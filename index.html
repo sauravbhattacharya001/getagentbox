@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgentBox - Your Personal AI Agent on Telegram</title>
-    <meta name="description" content="Get your own AI assistant that lives in Telegram. It remembers you, learns your preferences, and helps you get things done.">
+    <meta name="description" content="Get your own AI assistant that lives in Telegram. It remembers you, learns your preferences, and helps you get things done. Free to try — 20 messages/day.">
+    <meta property="og:title" content="AgentBox - Your Personal AI Agent on Telegram">
+    <meta property="og:description" content="An AI assistant that remembers you, searches the web, sets reminders, understands images, and lives right in Telegram.">
+    <meta property="og:type" content="website">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -63,6 +66,7 @@
             margin-right: 15px;
             width: 40px;
             text-align: center;
+            flex-shrink: 0;
         }
         
         .feature-text h3 {
@@ -75,80 +79,58 @@
             font-size: 0.95rem;
         }
         
-        .waitlist-form {
+        .cta-section {
             background: rgba(255,255,255,0.08);
             border-radius: 16px;
             padding: 30px;
             margin-bottom: 30px;
         }
         
-        .waitlist-form h2 {
+        .cta-section h2 {
             font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+
+        .cta-subtitle {
+            color: #888;
+            font-size: 0.95rem;
             margin-bottom: 20px;
         }
         
-        .input-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        input[type="email"] {
-            flex: 1;
-            min-width: 250px;
-            padding: 15px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            outline: none;
-        }
-        
-        input[type="email"]::placeholder {
-            color: #666;
-        }
-        
-        input[type="email"]:focus {
-            background: rgba(255,255,255,0.15);
-        }
-        
-        button {
-            padding: 15px 30px;
+        .cta-button {
+            display: inline-block;
+            padding: 16px 40px;
             background: linear-gradient(90deg, #00d4ff, #7b2cbf);
             border: none;
             border-radius: 8px;
             color: #fff;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
+            text-decoration: none;
             transition: transform 0.2s, box-shadow 0.2s;
         }
         
-        button:hover {
+        .cta-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
         }
-        
-        .success-message {
-            display: none;
-            background: rgba(0, 212, 255, 0.2);
-            border: 1px solid #00d4ff;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        
-        .count {
-            color: #888;
-            font-size: 0.9rem;
+
+        .free-badge {
+            display: inline-block;
             margin-top: 15px;
+            padding: 6px 14px;
+            background: rgba(0, 212, 255, 0.15);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #00d4ff;
         }
         
         .footer {
             color: #555;
             font-size: 0.85rem;
+            margin-top: 10px;
         }
         
         .footer a {
@@ -159,9 +141,7 @@
         @media (max-width: 480px) {
             h1 { font-size: 2rem; }
             .tagline { font-size: 1.1rem; }
-            .input-group { flex-direction: column; }
-            input[type="email"] { min-width: 100%; }
-            button { width: 100%; }
+            .cta-button { width: 100%; }
         }
     </style>
 </head>
@@ -180,17 +160,31 @@
                 </div>
             </div>
             <div class="feature">
-                <div class="feature-icon">💬</div>
+                <div class="feature-icon">🔍</div>
                 <div class="feature-text">
-                    <h3>Always available</h3>
-                    <p>Right in Telegram. No apps to install, no websites to visit. Just chat.</p>
+                    <h3>Web search built in</h3>
+                    <p>Ask anything about the real world — it searches the web and gives you a straight answer.</p>
                 </div>
             </div>
             <div class="feature">
-                <div class="feature-icon">🔧</div>
+                <div class="feature-icon">⏰</div>
                 <div class="feature-text">
-                    <h3>Actually useful</h3>
-                    <p>Research, scheduling, reminders, writing, coding help — whatever you need.</p>
+                    <h3>Reminders & scheduling</h3>
+                    <p>"Remind me in 30 minutes to check the oven." Done. It just works.</p>
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📷</div>
+                <div class="feature-text">
+                    <h3>Understands images</h3>
+                    <p>Send a photo and ask about it. Screenshots, documents, memes — it sees what you see.</p>
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎤</div>
+                <div class="feature-text">
+                    <h3>Voice messages</h3>
+                    <p>Too lazy to type? Send a voice note. It'll understand and respond.</p>
                 </div>
             </div>
             <div class="feature">
@@ -202,52 +196,16 @@
             </div>
         </div>
         
-        <div class="waitlist-form">
-            <h2>Join the waitlist</h2>
-            <form id="waitlist" action="https://formspree.io/f/mvzbpygk" method="POST">
-                <div class="input-group">
-                    <input type="email" name="email" placeholder="you@email.com" required>
-                    <button type="submit">Get Early Access</button>
-                </div>
-                <div class="success-message" id="success">
-                    ✨ You're on the list! We'll reach out soon.
-                </div>
-            </form>
-            <p class="count" id="count"></p>
+        <div class="cta-section">
+            <h2>Try it now</h2>
+            <p class="cta-subtitle">No signup, no app to install. Just open Telegram and start chatting.</p>
+            <a href="https://t.me/AgentBox11Bot" class="cta-button" target="_blank">Open in Telegram →</a>
+            <div class="free-badge">✨ 20 free messages per day</div>
         </div>
         
-<!-- footer removed -->
+        <p class="footer">Built by <a href="https://github.com/sauravbhattacharya001" target="_blank">Saurav Bhattacharya</a></p>
     </div>
-    
-    <script>
-        const form = document.getElementById('waitlist');
-        const success = document.getElementById('success');
-        
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = form.querySelector('input[type="email"]').value;
-            
-            // Store locally for now (replace with real backend later)
-            const waitlist = JSON.parse(localStorage.getItem('agentbox_waitlist') || '[]');
-            if (!waitlist.includes(email)) {
-                waitlist.push(email);
-                localStorage.setItem('agentbox_waitlist', JSON.stringify(waitlist));
-            }
-            
-            // Show success
-            form.querySelector('.input-group').style.display = 'none';
-            success.style.display = 'block';
-            
-            // Also submit to formspree if configured
-            if (!form.action.includes('FORM_ID')) {
-                fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form),
-                    headers: { 'Accept': 'application/json' }
-                });
-            }
-        });
-    </script>
+
     <!-- GoatCounter Analytics (free, privacy-friendly) -->
     <script data-goatcounter="https://agentbox.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
