@@ -79,6 +79,125 @@
             font-size: 0.95rem;
         }
         
+        /* Chat Demo */
+        .demo-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .demo-section h2 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+        }
+
+        .demo-subtitle {
+            color: #888;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        .chat-window {
+            background: #0e1621;
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 420px;
+            overflow-y: auto;
+            text-align: left;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        .chat-window::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-window::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+
+        .chat-bubble {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            animation: bubbleIn 0.3s ease-out;
+            word-wrap: break-word;
+        }
+
+        @keyframes bubbleIn {
+            from { opacity: 0; transform: translateY(8px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .chat-bubble.user {
+            background: #2b5278;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-bubble.bot {
+            background: #1e2c3a;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 14px;
+            background: #1e2c3a;
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+            margin-bottom: 8px;
+        }
+
+        .typing-indicator span {
+            width: 7px;
+            height: 7px;
+            background: #5a6a7a;
+            border-radius: 50%;
+            animation: typingBounce 1.2s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        .demo-scenarios {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .scenario-btn {
+            padding: 6px 14px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            color: #aaa;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scenario-btn:hover, .scenario-btn.active {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: rgba(0, 212, 255, 0.3);
+            color: #00d4ff;
+        }
+
         .cta-section {
             background: rgba(255,255,255,0.08);
             border-radius: 16px;
@@ -196,6 +315,18 @@
             </div>
         </div>
         
+        <div class="demo-section">
+            <h2>See it in action</h2>
+            <p class="demo-subtitle">This is what chatting with your agent looks like</p>
+            <div class="chat-window" id="chatWindow"></div>
+            <div class="demo-scenarios">
+                <button class="scenario-btn active" data-scenario="memory" onclick="switchScenario('memory')">🧠 Memory</button>
+                <button class="scenario-btn" data-scenario="search" onclick="switchScenario('search')">🔍 Search</button>
+                <button class="scenario-btn" data-scenario="reminder" onclick="switchScenario('reminder')">⏰ Reminder</button>
+                <button class="scenario-btn" data-scenario="image" onclick="switchScenario('image')">📷 Image</button>
+            </div>
+        </div>
+
         <div class="cta-section">
             <h2>Try it now</h2>
             <p class="cta-subtitle">No signup, no app to install. Just open Telegram and start chatting.</p>
@@ -205,6 +336,108 @@
         
         <p class="footer">Built by <a href="https://github.com/sauravbhattacharya001" target="_blank">Saurav Bhattacharya</a></p>
     </div>
+
+    <!-- Interactive Chat Demo -->
+    <script>
+        const scenarios = {
+            memory: [
+                { role: 'user', text: 'Hey, what was that pasta recipe I asked about last week?' },
+                { role: 'bot', text: 'The one with sun-dried tomatoes and basil! You mentioned wanting to try it with penne instead of fusilli. Want me to pull up the full recipe?' },
+                { role: 'user', text: 'Yes! And remind me to buy penne tonight' },
+                { role: 'bot', text: 'Here\'s the recipe:\n\n🍝 Sun-dried tomato pasta\n• 400g penne\n• 100g sun-dried tomatoes\n• Fresh basil, garlic, olive oil\n• Parmesan to finish\n\nBoil pasta, sauté garlic + tomatoes 3 min, toss together, top with basil & parmesan.\n\nI\'ll remind you tonight at 7pm to grab penne! ✅' }
+            ],
+            search: [
+                { role: 'user', text: 'What\'s the weather like in Seattle this weekend?' },
+                { role: 'bot', text: '🌧️ Seattle this weekend:\n\nSaturday: 48°F, light rain in the morning, clearing by noon\nSunday: 52°F, partly cloudy\n\nNot bad for February! Might be worth getting out on Sunday.' },
+                { role: 'user', text: 'Any good hikes near Seattle that work in light rain?' },
+                { role: 'bot', text: 'Here are some rain-friendly options:\n\n🌲 Twin Falls (easy, 2.6 mi) — waterfall is amazing after rain\n🏔️ Rattlesnake Ledge (moderate, 4 mi) — canopy cover most of the way\n🌿 Discovery Park Loop (easy, 2.8 mi) — scenic + mostly sheltered\n\nI\'d go Twin Falls if you want the payoff. Want directions?' }
+            ],
+            reminder: [
+                { role: 'user', text: 'Remind me to take my medicine in 30 minutes' },
+                { role: 'bot', text: 'Got it! I\'ll ping you in 30 minutes to take your medicine 💊' },
+                { role: 'user', text: 'Also remind me about the team standup at 9am tomorrow' },
+                { role: 'bot', text: 'Done! Two reminders set:\n\n⏰ In 30 min — take medicine\n⏰ Tomorrow 9:00 AM — team standup\n\nI\'ll make sure you don\'t miss either one.' }
+            ],
+            image: [
+                { role: 'user', text: '📷 [sends a photo of an error message on their screen]' },
+                { role: 'bot', text: 'I can see the error — it\'s a CORS issue. Your frontend at localhost:3000 is trying to hit an API on a different port without the right headers.\n\nQuick fix: add this to your server:\n\n`Access-Control-Allow-Origin: *`\n\nOr if you\'re using Express:\n`app.use(cors())`\n\nWant me to walk through the full setup?' },
+                { role: 'user', text: 'That fixed it, thanks!' },
+                { role: 'bot', text: 'Nice! 🎉 Pro tip: in production, replace the wildcard `*` with your actual domain for security. Let me know if anything else comes up.' }
+            ]
+        };
+
+        let currentScenario = 'memory';
+        let animationTimer = null;
+        let isAnimating = false;
+
+        function switchScenario(name) {
+            if (isAnimating) {
+                clearTimeout(animationTimer);
+                isAnimating = false;
+            }
+            currentScenario = name;
+            document.querySelectorAll('.scenario-btn').forEach(function(btn) {
+                btn.classList.toggle('active', btn.dataset.scenario === name);
+            });
+            playScenario(name);
+        }
+
+        function playScenario(name) {
+            var chatWindow = document.getElementById('chatWindow');
+            chatWindow.innerHTML = '';
+            var messages = scenarios[name];
+            var i = 0;
+            isAnimating = true;
+
+            function showNext() {
+                if (i >= messages.length || !isAnimating) {
+                    isAnimating = false;
+                    return;
+                }
+                var msg = messages[i];
+                if (msg.role === 'bot') {
+                    // Show typing indicator first
+                    var typing = document.createElement('div');
+                    typing.className = 'typing-indicator';
+                    typing.innerHTML = '<span></span><span></span><span></span>';
+                    chatWindow.appendChild(typing);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+
+                    animationTimer = setTimeout(function() {
+                        if (!isAnimating) return;
+                        chatWindow.removeChild(typing);
+                        addBubble(msg);
+                        i++;
+                        animationTimer = setTimeout(showNext, 1200);
+                    }, 800 + Math.random() * 600);
+                } else {
+                    addBubble(msg);
+                    i++;
+                    animationTimer = setTimeout(showNext, 900);
+                }
+            }
+
+            function addBubble(msg) {
+                var bubble = document.createElement('div');
+                bubble.className = 'chat-bubble ' + msg.role;
+                // Simple formatting: \n to <br>, backtick code
+                var html = msg.text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.1);padding:2px 5px;border-radius:3px;font-size:0.88em">$1</code>')
+                    .replace(/\n/g, '<br>');
+                bubble.innerHTML = html;
+                chatWindow.appendChild(bubble);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+
+            animationTimer = setTimeout(showNext, 500);
+        }
+
+        // Auto-play first scenario on load
+        playScenario('memory');
+    </script>
 
     <!-- GoatCounter Analytics (free, privacy-friendly) -->
     <script data-goatcounter="https://agentbox.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
