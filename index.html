@@ -653,11 +653,11 @@
         <div class="cta-section">
             <h2>Try it now</h2>
             <p class="cta-subtitle">No signup, no app to install. Just open Telegram and start chatting.</p>
-            <a href="https://t.me/AgentBox11Bot" class="cta-button" target="_blank">Open in Telegram →</a>
+            <a href="https://t.me/AgentBox11Bot" class="cta-button" target="_blank" rel="noopener noreferrer">Open in Telegram →</a>
             <div class="free-badge">✨ 20 free messages per day</div>
         </div>
         
-        <p class="footer">Built by <a href="https://github.com/sauravbhattacharya001" target="_blank">Saurav Bhattacharya</a></p>
+        <p class="footer">Built by <a href="https://github.com/sauravbhattacharya001" target="_blank" rel="noopener noreferrer">Saurav Bhattacharya</a></p>
     </div>
 
     <!-- Interactive Chat Demo -->
@@ -689,14 +689,19 @@
             ]
         };
 
-        let currentScenario = 'memory';
-        let animationTimer = null;
-        let isAnimating = false;
+        var currentScenario = 'memory';
+        var animationTimer = null;
+        // Generation counter prevents stale animation callbacks from
+        // executing after a scenario switch. Each switchScenario() bumps
+        // the counter; callbacks check their captured generation against
+        // the current value and bail if they don't match.
+        var animationGeneration = 0;
 
         function switchScenario(name) {
-            if (isAnimating) {
+            animationGeneration++;
+            if (animationTimer) {
                 clearTimeout(animationTimer);
-                isAnimating = false;
+                animationTimer = null;
             }
             currentScenario = name;
             document.querySelectorAll('.scenario-btn').forEach(function(btn) {
@@ -710,13 +715,14 @@
             chatWindow.innerHTML = '';
             var messages = scenarios[name];
             var i = 0;
-            isAnimating = true;
+            var gen = animationGeneration;
+
+            function isStale() {
+                return gen !== animationGeneration;
+            }
 
             function showNext() {
-                if (i >= messages.length || !isAnimating) {
-                    isAnimating = false;
-                    return;
-                }
+                if (i >= messages.length || isStale()) return;
                 var msg = messages[i];
                 if (msg.role === 'bot') {
                     // Show typing indicator first
@@ -727,8 +733,11 @@
                     chatWindow.scrollTop = chatWindow.scrollHeight;
 
                     animationTimer = setTimeout(function() {
-                        if (!isAnimating) return;
-                        chatWindow.removeChild(typing);
+                        if (isStale()) return;
+                        // Safe removal: verify the node is still a child
+                        if (typing.parentNode) {
+                            typing.parentNode.removeChild(typing);
+                        }
                         addBubble(msg);
                         i++;
                         animationTimer = setTimeout(showNext, 1200);
@@ -741,6 +750,7 @@
             }
 
             function addBubble(msg) {
+                if (isStale()) return;
                 var bubble = document.createElement('div');
                 bubble.className = 'chat-bubble ' + msg.role;
                 // Simple formatting: \n to <br>, backtick code

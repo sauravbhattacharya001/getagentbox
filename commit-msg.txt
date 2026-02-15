@@ -1,0 +1,15 @@
+fix: chat demo race condition, removeChild crash, and target=_blank security
+
+1. Animation race condition: Rapid scenario switching caused messages
+   from different scenarios to intermix. The boolean isAnimating flag
+   was shared state that couldn't distinguish between old and new
+   animations. Replaced with a generation counter so stale callbacks
+   from previous scenarios are properly invalidated.
+
+2. removeChild crash: When switching scenarios, chatWindow.innerHTML=''
+   clears the DOM, but pending setTimeout callbacks still tried to
+   call chatWindow.removeChild(typing) on an already-removed node.
+   Added parentNode guard before removal.
+
+3. Security: Added rel="noopener noreferrer" to target="_blank" links
+   to prevent the opened page from accessing window.opener.
