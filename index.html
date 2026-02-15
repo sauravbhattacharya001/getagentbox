@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline'; img-src 'self' https:; connect-src 'self' https://agentbox.goatcounter.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>AgentBox - Your Personal AI Agent on Telegram</title>
     <meta name="description" content="Get your own AI assistant that lives in Telegram. It remembers you, learns your preferences, and helps you get things done. Free to try — 20 messages/day.">
     <meta property="og:title" content="AgentBox - Your Personal AI Agent on Telegram">
@@ -726,7 +729,7 @@
                     // Show typing indicator first
                     var typing = document.createElement('div');
                     typing.className = 'typing-indicator';
-                    typing.innerHTML = '<span></span><span></span><span></span>';
+                    for (var d = 0; d < 3; d++) typing.appendChild(document.createElement('span'));
                     chatWindow.appendChild(typing);
                     chatWindow.scrollTop = chatWindow.scrollHeight;
 
@@ -751,14 +754,24 @@
                 if (isStale()) return;
                 var bubble = document.createElement('div');
                 bubble.className = 'chat-bubble ' + msg.role;
-                // Simple formatting: \n to <br>, backtick code
-                var html = msg.text
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.1);padding:2px 5px;border-radius:3px;font-size:0.88em">$1</code>')
-                    .replace(/\n/g, '<br>');
-                bubble.innerHTML = html;
+                // Build content safely using DOM nodes instead of innerHTML
+                var parts = msg.text.split('\n');
+                for (var p = 0; p < parts.length; p++) {
+                    if (p > 0) bubble.appendChild(document.createElement('br'));
+                    // Split on backtick-delimited code spans
+                    var segments = parts[p].split(/`([^`]+)`/);
+                    for (var s = 0; s < segments.length; s++) {
+                        if (s % 2 === 1) {
+                            // Odd segments are inside backticks — render as <code>
+                            var code = document.createElement('code');
+                            code.style.cssText = 'background:rgba(255,255,255,0.1);padding:2px 5px;border-radius:3px;font-size:0.88em';
+                            code.textContent = segments[s];
+                            bubble.appendChild(code);
+                        } else if (segments[s]) {
+                            bubble.appendChild(document.createTextNode(segments[s]));
+                        }
+                    }
+                }
                 chatWindow.appendChild(bubble);
                 chatWindow.scrollTop = chatWindow.scrollHeight;
             }
@@ -785,6 +798,6 @@
     </script>
 
     <!-- GoatCounter Analytics (free, privacy-friendly) -->
-    <script data-goatcounter="https://agentbox.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script data-goatcounter="https://agentbox.goatcounter.com/count" async src="//gc.zgo.at/count.js" crossorigin="anonymous"></script>
 </body>
 </html>
