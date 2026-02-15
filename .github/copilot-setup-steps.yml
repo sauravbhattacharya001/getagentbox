@@ -1,0 +1,39 @@
+# Copilot Setup Steps — getagentbox
+# This workflow installs dependencies and builds the project so GitHub Copilot
+# coding agents (Claude, Codex) can autonomously work on issues and PRs.
+
+name: "Copilot Setup"
+
+on: workflow_dispatch
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (for linting/validation tools)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install HTML validation tools
+        run: |
+          npm install -g htmlhint
+          npm install -g csslint
+
+      - name: Validate HTML
+        run: |
+          htmlhint index.html || true
+          echo "HTML validation complete"
+
+      - name: Verify project structure
+        run: |
+          echo "=== Project Files ==="
+          find . -not -path './.git/*' -type f | sort
+          echo ""
+          echo "=== index.html stats ==="
+          wc -l index.html
+          echo ""
+          echo "Project is a single-page landing site. All HTML, CSS, and JS are in index.html."
