@@ -198,6 +198,183 @@
             color: #00d4ff;
         }
 
+        /* Comparison Table */
+        .comparison-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .comparison-section h2 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+        }
+
+        .comparison-subtitle {
+            color: #888;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+            font-size: 0.88rem;
+        }
+
+        .comparison-table thead th {
+            padding: 10px 12px;
+            color: #888;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .comparison-table thead th:first-child {
+            text-align: left;
+        }
+
+        .comparison-table thead th:not(:first-child) {
+            text-align: center;
+        }
+
+        .comparison-table thead th.highlight-col {
+            color: #00d4ff;
+            background: rgba(0, 212, 255, 0.06);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .comparison-table tbody td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: #ccc;
+        }
+
+        .comparison-table tbody td:first-child {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .comparison-table tbody td:not(:first-child) {
+            text-align: center;
+        }
+
+        .comparison-table tbody td.highlight-col {
+            background: rgba(0, 212, 255, 0.04);
+        }
+
+        .comparison-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table tbody tr:last-child td.highlight-col {
+            border-radius: 0 0 8px 8px;
+        }
+
+        .check { color: #4ade80; }
+        .cross { color: #f87171; }
+        .partial { color: #facc15; }
+
+        /* FAQ Section */
+        .faq-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .faq-section h2 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .faq-subtitle {
+            color: #888;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .faq-question:hover {
+            color: #00d4ff;
+        }
+
+        .faq-question h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            flex: 1;
+            margin-right: 12px;
+        }
+
+        .faq-toggle {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #666;
+            transition: transform 0.3s ease, color 0.2s;
+        }
+
+        .faq-item.open .faq-toggle {
+            transform: rotate(45deg);
+            color: #00d4ff;
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.35s ease;
+        }
+
+        .faq-item.open .faq-answer {
+            max-height: 300px;
+        }
+
+        .faq-answer p {
+            color: #999;
+            font-size: 0.92rem;
+            line-height: 1.55;
+            padding-bottom: 16px;
+        }
+
+        @media (max-width: 480px) {
+            .comparison-table {
+                font-size: 0.78rem;
+            }
+            .comparison-table thead th,
+            .comparison-table tbody td {
+                padding: 8px 6px;
+            }
+        }
+
         .cta-section {
             background: rgba(255,255,255,0.08);
             border-radius: 16px;
@@ -327,6 +504,152 @@
             </div>
         </div>
 
+        <div class="comparison-section">
+            <h2>How it compares</h2>
+            <p class="comparison-subtitle">AgentBox vs the alternatives</p>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th class="highlight-col">AgentBox</th>
+                        <th>ChatGPT</th>
+                        <th>Siri / Google</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Remembers your context</td>
+                        <td class="highlight-col"><span class="check">✓</span></td>
+                        <td><span class="partial">~</span></td>
+                        <td><span class="cross">✗</span></td>
+                    </tr>
+                    <tr>
+                        <td>Lives in Telegram</td>
+                        <td class="highlight-col"><span class="check">✓</span></td>
+                        <td><span class="cross">✗</span></td>
+                        <td><span class="cross">✗</span></td>
+                    </tr>
+                    <tr>
+                        <td>Web search</td>
+                        <td class="highlight-col"><span class="check">✓</span></td>
+                        <td><span class="check">✓</span></td>
+                        <td><span class="check">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Image understanding</td>
+                        <td class="highlight-col"><span class="check">✓</span></td>
+                        <td><span class="check">✓</span></td>
+                        <td><span class="partial">~</span></td>
+                    </tr>
+                    <tr>
+                        <td>Voice messages</td>
+                        <td class="highlight-col"><span class="check">✓</span></td>
+                        <td><span class="check">✓</span></td>
+                        <td><span class="check">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Set reminders</td>
+                        <td class="highlight-col"><span class="check">✓</span></td>
+                        <td><span class="cross">✗</span></td>
+                        <td><span class="check">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>No app to install</td>
+                        <td class="highlight-col"><span class="check">✓</span></td>
+                        <td><span class="cross">✗</span></td>
+                        <td><span class="partial">~</span></td>
+                    </tr>
+                    <tr>
+                        <td>Free tier</td>
+                        <td class="highlight-col"><span class="check">✓</span></td>
+                        <td><span class="check">✓</span></td>
+                        <td><span class="check">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td>Private workspace</td>
+                        <td class="highlight-col"><span class="check">✓</span></td>
+                        <td><span class="partial">~</span></td>
+                        <td><span class="cross">✗</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="faq-section">
+            <h2>Frequently asked questions</h2>
+            <p class="faq-subtitle">Everything you need to know</p>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>Is it really free?</h3>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes! You get 20 free messages per day, no credit card required. Just open Telegram and start chatting. If you need more, premium plans are available.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>Do I need to install anything?</h3>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Nope. If you have Telegram (on your phone, desktop, or web), you're ready. Just tap the link, hit Start, and you're talking to your agent.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>How does memory work?</h3>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Your agent maintains a private workspace that persists across conversations. It remembers things you've told it — preferences, past requests, context — so you never have to repeat yourself.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>Is my data private?</h3>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Each user gets their own isolated workspace. Your conversations and data aren't shared with other users or used to train models. Your agent is yours.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>What AI model does it use?</h3>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>AgentBox uses state-of-the-art language models (including GPT-4o and Claude) with vision capabilities. It can understand text, images, voice, and search the web for real-time information.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>What can I actually use it for?</h3>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Anything you'd ask a smart assistant — research, writing help, coding questions, recipe ideas, reminders, image analysis, travel planning, quick calculations, language translation, and more. It's surprisingly versatile.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <h3>Can I use it in group chats?</h3>
+                    <span class="faq-toggle">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Currently AgentBox works best in direct messages. Group chat support is on the roadmap — stay tuned!</p>
+                </div>
+            </div>
+        </div>
+
         <div class="cta-section">
             <h2>Try it now</h2>
             <p class="cta-subtitle">No signup, no app to install. Just open Telegram and start chatting.</p>
@@ -437,6 +760,20 @@
 
         // Auto-play first scenario on load
         playScenario('memory');
+
+        // FAQ accordion
+        function toggleFaq(el) {
+            var item = el.parentElement;
+            var wasOpen = item.classList.contains('open');
+            // Close all
+            document.querySelectorAll('.faq-item').forEach(function(faq) {
+                faq.classList.remove('open');
+            });
+            // Open clicked if it wasn't open
+            if (!wasOpen) {
+                item.classList.add('open');
+            }
+        }
     </script>
 
     <!-- GoatCounter Analytics (free, privacy-friendly) -->
