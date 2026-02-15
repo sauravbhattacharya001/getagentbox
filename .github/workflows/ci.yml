@@ -1,0 +1,199 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  html-validate:
+    name: HTML Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install html-validate
+        run: npm install -g html-validate
+
+      - name: Create html-validate config
+        run: |
+          cat > .htmlvalidate.json << 'EOF'
+          {
+            "extends": ["html-validate:recommended"],
+            "rules": {
+              "no-inline-style": "off",
+              "no-trailing-whitespace": "off",
+              "tel-non-breaking": "off",
+              "attribute-boolean-style": "off",
+              "script-type": "off"
+            }
+          }
+          EOF
+
+      - name: Validate HTML
+        run: html-validate index.html
+
+  structure-check:
+    name: Structure & Best Practices
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required elements
+        run: |
+          echo "=== Checking index.html structure ==="
+          errors=0
+
+          # DOCTYPE
+          if ! grep -qi '<!DOCTYPE html>' index.html; then
+            echo "❌ Missing <!DOCTYPE html>"
+            errors=$((errors + 1))
+          else
+            echo "✅ DOCTYPE present"
+          fi
+
+          # lang attribute
+          if ! grep -qi '<html.*lang=' index.html; then
+            echo "❌ Missing lang attribute on <html>"
+            errors=$((errors + 1))
+          else
+            echo "✅ lang attribute present"
+          fi
+
+          # charset
+          if ! grep -qi 'charset=' index.html; then
+            echo "❌ Missing charset meta tag"
+            errors=$((errors + 1))
+          else
+            echo "✅ charset meta tag present"
+          fi
+
+          # viewport
+          if ! grep -qi 'viewport' index.html; then
+            echo "❌ Missing viewport meta tag"
+            errors=$((errors + 1))
+          else
+            echo "✅ viewport meta tag present"
+          fi
+
+          # title
+          if ! grep -qi '<title>' index.html; then
+            echo "❌ Missing <title> tag"
+            errors=$((errors + 1))
+          else
+            echo "✅ <title> tag present"
+          fi
+
+          # meta description
+          if ! grep -qi 'meta.*name="description"' index.html; then
+            echo "❌ Missing meta description"
+            errors=$((errors + 1))
+          else
+            echo "✅ meta description present"
+          fi
+
+          # Open Graph tags
+          if ! grep -qi 'og:title' index.html; then
+            echo "⚠️  Missing Open Graph title (non-blocking)"
+          else
+            echo "✅ Open Graph title present"
+          fi
+
+          if ! grep -qi 'og:description' index.html; then
+            echo "⚠️  Missing Open Graph description (non-blocking)"
+          else
+            echo "✅ Open Graph description present"
+          fi
+
+          if [ $errors -gt 0 ]; then
+            echo ""
+            echo "❌ $errors critical issue(s) found"
+            exit 1
+          fi
+          echo ""
+          echo "✅ All structure checks passed"
+
+      - name: Check file size
+        run: |
+          size=$(wc -c < index.html)
+          echo "index.html size: ${size} bytes"
+          # Warn if over 100KB (single-file site should stay lean)
+          if [ "$size" -gt 102400 ]; then
+            echo "⚠️  index.html is over 100KB — consider optimizing"
+          else
+            echo "✅ File size is reasonable"
+          fi
+
+      - name: Check for broken internal references
+        run: |
+          echo "=== Checking internal references ==="
+          errors=0
+
+          # Check for href/src references to local files that don't exist
+          for ref in $(grep -oP '(?:href|src)="(?!https?://|//|#|mailto:|tel:|data:)([^"]+)"' index.html | grep -oP '"[^"]+"' | tr -d '"'); do
+            if [ ! -f "$ref" ] && [ ! -d "$ref" ]; then
+              echo "❌ Broken reference: $ref"
+              errors=$((errors + 1))
+            fi
+          done
+
+          if [ $errors -gt 0 ]; then
+            echo "❌ $errors broken reference(s) found"
+            exit 1
+          fi
+          echo "✅ No broken internal references"
+
+  link-check:
+    name: External Link Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check external links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --verbose
+            --no-progress
+            --accept 200,204,301,302,403,429
+            --exclude-mail
+            --timeout 30
+            --max-retries 3
+            index.html
+            README.md
+          fail: true
+
+  accessibility:
+    name: Accessibility Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pa11y
+        run: npm install -g pa11y
+
+      - name: Start local server
+        run: |
+          npx serve . -l 8080 &
+          sleep 3
+
+      - name: Run accessibility audit
+        run: |
+          pa11y http://localhost:8080/index.html \
+            --standard WCAG2AA \
+            --ignore "WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail" \
+            --threshold 5 \
+            || true
+          # Non-blocking for now — logs issues but doesn't fail build
+          # Remove || true when accessibility issues are resolved
