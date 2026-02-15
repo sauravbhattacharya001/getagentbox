@@ -1,0 +1,66 @@
+name: ✨ Feature Request
+description: Suggest an improvement to the landing page or AgentBox
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea? We'd love to hear it!
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: What kind of improvement is this?
+      options:
+        - Landing page design
+        - New demo scenario
+        - Accessibility
+        - SEO / discoverability
+        - Performance
+        - Mobile experience
+        - New section or content
+        - Bot feature suggestion
+        - Internationalization / i18n
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What problem does this solve? Why is it needed?
+      placeholder: "I find it frustrating when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you solve it? Be as specific as you like.
+      placeholder: "Add a section that shows..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you thought about?
+
+  - type: textarea
+    id: mockup
+    attributes:
+      label: Mockup / reference
+      description: Drag and drop mockups, screenshots, or links to similar implementations
+      placeholder: Paste images or links here
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd be willing to submit a PR for this
