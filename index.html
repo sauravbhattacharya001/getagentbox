@@ -662,7 +662,7 @@
 
     <!-- Interactive Chat Demo -->
     <script>
-        const scenarios = {
+        var scenarios = {
             memory: [
                 { role: 'user', text: 'Hey, what was that pasta recipe I asked about last week?' },
                 { role: 'bot', text: 'The one with sun-dried tomatoes and basil! You mentioned wanting to try it with penne instead of fusilli. Want me to pull up the full recipe?' },
@@ -689,7 +689,6 @@
             ]
         };
 
-        var currentScenario = 'memory';
         var animationTimer = null;
         // Generation counter prevents stale animation callbacks from
         // executing after a scenario switch. Each switchScenario() bumps
@@ -703,7 +702,6 @@
                 clearTimeout(animationTimer);
                 animationTimer = null;
             }
-            currentScenario = name;
             document.querySelectorAll('.scenario-btn').forEach(function(btn) {
                 btn.classList.toggle('active', btn.dataset.scenario === name);
             });
