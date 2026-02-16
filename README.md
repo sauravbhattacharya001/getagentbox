@@ -11,6 +11,7 @@
 
 [![CI](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/ci.yml/badge.svg)](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/ci.yml)
 [![Deploy](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/pages.yml/badge.svg)](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/pages.yml)
+[![Docker](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/docker.yml/badge.svg)](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/docker.yml)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](#-tech-stack)
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)](#-tech-stack)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)](#-tech-stack)
