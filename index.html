@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline'; img-src 'self' https:; connect-src 'self' https://agentbox.goatcounter.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://gc.zgo.at; style-src 'self'; img-src 'self' https:; connect-src 'self' https://agentbox.goatcounter.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <link rel="preconnect" href="https://gc.zgo.at" crossorigin>
@@ -13,683 +13,7 @@
     <meta property="og:title" content="AgentBox - Your Personal AI Agent on Telegram">
     <meta property="og:description" content="An AI assistant that remembers you, searches the web, sets reminders, understands images, and lives right in Telegram.">
     <meta property="og:type" content="website">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: #fff;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 60px 20px;
-            text-align: center;
-        }
-        
-        .logo {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .tagline {
-            font-size: 1.3rem;
-            color: #a0a0a0;
-            margin-bottom: 40px;
-        }
-        
-        .features {
-            text-align: left;
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 40px;
-            contain: content;
-        }
-        
-        .feature {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-        
-        .feature:last-child { margin-bottom: 0; }
-        
-        .feature-icon {
-            font-size: 24px;
-            margin-right: 15px;
-            width: 40px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        
-        .feature-text h3 {
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-        
-        .feature-text p {
-            color: #888;
-            font-size: 0.95rem;
-        }
-        
-        /* Chat Demo */
-        .demo-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 40px;
-            contain: layout style;
-        }
-
-        .demo-section h2 {
-            font-size: 1.4rem;
-            margin-bottom: 5px;
-        }
-
-        .demo-subtitle {
-            color: #888;
-            font-size: 0.95rem;
-            margin-bottom: 20px;
-        }
-
-        .chat-window {
-            background: #0e1621;
-            border-radius: 12px;
-            padding: 16px;
-            max-height: 420px;
-            overflow-y: auto;
-            text-align: left;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.1) transparent;
-            contain: content;
-            will-change: scroll-position;
-        }
-
-        .chat-window::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .chat-window::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-        }
-
-        .chat-bubble {
-            max-width: 85%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            font-size: 0.92rem;
-            line-height: 1.45;
-            animation: bubbleIn 0.3s ease-out;
-            word-wrap: break-word;
-            will-change: transform, opacity;
-            contain: layout style;
-        }
-
-        @keyframes bubbleIn {
-            from { opacity: 0; transform: translateY(8px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .chat-bubble.user {
-            background: #2b5278;
-            margin-left: auto;
-            border-bottom-right-radius: 4px;
-        }
-
-        .chat-bubble.bot {
-            background: #1e2c3a;
-            margin-right: auto;
-            border-bottom-left-radius: 4px;
-        }
-
-        .typing-indicator {
-            display: flex;
-            gap: 4px;
-            padding: 12px 14px;
-            background: #1e2c3a;
-            border-radius: 12px;
-            border-bottom-left-radius: 4px;
-            width: fit-content;
-            margin-bottom: 8px;
-        }
-
-        .typing-indicator span {
-            width: 7px;
-            height: 7px;
-            background: #5a6a7a;
-            border-radius: 50%;
-            animation: typingBounce 1.2s infinite;
-            will-change: transform;
-        }
-
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-5px); }
-        }
-
-        .demo-scenarios {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .scenario-btn {
-            padding: 6px 14px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 20px;
-            color: #aaa;
-            font-size: 0.82rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .scenario-btn:hover, .scenario-btn.active {
-            background: rgba(0, 212, 255, 0.15);
-            border-color: rgba(0, 212, 255, 0.3);
-            color: #00d4ff;
-        }
-
-        /* Comparison Table */
-        .comparison-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 40px;
-            contain: content;
-        }
-
-        .comparison-section h2 {
-            font-size: 1.4rem;
-            margin-bottom: 5px;
-        }
-
-        .comparison-subtitle {
-            color: #888;
-            font-size: 0.95rem;
-            margin-bottom: 20px;
-        }
-
-        .comparison-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            text-align: left;
-            font-size: 0.88rem;
-        }
-
-        .comparison-table thead th {
-            padding: 10px 12px;
-            color: #888;
-            font-weight: 600;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .comparison-table thead th:first-child {
-            text-align: left;
-        }
-
-        .comparison-table thead th:not(:first-child) {
-            text-align: center;
-        }
-
-        .comparison-table thead th.highlight-col {
-            color: #00d4ff;
-            background: rgba(0, 212, 255, 0.06);
-            border-radius: 8px 8px 0 0;
-        }
-
-        .comparison-table tbody td {
-            padding: 10px 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            color: #ccc;
-        }
-
-        .comparison-table tbody td:first-child {
-            color: #fff;
-            font-weight: 500;
-        }
-
-        .comparison-table tbody td:not(:first-child) {
-            text-align: center;
-        }
-
-        .comparison-table tbody td.highlight-col {
-            background: rgba(0, 212, 255, 0.04);
-        }
-
-        .comparison-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .comparison-table tbody tr:last-child td.highlight-col {
-            border-radius: 0 0 8px 8px;
-        }
-
-        .check { color: #4ade80; }
-        .cross { color: #f87171; }
-        .partial { color: #facc15; }
-
-        /* Pricing Section */
-        .pricing-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 40px;
-            contain: content;
-        }
-
-        .pricing-section h2 {
-            font-size: 1.4rem;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-
-        .pricing-subtitle {
-            color: #888;
-            font-size: 0.95rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .billing-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .billing-toggle span {
-            font-size: 0.9rem;
-            color: #888;
-            transition: color 0.2s;
-        }
-
-        .billing-toggle span.active-label {
-            color: #fff;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 44px;
-            height: 24px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-            flex-shrink: 0;
-        }
-
-        .toggle-switch.yearly {
-            background: rgba(0, 212, 255, 0.35);
-        }
-
-        .toggle-knob {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 18px;
-            height: 18px;
-            background: #fff;
-            border-radius: 50%;
-            transition: transform 0.2s;
-        }
-
-        .toggle-switch.yearly .toggle-knob {
-            transform: translateX(20px);
-        }
-
-        .save-badge {
-            font-size: 0.75rem;
-            color: #4ade80;
-            background: rgba(74, 222, 128, 0.12);
-            border: 1px solid rgba(74, 222, 128, 0.25);
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-
-        .pricing-cards {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 14px;
-        }
-
-        .pricing-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 24px 16px;
-            text-align: center;
-            transition: border-color 0.2s, transform 0.2s;
-            position: relative;
-        }
-
-        .pricing-card:hover {
-            border-color: rgba(255,255,255,0.15);
-            transform: translateY(-2px);
-        }
-
-        .pricing-card.popular {
-            border-color: rgba(0, 212, 255, 0.4);
-            background: rgba(0, 212, 255, 0.06);
-        }
-
-        .popular-tag {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            color: #fff;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 3px 12px;
-            border-radius: 10px;
-        }
-
-        .pricing-card h3 {
-            font-size: 1.05rem;
-            margin-bottom: 6px;
-            color: #fff;
-        }
-
-        .pricing-card .plan-desc {
-            font-size: 0.82rem;
-            color: #888;
-            margin-bottom: 16px;
-        }
-
-        .pricing-card .price {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #fff;
-            line-height: 1;
-            margin-bottom: 4px;
-        }
-
-        .pricing-card .price .currency {
-            font-size: 1.1rem;
-            vertical-align: super;
-            font-weight: 600;
-        }
-
-        .pricing-card .price-period {
-            font-size: 0.8rem;
-            color: #666;
-            margin-bottom: 18px;
-        }
-
-        .pricing-card .plan-features {
-            text-align: left;
-            list-style: none;
-            padding: 0;
-            margin: 0 0 20px 0;
-        }
-
-        .pricing-card .plan-features li {
-            font-size: 0.85rem;
-            color: #bbb;
-            padding: 5px 0;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .pricing-card .plan-features li::before {
-            content: '✓';
-            color: #4ade80;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .pricing-card .plan-btn {
-            display: block;
-            padding: 10px 0;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-decoration: none;
-            text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-            border: none;
-            width: 100%;
-        }
-
-        .pricing-card .plan-btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .plan-btn.btn-free {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-
-        .plan-btn.btn-free:hover {
-            background: rgba(255,255,255,0.15);
-        }
-
-        .plan-btn.btn-pro {
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            color: #fff;
-        }
-
-        .plan-btn.btn-pro:hover {
-            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
-        }
-
-        .plan-btn.btn-team {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-
-        .plan-btn.btn-team:hover {
-            background: rgba(255,255,255,0.15);
-        }
-
-        @media (max-width: 480px) {
-            .pricing-cards {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-
-            .pricing-card {
-                padding: 20px 16px;
-            }
-        }
-
-        /* FAQ Section */
-        .faq-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 40px;
-            text-align: left;
-            contain: content;
-        }
-
-        .faq-section h2 {
-            font-size: 1.4rem;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-
-        .faq-subtitle {
-            color: #888;
-            font-size: 0.95rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .faq-item {
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .faq-item:last-child {
-            border-bottom: none;
-        }
-
-        .faq-question {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 0;
-            cursor: pointer;
-            user-select: none;
-            transition: color 0.2s;
-        }
-
-        .faq-question:hover {
-            color: #00d4ff;
-        }
-
-        .faq-question h3 {
-            font-size: 1rem;
-            font-weight: 500;
-            flex: 1;
-            margin-right: 12px;
-        }
-
-        .faq-toggle {
-            width: 24px;
-            height: 24px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            color: #666;
-            transition: transform 0.3s ease, color 0.2s;
-        }
-
-        .faq-item.open .faq-toggle {
-            transform: rotate(45deg);
-            color: #00d4ff;
-        }
-
-        .faq-answer {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.35s ease, padding 0.35s ease;
-            contain: content;
-        }
-
-        .faq-item.open .faq-answer {
-            max-height: 300px;
-        }
-
-        .faq-answer p {
-            color: #999;
-            font-size: 0.92rem;
-            line-height: 1.55;
-            padding-bottom: 16px;
-        }
-
-        @media (max-width: 480px) {
-            .comparison-table {
-                font-size: 0.78rem;
-            }
-            .comparison-table thead th,
-            .comparison-table tbody td {
-                padding: 8px 6px;
-            }
-        }
-
-        .cta-section {
-            background: rgba(255,255,255,0.08);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 30px;
-            contain: content;
-        }
-        
-        .cta-section h2 {
-            font-size: 1.4rem;
-            margin-bottom: 8px;
-        }
-
-        .cta-subtitle {
-            color: #888;
-            font-size: 0.95rem;
-            margin-bottom: 20px;
-        }
-        
-        .cta-button {
-            display: inline-block;
-            padding: 16px 40px;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            border: none;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
-        }
-
-        .free-badge {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 6px 14px;
-            background: rgba(0, 212, 255, 0.15);
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 20px;
-            font-size: 0.85rem;
-            color: #00d4ff;
-        }
-        
-        .footer {
-            color: #555;
-            font-size: 0.85rem;
-            margin-top: 10px;
-        }
-        
-        .footer a {
-            color: #00d4ff;
-            text-decoration: none;
-        }
-        
-        @media (max-width: 480px) {
-            h1 { font-size: 2rem; }
-            .tagline { font-size: 1.1rem; }
-            .cta-button { width: 100%; }
-        }
-    </style>
+        <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
@@ -747,10 +71,10 @@
             <p class="demo-subtitle">This is what chatting with your agent looks like</p>
             <div class="chat-window" id="chatWindow"></div>
             <div class="demo-scenarios">
-                <button class="scenario-btn active" data-scenario="memory" onclick="switchScenario('memory')">🧠 Memory</button>
-                <button class="scenario-btn" data-scenario="search" onclick="switchScenario('search')">🔍 Search</button>
-                <button class="scenario-btn" data-scenario="reminder" onclick="switchScenario('reminder')">⏰ Reminder</button>
-                <button class="scenario-btn" data-scenario="image" onclick="switchScenario('image')">📷 Image</button>
+                <button class="scenario-btn active" data-scenario="memory">🧠 Memory</button>
+                <button class="scenario-btn" data-scenario="search">🔍 Search</button>
+                <button class="scenario-btn" data-scenario="reminder">⏰ Reminder</button>
+                <button class="scenario-btn" data-scenario="image">📷 Image</button>
             </div>
         </div>
 
@@ -831,7 +155,7 @@
 
             <div class="billing-toggle">
                 <span class="active-label" id="monthlyLabel">Monthly</span>
-                <div class="toggle-switch" id="billingToggle" onclick="toggleBilling()" role="switch" aria-checked="false" aria-label="Toggle yearly billing" tabindex="0">
+                <div class="toggle-switch" id="billingToggle" role="switch" aria-checked="false" aria-label="Toggle yearly billing" tabindex="0">
                     <div class="toggle-knob"></div>
                 </div>
                 <span id="yearlyLabel">Yearly</span>
@@ -894,7 +218,7 @@
             <p class="faq-subtitle">Everything you need to know</p>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question" >
                     <h3>Is it really free?</h3>
                     <span class="faq-toggle">+</span>
                 </div>
@@ -904,7 +228,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question" >
                     <h3>Do I need to install anything?</h3>
                     <span class="faq-toggle">+</span>
                 </div>
@@ -914,7 +238,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question" >
                     <h3>How does memory work?</h3>
                     <span class="faq-toggle">+</span>
                 </div>
@@ -924,7 +248,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question" >
                     <h3>Is my data private?</h3>
                     <span class="faq-toggle">+</span>
                 </div>
@@ -934,7 +258,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question" >
                     <h3>What AI model does it use?</h3>
                     <span class="faq-toggle">+</span>
                 </div>
@@ -944,7 +268,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question" >
                     <h3>What can I actually use it for?</h3>
                     <span class="faq-toggle">+</span>
                 </div>
@@ -954,7 +278,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question" >
                     <h3>Can I use it in group chats?</h3>
                     <span class="faq-toggle">+</span>
                 </div>
@@ -975,199 +299,7 @@
     </div>
 
     <!-- Interactive Chat Demo -->
-    <script>
-        var scenarios = {
-            memory: [
-                { role: 'user', text: 'Hey, what was that pasta recipe I asked about last week?' },
-                { role: 'bot', text: 'The one with sun-dried tomatoes and basil! You mentioned wanting to try it with penne instead of fusilli. Want me to pull up the full recipe?' },
-                { role: 'user', text: 'Yes! And remind me to buy penne tonight' },
-                { role: 'bot', text: 'Here\'s the recipe:\n\n🍝 Sun-dried tomato pasta\n• 400g penne\n• 100g sun-dried tomatoes\n• Fresh basil, garlic, olive oil\n• Parmesan to finish\n\nBoil pasta, sauté garlic + tomatoes 3 min, toss together, top with basil & parmesan.\n\nI\'ll remind you tonight at 7pm to grab penne! ✅' }
-            ],
-            search: [
-                { role: 'user', text: 'What\'s the weather like in Seattle this weekend?' },
-                { role: 'bot', text: '🌧️ Seattle this weekend:\n\nSaturday: 48°F, light rain in the morning, clearing by noon\nSunday: 52°F, partly cloudy\n\nNot bad for February! Might be worth getting out on Sunday.' },
-                { role: 'user', text: 'Any good hikes near Seattle that work in light rain?' },
-                { role: 'bot', text: 'Here are some rain-friendly options:\n\n🌲 Twin Falls (easy, 2.6 mi) — waterfall is amazing after rain\n🏔️ Rattlesnake Ledge (moderate, 4 mi) — canopy cover most of the way\n🌿 Discovery Park Loop (easy, 2.8 mi) — scenic + mostly sheltered\n\nI\'d go Twin Falls if you want the payoff. Want directions?' }
-            ],
-            reminder: [
-                { role: 'user', text: 'Remind me to take my medicine in 30 minutes' },
-                { role: 'bot', text: 'Got it! I\'ll ping you in 30 minutes to take your medicine 💊' },
-                { role: 'user', text: 'Also remind me about the team standup at 9am tomorrow' },
-                { role: 'bot', text: 'Done! Two reminders set:\n\n⏰ In 30 min — take medicine\n⏰ Tomorrow 9:00 AM — team standup\n\nI\'ll make sure you don\'t miss either one.' }
-            ],
-            image: [
-                { role: 'user', text: '📷 [sends a photo of an error message on their screen]' },
-                { role: 'bot', text: 'I can see the error — it\'s a CORS issue. Your frontend at localhost:3000 is trying to hit an API on a different port without the right headers.\n\nQuick fix: add this to your server:\n\n`Access-Control-Allow-Origin: *`\n\nOr if you\'re using Express:\n`app.use(cors())`\n\nWant me to walk through the full setup?' },
-                { role: 'user', text: 'That fixed it, thanks!' },
-                { role: 'bot', text: 'Nice! 🎉 Pro tip: in production, replace the wildcard `*` with your actual domain for security. Let me know if anything else comes up.' }
-            ]
-        };
-
-        var animationTimer = null;
-        // Generation counter prevents stale animation callbacks from
-        // executing after a scenario switch. Each switchScenario() bumps
-        // the counter; callbacks check their captured generation against
-        // the current value and bail if they don't match.
-        var animationGeneration = 0;
-
-        // Reusable typing indicator element — avoids creating new nodes each time.
-        var typingTemplate = (function() {
-            var el = document.createElement('div');
-            el.className = 'typing-indicator';
-            for (var d = 0; d < 3; d++) el.appendChild(document.createElement('span'));
-            return el;
-        })();
-
-        // Batched scroll-to-bottom using requestAnimationFrame to avoid
-        // forced synchronous layout (reading scrollHeight triggers layout
-        // if a write is pending). The rAF defers the read+write to the
-        // browser's next paint frame where layout is already computed.
-        var scrollRafId = 0;
-        function scheduleScroll(el) {
-            if (scrollRafId) return; // already scheduled
-            scrollRafId = requestAnimationFrame(function() {
-                scrollRafId = 0;
-                el.scrollTop = el.scrollHeight;
-            });
-        }
-
-        function switchScenario(name) {
-            animationGeneration++;
-            if (animationTimer) {
-                clearTimeout(animationTimer);
-                animationTimer = null;
-            }
-            if (scrollRafId) {
-                cancelAnimationFrame(scrollRafId);
-                scrollRafId = 0;
-            }
-            document.querySelectorAll('.scenario-btn').forEach(function(btn) {
-                btn.classList.toggle('active', btn.dataset.scenario === name);
-            });
-            playScenario(name);
-        }
-
-        function playScenario(name) {
-            var chatWindow = document.getElementById('chatWindow');
-            chatWindow.innerHTML = '';
-            var messages = scenarios[name];
-            var i = 0;
-            var gen = animationGeneration;
-
-            function isStale() {
-                return gen !== animationGeneration;
-            }
-
-            function showNext() {
-                if (i >= messages.length || isStale()) return;
-                var msg = messages[i];
-                if (msg.role === 'bot') {
-                    // Reuse the template typing indicator via cloneNode
-                    var typing = typingTemplate.cloneNode(true);
-                    chatWindow.appendChild(typing);
-                    scheduleScroll(chatWindow);
-
-                    animationTimer = setTimeout(function() {
-                        if (isStale()) return;
-                        // Safe removal: verify the node is still a child
-                        if (typing.parentNode) {
-                            typing.parentNode.removeChild(typing);
-                        }
-                        addBubble(msg);
-                        i++;
-                        animationTimer = setTimeout(showNext, 1200);
-                    }, 800 + Math.random() * 600);
-                } else {
-                    addBubble(msg);
-                    i++;
-                    animationTimer = setTimeout(showNext, 900);
-                }
-            }
-
-            function addBubble(msg) {
-                if (isStale()) return;
-                var bubble = document.createElement('div');
-                bubble.className = 'chat-bubble ' + msg.role;
-                // Build content in a DocumentFragment to minimize reflows.
-                // All DOM nodes are assembled off-screen, then appended once.
-                var frag = document.createDocumentFragment();
-                var parts = msg.text.split('\n');
-                for (var p = 0; p < parts.length; p++) {
-                    if (p > 0) frag.appendChild(document.createElement('br'));
-                    // Split on backtick-delimited code spans
-                    var segments = parts[p].split(/`([^`]+)`/);
-                    for (var s = 0; s < segments.length; s++) {
-                        if (s % 2 === 1) {
-                            // Odd segments are inside backticks — render as <code>
-                            var code = document.createElement('code');
-                            code.style.cssText = 'background:rgba(255,255,255,0.1);padding:2px 5px;border-radius:3px;font-size:0.88em';
-                            code.textContent = segments[s];
-                            frag.appendChild(code);
-                        } else if (segments[s]) {
-                            frag.appendChild(document.createTextNode(segments[s]));
-                        }
-                    }
-                }
-                bubble.appendChild(frag);
-                chatWindow.appendChild(bubble);
-                scheduleScroll(chatWindow);
-            }
-
-            animationTimer = setTimeout(showNext, 500);
-        }
-
-        // Auto-play first scenario on load
-        playScenario('memory');
-
-        // Pricing billing toggle
-        var isYearly = false;
-
-        function toggleBilling() {
-            isYearly = !isYearly;
-            var toggle = document.getElementById('billingToggle');
-            var monthlyLabel = document.getElementById('monthlyLabel');
-            var yearlyLabel = document.getElementById('yearlyLabel');
-
-            toggle.classList.toggle('yearly', isYearly);
-            toggle.setAttribute('aria-checked', isYearly ? 'true' : 'false');
-            monthlyLabel.classList.toggle('active-label', !isYearly);
-            yearlyLabel.classList.toggle('active-label', isYearly);
-
-            var amounts = document.querySelectorAll('.price-amount');
-            amounts.forEach(function(el) {
-                var priceEl = el.parentElement;
-                var value = isYearly ? priceEl.dataset.yearly : priceEl.dataset.monthly;
-                el.textContent = value;
-            });
-
-            var periods = document.querySelectorAll('.price-period-dynamic');
-            periods.forEach(function(el) {
-                el.textContent = isYearly ? 'per month, billed yearly' : 'per month';
-            });
-        }
-
-        // Keyboard support for billing toggle
-        document.getElementById('billingToggle').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleBilling();
-            }
-        });
-
-        // FAQ accordion
-        function toggleFaq(el) {
-            var item = el.parentElement;
-            var wasOpen = item.classList.contains('open');
-            // Close all
-            document.querySelectorAll('.faq-item').forEach(function(faq) {
-                faq.classList.remove('open');
-            });
-            // Open clicked if it wasn't open
-            if (!wasOpen) {
-                item.classList.add('open');
-            }
-        }
-    </script>
+        <script src="app.js" defer></script>
 
     <!-- GoatCounter Analytics (free, privacy-friendly) -->
     <script data-goatcounter="https://agentbox.goatcounter.com/count" async src="//gc.zgo.at/count.js" crossorigin="anonymous"></script>

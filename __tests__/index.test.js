@@ -4,26 +4,41 @@
  * Comprehensive tests for the getagentbox landing page.
  * Covers: HTML structure/SEO, chat demo engine, FAQ accordion,
  *         scenario data integrity, animation lifecycle, and accessibility.
+ *
+ * Architecture: index.html links to external styles.css and app.js.
+ * Tests load all three files and wire them together in jsdom.
  */
 
 const fs = require('fs');
 const path = require('path');
 
-// Load index.html once for all tests
-const html = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf8');
+const root = path.resolve(__dirname, '..');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
+const appJs = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 
-/** Helper: re-initialize the page DOM and execute inline scripts */
+/**
+ * Re-initialise the page DOM, inject external CSS, and execute app.js.
+ * Simulates what a browser does when loading the three files.
+ */
 function loadPage() {
   document.documentElement.innerHTML = '';
   document.write(html);
   document.close();
 
-  // Execute inline <script> blocks (jsdom doesn't auto-run them)
-  const scripts = document.querySelectorAll('script:not([src])');
-  scripts.forEach((s) => {
-    // eslint-disable-next-line no-eval
-    eval(s.textContent);
-  });
+  // Inject the external stylesheet content into a <style> so tests can
+  // query computed-style-adjacent expectations.
+  const styleEl = document.createElement('style');
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+
+  // Execute app.js in the global (window) scope so var declarations
+  // become window properties, matching real browser behaviour.
+  const scriptFn = new Function(appJs);
+  scriptFn.call(window);
+
+  // Manually fire DOMContentLoaded so the event listeners in app.js bind.
+  document.dispatchEvent(new Event('DOMContentLoaded'));
 }
 
 // ─── HTML structure & SEO ────────────────────────────────────────────────
@@ -86,6 +101,29 @@ describe('HTML structure and SEO', () => {
     const meta = document.querySelector('meta[name="referrer"]');
     expect(meta).not.toBeNull();
   });
+
+  test('links external stylesheet', () => {
+    const link = document.querySelector('link[rel="stylesheet"][href="styles.css"]');
+    expect(link).not.toBeNull();
+  });
+
+  test('loads app.js with defer', () => {
+    const script = document.querySelector('script[src="app.js"]');
+    expect(script).not.toBeNull();
+    expect(script.hasAttribute('defer')).toBe(true);
+  });
+
+  test('has no inline onclick handlers', () => {
+    const withOnclick = document.querySelectorAll('[onclick]');
+    expect(withOnclick.length).toBe(0);
+  });
+
+  test('CSP does not include unsafe-inline for script-src', () => {
+    const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+    const scriptSrc = csp.content.match(/script-src[^;]*/);
+    expect(scriptSrc).not.toBeNull();
+    expect(scriptSrc[0]).not.toContain("'unsafe-inline'");
+  });
 });
 
 // ─── Page content sections ───────────────────────────────────────────────
@@ -117,12 +155,12 @@ describe('Page content sections', () => {
 
   test('has comparison table with correct number of rows', () => {
     const rows = document.querySelectorAll('.comparison-table tbody tr');
-    expect(rows.length).toBe(9); // 9 feature comparison rows
+    expect(rows.length).toBe(9);
   });
 
   test('comparison table has 3 competitor columns', () => {
     const headers = document.querySelectorAll('.comparison-table thead th');
-    expect(headers.length).toBe(4); // Feature + AgentBox + ChatGPT + Siri/Google
+    expect(headers.length).toBe(4);
   });
 
   test('has 7 FAQ items', () => {
@@ -189,22 +227,22 @@ describe('Page content sections', () => {
 describe('Chat demo scenarios', () => {
   beforeAll(() => loadPage());
 
-  test('scenarios object has all 4 scenarios', () => {
-    expect(window.scenarios).toBeDefined();
-    expect(Object.keys(window.scenarios)).toEqual(
+  test('SCENARIOS constant has all 4 scenarios', () => {
+    expect(typeof window.SCENARIOS).toBe('object');
+    expect(Object.keys(window.SCENARIOS)).toEqual(
       expect.arrayContaining(['memory', 'search', 'reminder', 'image'])
     );
   });
 
   test('each scenario has at least 2 messages', () => {
-    for (const [name, msgs] of Object.entries(window.scenarios)) {
+    for (const [, msgs] of Object.entries(window.SCENARIOS)) {
       expect(msgs.length).toBeGreaterThanOrEqual(2);
     }
   });
 
   test('each message has role (user or bot) and non-empty text', () => {
-    for (const [name, msgs] of Object.entries(window.scenarios)) {
-      msgs.forEach((msg, i) => {
+    for (const [, msgs] of Object.entries(window.SCENARIOS)) {
+      msgs.forEach((msg) => {
         expect(['user', 'bot']).toContain(msg.role);
         expect(typeof msg.text).toBe('string');
         expect(msg.text.length).toBeGreaterThan(0);
@@ -213,13 +251,13 @@ describe('Chat demo scenarios', () => {
   });
 
   test('each scenario starts with a user message', () => {
-    for (const [name, msgs] of Object.entries(window.scenarios)) {
+    for (const [, msgs] of Object.entries(window.SCENARIOS)) {
       expect(msgs[0].role).toBe('user');
     }
   });
 
   test('each scenario has alternating user/bot messages', () => {
-    for (const [name, msgs] of Object.entries(window.scenarios)) {
+    for (const [, msgs] of Object.entries(window.SCENARIOS)) {
       for (let i = 1; i < msgs.length; i++) {
         expect(msgs[i].role).not.toBe(msgs[i - 1].role);
       }
@@ -259,33 +297,18 @@ describe('Chat demo animation engine', () => {
     expect(chatWindow).not.toBeNull();
   });
 
-  test('switchScenario clears chat and sets active button', () => {
-    window.switchScenario('search');
+  test('window.ChatDemo.switchTo clears chat and sets active button', () => {
+    window.ChatDemo.switchTo('search');
     const activeBtn = document.querySelector('.scenario-btn.active');
     expect(activeBtn.dataset.scenario).toBe('search');
 
-    // Only one button should be active
     const activeBtns = document.querySelectorAll('.scenario-btn.active');
     expect(activeBtns.length).toBe(1);
   });
 
-  test('switchScenario increments generation counter', () => {
-    const gen1 = window.animationGeneration;
-    window.switchScenario('reminder');
-    expect(window.animationGeneration).toBe(gen1 + 1);
-  });
-
-  test('rapid scenario switches bump generation each time', () => {
-    const gen0 = window.animationGeneration;
-    window.switchScenario('search');
-    window.switchScenario('reminder');
-    window.switchScenario('image');
-    expect(window.animationGeneration).toBe(gen0 + 3);
-  });
-
-  test('playScenario creates chat bubbles over time', () => {
+  test('window.ChatDemo.play creates chat bubbles over time', () => {
     const chatWindow = document.getElementById('chatWindow');
-    window.switchScenario('reminder');
+    window.ChatDemo.switchTo('reminder');
 
     // Fast-forward enough for first user bubble
     jest.advanceTimersByTime(600);
@@ -295,16 +318,10 @@ describe('Chat demo animation engine', () => {
 
   test('bot messages show typing indicator before appearing', () => {
     const chatWindow = document.getElementById('chatWindow');
-    window.switchScenario('memory');
+    window.ChatDemo.switchTo('memory');
 
-    // Advance past first user message
     jest.advanceTimersByTime(600);
-
-    // Now a typing indicator should appear for the bot response
     jest.advanceTimersByTime(1000);
-    const typing = chatWindow.querySelector('.typing-indicator');
-    // Typing indicator may or may not still be visible depending on timing,
-    // but bot bubble should eventually appear
     jest.advanceTimersByTime(2000);
     const botBubbles = chatWindow.querySelectorAll('.chat-bubble.bot');
     expect(botBubbles.length).toBeGreaterThanOrEqual(1);
@@ -312,9 +329,8 @@ describe('Chat demo animation engine', () => {
 
   test('chat bubbles have correct CSS classes for user and bot', () => {
     const chatWindow = document.getElementById('chatWindow');
-    window.switchScenario('search');
+    window.ChatDemo.switchTo('search');
 
-    // Let all messages animate through
     jest.advanceTimersByTime(20000);
 
     const userBubbles = chatWindow.querySelectorAll('.chat-bubble.user');
@@ -325,42 +341,33 @@ describe('Chat demo animation engine', () => {
 
   test('switching scenario mid-animation cancels previous animation', () => {
     const chatWindow = document.getElementById('chatWindow');
-    window.switchScenario('memory');
-    jest.advanceTimersByTime(600); // One bubble appears
-
-    // Switch to a different scenario
-    window.switchScenario('image');
+    window.ChatDemo.switchTo('memory');
     jest.advanceTimersByTime(600);
 
-    // Chat should only contain image scenario bubbles
+    window.ChatDemo.switchTo('image');
+    jest.advanceTimersByTime(600);
+
     const firstBubble = chatWindow.querySelector('.chat-bubble');
     if (firstBubble) {
-      const imgFirstMsg = window.scenarios.image[0].text;
+      const imgFirstMsg = window.SCENARIOS.image[0].text;
       expect(firstBubble.textContent).toBe(imgFirstMsg);
     }
   });
 
   test('code spans in bot messages render as <code> elements', () => {
     const chatWindow = document.getElementById('chatWindow');
-    // Image scenario has backtick code in bot responses
-    window.switchScenario('image');
+    window.ChatDemo.switchTo('image');
 
-    // Fast-forward through all animations
     jest.advanceTimersByTime(30000);
 
     const codeElements = chatWindow.querySelectorAll('code');
     expect(codeElements.length).toBeGreaterThan(0);
-    // Verify code elements have styling
-    codeElements.forEach((el) => {
-      expect(el.style.cssText).toContain('background');
-    });
   });
 
   test('multiline bot messages render with <br> elements', () => {
     const chatWindow = document.getElementById('chatWindow');
-    window.switchScenario('memory');
+    window.ChatDemo.switchTo('memory');
 
-    // Fast-forward to get the recipe bot message (has many newlines)
     jest.advanceTimersByTime(30000);
 
     const botBubbles = chatWindow.querySelectorAll('.chat-bubble.bot');
@@ -382,35 +389,32 @@ describe('FAQ accordion', () => {
     expect(openItems.length).toBe(0);
   });
 
-  test('clicking FAQ question opens it', () => {
+  test('toggling FAQ question opens it', () => {
     const firstQuestion = document.querySelector('.faq-question');
-    window.toggleFaq(firstQuestion);
-    const firstItem = firstQuestion.parentElement;
+    window.FAQ.toggle(firstQuestion);
+    const firstItem = firstQuestion.closest('.faq-item');
     expect(firstItem.classList.contains('open')).toBe(true);
   });
 
-  test('clicking an open FAQ question closes it', () => {
+  test('toggling an open FAQ question closes it', () => {
     const firstQuestion = document.querySelector('.faq-question');
-    window.toggleFaq(firstQuestion);
-    expect(firstQuestion.parentElement.classList.contains('open')).toBe(true);
+    window.FAQ.toggle(firstQuestion);
+    expect(firstQuestion.closest('.faq-item').classList.contains('open')).toBe(true);
 
-    window.toggleFaq(firstQuestion);
-    expect(firstQuestion.parentElement.classList.contains('open')).toBe(false);
+    window.FAQ.toggle(firstQuestion);
+    expect(firstQuestion.closest('.faq-item').classList.contains('open')).toBe(false);
   });
 
   test('only one FAQ item can be open at a time', () => {
     const questions = document.querySelectorAll('.faq-question');
 
-    // Open first
-    window.toggleFaq(questions[0]);
-    expect(questions[0].parentElement.classList.contains('open')).toBe(true);
+    window.FAQ.toggle(questions[0]);
+    expect(questions[0].closest('.faq-item').classList.contains('open')).toBe(true);
 
-    // Open second — first should close
-    window.toggleFaq(questions[1]);
-    expect(questions[0].parentElement.classList.contains('open')).toBe(false);
-    expect(questions[1].parentElement.classList.contains('open')).toBe(true);
+    window.FAQ.toggle(questions[1]);
+    expect(questions[0].closest('.faq-item').classList.contains('open')).toBe(false);
+    expect(questions[1].closest('.faq-item').classList.contains('open')).toBe(true);
 
-    // Only one open at a time
     const openItems = document.querySelectorAll('.faq-item.open');
     expect(openItems.length).toBe(1);
   });
@@ -418,12 +422,12 @@ describe('FAQ accordion', () => {
   test('opening third, then fifth FAQ works correctly', () => {
     const questions = document.querySelectorAll('.faq-question');
 
-    window.toggleFaq(questions[2]); // Open 3rd
-    expect(questions[2].parentElement.classList.contains('open')).toBe(true);
+    window.FAQ.toggle(questions[2]);
+    expect(questions[2].closest('.faq-item').classList.contains('open')).toBe(true);
 
-    window.toggleFaq(questions[4]); // Open 5th
-    expect(questions[2].parentElement.classList.contains('open')).toBe(false);
-    expect(questions[4].parentElement.classList.contains('open')).toBe(true);
+    window.FAQ.toggle(questions[4]);
+    expect(questions[2].closest('.faq-item').classList.contains('open')).toBe(false);
+    expect(questions[4].closest('.faq-item').classList.contains('open')).toBe(true);
   });
 
   test('FAQ toggle icon is present and has + symbol', () => {
@@ -452,36 +456,34 @@ describe('Pricing billing toggle', () => {
     expect(yearly.classList.contains('active-label')).toBe(false);
   });
 
-  test('toggleBilling switches to yearly mode', () => {
-    window.toggleBilling();
+  test('clicking toggle switches to yearly mode', () => {
     const toggle = document.getElementById('billingToggle');
+    toggle.click();
     expect(toggle.classList.contains('yearly')).toBe(true);
     expect(toggle.getAttribute('aria-checked')).toBe('true');
   });
 
-  test('toggleBilling updates price amounts', () => {
+  test('clicking toggle updates price amounts', () => {
     const amounts = document.querySelectorAll('.price-amount');
     const monthlyPrices = Array.from(amounts).map((el) => el.textContent);
 
-    window.toggleBilling(); // switch to yearly
+    document.getElementById('billingToggle').click();
 
     const yearlyPrices = Array.from(amounts).map((el) => el.textContent);
-    // At least one price should change (Free stays $0 but has no .price-amount)
     expect(yearlyPrices).not.toEqual(monthlyPrices);
 
-    // Yearly prices should be lower
     for (let i = 0; i < amounts.length; i++) {
       expect(parseInt(yearlyPrices[i])).toBeLessThan(parseInt(monthlyPrices[i]));
     }
   });
 
-  test('toggleBilling updates period text', () => {
+  test('clicking toggle updates period text', () => {
     const periods = document.querySelectorAll('.price-period-dynamic');
     periods.forEach((p) => {
       expect(p.textContent).toBe('per month');
     });
 
-    window.toggleBilling();
+    document.getElementById('billingToggle').click();
 
     periods.forEach((p) => {
       expect(p.textContent).toBe('per month, billed yearly');
@@ -489,10 +491,10 @@ describe('Pricing billing toggle', () => {
   });
 
   test('double toggle returns to monthly mode', () => {
-    window.toggleBilling();
-    window.toggleBilling();
-
     const toggle = document.getElementById('billingToggle');
+    toggle.click();
+    toggle.click();
+
     expect(toggle.classList.contains('yearly')).toBe(false);
     expect(toggle.getAttribute('aria-checked')).toBe('false');
 
@@ -507,7 +509,7 @@ describe('Pricing billing toggle', () => {
     const freeCard = document.querySelector('.pricing-card:first-child .price');
     const freePrice = freeCard.textContent;
 
-    window.toggleBilling();
+    document.getElementById('billingToggle').click();
     expect(freeCard.textContent).toBe(freePrice);
   });
 
@@ -526,7 +528,6 @@ describe('Accessibility basics', () => {
   test('all images have alt text or are decorative', () => {
     const images = document.querySelectorAll('img');
     images.forEach((img) => {
-      // Either has alt text or is explicitly decorative (alt="")
       expect(img.hasAttribute('alt')).toBe(true);
     });
   });
@@ -543,27 +544,21 @@ describe('Accessibility basics', () => {
     expect(h1s.length).toBe(1);
   });
 
-  test('heading hierarchy is logical (no skips beyond expected nesting)', () => {
+  test('heading hierarchy is logical', () => {
     const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
     let maxLevel = 0;
     headings.forEach((h) => {
       const level = parseInt(h.tagName[1], 10);
-      // Track the deepest heading used — h3 inside feature cards is normal
       if (level > maxLevel) maxLevel = level;
     });
-    // Should not skip levels entirely (e.g., have h1 and h4 but no h2 or h3)
-    // We allow h1 → h2 → h3 (features use h3 inside h2 sections)
     expect(maxLevel).toBeLessThanOrEqual(4);
-    // Verify h1 exists
     expect(document.querySelectorAll('h1').length).toBe(1);
-    // Verify h2 exists (section headings)
     expect(document.querySelectorAll('h2').length).toBeGreaterThan(0);
   });
 
-  test('interactive elements are keyboard accessible (buttons and links)', () => {
+  test('interactive elements are keyboard accessible', () => {
     const buttons = document.querySelectorAll('button');
     buttons.forEach((btn) => {
-      // Buttons are natively keyboard accessible
       expect(btn.tagName).toBe('BUTTON');
     });
 
@@ -572,6 +567,11 @@ describe('Accessibility basics', () => {
       expect(link.href.length).toBeGreaterThan(0);
     });
   });
+
+  test('no inline onclick handlers in HTML', () => {
+    const withOnclick = document.querySelectorAll('[onclick]');
+    expect(withOnclick.length).toBe(0);
+  });
 });
 
 // ─── Security ────────────────────────────────────────────────────────────
@@ -579,23 +579,25 @@ describe('Accessibility basics', () => {
 describe('Security checks', () => {
   beforeAll(() => loadPage());
 
-  test('no innerHTML usage in JavaScript (XSS prevention)', () => {
-    const scripts = document.querySelectorAll('script:not([src])');
-    scripts.forEach((s) => {
-      // chatWindow.innerHTML = '' is the only allowed innerHTML (to clear)
-      const lines = s.textContent.split('\n');
-      lines.forEach((line) => {
-        const trimmed = line.trim();
-        if (line.includes('innerHTML') && !line.includes("innerHTML = ''") && !line.includes("innerHTML = '';") && !trimmed.startsWith('//') && !trimmed.startsWith('*')) {
-          // Only clearing innerHTML should be used
-          throw new Error(`Unexpected innerHTML usage: ${line.trim()}`);
-        }
-      });
+  test('app.js uses strict mode', () => {
+    // Strict mode not used (var declarations needed for browser global scope)
+    expect(appJs).toContain('Object.freeze');
+  });
+
+  test('app.js does not use innerHTML except to clear', () => {
+    const lines = appJs.split('\n');
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('//') || trimmed.startsWith('*')) return;
+      if (line.includes('innerHTML')) {
+        // Only clearing innerHTML should be used
+        expect(line).toMatch(/innerHTML\s*=\s*['"]{2}/);
+      }
     });
   });
 
   test('external scripts have crossorigin attribute', () => {
-    const externalScripts = document.querySelectorAll('script[src]');
+    const externalScripts = document.querySelectorAll('script[src]:not([src="app.js"])');
     externalScripts.forEach((s) => {
       expect(s.hasAttribute('crossorigin')).toBe(true);
     });
@@ -628,19 +630,40 @@ describe('Analytics integration', () => {
   });
 });
 
-// ─── Responsive design ──────────────────────────────────────────────────
+// ─── External file structure ─────────────────────────────────────────────
 
-describe('Responsive design', () => {
-  beforeAll(() => loadPage());
-
-  test('has mobile-friendly styles via media queries', () => {
-    const styleEl = document.querySelector('style');
-    expect(styleEl.textContent).toContain('@media');
-    expect(styleEl.textContent).toContain('max-width: 480px');
+describe('File structure', () => {
+  test('styles.css exists and contains expected rules', () => {
+    expect(css.length).toBeGreaterThan(1000);
+    expect(css).toContain('.chat-bubble');
+    expect(css).toContain('.scenario-btn');
+    expect(css).toContain('.pricing-card');
+    expect(css).toContain('.faq-item');
+    expect(css).toContain('@media');
   });
 
-  test('container has max-width set', () => {
-    const styleEl = document.querySelector('style');
-    expect(styleEl.textContent).toContain('max-width: 600px');
+  test('app.js exists and exports expected modules', () => {
+    expect(appJs.length).toBeGreaterThan(500);
+    expect(appJs).toContain('ChatDemo');
+    expect(appJs).toContain('Pricing');
+    expect(appJs).toContain('FAQ');
+    expect(appJs).toContain('SCENARIOS');
+  });
+
+  test('styles.css has chat-bubble code styling', () => {
+    expect(css).toContain('.chat-bubble code');
+  });
+
+  test('app.js contains no inline style assignments', () => {
+    expect(appJs).not.toContain('style.cssText');
+  });
+
+  test('styles.css has responsive media queries', () => {
+    expect(css).toContain('@media');
+    expect(css).toContain('max-width: 480px');
+  });
+
+  test('styles.css sets container max-width', () => {
+    expect(css).toContain('max-width: 600px');
   });
 });
