@@ -139,6 +139,44 @@ describe('Page content sections', () => {
     });
   });
 
+  test('has pricing section with 3 plan cards', () => {
+    const cards = document.querySelectorAll('.pricing-card');
+    expect(cards.length).toBe(3);
+  });
+
+  test('pricing cards have names, descriptions, prices, and features', () => {
+    const cards = document.querySelectorAll('.pricing-card');
+    cards.forEach((card) => {
+      expect(card.querySelector('h3')).not.toBeNull();
+      expect(card.querySelector('.plan-desc')).not.toBeNull();
+      expect(card.querySelector('.price')).not.toBeNull();
+      expect(card.querySelector('.plan-features')).not.toBeNull();
+      const features = card.querySelectorAll('.plan-features li');
+      expect(features.length).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  test('one pricing card is marked as popular', () => {
+    const popular = document.querySelectorAll('.pricing-card.popular');
+    expect(popular.length).toBe(1);
+    expect(popular[0].querySelector('.popular-tag')).not.toBeNull();
+  });
+
+  test('pricing cards have CTA buttons linking to Telegram', () => {
+    const buttons = document.querySelectorAll('.pricing-card .plan-btn');
+    expect(buttons.length).toBe(3);
+    buttons.forEach((btn) => {
+      expect(btn.href).toContain('t.me/AgentBox11Bot');
+    });
+  });
+
+  test('has billing toggle switch', () => {
+    const toggle = document.getElementById('billingToggle');
+    expect(toggle).not.toBeNull();
+    expect(toggle.getAttribute('role')).toBe('switch');
+    expect(toggle.getAttribute('aria-label')).toBeTruthy();
+  });
+
   test('footer has attribution link', () => {
     const footer = document.querySelector('.footer a');
     expect(footer).not.toBeNull();
@@ -393,6 +431,90 @@ describe('FAQ accordion', () => {
     toggles.forEach((t) => {
       expect(t.textContent.trim()).toBe('+');
     });
+  });
+});
+
+// ─── Pricing billing toggle ─────────────────────────────────────────────
+
+describe('Pricing billing toggle', () => {
+  beforeEach(() => loadPage());
+
+  test('starts in monthly mode', () => {
+    const toggle = document.getElementById('billingToggle');
+    expect(toggle.classList.contains('yearly')).toBe(false);
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+  });
+
+  test('monthly label is active by default', () => {
+    const monthly = document.getElementById('monthlyLabel');
+    const yearly = document.getElementById('yearlyLabel');
+    expect(monthly.classList.contains('active-label')).toBe(true);
+    expect(yearly.classList.contains('active-label')).toBe(false);
+  });
+
+  test('toggleBilling switches to yearly mode', () => {
+    window.toggleBilling();
+    const toggle = document.getElementById('billingToggle');
+    expect(toggle.classList.contains('yearly')).toBe(true);
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+  });
+
+  test('toggleBilling updates price amounts', () => {
+    const amounts = document.querySelectorAll('.price-amount');
+    const monthlyPrices = Array.from(amounts).map((el) => el.textContent);
+
+    window.toggleBilling(); // switch to yearly
+
+    const yearlyPrices = Array.from(amounts).map((el) => el.textContent);
+    // At least one price should change (Free stays $0 but has no .price-amount)
+    expect(yearlyPrices).not.toEqual(monthlyPrices);
+
+    // Yearly prices should be lower
+    for (let i = 0; i < amounts.length; i++) {
+      expect(parseInt(yearlyPrices[i])).toBeLessThan(parseInt(monthlyPrices[i]));
+    }
+  });
+
+  test('toggleBilling updates period text', () => {
+    const periods = document.querySelectorAll('.price-period-dynamic');
+    periods.forEach((p) => {
+      expect(p.textContent).toBe('per month');
+    });
+
+    window.toggleBilling();
+
+    periods.forEach((p) => {
+      expect(p.textContent).toBe('per month, billed yearly');
+    });
+  });
+
+  test('double toggle returns to monthly mode', () => {
+    window.toggleBilling();
+    window.toggleBilling();
+
+    const toggle = document.getElementById('billingToggle');
+    expect(toggle.classList.contains('yearly')).toBe(false);
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+
+    const amounts = document.querySelectorAll('.price-amount');
+    amounts.forEach((el) => {
+      const priceEl = el.parentElement;
+      expect(el.textContent).toBe(priceEl.dataset.monthly);
+    });
+  });
+
+  test('free tier price does not change on toggle', () => {
+    const freeCard = document.querySelector('.pricing-card:first-child .price');
+    const freePrice = freeCard.textContent;
+
+    window.toggleBilling();
+    expect(freeCard.textContent).toBe(freePrice);
+  });
+
+  test('billing toggle is keyboard accessible', () => {
+    const toggle = document.getElementById('billingToggle');
+    expect(toggle.getAttribute('tabindex')).toBe('0');
+    expect(toggle.getAttribute('role')).toBe('switch');
   });
 });
 
