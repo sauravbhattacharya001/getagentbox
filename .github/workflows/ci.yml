@@ -16,7 +16,7 @@ jobs:
     name: Unit Tests + Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -59,7 +59,7 @@ jobs:
     name: HTML Validation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install html-validate
         run: npm install -g html-validate
@@ -86,7 +86,7 @@ jobs:
     name: Structure & Best Practices
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check required elements
         run: |
@@ -196,7 +196,7 @@ jobs:
     name: External Link Validation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check external links
         uses: lycheeverse/lychee-action@v2
@@ -216,7 +216,7 @@ jobs:
     name: Accessibility Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
