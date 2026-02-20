@@ -10,6 +10,7 @@
 <br>
 
 [![CI](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/ci.yml/badge.svg)](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/sauravbhattacharya001/getagentbox/branch/master/graph/badge.svg)](https://codecov.io/gh/sauravbhattacharya001/getagentbox)
 [![Deploy](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/pages.yml/badge.svg)](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/pages.yml)
 [![Docker](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/docker.yml/badge.svg)](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/docker.yml)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](#-tech-stack)

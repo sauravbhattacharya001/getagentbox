@@ -2,7 +2,8 @@
   "name": "getagentbox-tests",
   "private": true,
   "scripts": {
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "test:coverage": "jest --verbose --coverage"
   },
   "devDependencies": {
     "jest": "^29.7.0",

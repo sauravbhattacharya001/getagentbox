@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   test:
-    name: Unit Tests
+    name: Unit Tests + Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,8 +27,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat coverage/coverage-summary.json | node -e "
+            const data = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+            const t = data.total;
+            console.log('Statements:', t.statements.pct + '%');
+            console.log('Branches:  ', t.branches.pct + '%');
+            console.log('Functions: ', t.functions.pct + '%');
+            console.log('Lines:     ', t.lines.pct + '%');
+          " 2>/dev/null || echo "Coverage summary not available"
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
   html-validate:
     name: HTML Validation
