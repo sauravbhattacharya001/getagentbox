@@ -1,0 +1,71 @@
+# Auto-labeler configuration for pull requests
+# Used by actions/labeler to automatically label PRs based on changed files
+
+# Core application code
+"app":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "app.js"
+
+# Frontend / UI
+"frontend":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "index.html"
+      - "styles.css"
+
+# Tests
+"tests":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "__tests__/**"
+      - "jest.config.js"
+
+# CI/CD and GitHub workflows
+"ci/cd":
+  - changed-files:
+    - any-glob-to-any-file:
+      - ".github/workflows/**"
+
+# Docker
+"docker":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/docker.yml"
+
+# Dependencies
+"dependencies":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "package.json"
+      - "package-lock.json"
+
+# Documentation
+"documentation":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "README.md"
+      - "SECURITY.md"
+      - "LICENSE"
+      - ".github/copilot-instructions.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/pull_request_template.md"
+
+# GitHub configuration
+"github-config":
+  - changed-files:
+    - any-glob-to-any-file:
+      - ".github/dependabot.yml"
+      - ".github/labeler.yml"
+      - ".github/stale.yml"
+      - ".github/copilot-setup-steps.yml"
+
+# Security-related changes
+"security":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "SECURITY.md"
+      - ".github/workflows/codeql.yml"
+      - ".github/dependabot.yml"
