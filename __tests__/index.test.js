@@ -578,6 +578,124 @@ describe('Testimonials carousel behaviour', () => {
   });
 });
 
+// ─── How It Works section ────────────────────────────────────────────────
+
+describe('How It Works section structure', () => {
+  beforeAll(() => loadPage());
+
+  test('has How It Works section', () => {
+    const section = document.getElementById('howItWorks');
+    expect(section).not.toBeNull();
+  });
+
+  test('has section heading and subtitle', () => {
+    const section = document.getElementById('howItWorks');
+    const h2 = section.querySelector('h2');
+    expect(h2).not.toBeNull();
+    expect(h2.textContent).toContain('How it works');
+
+    const subtitle = section.querySelector('.how-subtitle');
+    expect(subtitle).not.toBeNull();
+    expect(subtitle.textContent.length).toBeGreaterThan(0);
+  });
+
+  test('has 3 step cards', () => {
+    const steps = document.querySelectorAll('.step');
+    expect(steps.length).toBe(3);
+  });
+
+  test('each step has a number, icon, title, and description', () => {
+    const steps = document.querySelectorAll('.step');
+    steps.forEach((step, i) => {
+      const num = step.querySelector('.step-number');
+      expect(num).not.toBeNull();
+      expect(num.textContent).toBe(String(i + 1));
+
+      const icon = step.querySelector('.step-icon');
+      expect(icon).not.toBeNull();
+      expect(icon.textContent.trim().length).toBeGreaterThan(0);
+
+      const title = step.querySelector('.step-content h3');
+      expect(title).not.toBeNull();
+      expect(title.textContent.length).toBeGreaterThan(0);
+
+      const desc = step.querySelector('.step-content p');
+      expect(desc).not.toBeNull();
+      expect(desc.textContent.length).toBeGreaterThan(10);
+    });
+  });
+
+  test('steps have data-step attributes from 1 to 3', () => {
+    const steps = document.querySelectorAll('.step');
+    expect(steps[0].dataset.step).toBe('1');
+    expect(steps[1].dataset.step).toBe('2');
+    expect(steps[2].dataset.step).toBe('3');
+  });
+
+  test('has connecting line element', () => {
+    const line = document.querySelector('.step-line');
+    expect(line).not.toBeNull();
+    expect(line.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  test('has steps container', () => {
+    const container = document.querySelector('.steps-container');
+    expect(container).not.toBeNull();
+  });
+});
+
+describe('How It Works animation', () => {
+  beforeEach(() => {
+    loadPage();
+  });
+
+  test('HowItWorks module is exposed globally', () => {
+    expect(typeof window.HowItWorks).toBe('object');
+    expect(typeof window.HowItWorks.init).toBe('function');
+    expect(typeof window.HowItWorks.isRevealed).toBe('function');
+    expect(typeof window.HowItWorks.reset).toBe('function');
+    expect(typeof window.HowItWorks.revealSteps).toBe('function');
+  });
+
+  test('steps start without visible class', () => {
+    // Reset to test initial state (DOMContentLoaded may have fired init)
+    window.HowItWorks.reset();
+    const steps = document.querySelectorAll('.step');
+    steps.forEach((step) => {
+      expect(step.classList.contains('visible')).toBe(false);
+    });
+  });
+
+  test('revealSteps adds visible class to all steps', () => {
+    window.HowItWorks.reset();
+    const steps = document.querySelectorAll('.step');
+    window.HowItWorks.revealSteps(steps);
+    steps.forEach((step) => {
+      expect(step.classList.contains('visible')).toBe(true);
+    });
+  });
+
+  test('reset removes visible class and resets state', () => {
+    const steps = document.querySelectorAll('.step');
+    window.HowItWorks.revealSteps(steps);
+    window.HowItWorks.reset();
+
+    steps.forEach((step) => {
+      expect(step.classList.contains('visible')).toBe(false);
+    });
+    expect(window.HowItWorks.isRevealed()).toBe(false);
+  });
+
+  test('step cards have correct structure for animation', () => {
+    const steps = document.querySelectorAll('.step');
+    steps.forEach((step) => {
+      // Each step should have step-number and step-content children
+      expect(step.querySelector('.step-number')).not.toBeNull();
+      expect(step.querySelector('.step-content')).not.toBeNull();
+    });
+  });
+});
+
 // ─── FAQ accordion ───────────────────────────────────────────────────────
 
 describe('FAQ accordion', () => {
@@ -850,6 +968,7 @@ describe('File structure', () => {
     expect(appJs).toContain('Pricing');
     expect(appJs).toContain('FAQ');
     expect(appJs).toContain('SCENARIOS');
+    expect(appJs).toContain('HowItWorks');
   });
 
   test('styles.css has chat-bubble code styling', () => {
@@ -863,6 +982,13 @@ describe('File structure', () => {
   test('styles.css has responsive media queries', () => {
     expect(css).toContain('@media');
     expect(css).toContain('max-width: 480px');
+  });
+
+  test('styles.css has how-it-works styling', () => {
+    expect(css).toContain('.how-it-works-section');
+    expect(css).toContain('.step-number');
+    expect(css).toContain('.step-line');
+    expect(css).toContain('.step-content');
   });
 
   test('styles.css sets container max-width', () => {
