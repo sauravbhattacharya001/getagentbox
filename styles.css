@@ -277,6 +277,157 @@ h1 {
 .cross { color: #f87171; }
 .partial { color: #facc15; }
 
+/* Testimonials Section */
+.testimonials-section {
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 40px;
+    contain: content;
+    overflow: hidden;
+}
+
+.testimonials-section h2 {
+    font-size: 1.4rem;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.testimonials-subtitle {
+    color: #888;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.testimonials-carousel {
+    overflow: hidden;
+    position: relative;
+}
+
+.testimonials-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+}
+
+.testimonial-card {
+    min-width: 100%;
+    padding: 24px 20px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    text-align: left;
+    flex-shrink: 0;
+}
+
+.testimonial-stars {
+    color: #facc15;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+}
+
+.testimonial-quote {
+    color: #ccc;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    font-style: italic;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.testimonial-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.testimonial-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.testimonial-name {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.testimonial-role {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+.testimonials-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.testimonial-arrow {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #aaa;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+}
+
+.testimonial-arrow:hover {
+    background: rgba(0, 212, 255, 0.15);
+    border-color: rgba(0, 212, 255, 0.3);
+    color: #00d4ff;
+}
+
+.testimonials-dots {
+    display: flex;
+    gap: 8px;
+}
+
+.testimonial-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    padding: 0;
+}
+
+.testimonial-dot.active {
+    background: #00d4ff;
+    transform: scale(1.25);
+}
+
+.testimonial-dot:hover {
+    background: rgba(0, 212, 255, 0.5);
+}
+
 /* Pricing Section */
 .pricing-section {
     background: rgba(255,255,255,0.05);

@@ -2,16 +2,17 @@
  * AgentBox Landing Page — Interactive Components
  *
  * Modules:
- *  - ChatDemo:   animated chat scenario player
- *  - Pricing:    monthly/yearly billing toggle
- *  - FAQ:        accordion behaviour
+ *  - ChatDemo:       animated chat scenario player
+ *  - Testimonials:   auto-rotating testimonials carousel
+ *  - Pricing:        monthly/yearly billing toggle
+ *  - FAQ:            accordion behaviour
  */
 
 // ---------------------------------------------------------------------------
 // Chat Demo Scenarios
 // ---------------------------------------------------------------------------
 
-/* exported SCENARIOS, ChatDemo, Pricing, FAQ */
+/* exported SCENARIOS, ChatDemo, Testimonials, Pricing, FAQ */
 /* eslint-disable no-var */
 var SCENARIOS = Object.freeze({
   memory: [
@@ -162,6 +163,114 @@ var ChatDemo = (function () {
 })();
 
 // ---------------------------------------------------------------------------
+// Testimonials Carousel Module
+// ---------------------------------------------------------------------------
+
+var Testimonials = (function () {
+  var currentIndex = 0;
+  var totalSlides = 0;
+  var autoPlayTimer = null;
+  var AUTO_PLAY_INTERVAL = 5000;
+
+  /** Initialise the carousel: count slides, build dots, start auto-play. */
+  function init() {
+    var track = document.getElementById('testimonialsTrack');
+    if (!track) return;
+
+    totalSlides = track.querySelectorAll('.testimonial-card').length;
+    if (totalSlides === 0) return;
+
+    buildDots();
+    goTo(0);
+    startAutoPlay();
+
+    // Pause auto-play on hover, resume on leave.
+    var section = document.getElementById('testimonialsSection');
+    if (section) {
+      section.addEventListener('mouseenter', stopAutoPlay);
+      section.addEventListener('mouseleave', startAutoPlay);
+    }
+  }
+
+  /** Create navigation dots matching the number of slides. */
+  function buildDots() {
+    var dotsContainer = document.getElementById('testimonialsDots');
+    if (!dotsContainer) return;
+
+    dotsContainer.innerHTML = '';
+    for (var i = 0; i < totalSlides; i++) {
+      var dot = document.createElement('button');
+      dot.className = 'testimonial-dot';
+      dot.setAttribute('aria-label', 'Go to testimonial ' + (i + 1));
+      dot.dataset.index = String(i);
+      dotsContainer.appendChild(dot);
+    }
+  }
+
+  /** Navigate to a specific slide index. */
+  function goTo(index) {
+    if (index < 0) index = totalSlides - 1;
+    if (index >= totalSlides) index = 0;
+    currentIndex = index;
+
+    var track = document.getElementById('testimonialsTrack');
+    if (track) {
+      track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+    }
+
+    var dots = document.querySelectorAll('.testimonial-dot');
+    dots.forEach(function (dot, i) {
+      dot.classList.toggle('active', i === currentIndex);
+    });
+  }
+
+  /** Go to the next slide. */
+  function next() {
+    goTo(currentIndex + 1);
+  }
+
+  /** Go to the previous slide. */
+  function prev() {
+    goTo(currentIndex - 1);
+  }
+
+  /** Start the auto-play timer. */
+  function startAutoPlay() {
+    stopAutoPlay();
+    autoPlayTimer = setInterval(next, AUTO_PLAY_INTERVAL);
+  }
+
+  /** Stop the auto-play timer. */
+  function stopAutoPlay() {
+    if (autoPlayTimer) {
+      clearInterval(autoPlayTimer);
+      autoPlayTimer = null;
+    }
+  }
+
+  /** Get the current slide index. */
+  function getCurrent() {
+    return currentIndex;
+  }
+
+  /** Get the total number of slides. */
+  function getTotal() {
+    return totalSlides;
+  }
+
+  return {
+    init: init,
+    goTo: goTo,
+    next: next,
+    prev: prev,
+    startAutoPlay: startAutoPlay,
+    stopAutoPlay: stopAutoPlay,
+    getCurrent: getCurrent,
+    getTotal: getTotal,
+  };
+})();
+
+// ---------------------------------------------------------------------------
 // Pricing Module
 // ---------------------------------------------------------------------------
 
@@ -234,6 +343,28 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Testimonials carousel — init and event delegation.
+  Testimonials.init();
+
+  var testimonialsNav = document.querySelector('.testimonials-nav');
+  if (testimonialsNav) {
+    testimonialsNav.addEventListener('click', function (e) {
+      var arrow = e.target.closest('.testimonial-arrow');
+      if (arrow) {
+        if (arrow.classList.contains('testimonial-prev')) {
+          Testimonials.prev();
+        } else if (arrow.classList.contains('testimonial-next')) {
+          Testimonials.next();
+        }
+        return;
+      }
+      var dot = e.target.closest('.testimonial-dot');
+      if (dot && dot.dataset.index !== undefined) {
+        Testimonials.goTo(parseInt(dot.dataset.index, 10));
+      }
+    });
+  }
+
   // Billing toggle — click + keyboard.
   var billingToggle = document.getElementById('billingToggle');
   if (billingToggle) {
@@ -264,6 +395,7 @@ document.addEventListener('DOMContentLoaded', function () {
 if (typeof window !== 'undefined') {
   window.SCENARIOS = SCENARIOS;
   window.ChatDemo = ChatDemo;
+  window.Testimonials = Testimonials;
   window.Pricing = Pricing;
   window.FAQ = FAQ;
 }

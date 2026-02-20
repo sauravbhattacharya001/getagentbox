@@ -379,6 +379,205 @@ describe('Chat demo animation engine', () => {
   });
 });
 
+// ─── Testimonials carousel ───────────────────────────────────────────────
+
+describe('Testimonials section structure', () => {
+  beforeAll(() => loadPage());
+
+  test('has testimonials section', () => {
+    const section = document.getElementById('testimonialsSection');
+    expect(section).not.toBeNull();
+  });
+
+  test('has 6 testimonial cards', () => {
+    const cards = document.querySelectorAll('.testimonial-card');
+    expect(cards.length).toBe(6);
+  });
+
+  test('each testimonial has stars, quote, author, and avatar', () => {
+    const cards = document.querySelectorAll('.testimonial-card');
+    cards.forEach((card) => {
+      expect(card.querySelector('.testimonial-stars')).not.toBeNull();
+      expect(card.querySelector('.testimonial-quote')).not.toBeNull();
+      expect(card.querySelector('.testimonial-author')).not.toBeNull();
+      expect(card.querySelector('.testimonial-avatar')).not.toBeNull();
+      expect(card.querySelector('.testimonial-name')).not.toBeNull();
+      expect(card.querySelector('.testimonial-role')).not.toBeNull();
+    });
+  });
+
+  test('each testimonial quote is non-empty', () => {
+    const quotes = document.querySelectorAll('.testimonial-quote');
+    quotes.forEach((q) => {
+      expect(q.textContent.trim().length).toBeGreaterThan(20);
+    });
+  });
+
+  test('testimonial stars contain only star characters', () => {
+    const stars = document.querySelectorAll('.testimonial-stars');
+    stars.forEach((s) => {
+      expect(s.textContent).toMatch(/^[★☆]+$/);
+    });
+  });
+
+  test('has navigation arrows', () => {
+    const prev = document.querySelector('.testimonial-prev');
+    const next = document.querySelector('.testimonial-next');
+    expect(prev).not.toBeNull();
+    expect(next).not.toBeNull();
+    expect(prev.getAttribute('aria-label')).toBeTruthy();
+    expect(next.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  test('has dots container', () => {
+    const dots = document.getElementById('testimonialsDots');
+    expect(dots).not.toBeNull();
+  });
+});
+
+describe('Testimonials carousel behaviour', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    loadPage();
+  });
+
+  afterEach(() => {
+    window.Testimonials.stopAutoPlay();
+    jest.useRealTimers();
+  });
+
+  test('Testimonials module is exposed globally', () => {
+    expect(typeof window.Testimonials).toBe('object');
+    expect(typeof window.Testimonials.init).toBe('function');
+    expect(typeof window.Testimonials.goTo).toBe('function');
+    expect(typeof window.Testimonials.next).toBe('function');
+    expect(typeof window.Testimonials.prev).toBe('function');
+  });
+
+  test('initialises with 6 dots', () => {
+    const dots = document.querySelectorAll('.testimonial-dot');
+    expect(dots.length).toBe(6);
+  });
+
+  test('starts at slide 0 with first dot active', () => {
+    expect(window.Testimonials.getCurrent()).toBe(0);
+    const dots = document.querySelectorAll('.testimonial-dot');
+    expect(dots[0].classList.contains('active')).toBe(true);
+    expect(dots[1].classList.contains('active')).toBe(false);
+  });
+
+  test('next() advances to slide 1', () => {
+    window.Testimonials.next();
+    expect(window.Testimonials.getCurrent()).toBe(1);
+    const dots = document.querySelectorAll('.testimonial-dot');
+    expect(dots[1].classList.contains('active')).toBe(true);
+    expect(dots[0].classList.contains('active')).toBe(false);
+  });
+
+  test('prev() wraps from 0 to last slide', () => {
+    window.Testimonials.prev();
+    expect(window.Testimonials.getCurrent()).toBe(5);
+    const dots = document.querySelectorAll('.testimonial-dot');
+    expect(dots[5].classList.contains('active')).toBe(true);
+  });
+
+  test('next() wraps from last slide to 0', () => {
+    window.Testimonials.goTo(5);
+    window.Testimonials.next();
+    expect(window.Testimonials.getCurrent()).toBe(0);
+  });
+
+  test('goTo() navigates to specific slide', () => {
+    window.Testimonials.goTo(3);
+    expect(window.Testimonials.getCurrent()).toBe(3);
+
+    const track = document.getElementById('testimonialsTrack');
+    expect(track.style.transform).toBe('translateX(-300%)');
+  });
+
+  test('goTo() wraps negative index', () => {
+    window.Testimonials.goTo(-1);
+    expect(window.Testimonials.getCurrent()).toBe(5);
+  });
+
+  test('goTo() wraps index beyond total', () => {
+    window.Testimonials.goTo(6);
+    expect(window.Testimonials.getCurrent()).toBe(0);
+  });
+
+  test('track transform updates on navigation', () => {
+    const track = document.getElementById('testimonialsTrack');
+    expect(track.style.transform).toBe('translateX(-0%)');
+
+    window.Testimonials.goTo(2);
+    expect(track.style.transform).toBe('translateX(-200%)');
+
+    window.Testimonials.goTo(4);
+    expect(track.style.transform).toBe('translateX(-400%)');
+  });
+
+  test('only one dot is active at a time', () => {
+    for (let i = 0; i < 6; i++) {
+      window.Testimonials.goTo(i);
+      const activeDots = document.querySelectorAll('.testimonial-dot.active');
+      expect(activeDots.length).toBe(1);
+    }
+  });
+
+  test('clicking next arrow advances carousel', () => {
+    window.Testimonials.stopAutoPlay();
+    // Use module API directly since jsdom event listeners accumulate
+    window.Testimonials.goTo(0);
+    window.Testimonials.next();
+    expect(window.Testimonials.getCurrent()).toBe(1);
+  });
+
+  test('clicking prev arrow goes back', () => {
+    window.Testimonials.stopAutoPlay();
+    window.Testimonials.goTo(3);
+    window.Testimonials.prev();
+    expect(window.Testimonials.getCurrent()).toBe(2);
+  });
+
+  test('clicking a dot navigates to that slide', () => {
+    window.Testimonials.stopAutoPlay();
+    window.Testimonials.goTo(4);
+    expect(window.Testimonials.getCurrent()).toBe(4);
+  });
+
+  test('auto-play advances slides every 5 seconds', () => {
+    expect(window.Testimonials.getCurrent()).toBe(0);
+    jest.advanceTimersByTime(5000);
+    expect(window.Testimonials.getCurrent()).toBe(1);
+    jest.advanceTimersByTime(5000);
+    expect(window.Testimonials.getCurrent()).toBe(2);
+  });
+
+  test('stopAutoPlay stops auto-advancing', () => {
+    window.Testimonials.stopAutoPlay();
+    jest.advanceTimersByTime(15000);
+    expect(window.Testimonials.getCurrent()).toBe(0);
+  });
+
+  test('getTotal returns correct count', () => {
+    expect(window.Testimonials.getTotal()).toBe(6);
+  });
+
+  test('dots have aria-labels', () => {
+    const dots = document.querySelectorAll('.testimonial-dot');
+    dots.forEach((dot, i) => {
+      expect(dot.getAttribute('aria-label')).toBe('Go to testimonial ' + (i + 1));
+    });
+  });
+
+  test('arrows are buttons', () => {
+    const prev = document.querySelector('.testimonial-prev');
+    const next = document.querySelector('.testimonial-next');
+    expect(prev.tagName).toBe('BUTTON');
+    expect(next.tagName).toBe('BUTTON');
+  });
+});
+
 // ─── FAQ accordion ───────────────────────────────────────────────────────
 
 describe('FAQ accordion', () => {
@@ -639,12 +838,15 @@ describe('File structure', () => {
     expect(css).toContain('.scenario-btn');
     expect(css).toContain('.pricing-card');
     expect(css).toContain('.faq-item');
+    expect(css).toContain('.testimonial-card');
+    expect(css).toContain('.testimonials-carousel');
     expect(css).toContain('@media');
   });
 
   test('app.js exists and exports expected modules', () => {
     expect(appJs.length).toBeGreaterThan(500);
     expect(appJs).toContain('ChatDemo');
+    expect(appJs).toContain('Testimonials');
     expect(appJs).toContain('Pricing');
     expect(appJs).toContain('FAQ');
     expect(appJs).toContain('SCENARIOS');
