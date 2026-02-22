@@ -9,6 +9,9 @@
  *  - Stats:          animated social proof counters
  */
 
+/** Global reduced-motion check (WCAG 2.3.3 compliance). */
+var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 // ---------------------------------------------------------------------------
 // Chat Demo Scenarios
 // ---------------------------------------------------------------------------
@@ -183,13 +186,19 @@ var Testimonials = (function () {
 
     buildDots();
     goTo(0);
-    startAutoPlay();
+
+    // Only auto-play if user hasn't requested reduced motion.
+    if (!prefersReducedMotion) {
+      startAutoPlay();
+    }
 
     // Pause auto-play on hover, resume on leave.
     var section = document.getElementById('testimonialsSection');
     if (section) {
       section.addEventListener('mouseenter', stopAutoPlay);
-      section.addEventListener('mouseleave', startAutoPlay);
+      section.addEventListener('mouseleave', function () {
+        if (!prefersReducedMotion) startAutoPlay();
+      });
     }
   }
 
@@ -469,13 +478,54 @@ var Stats = (function () {
 
   /**
    * Animate all stat cards in the section.
+   * If prefers-reduced-motion is set, show final values immediately.
    * @param {NodeList|Array} cards - The .stat-card elements
    */
   function animateAll(cards) {
-    for (var i = 0; i < cards.length; i++) {
-      animateCard(cards[i]);
+    if (prefersReducedMotion) {
+      // Skip animation — show final values immediately
+      for (var i = 0; i < cards.length; i++) {
+        showFinalValue(cards[i]);
+      }
+    } else {
+      for (var i = 0; i < cards.length; i++) {
+        animateCard(cards[i]);
+      }
     }
     animated = true;
+  }
+
+  /**
+   * Show the final stat value without animation.
+   * @param {Element} card - A .stat-card element
+   */
+  function showFinalValue(card) {
+    var numberEl = card.querySelector('.stat-number');
+    if (!numberEl) return;
+
+    var raw = (numberEl.dataset.target || numberEl.textContent || '').trim();
+    var prefix = '';
+    var suffix = '';
+
+    if (raw.indexOf('+') !== -1) { suffix = '+'; raw = raw.replace('+', ''); }
+    if (raw.indexOf('%') !== -1) { suffix = '%'; raw = raw.replace('%', ''); }
+    if (raw.indexOf('<') === 0) { prefix = '<'; raw = raw.substring(1); }
+
+    var decimal = '';
+    if (raw.indexOf('.') !== -1) {
+      var parts = raw.split('.');
+      raw = parts[0];
+      decimal = parts[1];
+    }
+
+    var target = parseInt(raw.replace(/,/g, ''), 10);
+    if (isNaN(target)) return;
+
+    var display = prefix + formatNumber(target);
+    if (decimal) display += '.' + decimal;
+    display += suffix;
+    numberEl.textContent = display;
+    card.classList.add('animated');
   }
 
   /** Initialize — observe the stats section for scroll-triggered animation. */
