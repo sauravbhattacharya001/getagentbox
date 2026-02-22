@@ -995,3 +995,258 @@ describe('File structure', () => {
     expect(css).toContain('max-width: 600px');
   });
 });
+
+// ─── Social Proof Stats ──────────────────────────────────────────────────
+
+describe('Stats section — HTML structure', () => {
+  beforeAll(() => loadPage());
+
+  test('stats section exists with correct id', () => {
+    const section = document.getElementById('statsSection');
+    expect(section).not.toBeNull();
+    expect(section.classList.contains('stats-section')).toBe(true);
+  });
+
+  test('has heading and subtitle', () => {
+    const section = document.getElementById('statsSection');
+    const h2 = section.querySelector('h2');
+    const subtitle = section.querySelector('.stats-subtitle');
+    expect(h2).not.toBeNull();
+    expect(h2.textContent).toContain('Trusted');
+    expect(subtitle).not.toBeNull();
+  });
+
+  test('has exactly 4 stat cards', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    expect(cards.length).toBe(4);
+  });
+
+  test('each card has icon, number, and label', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    cards.forEach(card => {
+      expect(card.querySelector('.stat-icon')).not.toBeNull();
+      expect(card.querySelector('.stat-number')).not.toBeNull();
+      expect(card.querySelector('.stat-label')).not.toBeNull();
+    });
+  });
+
+  test('each card has a data-target attribute', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    cards.forEach(card => {
+      expect(card.dataset.target).toBeDefined();
+      expect(parseInt(card.dataset.target, 10)).toBeGreaterThan(0);
+    });
+  });
+
+  test('each card has a data-suffix attribute', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    cards.forEach(card => {
+      expect(card.dataset.suffix).toBeDefined();
+      expect(card.dataset.suffix.length).toBeGreaterThan(0);
+    });
+  });
+
+  test('stat numbers have aria-labels for accessibility', () => {
+    const numbers = document.querySelectorAll('.stat-number');
+    numbers.forEach(num => {
+      expect(num.getAttribute('aria-label')).toBeTruthy();
+    });
+  });
+
+  test('stats grid has correct CSS class', () => {
+    const grid = document.querySelector('.stats-grid');
+    expect(grid).not.toBeNull();
+    expect(grid.children.length).toBe(4);
+  });
+});
+
+describe('Stats module — formatNumber', () => {
+  beforeAll(() => loadPage());
+
+  test('formats small numbers without commas', () => {
+    expect(Stats.formatNumber(42)).toBe('42');
+    expect(Stats.formatNumber(0)).toBe('0');
+    expect(Stats.formatNumber(999)).toBe('999');
+  });
+
+  test('formats thousands with commas', () => {
+    expect(Stats.formatNumber(1000)).toBe('1,000');
+    expect(Stats.formatNumber(10000)).toBe('10,000');
+    expect(Stats.formatNumber(100000)).toBe('100,000');
+  });
+
+  test('formats millions with commas', () => {
+    expect(Stats.formatNumber(1000000)).toBe('1,000,000');
+  });
+});
+
+describe('Stats module — easeOutCubic', () => {
+  beforeAll(() => loadPage());
+
+  test('starts at 0', () => {
+    expect(Stats.easeOutCubic(0)).toBe(0);
+  });
+
+  test('ends at 1', () => {
+    expect(Stats.easeOutCubic(1)).toBe(1);
+  });
+
+  test('mid-point is above linear (ease out)', () => {
+    expect(Stats.easeOutCubic(0.5)).toBeGreaterThan(0.5);
+  });
+
+  test('is monotonically increasing', () => {
+    let prev = 0;
+    for (let t = 0.1; t <= 1; t += 0.1) {
+      const val = Stats.easeOutCubic(t);
+      expect(val).toBeGreaterThan(prev);
+      prev = val;
+    }
+  });
+});
+
+describe('Stats module — animation lifecycle', () => {
+  beforeEach(() => {
+    loadPage();
+    Stats.reset();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test('isAnimated is false after reset', () => {
+    Stats.reset();
+    expect(Stats.isAnimated()).toBe(false);
+  });
+
+  test('animateAll triggers animation on all cards', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    Stats.animateAll(cards);
+    // Advance past the full animation duration
+    jest.advanceTimersByTime(Stats.DURATION + 500);
+    expect(Stats.isAnimated()).toBe(true);
+  });
+
+  test('cards get "animated" class after completion', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    Stats.animateAll(cards);
+    jest.advanceTimersByTime(Stats.DURATION + 500);
+    cards.forEach(card => {
+      expect(card.classList.contains('animated')).toBe(true);
+    });
+  });
+
+  test('stat numbers show target values after animation', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    Stats.animateAll(cards);
+    jest.advanceTimersByTime(Stats.DURATION + 500);
+
+    // Check the messages card: target=10000, suffix="+"
+    const msgCard = cards[0];
+    const numEl = msgCard.querySelector('.stat-number');
+    expect(numEl.textContent).toContain('10,000');
+    expect(numEl.textContent).toContain('+');
+  });
+
+  test('percentage card shows decimal after animation', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    Stats.animateAll(cards);
+    jest.advanceTimersByTime(Stats.DURATION + 500);
+
+    // Uptime card: target=99, suffix="%", decimal="9"
+    const uptimeCard = cards[2];
+    const numEl = uptimeCard.querySelector('.stat-number');
+    expect(numEl.textContent).toBe('99.9%');
+  });
+
+  test('response time card preserves < prefix', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    // Reset the < prefix before animating
+    cards[3].querySelector('.stat-number').textContent = '<0';
+    Stats.animateAll(cards);
+    jest.advanceTimersByTime(Stats.DURATION + 500);
+
+    const numEl = cards[3].querySelector('.stat-number');
+    expect(numEl.textContent).toContain('<');
+    expect(numEl.textContent).toContain('2');
+  });
+
+  test('users card reaches 500+', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    Stats.animateAll(cards);
+    jest.advanceTimersByTime(Stats.DURATION + 500);
+
+    const usersCard = cards[1];
+    const numEl = usersCard.querySelector('.stat-number');
+    expect(numEl.textContent).toBe('500+');
+  });
+
+  test('reset clears animated state and numbers', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    Stats.animateAll(cards);
+    jest.advanceTimersByTime(Stats.DURATION + 500);
+    expect(Stats.isAnimated()).toBe(true);
+
+    Stats.reset();
+    expect(Stats.isAnimated()).toBe(false);
+    cards.forEach(card => {
+      expect(card.classList.contains('animated')).toBe(false);
+      expect(card.querySelector('.stat-number').textContent).toBe('0');
+    });
+  });
+
+  test('numbers increment during animation (not instant)', () => {
+    const cards = document.querySelectorAll('.stat-card');
+    Stats.animateAll(cards);
+
+    // After a quarter of the duration
+    jest.advanceTimersByTime(Stats.DURATION / 4);
+    const msgNum = cards[0].querySelector('.stat-number').textContent;
+    // Should be partially counted up (not 0, not 10,000)
+    const stripped = parseInt(msgNum.replace(/[^0-9]/g, ''), 10);
+    expect(stripped).toBeGreaterThan(0);
+    expect(stripped).toBeLessThan(10000);
+  });
+
+  test('animateCard handles card without stat-number gracefully', () => {
+    const fakeCard = document.createElement('div');
+    fakeCard.dataset.target = '100';
+    fakeCard.dataset.suffix = '+';
+    // No .stat-number child — should not throw
+    expect(() => Stats.animateCard(fakeCard)).not.toThrow();
+  });
+
+  test('animateCard handles NaN target gracefully', () => {
+    const fakeCard = document.createElement('div');
+    fakeCard.dataset.target = 'abc';
+    fakeCard.dataset.suffix = '+';
+    const numEl = document.createElement('div');
+    numEl.className = 'stat-number';
+    numEl.textContent = '0';
+    fakeCard.appendChild(numEl);
+    expect(() => Stats.animateCard(fakeCard)).not.toThrow();
+    expect(numEl.textContent).toBe('0');
+  });
+});
+
+describe('Stats — CSS', () => {
+  test('styles.css contains stats section styles', () => {
+    expect(css).toContain('.stats-section');
+    expect(css).toContain('.stats-grid');
+    expect(css).toContain('.stat-card');
+    expect(css).toContain('.stat-number');
+    expect(css).toContain('.stat-label');
+    expect(css).toContain('.stat-icon');
+  });
+
+  test('styles.css has responsive stats grid', () => {
+    expect(css).toContain('grid-template-columns');
+  });
+
+  test('styles.css has animated gradient for stat numbers', () => {
+    expect(css).toContain('.stat-card.animated .stat-number');
+    expect(css).toContain('background-clip');
+  });
+});

@@ -6,13 +6,14 @@
  *  - Testimonials:   auto-rotating testimonials carousel
  *  - Pricing:        monthly/yearly billing toggle
  *  - FAQ:            accordion behaviour
+ *  - Stats:          animated social proof counters
  */
 
 // ---------------------------------------------------------------------------
 // Chat Demo Scenarios
 // ---------------------------------------------------------------------------
 
-/* exported SCENARIOS, ChatDemo, Testimonials, Pricing, FAQ */
+/* exported SCENARIOS, ChatDemo, Testimonials, Pricing, FAQ, Stats */
 /* eslint-disable no-var */
 var SCENARIOS = Object.freeze({
   memory: [
@@ -391,6 +392,147 @@ var HowItWorks = (function () {
 })();
 
 // ---------------------------------------------------------------------------
+// Social Proof Stats — Animated Counters
+// ---------------------------------------------------------------------------
+
+var Stats = (function () {
+  var animated = false;
+  var DURATION = 2000; // animation duration in ms
+  var FRAME_INTERVAL = 30; // ms between updates (~33fps)
+
+  /**
+   * Easing function — ease-out cubic for a satisfying deceleration.
+   * @param {number} t - Progress from 0 to 1
+   * @returns {number} Eased value from 0 to 1
+   */
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  /**
+   * Format a number with commas as thousand separators.
+   * @param {number} n
+   * @returns {string}
+   */
+  function formatNumber(n) {
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  /**
+   * Animate a single stat card's number from 0 to its target value.
+   * @param {Element} card - The .stat-card element
+   */
+  function animateCard(card) {
+    var numberEl = card.querySelector('.stat-number');
+    if (!numberEl) return;
+
+    var target = parseInt(card.dataset.target, 10);
+    var suffix = card.dataset.suffix || '';
+    var decimal = card.dataset.decimal || '';
+    var prefix = '';
+
+    // Check if the display starts with < (e.g., "<2s")
+    if (numberEl.textContent.indexOf('<') === 0) {
+      prefix = '<';
+    }
+
+    if (isNaN(target)) return;
+
+    var frames = Math.ceil(DURATION / FRAME_INTERVAL);
+    var frame = 0;
+
+    var timer = setInterval(function () {
+      frame++;
+      var progress = Math.min(frame / frames, 1);
+      var easedProgress = easeOutCubic(progress);
+      var current = Math.round(easedProgress * target);
+
+      var display = prefix + formatNumber(current);
+      if (decimal && progress >= 1) {
+        display = prefix + formatNumber(target) + '.' + decimal;
+      }
+      display += suffix;
+
+      numberEl.textContent = display;
+
+      if (progress >= 1) {
+        clearInterval(timer);
+        card.classList.add('animated');
+      }
+    }, FRAME_INTERVAL);
+  }
+
+  /**
+   * Animate all stat cards in the section.
+   * @param {NodeList|Array} cards - The .stat-card elements
+   */
+  function animateAll(cards) {
+    for (var i = 0; i < cards.length; i++) {
+      animateCard(cards[i]);
+    }
+    animated = true;
+  }
+
+  /** Initialize — observe the stats section for scroll-triggered animation. */
+  function init() {
+    var section = document.getElementById('statsSection');
+    if (!section) return;
+
+    var cards = section.querySelectorAll('.stat-card');
+    if (cards.length === 0) return;
+
+    if ('IntersectionObserver' in window) {
+      var observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting && !animated) {
+              animateAll(cards);
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.3 }
+      );
+      observer.observe(section);
+    } else {
+      // Fallback: animate immediately.
+      animateAll(cards);
+    }
+  }
+
+  /** Check whether the animation has already played. */
+  function isAnimated() {
+    return animated;
+  }
+
+  /** Reset state for testing. */
+  function reset() {
+    animated = false;
+    var section = document.getElementById('statsSection');
+    if (section) {
+      var cards = section.querySelectorAll('.stat-card');
+      for (var i = 0; i < cards.length; i++) {
+        cards[i].classList.remove('animated');
+        var numEl = cards[i].querySelector('.stat-number');
+        if (numEl) numEl.textContent = '0';
+      }
+    }
+  }
+
+  return {
+    init: init,
+    isAnimated: isAnimated,
+    reset: reset,
+    animateAll: animateAll,
+    animateCard: animateCard,
+    formatNumber: formatNumber,
+    easeOutCubic: easeOutCubic,
+    DURATION: DURATION,
+    FRAME_INTERVAL: FRAME_INTERVAL
+  };
+})();
+
+// ---------------------------------------------------------------------------
 // Event Binding (replaces inline onclick handlers)
 // ---------------------------------------------------------------------------
 
@@ -452,6 +594,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // How It Works — scroll animation.
   HowItWorks.init();
 
+  // Stats — animated counters on scroll.
+  Stats.init();
+
   // Auto-play the default scenario.
   ChatDemo.play('memory');
 });
@@ -465,5 +610,6 @@ if (typeof window !== 'undefined') {
   window.Pricing = Pricing;
   window.FAQ = FAQ;
   window.HowItWorks = HowItWorks;
+  window.Stats = Stats;
 }
 
