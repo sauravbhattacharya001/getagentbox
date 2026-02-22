@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox Documentation</title>
+    <meta name="description" content="Developer documentation for the AgentBox landing page — components, customization, deployment, and API reference.">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --bg-card: #1a1d28;
+            --bg-code: #252830;
+            --text: #e0e0e8;
+            --text-dim: #8b8fa0;
+            --accent: #4a9eff;
+            --accent-hover: #70b4ff;
+            --border: #2d3040;
+            --green: #4ade80;
+            --yellow: #facc15;
+            --red: #f87171;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+        /* Layout */
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 2rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+        }
+        .sidebar-logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+        .sidebar-logo span { color: var(--accent); }
+        .sidebar nav { padding: 0 1rem; }
+        .sidebar nav a {
+            display: block;
+            padding: 0.45rem 0.75rem;
+            border-radius: 6px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+        .sidebar nav a:hover, .sidebar nav a.active {
+            background: rgba(74,158,255,0.1);
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .sidebar nav .section-title {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            padding: 1.2rem 0.75rem 0.4rem;
+            font-weight: 600;
+        }
+        .content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 3rem 4rem;
+            max-width: 900px;
+        }
+        h1 { font-size: 2.2rem; margin-bottom: 1rem; }
+        h2 {
+            font-size: 1.5rem;
+            margin: 2.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        h3 { font-size: 1.15rem; margin: 1.8rem 0 0.7rem; color: var(--accent); }
+        p { margin-bottom: 1rem; color: var(--text-dim); }
+        ul, ol { margin: 0 0 1.2rem 1.5rem; color: var(--text-dim); }
+        li { margin-bottom: 0.35rem; }
+
+        /* Code */
+        code {
+            font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            background: var(--bg-code);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+        pre code { background: none; padding: 0; }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.3rem;
+        }
+        .card h4 { margin-bottom: 0.5rem; font-size: 1rem; }
+        .card p { font-size: 0.88rem; margin: 0; }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0 1.5rem;
+            font-size: 0.9rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: var(--bg-code);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        td { color: var(--text-dim); }
+        td code { font-size: 0.82rem; }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.55rem;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-green { background: rgba(74,222,128,0.15); color: var(--green); }
+        .badge-yellow { background: rgba(250,204,21,0.15); color: var(--yellow); }
+        .badge-red { background: rgba(248,113,113,0.15); color: var(--red); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .content { margin-left: 0; padding: 2rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">🤖 <span>AgentBox</span> Docs</div>
+            <nav>
+                <div class="section-title">Getting Started</div>
+                <a href="#overview" class="active">Overview</a>
+                <a href="#quickstart">Quick Start</a>
+                <a href="#project-structure">Project Structure</a>
+
+                <div class="section-title">Components</div>
+                <a href="#chatdemo">ChatDemo</a>
+                <a href="#testimonials">Testimonials</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#faq">FAQ</a>
+                <a href="#howitworks">How It Works</a>
+                <a href="#stats">Stats</a>
+
+                <div class="section-title">Customization</div>
+                <a href="#themes">Theming</a>
+                <a href="#content">Content</a>
+                <a href="#analytics">Analytics</a>
+
+                <div class="section-title">Deployment</div>
+                <a href="#github-pages">GitHub Pages</a>
+                <a href="#docker">Docker</a>
+                <a href="#self-hosting">Self Hosting</a>
+
+                <div class="section-title">Reference</div>
+                <a href="#api">API Reference</a>
+                <a href="#accessibility">Accessibility</a>
+                <a href="#security">Security</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <h1>AgentBox Landing Page</h1>
+            <p>A modern, animated landing page for AgentBox — a personal AI agent that lives in Telegram. Built with vanilla HTML, CSS, and JavaScript. Zero dependencies. Fully accessible.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h4>🚀 Zero Dependencies</h4>
+                    <p>Pure HTML/CSS/JS — no build step, no frameworks, no bundlers.</p>
+                </div>
+                <div class="card">
+                    <h4>♿ Accessible</h4>
+                    <p>WCAG 2.1 AA compliant. Keyboard navigable, screen reader friendly, respects motion preferences.</p>
+                </div>
+                <div class="card">
+                    <h4>🔒 Secure</h4>
+                    <p>Content Security Policy headers, XSS prevention, strict referrer policy.</p>
+                </div>
+                <div class="card">
+                    <h4>⚡ Fast</h4>
+                    <p>No external scripts (except optional analytics). Loads in milliseconds.</p>
+                </div>
+            </div>
+
+            <!-- Overview -->
+            <h2 id="overview">Overview</h2>
+            <p>The AgentBox landing page is a single-page static site showcasing the AgentBox Telegram AI agent. It includes interactive demos, animated statistics, testimonials, pricing tables, and a FAQ accordion — all built without JavaScript frameworks.</p>
+
+            <h3>Key Features</h3>
+            <ul>
+                <li><strong>Animated Chat Demo</strong> — real-time typing simulation showing agent conversations</li>
+                <li><strong>Testimonial Carousel</strong> — auto-rotating user testimonials with dot navigation</li>
+                <li><strong>Pricing Toggle</strong> — monthly/yearly billing switch with animated price changes</li>
+                <li><strong>FAQ Accordion</strong> — keyboard-accessible expanding sections</li>
+                <li><strong>How It Works</strong> — step-by-step walkthrough with intersection observer animations</li>
+                <li><strong>Social Proof Stats</strong> — counter animations with real-time number display</li>
+            </ul>
+
+            <!-- Quick Start -->
+            <h2 id="quickstart">Quick Start</h2>
+            <p>Clone the repo and open <code>index.html</code> — that's it. No build step required.</p>
+<pre><code># Clone
+git clone https://github.com/sauravbhattacharya001/getagentbox.git
+cd getagentbox
+
+# Open directly
+open index.html
+
+# Or serve locally (Python)
+python -m http.server 8000
+
+# Or serve locally (Node)
+npx serve .</code></pre>
+
+            <h3>Run Tests</h3>
+<pre><code>npm install
+npm test
+
+# With coverage
+npm run test:coverage</code></pre>
+
+            <!-- Project Structure -->
+            <h2 id="project-structure">Project Structure</h2>
+<pre><code>getagentbox/
+├── index.html          # Main landing page
+├── styles.css          # All styles (1000+ lines, dark theme)
+├── app.js              # Interactive components (IIFE modules)
+├── package.json        # Test dependencies (jest)
+├── Dockerfile          # Production container (nginx)
+├── docs/               # This documentation site
+│   ├── index.html      # API reference & guides
+│   └── getting-started.html
+├── __tests__/          # Jest test suites
+│   ├── app.test.js
+│   ├── faq.test.js
+│   ├── pricing.test.js
+│   └── ...
+└── .github/
+    └── workflows/
+        ├── ci.yml      # Build + test + lint
+        ├── pages.yml   # GitHub Pages deploy
+        ├── docker.yml  # Docker build/push
+        └── codeql.yml  # Security scanning</code></pre>
+
+            <!-- ChatDemo Component -->
+            <h2 id="chatdemo">ChatDemo</h2>
+            <p>An animated chat window that simulates real-time conversations between a user and the AI agent. Features typing indicators, message-by-message reveal with configurable delays, and automatic scenario rotation.</p>
+
+            <h3>Scenarios</h3>
+            <p>Conversations are defined in the <code>SCENARIOS</code> object in <code>app.js</code>:</p>
+<pre><code>var SCENARIOS = Object.freeze({
+  memory: [
+    { role: 'user', text: 'What was that recipe from last week?' },
+    { role: 'bot',  text: 'The pasta with sun-dried tomatoes! ...' },
+  ],
+  search: [ ... ],
+  reminders: [ ... ],
+  vision: [ ... ],
+});</code></pre>
+
+            <h3>Configuration</h3>
+            <table>
+                <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><code>CHAR_DELAY</code></td><td><code>18</code></td><td>Milliseconds between typed characters</td></tr>
+                    <tr><td><code>MSG_PAUSE</code></td><td><code>700</code></td><td>Pause between messages (ms)</td></tr>
+                    <tr><td><code>TYPING_DOTS</code></td><td><code>3</code></td><td>Number of animated dots</td></tr>
+                    <tr><td><code>SCENARIO_GAP</code></td><td><code>3000</code></td><td>Delay between scenario switches (ms)</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Adding Scenarios</h3>
+            <p>Add a new key to <code>SCENARIOS</code> and a matching tab button in <code>index.html</code>:</p>
+<pre><code>&lt;!-- Add tab button --&gt;
+&lt;button class="demo-tab" data-scenario="custom"&gt;My Feature&lt;/button&gt;
+
+// Add conversation in app.js
+SCENARIOS.custom = [
+  { role: 'user', text: 'Show me something cool' },
+  { role: 'bot',  text: 'Here you go! ...' },
+];</code></pre>
+
+            <!-- Testimonials -->
+            <h2 id="testimonials">Testimonials</h2>
+            <p>Auto-rotating carousel with fade transitions. Supports dot navigation and pause-on-hover.</p>
+
+            <h3>Configuration</h3>
+            <table>
+                <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><code>ROTATE_INTERVAL</code></td><td><code>5000</code></td><td>Auto-rotation interval (ms)</td></tr>
+                    <tr><td><code>FADE_DURATION</code></td><td><code>400</code></td><td>Fade transition duration (ms)</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Adding Testimonials</h3>
+<pre><code>&lt;div class="testimonial-card"&gt;
+  &lt;div class="stars"&gt;⭐⭐⭐⭐⭐&lt;/div&gt;
+  &lt;p class="testimonial-text"&gt;Amazing product!&lt;/p&gt;
+  &lt;div class="testimonial-author"&gt;
+    &lt;div class="author-avatar"&gt;👩&lt;/div&gt;
+    &lt;div&gt;
+      &lt;div class="author-name"&gt;Jane Doe&lt;/div&gt;
+      &lt;div class="author-role"&gt;Product Manager&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+            <!-- Pricing -->
+            <h2 id="pricing">Pricing</h2>
+            <p>Toggle-based pricing display with monthly/yearly billing. Yearly prices show a discount badge. The toggle animates smoothly between states.</p>
+
+            <h3>Price Configuration</h3>
+            <p>Prices are set as <code>data-*</code> attributes on each pricing card:</p>
+<pre><code>&lt;div class="pricing-card"
+     data-monthly="9.99"
+     data-yearly="7.99"&gt;
+  &lt;span class="price-value"&gt;$9.99&lt;/span&gt;
+  &lt;span class="price-period"&gt;/month&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+            <p>The <code>Pricing</code> module reads these attributes and swaps values when the billing toggle is clicked.</p>
+
+            <!-- FAQ -->
+            <h2 id="faq">FAQ</h2>
+            <p>Accessible accordion component. Only one item opens at a time. Fully keyboard navigable with <code>Enter</code> and <code>Space</code> key support.</p>
+
+            <h3>Accessibility</h3>
+            <ul>
+                <li><code>role="button"</code> and <code>tabindex="0"</code> on question elements</li>
+                <li><code>aria-expanded</code> dynamically toggled</li>
+                <li><code>aria-hidden="true"</code> on toggle icons</li>
+                <li>Keyboard handler for <code>Enter</code> and <code>Space</code></li>
+            </ul>
+
+            <h3>Adding Questions</h3>
+<pre><code>&lt;div class="faq-item"&gt;
+  &lt;div class="faq-question"
+       role="button"
+       tabindex="0"
+       aria-expanded="false"&gt;
+    &lt;span&gt;Your question here?&lt;/span&gt;
+    &lt;span class="faq-toggle" aria-hidden="true"&gt;+&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div class="faq-answer"&gt;
+    &lt;p&gt;Your answer here.&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+            <!-- How It Works -->
+            <h2 id="howitworks">How It Works</h2>
+            <p>Step-by-step feature walkthrough using intersection observer for scroll-triggered fade-in animations. Steps animate in sequence as the user scrolls down.</p>
+
+            <h3>Animation Behavior</h3>
+            <ul>
+                <li>Uses <code>IntersectionObserver</code> with 0.2 threshold</li>
+                <li>Each step fades in with a staggered delay (100ms per step)</li>
+                <li>Respects <code>prefers-reduced-motion</code> — skips animation if set</li>
+                <li>Steps only animate once (observer disconnects after trigger)</li>
+            </ul>
+
+            <!-- Stats -->
+            <h2 id="stats">Stats</h2>
+            <p>Animated counter display for social proof metrics. Numbers count up from zero to their target value with easing.</p>
+
+            <h3>Configuration</h3>
+<pre><code>&lt;div class="stat" data-count="10000"&gt;
+  &lt;div class="stat-number"&gt;0&lt;/div&gt;
+  &lt;div class="stat-label"&gt;Active Users&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+            <table>
+                <thead><tr><th>Attribute</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><code>data-count</code></td><td>Target number to count up to</td></tr>
+                    <tr><td><code>data-suffix</code></td><td>Suffix to append (e.g., <code>+</code>, <code>%</code>)</td></tr>
+                </tbody>
+            </table>
+
+            <!-- Theming -->
+            <h2 id="themes">Theming</h2>
+            <p>The landing page uses a dark gradient theme defined in <code>styles.css</code>. Key colors and spacing can be customized by editing CSS custom properties or the style values directly.</p>
+
+            <h3>Key Colors</h3>
+            <table>
+                <thead><tr><th>Element</th><th>Value</th><th>Usage</th></tr></thead>
+                <tbody>
+                    <tr><td>Background</td><td><code>#1a1a2e → #0f3460</code></td><td>135deg gradient on body</td></tr>
+                    <tr><td>Accent</td><td><code>#4a9eff</code></td><td>Buttons, links, highlights</td></tr>
+                    <tr><td>Text Primary</td><td><code>#ffffff</code></td><td>Headings, important text</td></tr>
+                    <tr><td>Text Secondary</td><td><code>rgba(255,255,255,0.7)</code></td><td>Body text, descriptions</td></tr>
+                    <tr><td>Card Background</td><td><code>rgba(255,255,255,0.05)</code></td><td>Feature cards, pricing cards</td></tr>
+                    <tr><td>CTA Green</td><td><code>#00c853</code></td><td>Primary action buttons</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Typography</h3>
+            <p>System font stack: <code>-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif</code>. No external fonts are loaded.</p>
+
+            <!-- Content Customization -->
+            <h2 id="content">Content Customization</h2>
+            <p>All content is in <code>index.html</code> — no build step or template engine. Edit directly.</p>
+            <ul>
+                <li><strong>Hero Section:</strong> Update the <code>h1</code>, tagline, and CTA link</li>
+                <li><strong>Features:</strong> Modify the <code>.feature</code> cards (emoji + title + description)</li>
+                <li><strong>Chat Demos:</strong> Edit <code>SCENARIOS</code> in <code>app.js</code></li>
+                <li><strong>Pricing:</strong> Update <code>data-monthly</code>/<code>data-yearly</code> attributes</li>
+                <li><strong>Testimonials:</strong> Edit <code>.testimonial-card</code> elements</li>
+                <li><strong>FAQ:</strong> Edit <code>.faq-item</code> elements</li>
+                <li><strong>Stats:</strong> Update <code>data-count</code> attributes</li>
+                <li><strong>Footer:</strong> Update Telegram bot link and social links</li>
+            </ul>
+
+            <!-- Analytics -->
+            <h2 id="analytics">Analytics</h2>
+            <p>Optional privacy-friendly analytics via <a href="https://www.goatcounter.com">GoatCounter</a>. No cookies, no tracking, GDPR compliant.</p>
+<pre><code>&lt;!-- Replace with your GoatCounter endpoint --&gt;
+&lt;script data-goatcounter="https://yoursite.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"&gt;&lt;/script&gt;</code></pre>
+            <p>To disable analytics entirely, remove the GoatCounter script tag from <code>index.html</code>.</p>
+
+            <!-- GitHub Pages -->
+            <h2 id="github-pages">GitHub Pages</h2>
+            <p>The site auto-deploys to GitHub Pages on every push to <code>master</code> via the <code>pages.yml</code> workflow.</p>
+            <h3>Setup</h3>
+            <ol>
+                <li>Go to <strong>Settings → Pages</strong> in your GitHub repo</li>
+                <li>Set <strong>Source</strong> to "GitHub Actions"</li>
+                <li>Push to <code>master</code> — the workflow deploys automatically</li>
+            </ol>
+            <p>Live site: <a href="https://sauravbhattacharya001.github.io/getagentbox/">sauravbhattacharya001.github.io/getagentbox</a></p>
+
+            <!-- Docker -->
+            <h2 id="docker">Docker</h2>
+<pre><code># Build
+docker build -t agentbox-landing .
+
+# Run
+docker run -p 8080:80 agentbox-landing
+
+# Or use the pre-built image
+docker pull ghcr.io/sauravbhattacharya001/getagentbox:latest
+docker run -p 8080:80 ghcr.io/sauravbhattacharya001/getagentbox:latest</code></pre>
+            <p>The Dockerfile uses a multi-stage nginx setup with security-hardened configuration.</p>
+
+            <!-- Self Hosting -->
+            <h2 id="self-hosting">Self Hosting</h2>
+            <p>Since this is a static site, any web server works:</p>
+<pre><code># Nginx
+server {
+    listen 80;
+    root /var/www/agentbox;
+    index index.html;
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+
+# Apache
+DocumentRoot "/var/www/agentbox"
+
+# Caddy
+:80 {
+    root * /var/www/agentbox
+    file_server
+}</code></pre>
+
+            <!-- API Reference -->
+            <h2 id="api">API Reference</h2>
+            <p>All components are implemented as IIFEs (Immediately Invoked Function Expressions) in <code>app.js</code>. They auto-initialize on DOM ready.</p>
+
+            <table>
+                <thead>
+                    <tr><th>Module</th><th>Global</th><th>Methods</th><th>Description</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>ChatDemo</code></td>
+                        <td><code>window.ChatDemo</code></td>
+                        <td><code>init()</code>, <code>play(scenario)</code>, <code>stop()</code></td>
+                        <td>Animated chat conversation player</td>
+                    </tr>
+                    <tr>
+                        <td><code>Testimonials</code></td>
+                        <td><code>window.Testimonials</code></td>
+                        <td><code>init()</code>, <code>show(index)</code>, <code>next()</code>, <code>prev()</code></td>
+                        <td>Testimonial carousel with auto-rotation</td>
+                    </tr>
+                    <tr>
+                        <td><code>Pricing</code></td>
+                        <td><code>window.Pricing</code></td>
+                        <td><code>init()</code>, <code>toggle()</code></td>
+                        <td>Monthly/yearly billing toggle</td>
+                    </tr>
+                    <tr>
+                        <td><code>FAQ</code></td>
+                        <td><code>window.FAQ</code></td>
+                        <td><code>init()</code></td>
+                        <td>Accessible accordion FAQ</td>
+                    </tr>
+                    <tr>
+                        <td><code>HowItWorks</code></td>
+                        <td><code>window.HowItWorks</code></td>
+                        <td><code>init()</code></td>
+                        <td>Scroll-triggered step animations</td>
+                    </tr>
+                    <tr>
+                        <td><code>Stats</code></td>
+                        <td><code>window.Stats</code></td>
+                        <td><code>init()</code>, <code>animate()</code></td>
+                        <td>Animated counter display</td>
+                    </tr>
+                    <tr>
+                        <td><code>SCENARIOS</code></td>
+                        <td><code>window.SCENARIOS</code></td>
+                        <td>—</td>
+                        <td>Frozen object with chat scenario data</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>ChatDemo Methods</h3>
+            <table>
+                <thead><tr><th>Method</th><th>Parameters</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><code>init()</code></td><td>—</td><td>Bind tab clicks, start first scenario</td></tr>
+                    <tr><td><code>play(key)</code></td><td><code>key: string</code></td><td>Clear chat and play named scenario</td></tr>
+                    <tr><td><code>stop()</code></td><td>—</td><td>Stop current animation and clear timers</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Testimonials Methods</h3>
+            <table>
+                <thead><tr><th>Method</th><th>Parameters</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><code>init()</code></td><td>—</td><td>Find cards, create dots, start auto-rotation</td></tr>
+                    <tr><td><code>show(i)</code></td><td><code>i: number</code></td><td>Show testimonial at index <code>i</code></td></tr>
+                    <tr><td><code>next()</code></td><td>—</td><td>Advance to next testimonial</td></tr>
+                    <tr><td><code>prev()</code></td><td>—</td><td>Go to previous testimonial</td></tr>
+                </tbody>
+            </table>
+
+            <!-- Accessibility -->
+            <h2 id="accessibility">Accessibility</h2>
+            <p>The landing page follows WCAG 2.1 AA guidelines:</p>
+            <ul>
+                <li><strong>Keyboard Navigation:</strong> All interactive elements are focusable and operable with keyboard</li>
+                <li><strong>Screen Readers:</strong> Semantic HTML, ARIA attributes, meaningful alt text</li>
+                <li><strong>Motion:</strong> Respects <code>prefers-reduced-motion</code> — disables animations when set</li>
+                <li><strong>Color Contrast:</strong> All text meets minimum 4.5:1 contrast ratio</li>
+                <li><strong>Focus Indicators:</strong> Visible focus rings on all interactive elements</li>
+                <li><strong>FAQ Accessibility:</strong> <code>role="button"</code>, <code>aria-expanded</code>, keyboard Enter/Space support</li>
+            </ul>
+
+            <!-- Security -->
+            <h2 id="security">Security</h2>
+            <p>Security headers configured in <code>index.html</code> meta tags:</p>
+            <table>
+                <thead><tr><th>Header</th><th>Value</th></tr></thead>
+                <tbody>
+                    <tr><td>Content-Security-Policy</td><td>Restricts scripts, styles, images, frames to <code>'self'</code> + GoatCounter</td></tr>
+                    <tr><td>X-Content-Type-Options</td><td><code>nosniff</code></td></tr>
+                    <tr><td>Referrer-Policy</td><td><code>strict-origin-when-cross-origin</code></td></tr>
+                    <tr><td>Frame-Ancestors</td><td><code>'none'</code> (prevents clickjacking)</td></tr>
+                </tbody>
+            </table>
+            <p>See <a href="https://github.com/sauravbhattacharya001/getagentbox/blob/master/SECURITY.md">SECURITY.md</a> for vulnerability reporting.</p>
+
+            <hr style="border-color: var(--border); margin: 3rem 0;">
+            <p style="font-size: 0.85rem; text-align: center;">
+                <a href="https://github.com/sauravbhattacharya001/getagentbox">GitHub</a> ·
+                <a href="https://sauravbhattacharya001.github.io/getagentbox/">Live Demo</a> ·
+                MIT License
+            </p>
+        </main>
+    </div>
+</body>
+</html>

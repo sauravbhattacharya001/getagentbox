@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started — AgentBox Docs</title>
+    <meta name="description" content="Step-by-step guide to set up and customize the AgentBox landing page.">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --bg-card: #1a1d28;
+            --bg-code: #252830;
+            --text: #e0e0e8;
+            --text-dim: #8b8fa0;
+            --accent: #4a9eff;
+            --accent-hover: #70b4ff;
+            --border: #2d3040;
+            --green: #4ade80;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 3rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent-hover); text-decoration: underline; }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        h2 {
+            font-size: 1.4rem;
+            margin: 2.5rem 0 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+        h3 { font-size: 1.1rem; margin: 1.5rem 0 0.6rem; color: var(--accent); }
+        p { margin-bottom: 1rem; color: var(--text-dim); }
+        ul, ol { margin: 0 0 1.2rem 1.5rem; color: var(--text-dim); }
+        li { margin-bottom: 0.4rem; }
+        code {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            background: var(--bg-code);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+        pre code { background: none; padding: 0; }
+        .step {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-left: 4rem;
+        }
+        .step-number {
+            position: absolute;
+            left: 1.2rem;
+            top: 1.4rem;
+            width: 2rem;
+            height: 2rem;
+            background: var(--accent);
+            color: var(--bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .step h3 { margin-top: 0; }
+        .tip {
+            background: rgba(74,222,128,0.08);
+            border-left: 3px solid var(--green);
+            padding: 0.8rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0 1.5rem;
+            font-size: 0.9rem;
+        }
+        .tip strong { color: var(--green); }
+        .breadcrumb {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="breadcrumb">
+        <a href="index.html">Docs</a> → Getting Started
+    </div>
+
+    <h1>Getting Started</h1>
+    <p>Set up the AgentBox landing page locally, customize it for your project, and deploy — all in under 10 minutes.</p>
+
+    <h2>Prerequisites</h2>
+    <ul>
+        <li><a href="https://git-scm.com/">Git</a> installed</li>
+        <li>A web browser (for viewing)</li>
+        <li><a href="https://nodejs.org/">Node.js</a> 18+ (optional, for running tests)</li>
+        <li><a href="https://www.docker.com/">Docker</a> (optional, for containerized deployment)</li>
+    </ul>
+
+    <h2>Setup Steps</h2>
+
+    <div class="step">
+        <div class="step-number">1</div>
+        <h3>Clone the Repository</h3>
+<pre><code>git clone https://github.com/sauravbhattacharya001/getagentbox.git
+cd getagentbox</code></pre>
+    </div>
+
+    <div class="step">
+        <div class="step-number">2</div>
+        <h3>Open Locally</h3>
+        <p>No build step needed. Just open <code>index.html</code> directly:</p>
+<pre><code># macOS
+open index.html
+
+# Windows
+start index.html
+
+# Linux
+xdg-open index.html</code></pre>
+        <p>Or use a local server for proper CSP headers:</p>
+<pre><code># Python 3
+python -m http.server 8000
+
+# Node.js
+npx serve .
+
+# PHP
+php -S localhost:8000</code></pre>
+    </div>
+
+    <div class="step">
+        <div class="step-number">3</div>
+        <h3>Customize Content</h3>
+        <p>Edit <code>index.html</code> directly. Key sections to update:</p>
+        <ul>
+            <li><strong>Hero:</strong> Change the <code>&lt;h1&gt;</code>, tagline, and CTA button link</li>
+            <li><strong>Features:</strong> Update <code>.feature</code> cards with your product's features</li>
+            <li><strong>Pricing:</strong> Change <code>data-monthly</code> and <code>data-yearly</code> attributes</li>
+            <li><strong>Testimonials:</strong> Replace <code>.testimonial-card</code> content</li>
+            <li><strong>FAQ:</strong> Edit <code>.faq-item</code> questions and answers</li>
+            <li><strong>Stats:</strong> Update <code>data-count</code> values</li>
+            <li><strong>Footer:</strong> Update links and social media URLs</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <div class="step-number">4</div>
+        <h3>Customize Chat Demos</h3>
+        <p>Edit <code>SCENARIOS</code> in <code>app.js</code> to show your product's conversations:</p>
+<pre><code>var SCENARIOS = Object.freeze({
+  myFeature: [
+    { role: 'user', text: 'How do I use this?' },
+    { role: 'bot',  text: 'It\'s easy! Just...' },
+  ],
+});</code></pre>
+        <p>Add matching tab buttons in the <code>.demo-tabs</code> section of <code>index.html</code>.</p>
+    </div>
+
+    <div class="step">
+        <div class="step-number">5</div>
+        <h3>Customize Styling</h3>
+        <p>Edit <code>styles.css</code> to change colors, fonts, and layout:</p>
+<pre><code>/* Change the background gradient */
+body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+/* Change the accent color */
+.cta-button {
+    background: #00c853;  /* Green CTA */
+}
+
+/* Change card styling */
+.feature {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+}</code></pre>
+    </div>
+
+    <div class="step">
+        <div class="step-number">6</div>
+        <h3>Run Tests</h3>
+<pre><code>npm install
+npm test
+
+# With coverage report
+npm run test:coverage</code></pre>
+    </div>
+
+    <div class="step">
+        <div class="step-number">7</div>
+        <h3>Deploy</h3>
+        <p>Choose your deployment method:</p>
+        <p><strong>GitHub Pages</strong> (recommended):</p>
+        <ol>
+            <li>Push to GitHub</li>
+            <li>Go to Settings → Pages → Source: "GitHub Actions"</li>
+            <li>The <code>pages.yml</code> workflow deploys automatically</li>
+        </ol>
+        <p><strong>Docker:</strong></p>
+<pre><code>docker build -t my-landing-page .
+docker run -p 8080:80 my-landing-page</code></pre>
+        <p><strong>Any static host:</strong> Upload <code>index.html</code>, <code>styles.css</code>, and <code>app.js</code> to Netlify, Vercel, Cloudflare Pages, or any web server.</p>
+    </div>
+
+    <div class="tip">
+        <strong>💡 Tip:</strong> The landing page is fully self-contained — <code>index.html</code>, <code>styles.css</code>, and <code>app.js</code> are the only files needed for production. Everything else (tests, Docker, CI) is optional tooling.
+    </div>
+
+    <h2>What's Next?</h2>
+    <ul>
+        <li>Read the <a href="index.html#api">API Reference</a> for component details</li>
+        <li>Check <a href="index.html#accessibility">Accessibility</a> guidelines</li>
+        <li>Review <a href="index.html#security">Security</a> configuration</li>
+        <li>Set up <a href="index.html#analytics">Analytics</a> tracking</li>
+    </ul>
+
+    <hr style="border-color: #2d3040; margin: 3rem 0;">
+    <p style="font-size: 0.85rem; text-align: center; color: #8b8fa0;">
+        <a href="index.html">← Back to Docs</a> ·
+        <a href="https://github.com/sauravbhattacharya001/getagentbox">GitHub</a> ·
+        MIT License
+    </p>
+</body>
+</html>

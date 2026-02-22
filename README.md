@@ -18,6 +18,8 @@
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)](#-tech-stack)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](#-docker)
 [![License](https://img.shields.io/github/license/sauravbhattacharya001/getagentbox)](LICENSE)
+[![npm](https://img.shields.io/npm/v/agentbox-landing?logo=npm&logoColor=white)](https://www.npmjs.com/package/agentbox-landing)
+[![Docs](https://img.shields.io/badge/Docs-API_Reference-blue?logo=readthedocs&logoColor=white)](https://sauravbhattacharya001.github.io/getagentbox/docs/)
 [![Last Commit](https://img.shields.io/github/last-commit/sauravbhattacharya001/getagentbox)](https://github.com/sauravbhattacharya001/getagentbox/commits/master)
 [![Repo Size](https://img.shields.io/github/repo-size/sauravbhattacharya001/getagentbox)](https://github.com/sauravbhattacharya001/getagentbox)
 [![Stars](https://img.shields.io/github/stars/sauravbhattacharya001/getagentbox?style=flat)](https://github.com/sauravbhattacharya001/getagentbox/stargazers)
@@ -135,9 +137,17 @@ The [live landing page](https://sauravbhattacharya001.github.io/getagentbox/) in
 ```
 getagentbox/
 ├── index.html                              # Entire landing page (HTML + CSS + JS inline)
+├── styles.css                              # Styling (dark theme, responsive)
+├── app.js                                  # Interactive components (IIFE modules)
+├── src/
+│   └── index.js                            # Reusable npm library (FAQ, Pricing, Stats)
+├── docs/
+│   ├── index.html                          # API reference & developer docs
+│   └── getting-started.html                # Step-by-step setup guide
 ├── Dockerfile                              # Multi-stage nginx container
 ├── .dockerignore                           # Docker build exclusions
 ├── README.md
+├── __tests__/                              # Jest test suites
 ├── .github/
 │   ├── copilot-setup-steps.yml             # GitHub Copilot coding agent config
 │   ├── copilot-instructions.md             # Repo context for AI agents
@@ -148,12 +158,37 @@ getagentbox/
 │   │   └── config.yml                      # Issue template config
 │   └── workflows/
 │       ├── ci.yml                          # CI: HTML validate, structure, links, a11y
-│       └── pages.yml                       # Auto-deploy to GitHub Pages
+│       ├── pages.yml                       # Auto-deploy to GitHub Pages
+│       ├── publish.yml                     # npm publish on release
+│       └── docker.yml                      # Docker build/push
 ```
 
 ---
 
 ## 🧑‍💻 Development
+
+### npm Package
+
+The interactive components are also available as a reusable npm package:
+
+```bash
+npm install agentbox-landing
+```
+
+```js
+const { FAQ, Pricing, Stats } = require('agentbox-landing');
+
+// Initialize FAQ accordion
+FAQ.init('.faq-section');
+
+// Initialize pricing toggle
+Pricing.init('.billing-toggle');
+
+// Animate stats on scroll
+Stats.init('.stats-section', { duration: 2000 });
+```
+
+See the [API docs](https://sauravbhattacharya001.github.io/getagentbox/docs/) for full reference.
 
 ### Local Preview
 
