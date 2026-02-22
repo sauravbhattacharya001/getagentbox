@@ -588,6 +588,103 @@ var Stats = (function () {
 })();
 
 // ---------------------------------------------------------------------------
+// Use Cases Tabbed Section
+// ---------------------------------------------------------------------------
+
+var UseCases = (function () {
+  var currentTab = 'dev';
+  var initialized = false;
+
+  /**
+   * Switch to a different use-case tab.
+   * Updates ARIA attributes, active classes, and panel visibility.
+   * @param {string} tabId  The data-usecase value to switch to.
+   */
+  function switchTo(tabId) {
+    if (!tabId || tabId === currentTab) return;
+
+    var section = document.getElementById('usecasesSection');
+    if (!section) return;
+
+    // Deactivate current tab button.
+    var tabs = section.querySelectorAll('.usecase-tab');
+    var panels = section.querySelectorAll('.usecase-panel');
+
+    var found = false;
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].dataset.usecase === tabId) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) return;
+
+    for (var j = 0; j < tabs.length; j++) {
+      var isTarget = tabs[j].dataset.usecase === tabId;
+      tabs[j].classList.toggle('active', isTarget);
+      tabs[j].setAttribute('aria-selected', isTarget ? 'true' : 'false');
+      tabs[j].setAttribute('tabindex', isTarget ? '0' : '-1');
+    }
+
+    for (var k = 0; k < panels.length; k++) {
+      var panelId = panels[k].id;
+      var isActive = panelId === 'usecase-' + tabId;
+      panels[k].classList.toggle('active', isActive);
+      if (isActive) {
+        panels[k].removeAttribute('hidden');
+      } else {
+        panels[k].setAttribute('hidden', '');
+      }
+    }
+
+    currentTab = tabId;
+  }
+
+  /** Return the current active tab id. */
+  function getCurrent() {
+    return currentTab;
+  }
+
+  /** Get list of all available tab ids. */
+  function getTabs() {
+    var section = document.getElementById('usecasesSection');
+    if (!section) return [];
+    var tabs = section.querySelectorAll('.usecase-tab');
+    var ids = [];
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].dataset.usecase) ids.push(tabs[i].dataset.usecase);
+    }
+    return ids;
+  }
+
+  /**
+   * Initialise tabindex values for tabs (keyboard support).
+   * Click and keyboard event delegation is handled in the
+   * DOMContentLoaded block to avoid stale closure issues.
+   */
+  function init() {
+    var section = document.getElementById('usecasesSection');
+    if (!section) return;
+
+    var tablist = section.querySelector('[role="tablist"]');
+    if (!tablist) return;
+
+    // Set initial tabindex values.
+    var tabs = tablist.querySelectorAll('.usecase-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].setAttribute('tabindex', tabs[i].classList.contains('active') ? '0' : '-1');
+    }
+  }
+
+  return {
+    switchTo: switchTo,
+    getCurrent: getCurrent,
+    getTabs: getTabs,
+    init: init
+  };
+})();
+
+// ---------------------------------------------------------------------------
 // Event Binding (replaces inline onclick handlers)
 // ---------------------------------------------------------------------------
 
@@ -658,6 +755,59 @@ document.addEventListener('DOMContentLoaded', function () {
   // How It Works — scroll animation.
   HowItWorks.init();
 
+  // Use Cases — tabbed section (init + delegation).
+  UseCases.init();
+
+  var usecasesSection = document.getElementById('usecasesSection');
+  if (usecasesSection) {
+    var usecasesTablist = usecasesSection.querySelector('[role="tablist"]');
+    if (usecasesTablist && !usecasesTablist.dataset.bound) {
+      usecasesTablist.dataset.bound = '1';
+      // Click delegation.
+      usecasesTablist.addEventListener('click', function (e) {
+        var tab = e.target.closest('.usecase-tab');
+        if (tab && tab.dataset.usecase) {
+          window.UseCases.switchTo(tab.dataset.usecase);
+        }
+      });
+
+      // Keyboard navigation (arrow keys, Home, End).
+      usecasesTablist.addEventListener('keydown', function (e) {
+        var tabs = usecasesTablist.querySelectorAll('.usecase-tab');
+        if (tabs.length === 0) return;
+
+        var currentIndex = -1;
+        for (var ci = 0; ci < tabs.length; ci++) {
+          if (tabs[ci].classList.contains('active')) {
+            currentIndex = ci;
+            break;
+          }
+        }
+
+        var newIndex = currentIndex;
+
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          newIndex = (currentIndex + 1) % tabs.length;
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          newIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          newIndex = 0;
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          newIndex = tabs.length - 1;
+        }
+
+        if (newIndex !== currentIndex && newIndex >= 0) {
+          window.UseCases.switchTo(tabs[newIndex].dataset.usecase);
+          tabs[newIndex].focus();
+        }
+      });
+    }
+  }
+
   // Stats — animated counters on scroll.
   Stats.init();
 
@@ -675,5 +825,6 @@ if (typeof window !== 'undefined') {
   window.FAQ = FAQ;
   window.HowItWorks = HowItWorks;
   window.Stats = Stats;
+  window.UseCases = UseCases;
 }
 

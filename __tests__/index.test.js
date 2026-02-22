@@ -1250,3 +1250,353 @@ describe('Stats — CSS', () => {
     expect(css).toContain('background-clip');
   });
 });
+
+// ─── Use Cases Section ───────────────────────────────────────────────────
+
+describe('Use Cases — HTML structure', () => {
+  beforeAll(() => loadPage());
+
+  test('section exists with correct id', () => {
+    const section = document.getElementById('usecasesSection');
+    expect(section).not.toBeNull();
+    expect(section.classList.contains('usecases-section')).toBe(true);
+  });
+
+  test('has heading and subtitle', () => {
+    const section = document.getElementById('usecasesSection');
+    const h2 = section.querySelector('h2');
+    expect(h2).not.toBeNull();
+    expect(h2.textContent).toContain('Built for how you work');
+    const subtitle = section.querySelector('.usecases-subtitle');
+    expect(subtitle).not.toBeNull();
+  });
+
+  test('has 4 tab buttons', () => {
+    const tabs = document.querySelectorAll('.usecase-tab');
+    expect(tabs.length).toBe(4);
+  });
+
+  test('tab buttons have correct data-usecase attributes', () => {
+    const tabs = document.querySelectorAll('.usecase-tab');
+    const ids = Array.from(tabs).map(t => t.dataset.usecase);
+    expect(ids).toEqual(['dev', 'pro', 'student', 'personal']);
+  });
+
+  test('has 4 panels matching tabs', () => {
+    const panels = document.querySelectorAll('.usecase-panel');
+    expect(panels.length).toBe(4);
+    const panelIds = Array.from(panels).map(p => p.id);
+    expect(panelIds).toEqual(['usecase-dev', 'usecase-pro', 'usecase-student', 'usecase-personal']);
+  });
+
+  test('first tab is active by default', () => {
+    const firstTab = document.querySelector('.usecase-tab');
+    expect(firstTab.classList.contains('active')).toBe(true);
+    expect(firstTab.getAttribute('aria-selected')).toBe('true');
+  });
+
+  test('first panel is visible by default', () => {
+    const firstPanel = document.getElementById('usecase-dev');
+    expect(firstPanel.classList.contains('active')).toBe(true);
+    expect(firstPanel.hasAttribute('hidden')).toBe(false);
+  });
+
+  test('other panels are hidden by default', () => {
+    const others = ['usecase-pro', 'usecase-student', 'usecase-personal'];
+    others.forEach(id => {
+      const panel = document.getElementById(id);
+      expect(panel.hasAttribute('hidden')).toBe(true);
+    });
+  });
+
+  test('each panel has a header with emoji and heading', () => {
+    const panels = document.querySelectorAll('.usecase-panel');
+    panels.forEach(panel => {
+      const header = panel.querySelector('.usecase-header');
+      expect(header).not.toBeNull();
+      const emoji = header.querySelector('.usecase-emoji');
+      expect(emoji).not.toBeNull();
+      expect(emoji.textContent.length).toBeGreaterThan(0);
+      const h3 = header.querySelector('h3');
+      expect(h3).not.toBeNull();
+    });
+  });
+
+  test('each panel has a list of use cases', () => {
+    const panels = document.querySelectorAll('.usecase-panel');
+    panels.forEach(panel => {
+      const list = panel.querySelector('.usecase-list');
+      expect(list).not.toBeNull();
+      const items = list.querySelectorAll('li');
+      expect(items.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  test('each panel has a quote', () => {
+    const panels = document.querySelectorAll('.usecase-panel');
+    panels.forEach(panel => {
+      const quote = panel.querySelector('.usecase-quote');
+      expect(quote).not.toBeNull();
+      const p = quote.querySelector('p');
+      expect(p).not.toBeNull();
+      expect(p.textContent.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe('Use Cases — ARIA accessibility', () => {
+  beforeAll(() => loadPage());
+
+  test('tablist has correct role', () => {
+    const tablist = document.querySelector('.usecases-tabs');
+    expect(tablist.getAttribute('role')).toBe('tablist');
+  });
+
+  test('tabs have role=tab', () => {
+    const tabs = document.querySelectorAll('.usecase-tab');
+    tabs.forEach(tab => {
+      expect(tab.getAttribute('role')).toBe('tab');
+    });
+  });
+
+  test('panels have role=tabpanel', () => {
+    const panels = document.querySelectorAll('.usecase-panel');
+    panels.forEach(panel => {
+      expect(panel.getAttribute('role')).toBe('tabpanel');
+    });
+  });
+
+  test('tabs have aria-controls matching panel ids', () => {
+    const tabs = document.querySelectorAll('.usecase-tab');
+    tabs.forEach(tab => {
+      const controls = tab.getAttribute('aria-controls');
+      expect(controls).not.toBeNull();
+      const panel = document.getElementById(controls);
+      expect(panel).not.toBeNull();
+    });
+  });
+
+  test('panels have aria-labelledby matching tab ids', () => {
+    const panels = document.querySelectorAll('.usecase-panel');
+    panels.forEach(panel => {
+      const labelledby = panel.getAttribute('aria-labelledby');
+      expect(labelledby).not.toBeNull();
+      const tab = document.getElementById(labelledby);
+      expect(tab).not.toBeNull();
+    });
+  });
+
+  test('only active tab has aria-selected=true', () => {
+    const tabs = document.querySelectorAll('.usecase-tab');
+    const selected = Array.from(tabs).filter(t => t.getAttribute('aria-selected') === 'true');
+    expect(selected.length).toBe(1);
+  });
+});
+
+describe('Use Cases — module functionality', () => {
+  beforeEach(() => loadPage());
+
+  test('UseCases module is exposed on window', () => {
+    expect(window.UseCases).toBeDefined();
+    expect(typeof UseCases.switchTo).toBe('function');
+    expect(typeof UseCases.getCurrent).toBe('function');
+    expect(typeof UseCases.getTabs).toBe('function');
+    expect(typeof UseCases.init).toBe('function');
+  });
+
+  test('getCurrent returns "dev" initially', () => {
+    expect(UseCases.getCurrent()).toBe('dev');
+  });
+
+  test('getTabs returns all 4 tab ids', () => {
+    expect(UseCases.getTabs()).toEqual(['dev', 'pro', 'student', 'personal']);
+  });
+
+  test('switchTo changes the active tab', () => {
+    UseCases.switchTo('pro');
+    expect(UseCases.getCurrent()).toBe('pro');
+
+    const proTab = document.getElementById('tab-pro');
+    expect(proTab.classList.contains('active')).toBe(true);
+    expect(proTab.getAttribute('aria-selected')).toBe('true');
+
+    const devTab = document.getElementById('tab-dev');
+    expect(devTab.classList.contains('active')).toBe(false);
+    expect(devTab.getAttribute('aria-selected')).toBe('false');
+  });
+
+  test('switchTo shows correct panel and hides others', () => {
+    UseCases.switchTo('student');
+
+    const studentPanel = document.getElementById('usecase-student');
+    expect(studentPanel.classList.contains('active')).toBe(true);
+    expect(studentPanel.hasAttribute('hidden')).toBe(false);
+
+    const devPanel = document.getElementById('usecase-dev');
+    expect(devPanel.classList.contains('active')).toBe(false);
+    expect(devPanel.hasAttribute('hidden')).toBe(true);
+  });
+
+  test('switchTo with same tab does nothing', () => {
+    UseCases.switchTo('dev');
+    expect(UseCases.getCurrent()).toBe('dev');
+    // Should not break anything
+    const devPanel = document.getElementById('usecase-dev');
+    expect(devPanel.classList.contains('active')).toBe(true);
+  });
+
+  test('switchTo with invalid tab does nothing', () => {
+    UseCases.switchTo('nonexistent');
+    expect(UseCases.getCurrent()).toBe('dev');
+  });
+
+  test('switchTo with null/undefined does nothing', () => {
+    UseCases.switchTo(null);
+    expect(UseCases.getCurrent()).toBe('dev');
+    UseCases.switchTo(undefined);
+    expect(UseCases.getCurrent()).toBe('dev');
+  });
+
+  test('switchTo cycles through all tabs correctly', () => {
+    const tabs = ['dev', 'pro', 'student', 'personal'];
+    tabs.forEach(tab => {
+      UseCases.switchTo(tab);
+      expect(UseCases.getCurrent()).toBe(tab);
+
+      const panel = document.getElementById('usecase-' + tab);
+      expect(panel.classList.contains('active')).toBe(true);
+      expect(panel.hasAttribute('hidden')).toBe(false);
+
+      // All other panels should be hidden
+      tabs.filter(t => t !== tab).forEach(other => {
+        const otherPanel = document.getElementById('usecase-' + other);
+        expect(otherPanel.classList.contains('active')).toBe(false);
+        expect(otherPanel.hasAttribute('hidden')).toBe(true);
+      });
+    });
+  });
+
+  test('clicking a tab button switches to it', () => {
+    const proTab = document.getElementById('tab-pro');
+    proTab.click();
+    expect(UseCases.getCurrent()).toBe('pro');
+  });
+
+  test('only one aria-selected=true after switching', () => {
+    UseCases.switchTo('personal');
+    const tabs = document.querySelectorAll('.usecase-tab');
+    const selected = Array.from(tabs).filter(t => t.getAttribute('aria-selected') === 'true');
+    expect(selected.length).toBe(1);
+    expect(selected[0].dataset.usecase).toBe('personal');
+  });
+
+  test('tabindex is 0 on active tab and -1 on others', () => {
+    UseCases.switchTo('student');
+    const tabs = document.querySelectorAll('.usecase-tab');
+    tabs.forEach(tab => {
+      if (tab.dataset.usecase === 'student') {
+        expect(tab.getAttribute('tabindex')).toBe('0');
+      } else {
+        expect(tab.getAttribute('tabindex')).toBe('-1');
+      }
+    });
+  });
+});
+
+describe('Use Cases — keyboard navigation', () => {
+  beforeAll(() => loadPage());
+
+  afterEach(() => {
+    // Reset to initial state between tests
+    UseCases.switchTo('dev');
+  });
+
+  function pressKey(element, key) {
+    const event = new KeyboardEvent('keydown', { key, bubbles: true });
+    element.dispatchEvent(event);
+  }
+
+  test('ArrowRight moves to next tab', () => {
+    const tablist = document.querySelector('.usecases-tabs');
+    pressKey(tablist, 'ArrowRight');
+    expect(UseCases.getCurrent()).toBe('pro');
+  });
+
+  test('ArrowLeft wraps from first to last', () => {
+    const tablist = document.querySelector('.usecases-tabs');
+    pressKey(tablist, 'ArrowLeft');
+    expect(UseCases.getCurrent()).toBe('personal');
+  });
+
+  test('ArrowRight wraps from last to first', () => {
+    UseCases.switchTo('personal');
+    const tablist = document.querySelector('.usecases-tabs');
+    pressKey(tablist, 'ArrowRight');
+    expect(UseCases.getCurrent()).toBe('dev');
+  });
+
+  test('Home jumps to first tab', () => {
+    UseCases.switchTo('personal');
+    const tablist = document.querySelector('.usecases-tabs');
+    pressKey(tablist, 'Home');
+    expect(UseCases.getCurrent()).toBe('dev');
+  });
+
+  test('End jumps to last tab', () => {
+    const tablist = document.querySelector('.usecases-tabs');
+    pressKey(tablist, 'End');
+    expect(UseCases.getCurrent()).toBe('personal');
+  });
+
+  test('ArrowDown moves to next tab', () => {
+    const tablist = document.querySelector('.usecases-tabs');
+    pressKey(tablist, 'ArrowDown');
+    expect(UseCases.getCurrent()).toBe('pro');
+  });
+
+  test('ArrowUp moves to previous tab', () => {
+    UseCases.switchTo('student');
+    const tablist = document.querySelector('.usecases-tabs');
+    pressKey(tablist, 'ArrowUp');
+    expect(UseCases.getCurrent()).toBe('pro');
+  });
+
+  test('unrelated keys do not change tab', () => {
+    const tablist = document.querySelector('.usecases-tabs');
+    pressKey(tablist, 'a');
+    expect(UseCases.getCurrent()).toBe('dev');
+    pressKey(tablist, 'Enter');
+    expect(UseCases.getCurrent()).toBe('dev');
+  });
+});
+
+describe('Use Cases — CSS', () => {
+  test('styles.css contains use cases section styles', () => {
+    expect(css).toContain('.usecases-section');
+    expect(css).toContain('.usecases-tabs');
+    expect(css).toContain('.usecase-tab');
+    expect(css).toContain('.usecase-panel');
+    expect(css).toContain('.usecase-header');
+    expect(css).toContain('.usecase-list');
+    expect(css).toContain('.usecase-quote');
+  });
+
+  test('styles.css has active tab style', () => {
+    expect(css).toContain('.usecase-tab.active');
+  });
+
+  test('styles.css has panel fade animation', () => {
+    expect(css).toContain('usecaseFadeIn');
+  });
+
+  test('styles.css has responsive tab styles', () => {
+    expect(css).toContain('.usecase-tab');
+    // Mobile breakpoint exists
+    expect(css).toMatch(/max-width.*480/);
+  });
+
+  test('styles.css respects reduced motion for panels', () => {
+    expect(css).toContain('prefers-reduced-motion');
+    expect(css).toContain('.usecase-panel');
+  });
+});

@@ -378,6 +378,165 @@ h1 {
     }
 }
 
+/* Use Cases Section */
+.usecases-section {
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 40px;
+    contain: layout style;
+}
+
+.usecases-section h2 {
+    font-size: 1.4rem;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.usecases-subtitle {
+    color: #888;
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.usecases-tabs {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.usecase-tab {
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    color: #aaa;
+    font-size: 0.84rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.usecase-tab:hover {
+    background: rgba(0, 212, 255, 0.1);
+    border-color: rgba(0, 212, 255, 0.2);
+    color: #ccc;
+}
+
+.usecase-tab.active {
+    background: rgba(0, 212, 255, 0.15);
+    border-color: rgba(0, 212, 255, 0.35);
+    color: #00d4ff;
+    font-weight: 600;
+}
+
+.usecases-panels {
+    position: relative;
+}
+
+.usecase-panel {
+    display: none;
+    text-align: left;
+    animation: usecaseFadeIn 0.3s ease-out;
+}
+
+.usecase-panel.active {
+    display: block;
+}
+
+@keyframes usecaseFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.usecase-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+}
+
+.usecase-emoji {
+    font-size: 2.2rem;
+    flex-shrink: 0;
+}
+
+.usecase-header h3 {
+    font-size: 1.1rem;
+    margin-bottom: 3px;
+    color: #fff;
+}
+
+.usecase-desc {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.usecase-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 18px 0;
+}
+
+.usecase-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: #ccc;
+    font-size: 0.93rem;
+    line-height: 1.5;
+}
+
+.usecase-list li:last-child {
+    border-bottom: none;
+}
+
+.usecase-bullet {
+    flex-shrink: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.usecase-quote {
+    background: rgba(0, 212, 255, 0.06);
+    border-left: 3px solid rgba(0, 212, 255, 0.4);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+}
+
+.usecase-quote p {
+    color: #aaa;
+    font-size: 0.9rem;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+    .usecases-tabs {
+        gap: 4px;
+    }
+    .usecase-tab {
+        padding: 6px 10px;
+        font-size: 0.78rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .usecase-panel {
+        animation: none !important;
+    }
+}
+
 /* Comparison Table */
 .comparison-section {
     background: rgba(255,255,255,0.05);
