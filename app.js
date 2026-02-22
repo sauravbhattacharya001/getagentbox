@@ -319,10 +319,15 @@ var FAQ = (function () {
     // Close all items first (accordion behaviour).
     document.querySelectorAll('.faq-item.open').forEach(function (faq) {
       faq.classList.remove('open');
+      var q = faq.querySelector('.faq-question');
+      if (q) q.setAttribute('aria-expanded', 'false');
     });
 
     // Re-open the clicked item if it wasn't already open.
-    if (!wasOpen) item.classList.add('open');
+    if (!wasOpen) {
+      item.classList.add('open');
+      questionEl.setAttribute('aria-expanded', 'true');
+    }
   }
 
   return { toggle: toggle };
@@ -582,12 +587,21 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // FAQ accordion — event delegation on the section.
+  // FAQ accordion — event delegation on the section (click + keyboard).
   var faqSection = document.querySelector('.faq-section');
   if (faqSection) {
     faqSection.addEventListener('click', function (e) {
       var question = e.target.closest('.faq-question');
       if (question) FAQ.toggle(question);
+    });
+    faqSection.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        var question = e.target.closest('.faq-question');
+        if (question) {
+          e.preventDefault();
+          FAQ.toggle(question);
+        }
+      }
     });
   }
 
