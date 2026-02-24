@@ -503,22 +503,15 @@ var Stats = (function () {
     var numberEl = card.querySelector('.stat-number');
     if (!numberEl) return;
 
-    var raw = (numberEl.dataset.target || numberEl.textContent || '').trim();
+    var target = parseInt(card.dataset.target, 10);
+    var suffix = card.dataset.suffix || '';
+    var decimal = card.dataset.decimal || '';
     var prefix = '';
-    var suffix = '';
 
-    if (raw.indexOf('+') !== -1) { suffix = '+'; raw = raw.replace('+', ''); }
-    if (raw.indexOf('%') !== -1) { suffix = '%'; raw = raw.replace('%', ''); }
-    if (raw.indexOf('<') === 0) { prefix = '<'; raw = raw.substring(1); }
-
-    var decimal = '';
-    if (raw.indexOf('.') !== -1) {
-      var parts = raw.split('.');
-      raw = parts[0];
-      decimal = parts[1];
+    if (numberEl.textContent.indexOf('<') === 0) {
+      prefix = '<';
     }
 
-    var target = parseInt(raw.replace(/,/g, ''), 10);
     if (isNaN(target)) return;
 
     var display = prefix + formatNumber(target);
