@@ -598,7 +598,7 @@ DocumentRoot "/var/www/agentbox"
 
             <!-- Security -->
             <h2 id="security">Security</h2>
-            <p>Security headers configured in <code>index.html</code> meta tags:</p>
+            <p>Security headers configured in <code>index.html</code> meta tags and Dockerfile nginx config:</p>
             <table>
                 <thead><tr><th>Header</th><th>Value</th></tr></thead>
                 <tbody>
@@ -606,6 +606,9 @@ DocumentRoot "/var/www/agentbox"
                     <tr><td>X-Content-Type-Options</td><td><code>nosniff</code></td></tr>
                     <tr><td>Referrer-Policy</td><td><code>strict-origin-when-cross-origin</code></td></tr>
                     <tr><td>Frame-Ancestors</td><td><code>'none'</code> (prevents clickjacking)</td></tr>
+                    <tr><td>Strict-Transport-Security</td><td><code>max-age=31536000; includeSubDomains</code> (HSTS — prevents SSL stripping)</td></tr>
+                    <tr><td>Cross-Origin-Opener-Policy</td><td><code>same-origin</code> (prevents cross-origin window references)</td></tr>
+                    <tr><td>Permissions-Policy</td><td>Denies camera, microphone, geolocation, payment, USB, FLoC</td></tr>
                 </tbody>
             </table>
             <p>See <a href="https://github.com/sauravbhattacharya001/getagentbox/blob/master/SECURITY.md">SECURITY.md</a> for vulnerability reporting.</p>
