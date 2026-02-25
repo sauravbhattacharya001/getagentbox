@@ -108,6 +108,7 @@ var ChatDemo = (function () {
     if (!chatWindow) return;
 
     chatWindow.innerHTML = '';
+    if (!Object.prototype.hasOwnProperty.call(SCENARIOS, name)) return;
     var messages = SCENARIOS[name];
     if (!messages) return;
 
