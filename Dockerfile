@@ -46,6 +46,16 @@ server {
     location ~* \.(html)$ {
         expires 1h;
         add_header Cache-Control "public, must-revalidate";
+
+        # Re-declare security headers — nginx does not inherit
+        # parent add_header directives into blocks that define their own.
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://gc.zgo.at; style-src 'self'; img-src 'self' https:; connect-src 'self' https://agentbox.goatcounter.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" always;
+        add_header Cross-Origin-Opener-Policy "same-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     }
 
     # Health check endpoint

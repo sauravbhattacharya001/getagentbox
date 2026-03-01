@@ -19,8 +19,8 @@ The site uses a strict CSP via `<meta>` tag:
 | Directive | Value | Purpose |
 |---|---|---|
 | `default-src` | `'self'` | Block all external resources by default |
-| `script-src` | `'self' 'unsafe-inline' https://gc.zgo.at` | Only inline scripts + GoatCounter |
-| `style-src` | `'self' 'unsafe-inline'` | Inline styles only (single-file architecture) |
+| `script-src` | `'self' https://gc.zgo.at` | Only own scripts + GoatCounter |
+| `style-src` | `'self'` | Own stylesheets only |
 | `img-src` | `'self' https:` | Allow HTTPS images |
 | `connect-src` | `'self' https://agentbox.goatcounter.com` | Only GoatCounter analytics endpoint |
 | `frame-ancestors` | `'none'` | Prevent clickjacking via iframe embedding |
