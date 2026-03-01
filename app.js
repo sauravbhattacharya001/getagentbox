@@ -1034,9 +1034,144 @@ document.addEventListener('DOMContentLoaded', function () {
   // Changelog — tag filter.
   Changelog.init();
 
+  // Sticky navigation bar.
+  SiteNav.init();
+
   // Auto-play the default scenario.
   ChatDemo.play('memory');
 });
+
+// ---------------------------------------------------------------------------
+// Sticky Navigation Bar
+// ---------------------------------------------------------------------------
+
+var SiteNav = (function () {
+  var nav = null;
+  var links = [];
+  var sections = [];
+  var toggle = null;
+  var linksContainer = null;
+  var activeLink = null;
+  var ticking = false;
+
+  function init() {
+    nav = document.getElementById('siteNav');
+    toggle = document.getElementById('navToggle');
+    linksContainer = document.getElementById('navLinks');
+    if (!nav || !linksContainer) return;
+
+    // Collect nav links and their target sections
+    var anchors = linksContainer.querySelectorAll('a[href^="#"]');
+    for (var i = 0; i < anchors.length; i++) {
+      var href = anchors[i].getAttribute('href');
+      var target = document.querySelector(href);
+      if (target) {
+        links.push(anchors[i]);
+        sections.push(target);
+      }
+    }
+
+    // Smooth scroll + close mobile menu on click
+    linksContainer.addEventListener('click', function (e) {
+      var a = e.target.closest('a[href^="#"]');
+      if (!a) return;
+      e.preventDefault();
+      var target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+      }
+      closeMenu();
+    });
+
+    // Logo scroll to top
+    var logo = nav.querySelector('.nav-logo');
+    if (logo) {
+      logo.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+        closeMenu();
+      });
+    }
+
+    // Mobile hamburger toggle
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var expanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!expanded));
+        linksContainer.classList.toggle('open');
+      });
+    }
+
+    // Close menu on Escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeMenu();
+    });
+
+    // Scroll listener for active link + scrolled class
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  function closeMenu() {
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    if (linksContainer) linksContainer.classList.remove('open');
+  }
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      updateScrolledClass();
+      updateActiveLink();
+    });
+  }
+
+  function updateScrolledClass() {
+    if (!nav) return;
+    if (window.scrollY > 40) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+  }
+
+  function updateActiveLink() {
+    var scrollY = window.scrollY + 100; // offset for nav height + margin
+    var current = null;
+
+    for (var i = sections.length - 1; i >= 0; i--) {
+      if (sections[i].offsetTop <= scrollY) {
+        current = links[i];
+        break;
+      }
+    }
+
+    if (current !== activeLink) {
+      if (activeLink) activeLink.classList.remove('active');
+      if (current) current.classList.add('active');
+      activeLink = current;
+    }
+  }
+
+  function getActiveSection() {
+    return activeLink ? activeLink.getAttribute('href').slice(1) : null;
+  }
+
+  function reset() {
+    if (activeLink) activeLink.classList.remove('active');
+    activeLink = null;
+    closeMenu();
+  }
+
+  return {
+    init: init,
+    getActiveSection: getActiveSection,
+    reset: reset,
+    closeMenu: closeMenu
+  };
+})();
+
 /* eslint-enable no-var */
 
 // Expose modules globally for external access and testability.
@@ -1051,5 +1186,6 @@ if (typeof window !== 'undefined') {
   window.UseCases = UseCases;
   window.Integrations = Integrations;
   window.Changelog = Changelog;
+  window.SiteNav = SiteNav;
 }
 

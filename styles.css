@@ -1471,3 +1471,158 @@ h1 {
     background: rgba(76, 175, 80, 0.15);
     color: #4caf50;
 }
+
+/* =============================================
+   Sticky Navigation Bar
+   ============================================= */
+
+.site-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(26, 26, 46, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.site-nav.scrolled {
+    background: rgba(26, 26, 46, 0.95);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+.nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+}
+
+.nav-logo {
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.nav-logo:hover { opacity: 0.85; }
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-links a.active {
+    background: rgba(100, 130, 255, 0.2);
+    color: #8ba4ff;
+}
+
+/* Hamburger toggle (mobile) */
+.nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-hamburger,
+.nav-hamburger::before,
+.nav-hamburger::after {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #fff;
+    border-radius: 2px;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+    position: relative;
+}
+
+.nav-hamburger::before,
+.nav-hamburger::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 22px;
+}
+
+.nav-hamburger::before { top: -7px; }
+.nav-hamburger::after  { top: 7px;  }
+
+.nav-toggle[aria-expanded="true"] .nav-hamburger {
+    background: transparent;
+}
+.nav-toggle[aria-expanded="true"] .nav-hamburger::before {
+    top: 0;
+    transform: rotate(45deg);
+}
+.nav-toggle[aria-expanded="true"] .nav-hamburger::after {
+    top: 0;
+    transform: rotate(-45deg);
+}
+
+/* Add top padding to body so content isn't hidden behind nav */
+body { padding-top: 56px; }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .nav-toggle { display: block; }
+
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        background: rgba(26, 26, 46, 0.97);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 8px 16px 16px;
+        gap: 2px;
+    }
+
+    .nav-links.open { display: flex; }
+
+    .nav-links a {
+        padding: 10px 16px;
+        font-size: 0.95rem;
+    }
+}
+
+/* Smooth scrolling */
+html { scroll-behavior: smooth; }
+
+/* Scroll offset for anchors (account for fixed nav) */
+[id$="Section"], #howItWorks {
+    scroll-margin-top: 64px;
+}

@@ -17,12 +17,30 @@
         <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <nav class="site-nav" id="siteNav" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo" aria-label="Back to top">🤖 AgentBox</a>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+                <span class="nav-hamburger"></span>
+            </button>
+            <ul class="nav-links" id="navLinks" role="menubar">
+                <li role="none"><a href="#featuresSection" role="menuitem">Features</a></li>
+                <li role="none"><a href="#howItWorks" role="menuitem">How It Works</a></li>
+                <li role="none"><a href="#demoSection" role="menuitem">Demo</a></li>
+                <li role="none"><a href="#usecasesSection" role="menuitem">Use Cases</a></li>
+                <li role="none"><a href="#integrationsSection" role="menuitem">Integrations</a></li>
+                <li role="none"><a href="#comparisonSection" role="menuitem">Compare</a></li>
+                <li role="none"><a href="#pricingSection" role="menuitem">Pricing</a></li>
+                <li role="none"><a href="#faqSection" role="menuitem">FAQ</a></li>
+            </ul>
+        </div>
+    </nav>
     <div class="container">
         <div class="logo">🤖</div>
         <h1>AgentBox</h1>
         <p class="tagline">Your personal AI agent that lives in Telegram</p>
         
-        <div class="features">
+        <div class="features" id="featuresSection">
             <div class="feature">
                 <div class="feature-icon">🧠</div>
                 <div class="feature-text">
@@ -99,7 +117,7 @@
             </div>
         </div>
 
-        <div class="demo-section">
+        <div class="demo-section" id="demoSection">
             <h2>See it in action</h2>
             <p class="demo-subtitle">This is what chatting with your agent looks like</p>
             <div class="chat-window" id="chatWindow"></div>
@@ -294,7 +312,7 @@
             </div>
         </div>
 
-        <div class="comparison-section">
+        <div class="comparison-section" id="comparisonSection">
             <h2>How it compares</h2>
             <p class="comparison-subtitle">AgentBox vs the alternatives</p>
             <table class="comparison-table">
@@ -594,7 +612,7 @@
             </div>
         </div>
 
-        <div class="faq-section">
+        <div class="faq-section" id="faqSection">
             <h2>Frequently asked questions</h2>
             <p class="faq-subtitle">Everything you need to know</p>
 
