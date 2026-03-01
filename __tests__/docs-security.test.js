@@ -61,4 +61,8 @@ describe.each(docsPages)('Security headers in $name', ({ name, html }) => {
       }
     }
   });
+
+  test('has Permissions-Policy meta tag', () => {
+    expect(html).toMatch(/<meta\s+http-equiv="Permissions-Policy"/i);
+  });
 });

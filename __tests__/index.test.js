@@ -913,11 +913,9 @@ describe('Security checks', () => {
     });
   });
 
-  test('external scripts have crossorigin attribute', () => {
-    const externalScripts = document.querySelectorAll('script[src]:not([src="app.js"])');
-    externalScripts.forEach((s) => {
-      expect(s.hasAttribute('crossorigin')).toBe(true);
-    });
+  test('no external scripts loaded (all vendored locally)', () => {
+    const externalScripts = document.querySelectorAll('script[src^="http"]');
+    expect(externalScripts.length).toBe(0);
   });
 
   test('CSP blocks unsafe sources', () => {
