@@ -7,6 +7,7 @@
  *  - Pricing:        monthly/yearly billing toggle
  *  - FAQ:            accordion behaviour
  *  - Stats:          animated social proof counters
+ *  - Trust:          expandable privacy detail cards
  */
 
 /** Global reduced-motion check (WCAG 2.3.3 compliance). */
@@ -16,7 +17,7 @@ var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-redu
 // Chat Demo Scenarios
 // ---------------------------------------------------------------------------
 
-/* exported SCENARIOS, ChatDemo, Testimonials, Pricing, FAQ, Stats */
+/* exported SCENARIOS, ChatDemo, Testimonials, Pricing, FAQ, Stats, Trust */
 /* eslint-disable no-var */
 var SCENARIOS = Object.freeze({
   memory: [
@@ -926,6 +927,40 @@ var Changelog = (function () {
 })();
 
 // ---------------------------------------------------------------------------
+// Trust & Privacy — Expandable Detail Cards
+// ---------------------------------------------------------------------------
+
+var Trust = (function () {
+  /**
+   * Toggle the detail panel on a trust card.
+   * Only one card can be expanded at a time (accordion).
+   */
+  function toggle(card) {
+    if (!card || !card.classList.contains('trust-card')) return;
+
+    var detail = card.querySelector('.trust-detail');
+    if (!detail) return;
+
+    var wasExpanded = card.classList.contains('expanded');
+
+    // Collapse all cards first.
+    document.querySelectorAll('.trust-card.expanded').forEach(function (c) {
+      c.classList.remove('expanded');
+      var d = c.querySelector('.trust-detail');
+      if (d) d.hidden = true;
+    });
+
+    // Toggle the clicked card.
+    if (!wasExpanded) {
+      card.classList.add('expanded');
+      detail.hidden = false;
+    }
+  }
+
+  return { toggle: toggle };
+})();
+
+// ---------------------------------------------------------------------------
 // Event Binding (replaces inline onclick handlers)
 // ---------------------------------------------------------------------------
 
@@ -995,6 +1030,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // How It Works — scroll animation.
   HowItWorks.init();
+
+  // Trust & Privacy — expandable cards (click + keyboard).
+  var trustSection = document.querySelector('.trust-section');
+  if (trustSection) {
+    trustSection.addEventListener('click', function (e) {
+      var card = e.target.closest('.trust-card');
+      if (card) Trust.toggle(card);
+    });
+    trustSection.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        var card = e.target.closest('.trust-card');
+        if (card) {
+          e.preventDefault();
+          Trust.toggle(card);
+        }
+      }
+    });
+  }
 
   // Use Cases — tabbed section (init + delegation).
   UseCases.init();
