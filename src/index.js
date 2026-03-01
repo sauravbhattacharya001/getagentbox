@@ -201,20 +201,37 @@
             var numberEl = el.querySelector('.stat-number') || el;
             if (isNaN(target)) return;
 
+            // Cancel any existing timer to prevent stacking
+            if (el._statsTimer) {
+                clearInterval(el._statsTimer);
+                el._statsTimer = null;
+            }
+
             var frames = Math.ceil(duration / (1000 / fps));
             var current = 0;
             var step = target / frames;
             var frame = 0;
+            var prev = -1;
 
             var timer = setInterval(function () {
                 frame++;
-                current = Math.min(Math.round(step * frame), target);
+                current = Math.min(Math.ceil(step * frame), target);
+
+                // Ensure monotonic progression
+                if (current < prev) current = prev;
+                prev = current;
+
                 numberEl.textContent = current.toLocaleString() + suffix;
-                if (frame >= frames) {
+
+                // Early exit when target reached
+                if (current === target || frame >= frames) {
                     clearInterval(timer);
+                    el._statsTimer = null;
                     numberEl.textContent = target.toLocaleString() + suffix;
                 }
             }, 1000 / fps);
+
+            el._statsTimer = timer;
         },
 
         /**

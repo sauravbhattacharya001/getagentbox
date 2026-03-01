@@ -453,8 +453,15 @@ var Stats = (function () {
 
     if (isNaN(target)) return;
 
+    // Cancel any existing timer on this element to prevent stacking
+    if (card._statsTimer) {
+      clearInterval(card._statsTimer);
+      card._statsTimer = null;
+    }
+
     var frames = Math.ceil(DURATION / FRAME_INTERVAL);
     var frame = 0;
+    var prev = -1;
 
     var timer = setInterval(function () {
       frame++;
@@ -462,19 +469,32 @@ var Stats = (function () {
       var easedProgress = easeOutCubic(progress);
       var current = Math.round(easedProgress * target);
 
-      var display = prefix + formatNumber(current);
-      if (decimal && progress >= 1) {
-        display = prefix + formatNumber(target) + '.' + decimal;
+      // Ensure monotonic progression — never go backwards
+      if (current < prev) current = prev;
+      prev = current;
+
+      // Early exit if we've reached the target
+      if (current === target || progress >= 1) {
+        clearInterval(timer);
+        card._statsTimer = null;
+
+        var finalDisplay = prefix + formatNumber(target);
+        if (decimal) {
+          finalDisplay = prefix + formatNumber(target) + '.' + decimal;
+        }
+        finalDisplay += suffix;
+        numberEl.textContent = finalDisplay;
+        card.classList.add('animated');
+        return;
       }
+
+      var display = prefix + formatNumber(current);
       display += suffix;
 
       numberEl.textContent = display;
-
-      if (progress >= 1) {
-        clearInterval(timer);
-        card.classList.add('animated');
-      }
     }, FRAME_INTERVAL);
+
+    card._statsTimer = timer;
   }
 
   /**
