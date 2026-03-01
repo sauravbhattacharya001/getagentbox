@@ -1201,6 +1201,118 @@ h1 {
     }
 }
 
+.newsletter-section {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(123, 44, 191, 0.08));
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: 16px;
+    padding: 40px 30px;
+    margin-bottom: 30px;
+    text-align: center;
+    contain: content;
+}
+
+.newsletter-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+}
+
+.newsletter-section h2 {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+}
+
+.newsletter-subtitle {
+    color: #888;
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.newsletter-form {
+    margin-bottom: 12px;
+}
+
+.newsletter-input-group {
+    display: flex;
+    gap: 8px;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+.newsletter-input {
+    flex: 1;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.newsletter-input::placeholder {
+    color: #666;
+}
+
+.newsletter-input:focus {
+    border-color: #00d4ff;
+}
+
+.newsletter-btn {
+    padding: 12px 24px;
+    background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+}
+
+.newsletter-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
+}
+
+.newsletter-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.newsletter-status {
+    font-size: 0.85rem;
+    margin-top: 10px;
+    min-height: 1.2em;
+}
+
+.newsletter-status.success {
+    color: #4ade80;
+}
+
+.newsletter-status.error {
+    color: #f87171;
+}
+
+.newsletter-privacy {
+    color: #555;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 480px) {
+    .newsletter-input-group {
+        flex-direction: column;
+    }
+    .newsletter-btn {
+        width: 100%;
+    }
+}
+
 .cta-section {
     background: rgba(255,255,255,0.08);
     border-radius: 16px;

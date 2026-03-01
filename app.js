@@ -1061,6 +1061,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // Sticky navigation bar.
   SiteNav.init();
 
+  // Newsletter signup form.
+  Newsletter.init();
+
   // Auto-play the default scenario.
   ChatDemo.play('memory');
 });
@@ -1198,6 +1201,80 @@ var SiteNav = (function () {
 
 /* eslint-enable no-var */
 
+/**
+ * Newsletter — email signup form with client-side validation and feedback.
+ * Stores subscriptions in localStorage (demo) since there's no backend.
+ */
+var Newsletter = (function () {
+  'use strict';
+
+  function init() {
+    var form = document.getElementById('newsletterForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var emailInput = document.getElementById('newsletterEmail');
+      var btn = document.getElementById('newsletterBtn');
+      var status = document.getElementById('newsletterStatus');
+      var email = emailInput.value.trim();
+
+      if (!email || !isValidEmail(email)) {
+        showStatus(status, 'Please enter a valid email address.', 'error');
+        return;
+      }
+
+      // Check for duplicate
+      var subs = getSubscribers();
+      if (subs.indexOf(email) !== -1) {
+        showStatus(status, 'You\'re already subscribed! 🎉', 'success');
+        return;
+      }
+
+      // Simulate subscribe
+      btn.disabled = true;
+      btn.textContent = 'Subscribing…';
+
+      setTimeout(function () {
+        subs.push(email);
+        try {
+          localStorage.setItem('agentbox_newsletter', JSON.stringify(subs));
+        } catch (_) { /* ignore */ }
+
+        showStatus(status, 'You\'re in! Welcome aboard. 🚀', 'success');
+        btn.textContent = 'Subscribed ✓';
+        emailInput.value = '';
+
+        setTimeout(function () {
+          btn.disabled = false;
+          btn.textContent = 'Subscribe';
+        }, 3000);
+      }, 800);
+    });
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function showStatus(el, msg, type) {
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'newsletter-status ' + type;
+  }
+
+  function getSubscribers() {
+    try {
+      var data = localStorage.getItem('agentbox_newsletter');
+      return data ? JSON.parse(data) : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  return { init: init, getSubscribers: getSubscribers };
+})();
+
 // Expose modules globally for external access and testability.
 if (typeof window !== 'undefined') {
   window.SCENARIOS = SCENARIOS;
@@ -1211,5 +1288,6 @@ if (typeof window !== 'undefined') {
   window.Integrations = Integrations;
   window.Changelog = Changelog;
   window.SiteNav = SiteNav;
+  window.Newsletter = Newsletter;
 }
 
