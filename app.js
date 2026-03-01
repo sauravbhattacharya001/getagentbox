@@ -413,7 +413,6 @@ var HowItWorks = (function () {
 var Stats = (function () {
   var animated = false;
   var DURATION = 2000; // animation duration in ms
-  var FRAME_INTERVAL = 30; // ms between updates (~33fps)
 
   /**
    * Easing function — ease-out cubic for a satisfying deceleration.
@@ -435,6 +434,8 @@ var Stats = (function () {
 
   /**
    * Animate a single stat card's number from 0 to its target value.
+   * Uses requestAnimationFrame for smooth 60fps animation instead of
+   * setInterval which can cause jank and layout thrashing.
    * @param {Element} card - The .stat-card element
    */
   function animateCard(card) {
@@ -453,19 +454,19 @@ var Stats = (function () {
 
     if (isNaN(target)) return;
 
-    // Cancel any existing timer on this element to prevent stacking
-    if (card._statsTimer) {
-      clearInterval(card._statsTimer);
-      card._statsTimer = null;
+    // Cancel any existing animation on this element to prevent stacking
+    if (card._statsRafId) {
+      cancelAnimationFrame(card._statsRafId);
+      card._statsRafId = null;
     }
 
-    var frames = Math.ceil(DURATION / FRAME_INTERVAL);
-    var frame = 0;
+    var startTime = null;
     var prev = -1;
 
-    var timer = setInterval(function () {
-      frame++;
-      var progress = Math.min(frame / frames, 1);
+    function tick(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var elapsed = timestamp - startTime;
+      var progress = Math.min(elapsed / DURATION, 1);
       var easedProgress = easeOutCubic(progress);
       var current = Math.round(easedProgress * target);
 
@@ -473,10 +474,9 @@ var Stats = (function () {
       if (current < prev) current = prev;
       prev = current;
 
-      // Early exit if we've reached the target
+      // Final frame
       if (current === target || progress >= 1) {
-        clearInterval(timer);
-        card._statsTimer = null;
+        card._statsRafId = null;
 
         var finalDisplay = prefix + formatNumber(target);
         if (decimal) {
@@ -490,11 +490,12 @@ var Stats = (function () {
 
       var display = prefix + formatNumber(current);
       display += suffix;
-
       numberEl.textContent = display;
-    }, FRAME_INTERVAL);
 
-    card._statsTimer = timer;
+      card._statsRafId = requestAnimationFrame(tick);
+    }
+
+    card._statsRafId = requestAnimationFrame(tick);
   }
 
   /**
@@ -581,6 +582,10 @@ var Stats = (function () {
     if (section) {
       var cards = section.querySelectorAll('.stat-card');
       for (var i = 0; i < cards.length; i++) {
+        if (cards[i]._statsRafId) {
+          cancelAnimationFrame(cards[i]._statsRafId);
+          cards[i]._statsRafId = null;
+        }
         cards[i].classList.remove('animated');
         var numEl = cards[i].querySelector('.stat-number');
         if (numEl) numEl.textContent = '0';
@@ -596,8 +601,7 @@ var Stats = (function () {
     animateCard: animateCard,
     formatNumber: formatNumber,
     easeOutCubic: easeOutCubic,
-    DURATION: DURATION,
-    FRAME_INTERVAL: FRAME_INTERVAL
+    DURATION: DURATION
   };
 })();
 
