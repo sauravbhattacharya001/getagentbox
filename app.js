@@ -679,6 +679,117 @@ var UseCases = (function () {
 })();
 
 // ---------------------------------------------------------------------------
+// Integrations Module — category filtering for integrations grid
+// ---------------------------------------------------------------------------
+
+var Integrations = (function () {
+  var currentCategory = 'all';
+
+  /**
+   * Filter integration cards by category.
+   * @param {string} category  The data-category to show, or 'all'.
+   */
+  function filterBy(category) {
+    if (!category) return;
+
+    var section = document.getElementById('integrationsSection');
+    if (!section) return;
+
+    var cards = section.querySelectorAll('.integration-card');
+    var buttons = section.querySelectorAll('.integration-filter-btn');
+
+    // Update filter buttons
+    for (var i = 0; i < buttons.length; i++) {
+      var isActive = buttons[i].dataset.category === category;
+      buttons[i].classList.toggle('active', isActive);
+      buttons[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
+
+    // Show/hide cards
+    var visibleCount = 0;
+    for (var j = 0; j < cards.length; j++) {
+      var match = category === 'all' || cards[j].dataset.category === category;
+      cards[j].classList.toggle('hidden', !match);
+      if (match) visibleCount++;
+    }
+
+    currentCategory = category;
+    return visibleCount;
+  }
+
+  /** Get the current active category. */
+  function getCurrent() {
+    return currentCategory;
+  }
+
+  /** Get all available categories. */
+  function getCategories() {
+    var section = document.getElementById('integrationsSection');
+    if (!section) return [];
+    var buttons = section.querySelectorAll('.integration-filter-btn');
+    var cats = [];
+    for (var i = 0; i < buttons.length; i++) {
+      if (buttons[i].dataset.category) cats.push(buttons[i].dataset.category);
+    }
+    return cats;
+  }
+
+  /** Get integration cards data. */
+  function getIntegrations(category) {
+    var section = document.getElementById('integrationsSection');
+    if (!section) return [];
+    var cards = section.querySelectorAll('.integration-card');
+    var result = [];
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      if (category && category !== 'all' && card.dataset.category !== category) continue;
+      result.push({
+        name: card.querySelector('h3') ? card.querySelector('h3').textContent : '',
+        category: card.dataset.category || '',
+        status: card.dataset.status || '',
+        description: card.querySelector('p') ? card.querySelector('p').textContent : ''
+      });
+    }
+    return result;
+  }
+
+  /** Get count by status (live/coming). */
+  function getStatusCounts() {
+    var integrations = getIntegrations();
+    var counts = { live: 0, coming: 0 };
+    for (var i = 0; i < integrations.length; i++) {
+      if (integrations[i].status === 'live') counts.live++;
+      else if (integrations[i].status === 'coming') counts.coming++;
+    }
+    return counts;
+  }
+
+  /** Initialize click handlers on filter buttons. */
+  function init() {
+    var section = document.getElementById('integrationsSection');
+    if (!section) return;
+
+    var filterContainer = section.querySelector('.integrations-filter');
+    if (!filterContainer) return;
+
+    filterContainer.addEventListener('click', function (e) {
+      var btn = e.target.closest('.integration-filter-btn');
+      if (!btn || !btn.dataset.category) return;
+      filterBy(btn.dataset.category);
+    });
+  }
+
+  return {
+    filterBy: filterBy,
+    getCurrent: getCurrent,
+    getCategories: getCategories,
+    getIntegrations: getIntegrations,
+    getStatusCounts: getStatusCounts,
+    init: init
+  };
+})();
+
+// ---------------------------------------------------------------------------
 // Event Binding (replaces inline onclick handlers)
 // ---------------------------------------------------------------------------
 
@@ -805,6 +916,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // Stats — animated counters on scroll.
   Stats.init();
 
+  // Integrations — category filter.
+  Integrations.init();
+
   // Auto-play the default scenario.
   ChatDemo.play('memory');
 });
@@ -820,5 +934,6 @@ if (typeof window !== 'undefined') {
   window.HowItWorks = HowItWorks;
   window.Stats = Stats;
   window.UseCases = UseCases;
+  window.Integrations = Integrations;
 }
 
