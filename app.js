@@ -790,6 +790,118 @@ var Integrations = (function () {
 })();
 
 // ---------------------------------------------------------------------------
+// Changelog Module
+// ---------------------------------------------------------------------------
+
+var Changelog = (function () {
+  var currentTag = 'all';
+
+  /**
+   * Filter changelog entries by tag.
+   * @param {string} tag  The data-tag to show, or 'all'.
+   * @returns {number} Number of visible entries.
+   */
+  function filterBy(tag) {
+    if (!tag) return 0;
+
+    var section = document.getElementById('changelogSection');
+    if (!section) return 0;
+
+    var entries = section.querySelectorAll('.changelog-entry');
+    var buttons = section.querySelectorAll('.changelog-filter-btn');
+
+    // Update filter buttons
+    for (var i = 0; i < buttons.length; i++) {
+      var isActive = buttons[i].dataset.tag === tag;
+      buttons[i].classList.toggle('active', isActive);
+      buttons[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
+
+    // Show/hide entries
+    var visibleCount = 0;
+    for (var j = 0; j < entries.length; j++) {
+      var match = tag === 'all' || entries[j].dataset.tag === tag;
+      entries[j].classList.toggle('hidden', !match);
+      if (match) visibleCount++;
+    }
+
+    currentTag = tag;
+    return visibleCount;
+  }
+
+  /** Get the current active tag filter. */
+  function getCurrent() {
+    return currentTag;
+  }
+
+  /** Get all available filter tags. */
+  function getTags() {
+    var section = document.getElementById('changelogSection');
+    if (!section) return [];
+    var buttons = section.querySelectorAll('.changelog-filter-btn');
+    var tags = [];
+    for (var i = 0; i < buttons.length; i++) {
+      if (buttons[i].dataset.tag) tags.push(buttons[i].dataset.tag);
+    }
+    return tags;
+  }
+
+  /** Get changelog entries data, optionally filtered by tag. */
+  function getEntries(tag) {
+    var section = document.getElementById('changelogSection');
+    if (!section) return [];
+    var entries = section.querySelectorAll('.changelog-entry');
+    var result = [];
+    for (var i = 0; i < entries.length; i++) {
+      var entry = entries[i];
+      if (tag && tag !== 'all' && entry.dataset.tag !== tag) continue;
+      var content = entry.querySelector('.changelog-content');
+      result.push({
+        tag: entry.dataset.tag || '',
+        date: entry.querySelector('.changelog-date') ? entry.querySelector('.changelog-date').textContent : '',
+        title: content && content.querySelector('h3') ? content.querySelector('h3').textContent : '',
+        description: content && content.querySelector('p') ? content.querySelector('p').textContent : ''
+      });
+    }
+    return result;
+  }
+
+  /** Get count of entries by tag. */
+  function getTagCounts() {
+    var entries = getEntries();
+    var counts = { feature: 0, improvement: 0, fix: 0 };
+    for (var i = 0; i < entries.length; i++) {
+      if (counts[entries[i].tag] !== undefined) counts[entries[i].tag]++;
+    }
+    return counts;
+  }
+
+  /** Initialize click handlers on filter buttons. */
+  function init() {
+    var section = document.getElementById('changelogSection');
+    if (!section) return;
+
+    var filterContainer = section.querySelector('.changelog-filter');
+    if (!filterContainer) return;
+
+    filterContainer.addEventListener('click', function (e) {
+      var btn = e.target.closest('.changelog-filter-btn');
+      if (!btn || !btn.dataset.tag) return;
+      filterBy(btn.dataset.tag);
+    });
+  }
+
+  return {
+    filterBy: filterBy,
+    getCurrent: getCurrent,
+    getTags: getTags,
+    getEntries: getEntries,
+    getTagCounts: getTagCounts,
+    init: init
+  };
+})();
+
+// ---------------------------------------------------------------------------
 // Event Binding (replaces inline onclick handlers)
 // ---------------------------------------------------------------------------
 
@@ -919,6 +1031,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // Integrations — category filter.
   Integrations.init();
 
+  // Changelog — tag filter.
+  Changelog.init();
+
   // Auto-play the default scenario.
   ChatDemo.play('memory');
 });
@@ -935,5 +1050,6 @@ if (typeof window !== 'undefined') {
   window.Stats = Stats;
   window.UseCases = UseCases;
   window.Integrations = Integrations;
+  window.Changelog = Changelog;
 }
 

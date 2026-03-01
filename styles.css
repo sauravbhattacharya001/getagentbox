@@ -1322,4 +1322,152 @@ h1 {
     .stat-card {
         transition: none !important;
     }
+
+    /* Disable changelog animations */
+    .changelog-entry {
+        transition: none !important;
+    }
+}
+
+/* ── Changelog Section ─────────────────────────────────────────── */
+
+.changelog-section {
+    margin-top: 80px;
+    text-align: center;
+}
+
+.changelog-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 8px;
+    margin-bottom: 32px;
+    font-size: 1.05rem;
+}
+
+.changelog-filter {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+}
+
+.changelog-filter-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 6px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.changelog-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+.changelog-filter-btn.active {
+    background: rgba(0, 212, 255, 0.15);
+    border-color: rgba(0, 212, 255, 0.4);
+    color: #00d4ff;
+}
+
+.changelog-timeline {
+    position: relative;
+    text-align: left;
+    padding-left: 24px;
+}
+
+.changelog-timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 1px;
+}
+
+.changelog-entry {
+    position: relative;
+    margin-bottom: 28px;
+    padding-left: 24px;
+    transition: opacity 0.3s ease;
+}
+
+.changelog-entry.hidden {
+    display: none;
+}
+
+.changelog-dot {
+    position: absolute;
+    left: -20px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid;
+}
+
+.changelog-dot.feature {
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, 0.3);
+}
+
+.changelog-dot.improvement {
+    border-color: #ffc107;
+    background: rgba(255, 193, 7, 0.3);
+}
+
+.changelog-dot.fix {
+    border-color: #4caf50;
+    background: rgba(76, 175, 80, 0.3);
+}
+
+.changelog-date {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.changelog-content h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+    color: #fff;
+}
+
+.changelog-content p {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.5;
+}
+
+.changelog-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.changelog-badge.feature {
+    background: rgba(0, 212, 255, 0.15);
+    color: #00d4ff;
+}
+
+.changelog-badge.improvement {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.changelog-badge.fix {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4caf50;
 }
