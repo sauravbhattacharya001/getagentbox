@@ -1010,6 +1010,23 @@
         <p class="footer">Built by <a href="https://github.com/sauravbhattacharya001" target="_blank" rel="noopener noreferrer">Saurav Bhattacharya</a></p>
     </div>
 
+    <!-- Command Palette (Ctrl+K) -->
+    <div class="cmd-palette-overlay" id="cmdPaletteOverlay" hidden>
+        <div class="cmd-palette" role="dialog" aria-label="Command palette" aria-modal="true">
+            <div class="cmd-palette-header">
+                <span class="cmd-palette-icon">🔍</span>
+                <input type="text" class="cmd-palette-input" id="cmdPaletteInput" placeholder="Jump to section..." autocomplete="off" aria-label="Search sections">
+                <kbd class="cmd-palette-shortcut">ESC</kbd>
+            </div>
+            <ul class="cmd-palette-results" id="cmdPaletteResults" role="listbox" aria-label="Sections"></ul>
+            <div class="cmd-palette-footer">
+                <span><kbd>↑↓</kbd> navigate</span>
+                <span><kbd>↵</kbd> go</span>
+                <span><kbd>esc</kbd> close</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Interactive Chat Demo -->
         <script src="app.js" defer></script>
 

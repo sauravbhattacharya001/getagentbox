@@ -1716,3 +1716,133 @@ if (typeof window !== 'undefined') {
   window.Newsletter = Newsletter;
 }
 
+
+// ---------------------------------------------------------------------------
+// Command Palette (Ctrl+K / Cmd+K)
+// ---------------------------------------------------------------------------
+var CommandPalette = (function () {
+  var SECTIONS = [
+    { id: 'featuresSection', icon: '✨', label: 'Features', hint: 'What AgentBox can do' },
+    { id: 'howItWorks', icon: '🚀', label: 'How It Works', hint: 'Getting started' },
+    { id: 'demoSection', icon: '💬', label: 'Demo', hint: 'See it in action' },
+    { id: 'statsSection', icon: '📊', label: 'Stats', hint: 'Social proof' },
+    { id: 'usecasesSection', icon: '👨‍💻', label: 'Use Cases', hint: 'Who it is for' },
+    { id: 'integrationsSection', icon: '🔗', label: 'Integrations', hint: 'Connected tools' },
+    { id: 'comparisonSection', icon: '⚖️', label: 'Compare', hint: 'vs ChatGPT, Siri' },
+    { id: 'trustSection', icon: '🔒', label: 'Trust & Privacy', hint: 'Security details' },
+    { id: 'testimonialsSection', icon: '💬', label: 'Testimonials', hint: 'What people say' },
+    { id: 'pricingSection', icon: '💰', label: 'Pricing', hint: 'Plans & pricing' },
+    { id: 'changelogSection', icon: '📋', label: 'Changelog', hint: 'What is new' },
+    { id: 'roadmapSection', icon: '🗺️', label: 'Roadmap', hint: 'Coming soon' },
+    { id: 'statusSection', icon: '🟢', label: 'System Status', hint: 'Service health' },
+    { id: 'faqSection', icon: '❓', label: 'FAQ', hint: 'Common questions' },
+    { id: 'newsletterSection', icon: '📬', label: 'Newsletter', hint: 'Stay in the loop' }
+  ];
+
+  var overlay, input, results;
+  var selectedIndex = 0;
+  var filtered = [];
+
+  function init() {
+    overlay = document.getElementById('cmdPaletteOverlay');
+    input = document.getElementById('cmdPaletteInput');
+    results = document.getElementById('cmdPaletteResults');
+    if (!overlay || !input || !results) return;
+
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        toggle();
+      }
+      if (e.key === 'Escape' && !overlay.hidden) {
+        close();
+      }
+    });
+
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) close();
+    });
+
+    input.addEventListener('input', function () {
+      filter(input.value);
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+      else if (e.key === 'Enter') { e.preventDefault(); go(); }
+    });
+
+    filter('');
+  }
+
+  function toggle() {
+    if (overlay.hidden) open(); else close();
+  }
+
+  function open() {
+    overlay.hidden = false;
+    input.value = '';
+    filter('');
+    input.focus();
+  }
+
+  function close() {
+    overlay.hidden = true;
+  }
+
+  function filter(q) {
+    var query = q.toLowerCase().trim();
+    filtered = query
+      ? SECTIONS.filter(function (s) {
+          return s.label.toLowerCase().indexOf(query) !== -1 ||
+                 s.hint.toLowerCase().indexOf(query) !== -1;
+        })
+      : SECTIONS.slice();
+    selectedIndex = 0;
+    render();
+  }
+
+  function render() {
+    results.innerHTML = '';
+    filtered.forEach(function (s, i) {
+      var li = document.createElement('li');
+      li.className = 'cmd-palette-item';
+      li.setAttribute('role', 'option');
+      if (i === selectedIndex) li.setAttribute('aria-selected', 'true');
+      li.innerHTML =
+        '<span class="cmd-palette-item-icon">' + s.icon + '</span>' +
+        '<span class="cmd-palette-item-label">' + s.label + '</span>' +
+        '<span class="cmd-palette-item-hint">' + s.hint + '</span>';
+      li.addEventListener('click', function () {
+        selectedIndex = i;
+        go();
+      });
+      results.appendChild(li);
+    });
+  }
+
+  function move(dir) {
+    if (!filtered.length) return;
+    selectedIndex = (selectedIndex + dir + filtered.length) % filtered.length;
+    render();
+    var sel = results.querySelector('[aria-selected="true"]');
+    if (sel) sel.scrollIntoView({ block: 'nearest' });
+  }
+
+  function go() {
+    if (!filtered.length) return;
+    var section = filtered[selectedIndex];
+    var el = document.getElementById(section.id);
+    if (el) {
+      close();
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  return { init: init, open: open, close: close };
+})();
+
+document.addEventListener('DOMContentLoaded', function () {
+  CommandPalette.init();
+});
