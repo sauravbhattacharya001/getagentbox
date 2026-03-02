@@ -2726,3 +2726,123 @@ body.light-mode .nav-hamburger::after { background: #1a202c; }
     transition: opacity 0.1s, visibility 0.1s;
   }
 }
+
+/* Keyboard Shortcuts Modal */
+.shortcuts-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.shortcuts-overlay[hidden] {
+  display: none;
+}
+
+.shortcuts-modal {
+  background: var(--card-bg, #1a1a2e);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 16px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: shortcuts-in 0.2s ease-out;
+}
+
+@keyframes shortcuts-in {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.shortcuts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+}
+
+.shortcuts-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text, #e0e0e0);
+}
+
+.shortcuts-close {
+  background: none;
+  border: none;
+  color: var(--text-muted, #999);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.shortcuts-close:hover {
+  color: var(--text, #e0e0e0);
+}
+
+.shortcuts-body {
+  padding: 16px 24px 24px;
+}
+
+.shortcuts-group {
+  margin-bottom: 20px;
+}
+
+.shortcuts-group:last-child {
+  margin-bottom: 0;
+}
+
+.shortcuts-group h4 {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent, #00d4ff);
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  color: var(--text, #e0e0e0);
+  font-size: 0.9rem;
+}
+
+.shortcut-row kbd {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--text, #e0e0e0);
+  min-width: 24px;
+  text-align: center;
+}
+
+/* Light theme overrides */
+[data-theme="light"] .shortcuts-modal {
+  background: #fff;
+  border-color: #e0e0e0;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .shortcuts-header {
+  border-bottom-color: #e0e0e0;
+}
+
+[data-theme="light"] .shortcut-row kbd {
+  background: #f5f5f5;
+  border-color: #ddd;
+  color: #333;
+}
