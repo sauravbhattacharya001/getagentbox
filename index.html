@@ -30,6 +30,7 @@
                 <li role="none"><a href="#comparisonSection" role="menuitem">Compare</a></li>
                 <li role="none"><a href="#trustSection" role="menuitem">Trust</a></li>
                 <li role="none"><a href="#pricingSection" role="menuitem">Pricing</a></li>
+                <li role="none"><a href="#roadmapSection" role="menuitem">Roadmap</a></li>
                 <li role="none"><a href="#faqSection" role="menuitem">FAQ</a></li>
                 <li role="none"><a href="#newsletterSection" role="menuitem">Newsletter</a></li>
             </ul>
@@ -719,6 +720,114 @@
                         <p>Switched to GPT-4o vision — screenshots, documents, and memes are understood with much higher accuracy.</p>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="roadmap-section" id="roadmapSection">
+            <h2>Product roadmap</h2>
+            <p class="roadmap-subtitle">See what we're working on and what's coming next</p>
+            <div class="roadmap-filter" role="tablist" aria-label="Roadmap status filter">
+                <button class="roadmap-filter-btn active" role="tab" aria-selected="true" data-status="all">All</button>
+                <button class="roadmap-filter-btn" role="tab" aria-selected="false" data-status="shipped">&#x2705; Shipped</button>
+                <button class="roadmap-filter-btn" role="tab" aria-selected="false" data-status="progress">&#x1F528; In Progress</button>
+                <button class="roadmap-filter-btn" role="tab" aria-selected="false" data-status="planned">&#x1F4CB; Planned</button>
+            </div>
+            <div class="roadmap-grid" id="roadmapGrid">
+                <div class="roadmap-card" data-status="shipped" data-category="core">
+                    <div class="roadmap-status-badge shipped">&#x2705; Shipped</div>
+                    <div class="roadmap-category">&#x1F9E0; Core</div>
+                    <h3>Long-term memory</h3>
+                    <p>Your agent remembers preferences, past conversations, and context across sessions.</p>
+                    <div class="roadmap-votes">
+                        <button class="roadmap-vote-btn" aria-label="Upvote long-term memory">&#x1F44D;</button>
+                        <span class="roadmap-vote-count">142</span>
+                    </div>
+                </div>
+                <div class="roadmap-card" data-status="shipped" data-category="integration">
+                    <div class="roadmap-status-badge shipped">&#x2705; Shipped</div>
+                    <div class="roadmap-category">&#x1F517; Integration</div>
+                    <h3>WhatsApp support</h3>
+                    <p>Same agent, different app. Your WhatsApp messages are handled with full memory and intelligence.</p>
+                    <div class="roadmap-votes">
+                        <button class="roadmap-vote-btn" aria-label="Upvote WhatsApp support">&#x1F44D;</button>
+                        <span class="roadmap-vote-count">98</span>
+                    </div>
+                </div>
+                <div class="roadmap-card" data-status="shipped" data-category="feature">
+                    <div class="roadmap-status-badge shipped">&#x2705; Shipped</div>
+                    <div class="roadmap-category">&#x2728; Feature</div>
+                    <h3>File analysis</h3>
+                    <p>Upload PDFs, spreadsheets, and documents. Your agent reads, summarizes, and answers questions.</p>
+                    <div class="roadmap-votes">
+                        <button class="roadmap-vote-btn" aria-label="Upvote file analysis">&#x1F44D;</button>
+                        <span class="roadmap-vote-count">87</span>
+                    </div>
+                </div>
+                <div class="roadmap-card" data-status="progress" data-category="integration">
+                    <div class="roadmap-status-badge progress">&#x1F528; In Progress</div>
+                    <div class="roadmap-category">&#x1F517; Integration</div>
+                    <h3>Slack integration</h3>
+                    <p>Bring your agent into Slack workspaces. Team-wide AI assistance with shared context.</p>
+                    <div class="roadmap-votes">
+                        <button class="roadmap-vote-btn" aria-label="Upvote Slack integration">&#x1F44D;</button>
+                        <span class="roadmap-vote-count">156</span>
+                    </div>
+                </div>
+                <div class="roadmap-card" data-status="progress" data-category="core">
+                    <div class="roadmap-status-badge progress">&#x1F528; In Progress</div>
+                    <div class="roadmap-category">&#x1F9E0; Core</div>
+                    <h3>Multi-model switching</h3>
+                    <p>Choose between different AI models per conversation. Use the best model for each task.</p>
+                    <div class="roadmap-votes">
+                        <button class="roadmap-vote-btn" aria-label="Upvote multi-model switching">&#x1F44D;</button>
+                        <span class="roadmap-vote-count">203</span>
+                    </div>
+                </div>
+                <div class="roadmap-card" data-status="progress" data-category="feature">
+                    <div class="roadmap-status-badge progress">&#x1F528; In Progress</div>
+                    <div class="roadmap-category">&#x2728; Feature</div>
+                    <h3>Scheduled tasks</h3>
+                    <p>Set up recurring actions. Daily briefings, weekly reports, automated checks while you sleep.</p>
+                    <div class="roadmap-votes">
+                        <button class="roadmap-vote-btn" aria-label="Upvote scheduled tasks">&#x1F44D;</button>
+                        <span class="roadmap-vote-count">178</span>
+                    </div>
+                </div>
+                <div class="roadmap-card" data-status="planned" data-category="feature">
+                    <div class="roadmap-status-badge planned">&#x1F4CB; Planned</div>
+                    <div class="roadmap-category">&#x2728; Feature</div>
+                    <h3>Custom tools &amp; plugins</h3>
+                    <p>Connect your own APIs and services as tools. Your agent calls them when needed.</p>
+                    <div class="roadmap-votes">
+                        <button class="roadmap-vote-btn" aria-label="Upvote custom tools">&#x1F44D;</button>
+                        <span class="roadmap-vote-count">234</span>
+                    </div>
+                </div>
+                <div class="roadmap-card" data-status="planned" data-category="core">
+                    <div class="roadmap-status-badge planned">&#x1F4CB; Planned</div>
+                    <div class="roadmap-category">&#x1F9E0; Core</div>
+                    <h3>Agent personas</h3>
+                    <p>Create custom personalities. A research assistant, writing coach, or coding mentor on demand.</p>
+                    <div class="roadmap-votes">
+                        <button class="roadmap-vote-btn" aria-label="Upvote agent personas">&#x1F44D;</button>
+                        <span class="roadmap-vote-count">189</span>
+                    </div>
+                </div>
+                <div class="roadmap-card" data-status="planned" data-category="integration">
+                    <div class="roadmap-status-badge planned">&#x1F4CB; Planned</div>
+                    <div class="roadmap-category">&#x1F517; Integration</div>
+                    <h3>Notion integration</h3>
+                    <p>Search, create, and update Notion pages and databases through natural language.</p>
+                    <div class="roadmap-votes">
+                        <button class="roadmap-vote-btn" aria-label="Upvote Notion integration">&#x1F44D;</button>
+                        <span class="roadmap-vote-count">167</span>
+                    </div>
+                </div>
+            </div>
+            <div class="roadmap-summary" id="roadmapSummary">
+                <span class="roadmap-summary-item" data-status="shipped">&#x2705; <strong>3</strong> shipped</span>
+                <span class="roadmap-summary-item" data-status="progress">&#x1F528; <strong>3</strong> in progress</span>
+                <span class="roadmap-summary-item" data-status="planned">&#x1F4CB; <strong>3</strong> planned</span>
             </div>
         </div>
 

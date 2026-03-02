@@ -1110,6 +1110,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // Changelog — tag filter.
   Changelog.init();
 
+  // Product roadmap with voting and filters.
+  Roadmap.init();
+
   // Sticky navigation bar.
   SiteNav.init();
 
@@ -1327,6 +1330,219 @@ var Newsletter = (function () {
   return { init: init, getSubscribers: getSubscribers };
 })();
 
+// ---------------------------------------------------------------------------
+// Roadmap Module
+// ---------------------------------------------------------------------------
+
+var Roadmap = (function () {
+  var STORAGE_KEY = 'agentbox_roadmap_votes';
+  var currentFilter = 'all';
+
+  function init() {
+    var container = document.getElementById('roadmapSection');
+    if (!container) return;
+
+    restoreVotes();
+
+    var filterBtns = container.querySelectorAll('.roadmap-filter-btn');
+    for (var i = 0; i < filterBtns.length; i++) {
+      filterBtns[i].addEventListener('click', function (e) {
+        var status = e.currentTarget.getAttribute('data-status');
+        filterBy(status);
+      });
+    }
+
+    var grid = document.getElementById('roadmapGrid');
+    if (grid) {
+      grid.addEventListener('click', function (e) {
+        var btn = e.target.closest('.roadmap-vote-btn');
+        if (!btn) return;
+        toggleVote(btn);
+      });
+    }
+
+    container.addEventListener('keydown', function (e) {
+      if (e.target.className.indexOf('roadmap-filter-btn') === -1) return;
+      var btns = Array.prototype.slice.call(
+        container.querySelectorAll('.roadmap-filter-btn')
+      );
+      var idx = btns.indexOf(e.target);
+      if (idx === -1) return;
+
+      var next = -1;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        next = (idx + 1) % btns.length;
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        next = (idx - 1 + btns.length) % btns.length;
+      } else if (e.key === 'Home') {
+        next = 0;
+      } else if (e.key === 'End') {
+        next = btns.length - 1;
+      }
+
+      if (next >= 0) {
+        e.preventDefault();
+        btns[next].focus();
+        btns[next].click();
+      }
+    });
+  }
+
+  function filterBy(status) {
+    currentFilter = status || 'all';
+    var container = document.getElementById('roadmapSection');
+    if (!container) return;
+
+    var filterBtns = container.querySelectorAll('.roadmap-filter-btn');
+    for (var i = 0; i < filterBtns.length; i++) {
+      var isActive =
+        filterBtns[i].getAttribute('data-status') === currentFilter;
+      filterBtns[i].classList.toggle('active', isActive);
+      filterBtns[i].setAttribute(
+        'aria-selected',
+        isActive ? 'true' : 'false'
+      );
+    }
+
+    var cards = container.querySelectorAll('.roadmap-card');
+    for (var j = 0; j < cards.length; j++) {
+      var cardStatus = cards[j].getAttribute('data-status');
+      var visible = currentFilter === 'all' || cardStatus === currentFilter;
+      cards[j].setAttribute('data-hidden', visible ? 'false' : 'true');
+    }
+
+    var summaryItems = container.querySelectorAll('.roadmap-summary-item');
+    for (var k = 0; k < summaryItems.length; k++) {
+      var itemStatus = summaryItems[k].getAttribute('data-status');
+      var highlighted =
+        currentFilter === 'all' || itemStatus === currentFilter;
+      summaryItems[k].style.opacity = highlighted ? '1' : '0.4';
+    }
+  }
+
+  function toggleVote(btn) {
+    var card = btn.closest('.roadmap-card');
+    if (!card) return;
+
+    var countEl = card.querySelector('.roadmap-vote-count');
+    if (!countEl) return;
+
+    var count = parseInt(countEl.textContent, 10) || 0;
+    var wasVoted = btn.classList.contains('voted');
+
+    if (wasVoted) {
+      count = Math.max(0, count - 1);
+      btn.classList.remove('voted');
+      btn.setAttribute('aria-pressed', 'false');
+    } else {
+      count += 1;
+      btn.classList.add('voted');
+      btn.setAttribute('aria-pressed', 'true');
+    }
+
+    countEl.textContent = String(count);
+    saveVotes();
+  }
+
+  function getCards() {
+    var grid = document.getElementById('roadmapGrid');
+    if (!grid) return [];
+    return Array.prototype.slice.call(grid.querySelectorAll('.roadmap-card'));
+  }
+
+  function getVisibleCards() {
+    return getCards().filter(function (c) {
+      return c.getAttribute('data-hidden') !== 'true';
+    });
+  }
+
+  function getCurrent() {
+    return currentFilter;
+  }
+
+  function getStatuses() {
+    return ['all', 'shipped', 'progress', 'planned'];
+  }
+
+  function getStatusCounts() {
+    var cards = getCards();
+    var counts = { shipped: 0, progress: 0, planned: 0 };
+    for (var i = 0; i < cards.length; i++) {
+      var s = cards[i].getAttribute('data-status');
+      if (counts.hasOwnProperty(s)) counts[s]++;
+    }
+    return counts;
+  }
+
+  function getVotes() {
+    var cards = getCards();
+    var votes = {};
+    for (var i = 0; i < cards.length; i++) {
+      var h3 = cards[i].querySelector('h3');
+      var countEl = cards[i].querySelector('.roadmap-vote-count');
+      if (h3 && countEl) {
+        votes[h3.textContent] = parseInt(countEl.textContent, 10) || 0;
+      }
+    }
+    return votes;
+  }
+
+  function saveVotes() {
+    try {
+      var cards = getCards();
+      var data = {};
+      for (var i = 0; i < cards.length; i++) {
+        var h3 = cards[i].querySelector('h3');
+        var btn = cards[i].querySelector('.roadmap-vote-btn');
+        var countEl = cards[i].querySelector('.roadmap-vote-count');
+        if (h3 && btn && countEl) {
+          data[h3.textContent] = {
+            count: parseInt(countEl.textContent, 10) || 0,
+            voted: btn.classList.contains('voted')
+          };
+        }
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (_) {
+      /* localStorage unavailable */
+    }
+  }
+
+  function restoreVotes() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      var cards = getCards();
+      for (var i = 0; i < cards.length; i++) {
+        var h3 = cards[i].querySelector('h3');
+        if (!h3 || !data[h3.textContent]) continue;
+        var entry = data[h3.textContent];
+        var countEl = cards[i].querySelector('.roadmap-vote-count');
+        var btn = cards[i].querySelector('.roadmap-vote-btn');
+        if (countEl) countEl.textContent = String(entry.count);
+        if (btn && entry.voted) {
+          btn.classList.add('voted');
+          btn.setAttribute('aria-pressed', 'true');
+        }
+      }
+    } catch (_) {
+      /* localStorage unavailable */
+    }
+  }
+
+  return {
+    init: init,
+    filterBy: filterBy,
+    getCurrent: getCurrent,
+    getStatuses: getStatuses,
+    getStatusCounts: getStatusCounts,
+    getCards: getCards,
+    getVisibleCards: getVisibleCards,
+    getVotes: getVotes
+  };
+})();
+
 // Expose modules globally for external access and testability.
 if (typeof window !== 'undefined') {
   window.SCENARIOS = SCENARIOS;
@@ -1339,6 +1555,7 @@ if (typeof window !== 'undefined') {
   window.UseCases = UseCases;
   window.Integrations = Integrations;
   window.Changelog = Changelog;
+  window.Roadmap = Roadmap;
   window.SiteNav = SiteNav;
   window.Newsletter = Newsletter;
 }
