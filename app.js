@@ -1944,7 +1944,38 @@ var ShareFab = (function () {
   return { init: init };
 })();
 
+// ---------------------------------------------------------------------------
+// Theme Toggle (Light/Dark Mode)
+// ---------------------------------------------------------------------------
+var ThemeToggle = (function () {
+  var STORAGE_KEY = 'agentbox-theme';
+  var btn, icon;
+
+  function init() {
+    btn = document.getElementById('themeToggle');
+    icon = document.getElementById('themeIcon');
+    if (!btn) return;
+
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === 'light') {
+      document.body.classList.add('light-mode');
+      icon.textContent = '🌙';
+    }
+
+    btn.addEventListener('click', toggle);
+  }
+
+  function toggle() {
+    var isLight = document.body.classList.toggle('light-mode');
+    icon.textContent = isLight ? '🌙' : '☀️';
+    localStorage.setItem(STORAGE_KEY, isLight ? 'light' : 'dark');
+  }
+
+  return { init: init };
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
   CommandPalette.init();
   ShareFab.init();
+  ThemeToggle.init();
 });

@@ -2427,3 +2427,216 @@ html { scroll-behavior: smooth; }
     .share-fab { bottom: 16px; right: 16px; }
     .share-fab-btn { width: 46px; height: 46px; font-size: 20px; }
 }
+
+/* ------------------------------------------------------------------ */
+/* Theme Toggle Button                                                 */
+/* ------------------------------------------------------------------ */
+.theme-toggle {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    flex-shrink: 0;
+    margin-right: 12px;
+}
+.theme-toggle:hover {
+    background: rgba(255,255,255,0.18);
+    transform: scale(1.08);
+}
+.theme-toggle:focus-visible {
+    outline: 2px solid #00d4ff;
+    outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Light Mode                                                          */
+/* ------------------------------------------------------------------ */
+body.light-mode {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #dbeafe 100%);
+    color: #1a202c;
+}
+
+body.light-mode .site-nav {
+    background: rgba(255,255,255,0.92);
+    border-bottom-color: rgba(0,0,0,0.08);
+}
+body.light-mode .nav-logo { color: #1a202c; }
+body.light-mode .nav-links a { color: #4a5568; }
+body.light-mode .nav-links a:hover { color: #1a202c; }
+
+body.light-mode .theme-toggle {
+    background: rgba(0,0,0,0.06);
+    border-color: rgba(0,0,0,0.12);
+}
+body.light-mode .theme-toggle:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+body.light-mode h1 {
+    background: linear-gradient(90deg, #0077cc, #7b2cbf);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+body.light-mode .tagline { color: #718096; }
+
+body.light-mode .features,
+body.light-mode .how-it-works-section,
+body.light-mode .demo-section,
+body.light-mode .stats-section,
+body.light-mode .usecases-section,
+body.light-mode .integrations-section,
+body.light-mode .comparison-section,
+body.light-mode .trust-section,
+body.light-mode .testimonials-section,
+body.light-mode .pricing-section,
+body.light-mode .changelog-section,
+body.light-mode .roadmap-section,
+body.light-mode .status-section,
+body.light-mode .faq-section,
+body.light-mode .newsletter-section {
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+body.light-mode .feature-text p,
+body.light-mode .step-content p { color: #718096; }
+
+body.light-mode .chat-window {
+    background: #f7fafc;
+    border-color: rgba(0,0,0,0.1);
+}
+body.light-mode .chat-msg-user { background: #0077cc; color: #fff; }
+body.light-mode .chat-msg-bot { background: #e2e8f0; color: #1a202c; }
+
+body.light-mode .scenario-btn {
+    background: rgba(0,0,0,0.04);
+    color: #4a5568;
+    border-color: rgba(0,0,0,0.08);
+}
+body.light-mode .scenario-btn.active {
+    background: #0077cc;
+    color: #fff;
+    border-color: #0077cc;
+}
+
+body.light-mode .stat-card,
+body.light-mode .integration-card,
+body.light-mode .trust-card,
+body.light-mode .testimonial-card,
+body.light-mode .pricing-card,
+body.light-mode .roadmap-card {
+    background: rgba(255,255,255,0.9);
+    border-color: rgba(0,0,0,0.08);
+    color: #1a202c;
+}
+
+body.light-mode .stat-label,
+body.light-mode .integration-card p,
+body.light-mode .trust-card p,
+body.light-mode .testimonial-quote { color: #4a5568; }
+
+body.light-mode .usecase-tab {
+    color: #4a5568;
+    border-color: rgba(0,0,0,0.08);
+}
+body.light-mode .usecase-tab.active {
+    background: #0077cc;
+    color: #fff;
+    border-color: #0077cc;
+}
+
+body.light-mode .usecase-panel {
+    background: rgba(255,255,255,0.8);
+    border-color: rgba(0,0,0,0.06);
+}
+body.light-mode .usecase-desc,
+body.light-mode .usecase-list li { color: #4a5568; }
+
+body.light-mode .comparison-table th { background: rgba(0,0,0,0.04); color: #1a202c; }
+body.light-mode .comparison-table td { border-color: rgba(0,0,0,0.06); color: #4a5568; }
+body.light-mode .highlight-col { background: rgba(0,119,204,0.06); }
+
+body.light-mode .trust-badge {
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.08);
+    color: #1a202c;
+}
+
+body.light-mode .pricing-card.popular {
+    border-color: #0077cc;
+}
+body.light-mode .plan-features li { color: #4a5568; }
+body.light-mode .price { color: #1a202c; }
+
+body.light-mode .changelog-content {
+    background: rgba(255,255,255,0.8);
+    border-color: rgba(0,0,0,0.06);
+}
+body.light-mode .changelog-content p { color: #4a5568; }
+body.light-mode .changelog-date { color: #718096; }
+
+body.light-mode .faq-question { border-color: rgba(0,0,0,0.06); }
+body.light-mode .faq-question h3 { color: #1a202c; }
+body.light-mode .faq-answer p { color: #4a5568; }
+
+body.light-mode .newsletter-input {
+    background: #fff;
+    border-color: rgba(0,0,0,0.12);
+    color: #1a202c;
+}
+body.light-mode .newsletter-privacy,
+body.light-mode .newsletter-subtitle { color: #718096; }
+
+body.light-mode .cta-section { color: #1a202c; }
+body.light-mode .cta-subtitle { color: #718096; }
+body.light-mode .free-badge { color: #4a5568; }
+
+body.light-mode .footer { color: #718096; }
+body.light-mode .footer a { color: #0077cc; }
+
+body.light-mode .cmd-palette-overlay { background: rgba(0,0,0,0.3); }
+body.light-mode .cmd-palette {
+    background: #fff;
+    border-color: rgba(0,0,0,0.1);
+}
+body.light-mode .cmd-palette-input {
+    color: #1a202c;
+    background: transparent;
+}
+body.light-mode .cmd-palette-results li { color: #4a5568; }
+body.light-mode .cmd-palette-results li.active {
+    background: #0077cc;
+    color: #fff;
+}
+
+body.light-mode .share-fab-btn {
+    background: #fff;
+    border-color: rgba(0,0,0,0.1);
+}
+body.light-mode .share-fab-menu {
+    background: #fff;
+    border-color: rgba(0,0,0,0.08);
+}
+body.light-mode .share-option { color: #4a5568; }
+body.light-mode .share-option:hover { background: rgba(0,0,0,0.04); color: #1a202c; }
+
+body.light-mode .status-dot.operational { background: #38a169; }
+body.light-mode .status-service { border-color: rgba(0,0,0,0.06); }
+body.light-mode .status-service-name { color: #1a202c; }
+body.light-mode .status-uptime { color: #718096; }
+body.light-mode .status-bar { background: #e2e8f0; }
+body.light-mode .status-bar-fill { background: #38a169; }
+body.light-mode .status-incident { border-color: rgba(0,0,0,0.06); }
+body.light-mode .status-incident-text { color: #4a5568; }
+
+body.light-mode .nav-hamburger,
+body.light-mode .nav-hamburger::before,
+body.light-mode .nav-hamburger::after { background: #1a202c; }
