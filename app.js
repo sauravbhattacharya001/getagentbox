@@ -1,5 +1,5 @@
 /**
- * AgentBox Landing Page — Interactive Components
+ * AgentBox Landing Page - Interactive Components
  *
  * Modules:
  *  - ChatDemo:       animated chat scenario player
@@ -30,17 +30,17 @@ var SCENARIOS = Object.freeze({
     { role: 'user', text: 'What\'s the weather like in Seattle this weekend?' },
     { role: 'bot', text: '🌧️ Seattle this weekend:\n\nSaturday: 48°F, light rain in the morning, clearing by noon\nSunday: 52°F, partly cloudy\n\nNot bad for February! Might be worth getting out on Sunday.' },
     { role: 'user', text: 'Any good hikes near Seattle that work in light rain?' },
-    { role: 'bot', text: 'Here are some rain-friendly options:\n\n🌲 Twin Falls (easy, 2.6 mi) — waterfall is amazing after rain\n🏔️ Rattlesnake Ledge (moderate, 4 mi) — canopy cover most of the way\n🌿 Discovery Park Loop (easy, 2.8 mi) — scenic + mostly sheltered\n\nI\'d go Twin Falls if you want the payoff. Want directions?' },
+    { role: 'bot', text: 'Here are some rain-friendly options:\n\n🌲 Twin Falls (easy, 2.6 mi) - waterfall is amazing after rain\n🏔️ Rattlesnake Ledge (moderate, 4 mi) - canopy cover most of the way\n🌿 Discovery Park Loop (easy, 2.8 mi) - scenic + mostly sheltered\n\nI\'d go Twin Falls if you want the payoff. Want directions?' },
   ],
   reminder: [
     { role: 'user', text: 'Remind me to take my medicine in 30 minutes' },
     { role: 'bot', text: 'Got it! I\'ll ping you in 30 minutes to take your medicine 💊' },
     { role: 'user', text: 'Also remind me about the team standup at 9am tomorrow' },
-    { role: 'bot', text: 'Done! Two reminders set:\n\n⏰ In 30 min — take medicine\n⏰ Tomorrow 9:00 AM — team standup\n\nI\'ll make sure you don\'t miss either one.' },
+    { role: 'bot', text: 'Done! Two reminders set:\n\n⏰ In 30 min - take medicine\n⏰ Tomorrow 9:00 AM - team standup\n\nI\'ll make sure you don\'t miss either one.' },
   ],
   image: [
     { role: 'user', text: '📷 [sends a photo of an error message on their screen]' },
-    { role: 'bot', text: 'I can see the error — it\'s a CORS issue. Your frontend at localhost:3000 is trying to hit an API on a different port without the right headers.\n\nQuick fix: add this to your server:\n\n`Access-Control-Allow-Origin: *`\n\nOr if you\'re using Express:\n`app.use(cors())`\n\nWant me to walk through the full setup?' },
+    { role: 'bot', text: 'I can see the error - it\'s a CORS issue. Your frontend at localhost:3000 is trying to hit an API on a different port without the right headers.\n\nQuick fix: add this to your server:\n\n`Access-Control-Allow-Origin: *`\n\nOr if you\'re using Express:\n`app.use(cors())`\n\nWant me to walk through the full setup?' },
     { role: 'user', text: 'That fixed it, thanks!' },
     { role: 'bot', text: 'Nice! 🎉 Pro tip: in production, replace the wildcard `*` with your actual domain for security. Let me know if anything else comes up.' },
   ],
@@ -345,7 +345,7 @@ var FAQ = (function () {
 })();
 
 // ---------------------------------------------------------------------------
-// How It Works — Scroll-triggered Step Animation
+// How It Works - Scroll-triggered Step Animation
 // ---------------------------------------------------------------------------
 
 var HowItWorks = (function () {
@@ -408,7 +408,7 @@ var HowItWorks = (function () {
 })();
 
 // ---------------------------------------------------------------------------
-// Social Proof Stats — Animated Counters
+// Social Proof Stats - Animated Counters
 // ---------------------------------------------------------------------------
 
 var Stats = (function () {
@@ -416,7 +416,7 @@ var Stats = (function () {
   var DURATION = 2000; // animation duration in ms
 
   /**
-   * Easing function — ease-out cubic for a satisfying deceleration.
+   * Easing function - ease-out cubic for a satisfying deceleration.
    * @param {number} t - Progress from 0 to 1
    * @returns {number} Eased value from 0 to 1
    */
@@ -471,7 +471,7 @@ var Stats = (function () {
       var easedProgress = easeOutCubic(progress);
       var current = Math.round(easedProgress * target);
 
-      // Ensure monotonic progression — never go backwards
+      // Ensure monotonic progression - never go backwards
       if (current < prev) current = prev;
       prev = current;
 
@@ -506,7 +506,7 @@ var Stats = (function () {
    */
   function animateAll(cards) {
     if (prefersReducedMotion) {
-      // Skip animation — show final values immediately
+      // Skip animation - show final values immediately
       for (var i = 0; i < cards.length; i++) {
         showFinalValue(cards[i]);
       }
@@ -544,7 +544,7 @@ var Stats = (function () {
     card.classList.add('animated');
   }
 
-  /** Initialize — observe the stats section for scroll-triggered animation. */
+  /** Initialize - observe the stats section for scroll-triggered animation. */
   function init() {
     var section = document.getElementById('statsSection');
     if (!section) return;
@@ -703,7 +703,7 @@ var UseCases = (function () {
 })();
 
 // ---------------------------------------------------------------------------
-// Integrations Module — category filtering for integrations grid
+// Integrations Module - category filtering for integrations grid
 // ---------------------------------------------------------------------------
 
 var Integrations = (function () {
@@ -926,7 +926,7 @@ var Changelog = (function () {
 })();
 
 // ---------------------------------------------------------------------------
-// Trust & Privacy — Expandable Detail Cards
+// Trust & Privacy - Expandable Detail Cards
 // ---------------------------------------------------------------------------
 
 var Trust = (function () {
@@ -964,7 +964,7 @@ var Trust = (function () {
 // ---------------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', function () {
-  // Scenario buttons — event delegation on the container.
+  // Scenario buttons - event delegation on the container.
   var scenarioContainer = document.querySelector('.demo-scenarios');
   if (scenarioContainer) {
     scenarioContainer.addEventListener('click', function (e) {
@@ -975,7 +975,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Testimonials carousel — init and event delegation.
+  // Testimonials carousel - init and event delegation.
   Testimonials.init();
 
   var testimonialsNav = document.querySelector('.testimonials-nav');
@@ -997,7 +997,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Billing toggle — click + keyboard.
+  // Billing toggle - click + keyboard.
   var billingToggle = document.getElementById('billingToggle');
   if (billingToggle) {
     billingToggle.addEventListener('click', Pricing.toggle);
@@ -1009,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // FAQ accordion — event delegation on the section (click + keyboard).
+  // FAQ accordion - event delegation on the section (click + keyboard).
   var faqSection = document.querySelector('.faq-section');
   if (faqSection) {
     faqSection.addEventListener('click', function (e) {
@@ -1027,11 +1027,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // How It Works — scroll animation.
+  // How It Works - scroll animation.
   HowItWorks.init();
 
-  // Trust & Privacy — expandable cards (click + keyboard).
+  // Trust & Privacy - expandable cards (click + keyboard).
   var trustSection = document.querySelector('.trust-section');
+
+  // System status dashboard.
+  StatusDashboard.init();
   if (trustSection) {
     trustSection.addEventListener('click', function (e) {
       var card = e.target.closest('.trust-card');
@@ -1048,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Use Cases — tabbed section (init + delegation).
+  // Use Cases - tabbed section (init + delegation).
   UseCases.init();
 
   var usecasesSection = document.getElementById('usecasesSection');
@@ -1101,13 +1104,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Stats — animated counters on scroll.
+  // Stats - animated counters on scroll.
   Stats.init();
 
-  // Integrations — category filter.
+  // Integrations - category filter.
   Integrations.init();
 
-  // Changelog — tag filter.
+  // Changelog - tag filter.
   Changelog.init();
 
   // Product roadmap with voting and filters.
@@ -1257,7 +1260,7 @@ var SiteNav = (function () {
 /* eslint-enable no-var */
 
 /**
- * Newsletter — email signup form with client-side validation and feedback.
+ * Newsletter - email signup form with client-side validation and feedback.
  * Stores subscriptions in localStorage (demo) since there's no backend.
  */
 var Newsletter = (function () {
@@ -1543,6 +1546,158 @@ var Roadmap = (function () {
   };
 })();
 
+// ---------------------------------------------------------------------------
+// System Status Dashboard Module
+// ---------------------------------------------------------------------------
+
+var StatusDashboard = (function () {
+  var STATUS_LEVELS = ['operational', 'degraded', 'outage'];
+
+  function init() {
+    updateOverall();
+  }
+
+  function getServices() {
+    var grid = document.getElementById('statusGrid');
+    if (!grid) return [];
+    return Array.prototype.slice.call(
+      grid.querySelectorAll('.status-service')
+    );
+  }
+
+  function getIncidents() {
+    var container = document.getElementById('statusIncidents');
+    if (!container) return [];
+    return Array.prototype.slice.call(
+      container.querySelectorAll('.status-incident')
+    );
+  }
+
+  function getServiceStatus(serviceName) {
+    var services = getServices();
+    for (var i = 0; i < services.length; i++) {
+      if (services[i].getAttribute('data-service') === serviceName) {
+        return services[i].getAttribute('data-status');
+      }
+    }
+    return null;
+  }
+
+  function getServiceUptime(serviceName) {
+    var services = getServices();
+    for (var i = 0; i < services.length; i++) {
+      if (services[i].getAttribute('data-service') === serviceName) {
+        var el = services[i].querySelector('.status-uptime');
+        if (!el) return null;
+        return parseFloat(el.textContent);
+      }
+    }
+    return null;
+  }
+
+  function setServiceStatus(serviceName, status) {
+    var services = getServices();
+    for (var i = 0; i < services.length; i++) {
+      if (services[i].getAttribute('data-service') === serviceName) {
+        services[i].setAttribute('data-status', status);
+        var dot = services[i].querySelector('.status-dot');
+        if (dot) {
+          dot.className = 'status-dot ' + status;
+        }
+        break;
+      }
+    }
+    updateOverall();
+  }
+
+  function setServiceUptime(serviceName, uptime) {
+    var services = getServices();
+    for (var i = 0; i < services.length; i++) {
+      if (services[i].getAttribute('data-service') === serviceName) {
+        var el = services[i].querySelector('.status-uptime');
+        if (el) el.textContent = uptime.toFixed(2) + '%';
+        var bar = services[i].querySelector('.status-bar-fill');
+        if (bar) bar.style.width = Math.min(100, Math.max(0, uptime)) + '%';
+        var meter = services[i].querySelector('.status-bar');
+        if (meter) meter.setAttribute('aria-valuenow', String(uptime));
+        break;
+      }
+    }
+  }
+
+  function updateOverall() {
+    var services = getServices();
+    var worst = 'operational';
+    for (var i = 0; i < services.length; i++) {
+      var s = services[i].getAttribute('data-status');
+      if (STATUS_LEVELS.indexOf(s) > STATUS_LEVELS.indexOf(worst)) {
+        worst = s;
+      }
+    }
+
+    var overall = document.getElementById('statusOverall');
+    if (!overall) return;
+
+    var dot = overall.querySelector('.status-dot');
+    var text = overall.querySelector('.status-overall-text');
+    if (dot) dot.className = 'status-dot ' + worst;
+
+    var messages = {
+      operational: 'All systems operational',
+      degraded: 'Some systems degraded',
+      outage: 'System outage detected'
+    };
+    if (text) text.textContent = messages[worst] || worst;
+  }
+
+  function getOverallStatus() {
+    var overall = document.getElementById('statusOverall');
+    if (!overall) return null;
+    var dot = overall.querySelector('.status-dot');
+    if (!dot) return null;
+    for (var i = STATUS_LEVELS.length - 1; i >= 0; i--) {
+      if (dot.classList.contains(STATUS_LEVELS[i])) return STATUS_LEVELS[i];
+    }
+    return 'operational';
+  }
+
+  function getServiceNames() {
+    return getServices().map(function (s) {
+      return s.getAttribute('data-service');
+    });
+  }
+
+  function getAverageUptime() {
+    var services = getServices();
+    if (services.length === 0) return 0;
+    var total = 0;
+    for (var i = 0; i < services.length; i++) {
+      var el = services[i].querySelector('.status-uptime');
+      total += el ? parseFloat(el.textContent) || 0 : 0;
+    }
+    return total / services.length;
+  }
+
+  function getIncidentCount() {
+    return getIncidents().length;
+  }
+
+  return {
+    init: init,
+    getServices: getServices,
+    getIncidents: getIncidents,
+    getServiceStatus: getServiceStatus,
+    getServiceUptime: getServiceUptime,
+    setServiceStatus: setServiceStatus,
+    setServiceUptime: setServiceUptime,
+    updateOverall: updateOverall,
+    getOverallStatus: getOverallStatus,
+    getServiceNames: getServiceNames,
+    getAverageUptime: getAverageUptime,
+    getIncidentCount: getIncidentCount
+  };
+})();
+
 // Expose modules globally for external access and testability.
 if (typeof window !== 'undefined') {
   window.SCENARIOS = SCENARIOS;
@@ -1556,6 +1711,7 @@ if (typeof window !== 'undefined') {
   window.Integrations = Integrations;
   window.Changelog = Changelog;
   window.Roadmap = Roadmap;
+  window.StatusDashboard = StatusDashboard;
   window.SiteNav = SiteNav;
   window.Newsletter = Newsletter;
 }
