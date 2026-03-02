@@ -2313,3 +2313,117 @@ html { scroll-behavior: smooth; }
     border: 1px solid rgba(255,255,255,0.08);
     margin-right: 3px;
 }
+
+/* Floating Share Button */
+.share-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 900;
+}
+.share-fab-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.share-fab-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 24px rgba(0, 212, 255, 0.45);
+}
+.share-fab-btn:focus-visible {
+    outline: 2px solid #00d4ff;
+    outline-offset: 3px;
+}
+.share-fab-btn[aria-expanded="true"] .share-fab-icon {
+    transform: rotate(45deg);
+}
+.share-fab-icon {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    line-height: 1;
+}
+.share-fab-menu {
+    position: absolute;
+    bottom: 62px;
+    right: 0;
+    background: rgba(22, 33, 62, 0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    animation: shareMenuIn 0.15s ease-out;
+}
+@keyframes shareMenuIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.share-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: #ccc;
+    font-size: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.share-option:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+}
+.share-option:focus-visible {
+    outline: 2px solid #00d4ff;
+    outline-offset: -2px;
+}
+.share-option-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+.share-toast {
+    position: absolute;
+    bottom: 62px;
+    right: 0;
+    background: #00d4ff;
+    color: #000;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    animation: shareToastIn 0.2s ease-out;
+    pointer-events: none;
+}
+@keyframes shareToastIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 480px) {
+    .share-fab { bottom: 16px; right: 16px; }
+    .share-fab-btn { width: 46px; height: 46px; font-size: 20px; }
+}

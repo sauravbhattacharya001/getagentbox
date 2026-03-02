@@ -1010,6 +1010,28 @@
         <p class="footer">Built by <a href="https://github.com/sauravbhattacharya001" target="_blank" rel="noopener noreferrer">Saurav Bhattacharya</a></p>
     </div>
 
+    <!-- Floating Share Button -->
+    <div class="share-fab" id="shareFab">
+        <button class="share-fab-btn" id="shareFabBtn" aria-label="Share this page" aria-expanded="false">
+            <span class="share-fab-icon">📤</span>
+        </button>
+        <div class="share-fab-menu" id="shareFabMenu" hidden>
+            <button class="share-option" data-share="twitter" aria-label="Share on X / Twitter">
+                <span class="share-option-icon">𝕏</span>
+                <span class="share-option-label">Twitter / X</span>
+            </button>
+            <button class="share-option" data-share="linkedin" aria-label="Share on LinkedIn">
+                <span class="share-option-icon">in</span>
+                <span class="share-option-label">LinkedIn</span>
+            </button>
+            <button class="share-option" data-share="copy" aria-label="Copy link">
+                <span class="share-option-icon">🔗</span>
+                <span class="share-option-label">Copy link</span>
+            </button>
+        </div>
+        <div class="share-toast" id="shareToast" hidden>Link copied!</div>
+    </div>
+
     <!-- Command Palette (Ctrl+K) -->
     <div class="cmd-palette-overlay" id="cmdPaletteOverlay" hidden>
         <div class="cmd-palette" role="dialog" aria-label="Command palette" aria-modal="true">
