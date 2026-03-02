@@ -5,12 +5,9 @@
  * Works as both a Node.js/CommonJS module and a browser global.
  *
  * Components:
- *   - ChatDemo:     Animated chat conversation player
- *   - Testimonials: Auto-rotating testimonial carousel
- *   - Pricing:      Monthly/yearly billing toggle
- *   - FAQ:          Accessible accordion
- *   - HowItWorks:   Scroll-triggered step animations
- *   - Stats:        Animated counter display
+ *   - FAQ:      Accessible accordion
+ *   - Pricing:  Monthly/yearly billing toggle
+ *   - Stats:    Animated counter display
  */
 
 (function (root, factory) {

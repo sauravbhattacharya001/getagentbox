@@ -1,21 +1,24 @@
 {
   "name": "agentbox-landing",
   "version": "1.0.0",
-  "description": "Interactive landing page components — FAQ accordion, pricing toggle, animated stats, chat demo. Zero dependencies.",
+  "description": "Interactive landing page components - FAQ accordion, pricing toggle, animated stats, chat demo. Zero dependencies.",
   "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
   "files": [
-    "src/index.js",
-    "index.html",
-    "styles.css",
-    "vendor/count.js",
-    "app.js",
-    "README.md",
+    "src/",
     "LICENSE"
   ],
   "scripts": {
     "test": "jest --verbose",
     "test:coverage": "jest --verbose --coverage",
-    "start": "npx serve ."
+    "start": "npx serve .",
+    "prepublishOnly": "npm test"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "keywords": [
     "landing-page",
@@ -27,7 +30,9 @@
     "vanilla-js",
     "no-dependencies",
     "accessible",
-    "wcag"
+    "wcag",
+    "umd",
+    "zero-dependency"
   ],
   "author": "Saurav Bhattacharya",
   "license": "MIT",

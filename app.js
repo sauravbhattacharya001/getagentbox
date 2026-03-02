@@ -511,8 +511,8 @@ var Stats = (function () {
         showFinalValue(cards[i]);
       }
     } else {
-      for (var i = 0; i < cards.length; i++) {
-        animateCard(cards[i]);
+      for (var j = 0; j < cards.length; j++) {
+        animateCard(cards[j]);
       }
     }
     animated = true;
@@ -612,7 +612,6 @@ var Stats = (function () {
 
 var UseCases = (function () {
   var currentTab = 'dev';
-  var initialized = false;
 
   /**
    * Switch to a different use-case tab.
