@@ -1974,8 +1974,64 @@ var ThemeToggle = (function () {
   return { init: init };
 })();
 
+// ---------------------------------------------------------------------------
+// Scroll Progress + Back-to-Top Module
+// ---------------------------------------------------------------------------
+
+var ScrollProgress = (function () {
+  'use strict';
+
+  var bar, btn, ticking;
+
+  function init() {
+    bar = document.getElementById('scrollProgressBar');
+    btn = document.getElementById('backToTop');
+    if (!bar || !btn) return;
+
+    ticking = false;
+    window.addEventListener('scroll', onScroll, { passive: true });
+    btn.addEventListener('click', scrollToTop);
+    update(); // initial state
+  }
+
+  function onScroll() {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(function () {
+        update();
+        ticking = false;
+      });
+    }
+  }
+
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+
+    bar.style.width = progress + '%';
+
+    if (scrollTop > 400) {
+      btn.classList.add('visible');
+    } else {
+      btn.classList.remove('visible');
+    }
+  }
+
+  function scrollToTop() {
+    if (prefersReducedMotion) {
+      window.scrollTo(0, 0);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  return { init: init };
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
   CommandPalette.init();
   ShareFab.init();
   ThemeToggle.init();
+  ScrollProgress.init();
 });

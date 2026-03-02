@@ -2640,3 +2640,89 @@ body.light-mode .status-incident-text { color: #4a5568; }
 body.light-mode .nav-hamburger,
 body.light-mode .nav-hamburger::before,
 body.light-mode .nav-hamburger::after { background: #1a202c; }
+
+/* -----------------------------------------------------------------------
+   Scroll Progress Bar + Back to Top
+   ----------------------------------------------------------------------- */
+
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  z-index: 10001;
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+
+.light-mode .scroll-progress-bar {
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+}
+
+.back-to-top {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(102, 126, 234, 0.9);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px);
+  transition: opacity 0.3s, visibility 0.3s, transform 0.3s, background-color 0.2s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  background: rgba(118, 75, 162, 0.95);
+  transform: translateY(-2px);
+}
+
+.back-to-top:active {
+  transform: translateY(0);
+}
+
+.light-mode .back-to-top {
+  background: rgba(79, 70, 229, 0.9);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.light-mode .back-to-top:hover {
+  background: rgba(124, 58, 237, 0.95);
+}
+
+@media (max-width: 768px) {
+  .back-to-top {
+    bottom: 80px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-progress-bar {
+    transition: none;
+  }
+  .back-to-top {
+    transition: opacity 0.1s, visibility 0.1s;
+  }
+}
