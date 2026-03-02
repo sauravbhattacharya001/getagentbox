@@ -1810,10 +1810,23 @@ var CommandPalette = (function () {
       li.className = 'cmd-palette-item';
       li.setAttribute('role', 'option');
       if (i === selectedIndex) li.setAttribute('aria-selected', 'true');
-      li.innerHTML =
-        '<span class="cmd-palette-item-icon">' + s.icon + '</span>' +
-        '<span class="cmd-palette-item-label">' + s.label + '</span>' +
-        '<span class="cmd-palette-item-hint">' + s.hint + '</span>';
+
+      var iconSpan = document.createElement('span');
+      iconSpan.className = 'cmd-palette-item-icon';
+      iconSpan.textContent = s.icon;
+
+      var labelSpan = document.createElement('span');
+      labelSpan.className = 'cmd-palette-item-label';
+      labelSpan.textContent = s.label;
+
+      var hintSpan = document.createElement('span');
+      hintSpan.className = 'cmd-palette-item-hint';
+      hintSpan.textContent = s.hint;
+
+      li.appendChild(iconSpan);
+      li.appendChild(labelSpan);
+      li.appendChild(hintSpan);
+
       li.addEventListener('click', function () {
         selectedIndex = i;
         go();
