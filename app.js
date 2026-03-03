@@ -1763,32 +1763,6 @@ var StatusDashboard = (function () {
   };
 })();
 
-// Expose modules globally for external access and testability.
-if (typeof window !== 'undefined') {
-  window.SCENARIOS = SCENARIOS;
-  window.ChatDemo = ChatDemo;
-  window.Testimonials = Testimonials;
-  window.Pricing = Pricing;
-  window.FAQ = FAQ;
-  window.HowItWorks = HowItWorks;
-  window.Stats = Stats;
-  window.UseCases = UseCases;
-  window.Integrations = Integrations;
-  window.Changelog = Changelog;
-  window.Roadmap = Roadmap;
-  window.StatusDashboard = StatusDashboard;
-  window.SiteNav = SiteNav;
-  window.Newsletter = Newsletter;
-  window.Calculator = Calculator;
-  window.CommandPalette = CommandPalette;
-  window.ShareFab = ShareFab;
-  window.ThemeToggle = ThemeToggle;
-  window.ScrollProgress = ScrollProgress;
-  window.ShortcutsHelp = ShortcutsHelp;
-  window.Playground = Playground;
-}
-
-
 // ---------------------------------------------------------------------------
 // Time Saved Calculator Module
 // ---------------------------------------------------------------------------
@@ -2326,6 +2300,35 @@ var Playground = (function () {
 
   return { init: init };
 })();
+
+// ---------------------------------------------------------------------------
+// Expose modules globally for external access and testability.
+// This block MUST come after all module definitions to avoid hoisting issues
+// (var declarations are hoisted but their IIFE assignments are not).
+// ---------------------------------------------------------------------------
+if (typeof window !== 'undefined') {
+  window.SCENARIOS = SCENARIOS;
+  window.ChatDemo = ChatDemo;
+  window.Testimonials = Testimonials;
+  window.Pricing = Pricing;
+  window.FAQ = FAQ;
+  window.HowItWorks = HowItWorks;
+  window.Stats = Stats;
+  window.UseCases = UseCases;
+  window.Integrations = Integrations;
+  window.Changelog = Changelog;
+  window.Roadmap = Roadmap;
+  window.StatusDashboard = StatusDashboard;
+  window.SiteNav = SiteNav;
+  window.Newsletter = Newsletter;
+  window.Calculator = Calculator;
+  window.CommandPalette = CommandPalette;
+  window.ShareFab = ShareFab;
+  window.ThemeToggle = ThemeToggle;
+  window.ScrollProgress = ScrollProgress;
+  window.ShortcutsHelp = ShortcutsHelp;
+  window.Playground = Playground;
+}
 
 document.addEventListener('DOMContentLoaded', function () {
   ThemeToggle.init();
