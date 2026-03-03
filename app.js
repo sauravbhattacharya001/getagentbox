@@ -2146,11 +2146,96 @@ var ShortcutsHelp = (function () {
   return { init: init };
 })();
 
+/* ── Chat Playground ── */
+var Playground = (function () {
+  var messagesEl, inputEl, formEl;
+  var responses = [
+    { patterns: ['hi', 'hello', 'hey', 'sup', 'yo'], reply: 'Hey there! \u{1F44B} I\'m your AgentBox agent. Ask me anything \u2014 weather, recipes, coding help, reminders, or whatever\'s on your mind.' },
+    { patterns: ['weather', 'temperature', 'rain', 'sunny', 'forecast'], reply: '\u{1F324}\uFE0F I can check real-time weather for any city! In the full version, I search the web and give you current conditions + forecasts. Try me on Telegram to get live data!' },
+    { patterns: ['recipe', 'cook', 'food', 'dinner', 'lunch', 'pasta', 'chicken'], reply: '\u{1F373} I love helping with recipes! Tell me what ingredients you have and I\'ll suggest something. I also remember your dietary preferences across conversations \u2014 no repeating yourself.' },
+    { patterns: ['remind', 'reminder', 'alarm', 'schedule', 'todo'], reply: '\u23F0 Reminders are one of my favorite features! Just say "remind me to X in 30 minutes" and I\'ll ping you. I handle recurring reminders too. Try it on Telegram for the real thing!' },
+    { patterns: ['code', 'error', 'bug', 'debug', 'programming', 'javascript', 'python'], reply: '\u{1F4BB} Send me error messages, code snippets, or screenshots \u2014 I\'ll help you debug. I remember your tech stack across conversations so my answers stay relevant.' },
+    { patterns: ['image', 'photo', 'picture', 'screenshot', 'see'], reply: '\u{1F4F7} In the full version, you can send me photos and I\'ll analyze them! Screenshots of errors, documents, memes, food \u2014 I see what you see and answer questions about it.' },
+    { patterns: ['voice', 'audio', 'speak', 'talk'], reply: '\u{1F3A4} Too lazy to type? Send a voice message on Telegram and I\'ll understand it. I transcribe and respond naturally \u2014 it\'s like texting, but hands-free.' },
+    { patterns: ['price', 'cost', 'plan', 'free', 'premium', 'pro'], reply: '\u{1F4B0} I\'m free to try \u2014 20 messages/day, no signup. Pro is $9/mo for unlimited messages, advanced memory, and priority responses. Scroll down to see all plans!' },
+    { patterns: ['memory', 'remember', 'forget', 'context'], reply: '\u{1F9E0} That\'s my superpower! I remember your preferences, past conversations, and context. Tell me something once and I\'ll know it forever \u2014 unless you ask me to forget.' },
+    { patterns: ['privacy', 'data', 'secure', 'safe', 'private'], reply: '\u{1F512} Your data is yours. Each user gets an isolated workspace \u2014 no shared context, no training on your data, no third-party sharing. You can wipe my memory anytime.' },
+    { patterns: ['thank', 'thanks', 'awesome', 'great', 'cool', 'nice'], reply: 'You\'re welcome! \u{1F60A} This is just a demo \u2014 the real agent on Telegram is way more capable. Give it a try!' },
+    { patterns: ['who', 'what are you', 'about'], reply: 'I\'m AgentBox \u2014 your personal AI agent that lives in Telegram. I can search the web, set reminders, understand images, and most importantly: I remember you across conversations. \u{1F916}' },
+    { patterns: ['help', 'can you', 'what can'], reply: 'I can help with:\n\u{1F50D} Web search & research\n\u23F0 Reminders & scheduling\n\u{1F4F7} Image analysis\n\u{1F9E0} Remembering your preferences\n\u{1F4BB} Coding help\n\u{1F373} Recipes & recommendations\n\nAnd much more on Telegram!' },
+  ];
+  var fallbacks = [
+    'Interesting question! In the full version on Telegram, I\'d search the web and give you a detailed answer. Try me there! \u{1F680}',
+    'I\'d love to help with that! This demo is limited, but the real agent on Telegram has full web search, memory, and image understanding. Give it a spin! \u2728',
+    'Good one! The real AgentBox would handle this with a web search and your personal context. Head to Telegram to try the full experience \u{1F4AC}',
+  ];
+  var fallbackIdx = 0;
+
+  function findResponse(text) {
+    var lower = text.toLowerCase().replace(/[^\w\s]/g, '');
+    for (var i = 0; i < responses.length; i++) {
+      for (var j = 0; j < responses[i].patterns.length; j++) {
+        if (lower.indexOf(responses[i].patterns[j]) !== -1) {
+          return responses[i].reply;
+        }
+      }
+    }
+    var fb = fallbacks[fallbackIdx % fallbacks.length];
+    fallbackIdx++;
+    return fb;
+  }
+
+  function addBubble(role, text) {
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + role;
+    bubble.textContent = text;
+    messagesEl.appendChild(bubble);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function addTyping() {
+    var el = document.createElement('div');
+    el.className = 'typing-indicator';
+    el.innerHTML = '<span></span><span></span><span></span>';
+    el.id = 'playgroundTyping';
+    messagesEl.appendChild(el);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return el;
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    var text = inputEl.value.trim();
+    if (!text) return;
+
+    addBubble('user', text);
+    inputEl.value = '';
+
+    var reply = findResponse(text);
+    var typing = addTyping();
+    var delay = prefersReducedMotion ? 200 : 800 + Math.min(reply.length * 5, 1200);
+
+    setTimeout(function () {
+      if (typing.parentNode) typing.parentNode.removeChild(typing);
+      addBubble('bot', reply);
+    }, delay);
+  }
+
+  function init() {
+    formEl = document.getElementById('playgroundForm');
+    inputEl = document.getElementById('playgroundInput');
+    messagesEl = document.getElementById('playgroundMessages');
+    if (!formEl || !inputEl || !messagesEl) return;
+    formEl.addEventListener('submit', handleSubmit);
+  }
+
+  return { init: init };
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
-  CommandPalette.init();
-  ShareFab.init();
   ThemeToggle.init();
   ScrollProgress.init();
   ShortcutsHelp.init();
   Calculator.init();
+  Playground.init();
 });

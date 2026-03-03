@@ -302,6 +302,100 @@ h1 {
     color: #00d4ff;
 }
 
+/* Chat Playground */
+.playground-section {
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 40px;
+    contain: layout style;
+}
+
+.playground-section h2 {
+    font-size: 1.4rem;
+    margin-bottom: 5px;
+}
+
+.playground-subtitle {
+    color: #888;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+}
+
+.playground-window {
+    background: #0e1621;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.playground-messages {
+    padding: 16px;
+    max-height: 320px;
+    overflow-y: auto;
+    text-align: left;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.playground-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.playground-messages::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+.playground-input-group {
+    display: flex;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: #0c1219;
+}
+
+.playground-input {
+    flex: 1;
+    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+}
+
+.playground-input::placeholder {
+    color: #5a6a7a;
+}
+
+.playground-send {
+    padding: 14px 20px;
+    background: transparent;
+    border: none;
+    color: #00d4ff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.playground-send:hover {
+    opacity: 0.8;
+}
+
+.playground-note {
+    color: #666;
+    font-size: 0.82rem;
+    margin-top: 12px;
+}
+
+.playground-note a {
+    color: #00d4ff;
+    text-decoration: none;
+}
+
+.playground-note a:hover {
+    text-decoration: underline;
+}
+
 /* Social Proof Stats */
 .stats-section {
     margin: 40px 0;
