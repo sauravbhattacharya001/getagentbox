@@ -1152,6 +1152,20 @@ var SiteNav = (function () {
   var activeLink = null;
   var ticking = false;
 
+  /**
+   * Cached section offsetTop values. Reading offsetTop on every scroll
+   * event forces synchronous layout recalculation. Cache and recompute
+   * only on resize when layout actually changes.
+   */
+  var sectionOffsets = [];
+
+  function cacheSectionOffsets() {
+    sectionOffsets = [];
+    for (var i = 0; i < sections.length; i++) {
+      sectionOffsets.push(sections[i].offsetTop);
+    }
+  }
+
   function init() {
     nav = document.getElementById('siteNav');
     toggle = document.getElementById('navToggle');
@@ -1168,6 +1182,10 @@ var SiteNav = (function () {
         sections.push(target);
       }
     }
+
+    // Cache section positions (recompute on resize)
+    cacheSectionOffsets();
+    window.addEventListener('resize', cacheSectionOffsets, { passive: true });
 
     // Smooth scroll + close mobile menu on click
     linksContainer.addEventListener('click', function (e) {
@@ -1238,8 +1256,9 @@ var SiteNav = (function () {
     var scrollY = window.scrollY + 100; // offset for nav height + margin
     var current = null;
 
-    for (var i = sections.length - 1; i >= 0; i--) {
-      if (sections[i].offsetTop <= scrollY) {
+    // Use cached offsets instead of reading offsetTop (avoids forced layout)
+    for (var i = sectionOffsets.length - 1; i >= 0; i--) {
+      if (sectionOffsets[i] <= scrollY) {
         current = links[i];
         break;
       }
@@ -1266,7 +1285,8 @@ var SiteNav = (function () {
     init: init,
     getActiveSection: getActiveSection,
     reset: reset,
-    closeMenu: closeMenu
+    closeMenu: closeMenu,
+    cacheSectionOffsets: cacheSectionOffsets
   };
 })();
 
@@ -1971,12 +1991,21 @@ var CommandPalette = (function () {
     });
   }
 
+  /**
+   * Move selection up/down without rebuilding DOM.
+   * Old code called render() on every arrow key, destroying and recreating
+   * all list items to move a highlight. Now updates aria-selected in-place
+   * — O(1) DOM writes instead of O(n).
+   */
   function move(dir) {
     if (!filtered.length) return;
+    var items = results.children;
+    if (items[selectedIndex]) items[selectedIndex].removeAttribute('aria-selected');
     selectedIndex = (selectedIndex + dir + filtered.length) % filtered.length;
-    render();
-    var sel = results.querySelector('[aria-selected="true"]');
-    if (sel) sel.scrollIntoView({ block: 'nearest' });
+    if (items[selectedIndex]) {
+      items[selectedIndex].setAttribute('aria-selected', 'true');
+      items[selectedIndex].scrollIntoView({ block: 'nearest' });
+    }
   }
 
   function go() {
