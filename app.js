@@ -1714,8 +1714,77 @@ if (typeof window !== 'undefined') {
   window.StatusDashboard = StatusDashboard;
   window.SiteNav = SiteNav;
   window.Newsletter = Newsletter;
+  window.Calculator = Calculator;
 }
 
+
+// ---------------------------------------------------------------------------
+// Time Saved Calculator Module
+// ---------------------------------------------------------------------------
+
+var Calculator = (function () {
+  function init() {
+    var section = document.getElementById('calculatorSection');
+    if (!section) return;
+
+    var sliders = section.querySelectorAll('.calc-range');
+    for (var i = 0; i < sliders.length; i++) {
+      sliders[i].addEventListener('input', update);
+    }
+    update();
+  }
+
+  function update() {
+    var section = document.getElementById('calculatorSection');
+    if (!section) return;
+
+    var groups = section.querySelectorAll('.calc-slider-group');
+    var totalMinutes = 0;
+
+    for (var i = 0; i < groups.length; i++) {
+      var slider = groups[i].querySelector('.calc-range');
+      var valueEl = groups[i].querySelector('.calc-slider-value');
+      var minutesPer = parseInt(groups[i].dataset.minutes, 10) || 0;
+      var count = parseInt(slider.value, 10) || 0;
+
+      if (valueEl) valueEl.textContent = count + ' /week';
+      totalMinutes += count * minutesPer;
+    }
+
+    var weeklyEl = document.getElementById('calcWeekly');
+    var monthlyEl = document.getElementById('calcMonthly');
+    var yearlyEl = document.getElementById('calcYearly');
+    var equivEl = document.getElementById('calcEquivalent');
+
+    if (weeklyEl) weeklyEl.textContent = totalMinutes;
+
+    var monthlyHours = (totalMinutes * 4.33 / 60);
+    if (monthlyEl) monthlyEl.textContent = monthlyHours < 10 ? monthlyHours.toFixed(1) : Math.round(monthlyHours);
+
+    var yearlyHours = (totalMinutes * 52 / 60);
+    if (yearlyEl) yearlyEl.textContent = Math.round(yearlyHours);
+
+    if (equivEl) {
+      var workdays = (yearlyHours / 8).toFixed(1);
+      if (yearlyHours === 0) {
+        equivEl.innerHTML = 'Move the sliders to see your potential time savings ☝️';
+      } else if (yearlyHours < 8) {
+        equivEl.innerHTML = 'That\'s <strong>' + Math.round(yearlyHours) + ' hours</strong> back every year — time for what matters ✨';
+      } else {
+        equivEl.innerHTML = 'That\'s like getting <strong>' + workdays + ' extra workdays</strong> back every year ✨';
+      }
+    }
+  }
+
+  function getTotal() {
+    var section = document.getElementById('calculatorSection');
+    if (!section) return 0;
+    var weeklyEl = document.getElementById('calcWeekly');
+    return weeklyEl ? parseInt(weeklyEl.textContent, 10) || 0 : 0;
+  }
+
+  return { init: init, update: update, getTotal: getTotal };
+})();
 
 // ---------------------------------------------------------------------------
 // Command Palette (Ctrl+K / Cmd+K)
@@ -1729,6 +1798,7 @@ var CommandPalette = (function () {
     { id: 'usecasesSection', icon: '👨‍💻', label: 'Use Cases', hint: 'Who it is for' },
     { id: 'integrationsSection', icon: '🔗', label: 'Integrations', hint: 'Connected tools' },
     { id: 'comparisonSection', icon: '⚖️', label: 'Compare', hint: 'vs ChatGPT, Siri' },
+    { id: 'calculatorSection', icon: '⏱️', label: 'Time Calculator', hint: 'Estimate time saved' },
     { id: 'trustSection', icon: '🔒', label: 'Trust & Privacy', hint: 'Security details' },
     { id: 'testimonialsSection', icon: '💬', label: 'Testimonials', hint: 'What people say' },
     { id: 'pricingSection', icon: '💰', label: 'Pricing', hint: 'Plans & pricing' },
@@ -2082,4 +2152,5 @@ document.addEventListener('DOMContentLoaded', function () {
   ThemeToggle.init();
   ScrollProgress.init();
   ShortcutsHelp.init();
+  Calculator.init();
 });

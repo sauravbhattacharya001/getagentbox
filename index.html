@@ -31,6 +31,7 @@
                 <li role="none"><a href="#usecasesSection" role="menuitem">Use Cases</a></li>
                 <li role="none"><a href="#integrationsSection" role="menuitem">Integrations</a></li>
                 <li role="none"><a href="#comparisonSection" role="menuitem">Compare</a></li>
+                <li role="none"><a href="#calculatorSection" role="menuitem">Calculator</a></li>
                 <li role="none"><a href="#trustSection" role="menuitem">Trust</a></li>
                 <li role="none"><a href="#pricingSection" role="menuitem">Pricing</a></li>
                 <li role="none"><a href="#roadmapSection" role="menuitem">Roadmap</a></li>
@@ -386,6 +387,81 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <div class="calculator-section" id="calculatorSection">
+            <h2>How much time could you save?</h2>
+            <p class="calculator-subtitle">Drag the sliders to estimate your weekly tasks — see how AgentBox adds up</p>
+            <div class="calculator-grid">
+                <div class="calculator-sliders">
+                    <div class="calc-slider-group" data-task="search" data-minutes="3">
+                        <div class="calc-slider-header">
+                            <span class="calc-slider-icon">🔍</span>
+                            <span class="calc-slider-label">Web searches</span>
+                            <span class="calc-slider-value">5 /week</span>
+                        </div>
+                        <input type="range" class="calc-range" min="0" max="50" value="5" aria-label="Web searches per week">
+                        <div class="calc-slider-scale"><span>0</span><span>25</span><span>50</span></div>
+                    </div>
+                    <div class="calc-slider-group" data-task="reminder" data-minutes="2">
+                        <div class="calc-slider-header">
+                            <span class="calc-slider-icon">⏰</span>
+                            <span class="calc-slider-label">Reminders & scheduling</span>
+                            <span class="calc-slider-value">3 /week</span>
+                        </div>
+                        <input type="range" class="calc-range" min="0" max="30" value="3" aria-label="Reminders per week">
+                        <div class="calc-slider-scale"><span>0</span><span>15</span><span>30</span></div>
+                    </div>
+                    <div class="calc-slider-group" data-task="email" data-minutes="5">
+                        <div class="calc-slider-header">
+                            <span class="calc-slider-icon">✍️</span>
+                            <span class="calc-slider-label">Emails & messages drafted</span>
+                            <span class="calc-slider-value">4 /week</span>
+                        </div>
+                        <input type="range" class="calc-range" min="0" max="40" value="4" aria-label="Emails drafted per week">
+                        <div class="calc-slider-scale"><span>0</span><span>20</span><span>40</span></div>
+                    </div>
+                    <div class="calc-slider-group" data-task="research" data-minutes="8">
+                        <div class="calc-slider-header">
+                            <span class="calc-slider-icon">📚</span>
+                            <span class="calc-slider-label">Research / deep questions</span>
+                            <span class="calc-slider-value">2 /week</span>
+                        </div>
+                        <input type="range" class="calc-range" min="0" max="20" value="2" aria-label="Research tasks per week">
+                        <div class="calc-slider-scale"><span>0</span><span>10</span><span>20</span></div>
+                    </div>
+                    <div class="calc-slider-group" data-task="image" data-minutes="4">
+                        <div class="calc-slider-header">
+                            <span class="calc-slider-icon">📷</span>
+                            <span class="calc-slider-label">Image / screenshot analysis</span>
+                            <span class="calc-slider-value">1 /week</span>
+                        </div>
+                        <input type="range" class="calc-range" min="0" max="20" value="1" aria-label="Image analysis tasks per week">
+                        <div class="calc-slider-scale"><span>0</span><span>10</span><span>20</span></div>
+                    </div>
+                </div>
+                <div class="calculator-results">
+                    <div class="calc-result-card primary">
+                        <div class="calc-result-number" id="calcWeekly">35</div>
+                        <div class="calc-result-unit">min / week</div>
+                        <div class="calc-result-label">saved with AgentBox</div>
+                    </div>
+                    <div class="calc-result-row">
+                        <div class="calc-result-card small">
+                            <div class="calc-result-number" id="calcMonthly">2.3</div>
+                            <div class="calc-result-unit">hours / month</div>
+                        </div>
+                        <div class="calc-result-card small">
+                            <div class="calc-result-number" id="calcYearly">28</div>
+                            <div class="calc-result-unit">hours / year</div>
+                        </div>
+                    </div>
+                    <div class="calc-equivalent" id="calcEquivalent">
+                        That's like getting <strong>3.5 extra workdays</strong> back every year ✨
+                    </div>
+                    <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer" class="calc-cta">Start saving time →</a>
+                </div>
+            </div>
         </div>
 
         <div class="trust-section" id="trustSection">
