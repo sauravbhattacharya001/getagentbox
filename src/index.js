@@ -173,10 +173,10 @@
     var Stats = {
         /**
          * Animate all stat counters within a container.
+         * Uses requestAnimationFrame with ease-out cubic for smooth 60fps.
          * @param {string|Element} container - CSS selector or DOM element
          * @param {Object} [options] - Animation options
          * @param {number} [options.duration=2000] - Animation duration in ms
-         * @param {number} [options.fps=60] - Frames per second
          */
         animate: function (container, options) {
             var el = typeof container === 'string' ? qs(container) : container;
@@ -184,51 +184,64 @@
 
             var opts = options || {};
             var duration = opts.duration || 2000;
-            var fps = opts.fps || 60;
 
             var stats = el.querySelectorAll('[data-count]');
             for (var i = 0; i < stats.length; i++) {
-                Stats._animateSingle(stats[i], duration, fps);
+                Stats._animateSingle(stats[i], duration);
             }
         },
 
-        _animateSingle: function (el, duration, fps) {
+        /**
+         * Ease-out cubic curve for natural deceleration.
+         * @param {number} t - Progress from 0 to 1
+         * @returns {number} Eased value from 0 to 1
+         */
+        _ease: function (t) {
+            return 1 - Math.pow(1 - t, 3);
+        },
+
+        _animateSingle: function (el, duration) {
             var target = parseInt(el.getAttribute('data-count'), 10);
             var suffix = el.getAttribute('data-suffix') || '';
             var numberEl = el.querySelector('.stat-number') || el;
             if (isNaN(target)) return;
 
-            // Cancel any existing timer to prevent stacking
-            if (el._statsTimer) {
-                clearInterval(el._statsTimer);
-                el._statsTimer = null;
+            // Cancel any existing animation to prevent stacking
+            if (el._statsRafId) {
+                cancelAnimationFrame(el._statsRafId);
+                el._statsRafId = null;
             }
 
-            var frames = Math.ceil(duration / (1000 / fps));
-            var current = 0;
-            var step = target / frames;
-            var frame = 0;
+            // Skip animation in non-browser environments
+            if (typeof requestAnimationFrame === 'undefined') {
+                numberEl.textContent = target.toLocaleString() + suffix;
+                return;
+            }
+
+            var startTime = null;
             var prev = -1;
 
-            var timer = setInterval(function () {
-                frame++;
-                current = Math.min(Math.ceil(step * frame), target);
+            function tick(timestamp) {
+                if (!startTime) startTime = timestamp;
+                var elapsed = timestamp - startTime;
+                var progress = Math.min(elapsed / duration, 1);
+                var current = Math.round(Stats._ease(progress) * target);
 
                 // Ensure monotonic progression
                 if (current < prev) current = prev;
                 prev = current;
 
-                numberEl.textContent = current.toLocaleString() + suffix;
-
-                // Early exit when target reached
-                if (current === target || frame >= frames) {
-                    clearInterval(timer);
-                    el._statsTimer = null;
+                if (current === target || progress >= 1) {
+                    el._statsRafId = null;
                     numberEl.textContent = target.toLocaleString() + suffix;
+                    return;
                 }
-            }, 1000 / fps);
 
-            el._statsTimer = timer;
+                numberEl.textContent = current.toLocaleString() + suffix;
+                el._statsRafId = requestAnimationFrame(tick);
+            }
+
+            el._statsRafId = requestAnimationFrame(tick);
         },
 
         /**

@@ -244,7 +244,7 @@ describe('AgentBoxComponents library', () => {
         });
 
         test('animate counts up to target', () => {
-            lib.Stats.animate('.stats-section', { duration: 100, fps: 10 });
+            lib.Stats.animate('.stats-section', { duration: 100 });
 
             // Fast-forward all timers
             jest.advanceTimersByTime(200);
@@ -261,7 +261,7 @@ describe('AgentBoxComponents library', () => {
 
         test('animate accepts DOM element', () => {
             const el = document.querySelector('.stats-section');
-            lib.Stats.animate(el, { duration: 100, fps: 10 });
+            lib.Stats.animate(el, { duration: 100 });
             jest.advanceTimersByTime(200);
 
             const number = document.querySelector('.stat-number');
@@ -283,7 +283,7 @@ describe('AgentBoxComponents library', () => {
         });
 
         test('numbers increase over time', () => {
-            lib.Stats.animate('.stats-section', { duration: 1000, fps: 10 });
+            lib.Stats.animate('.stats-section', { duration: 1000 });
 
             // After 50% of duration
             jest.advanceTimersByTime(500);
@@ -300,7 +300,7 @@ describe('AgentBoxComponents library', () => {
             const origIO = global.IntersectionObserver;
             delete global.IntersectionObserver;
 
-            lib.Stats.init('.stats-section', { duration: 100, fps: 10 });
+            lib.Stats.init('.stats-section', { duration: 100 });
             jest.advanceTimersByTime(200);
 
             expect(document.querySelector('.stat-number').textContent).toBe('100');

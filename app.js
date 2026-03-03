@@ -2244,6 +2244,12 @@ var ShortcutsHelp = (function () {
 /* ── Chat Playground ── */
 var Playground = (function () {
   var messagesEl, inputEl, formEl;
+
+  /** Pending reply timer — cleared on new submit to prevent stacking. */
+  var pendingTimer = null;
+  /** Typing indicator currently in the DOM. */
+  var currentTyping = null;
+
   var responses = [
     { patterns: ['hi', 'hello', 'hey', 'sup', 'yo'], reply: 'Hey there! \u{1F44B} I\'m your AgentBox agent. Ask me anything \u2014 weather, recipes, coding help, reminders, or whatever\'s on your mind.' },
     { patterns: ['weather', 'temperature', 'rain', 'sunny', 'forecast'], reply: '\u{1F324}\uFE0F I can check real-time weather for any city! In the full version, I search the web and give you current conditions + forecasts. Try me on Telegram to get live data!' },
@@ -2266,15 +2272,49 @@ var Playground = (function () {
   ];
   var fallbackIdx = 0;
 
-  function findResponse(text) {
-    var lower = text.toLowerCase().replace(/[^\w\s]/g, '');
+  /**
+   * Pre-built keyword → reply index for O(1) lookup instead of
+   * nested linear scan on every message.
+   */
+  var patternMap = null;
+
+  function buildPatternMap() {
+    patternMap = Object.create(null);
     for (var i = 0; i < responses.length; i++) {
       for (var j = 0; j < responses[i].patterns.length; j++) {
-        if (lower.indexOf(responses[i].patterns[j]) !== -1) {
-          return responses[i].reply;
-        }
+        patternMap[responses[i].patterns[j]] = responses[i].reply;
       }
     }
+  }
+
+  /**
+   * Reusable typing indicator template (cloned instead of rebuilt).
+   * Matches the pattern used by ChatDemo.
+   */
+  var typingTemplate = (function () {
+    var el = document.createElement('div');
+    el.className = 'typing-indicator';
+    for (var i = 0; i < 3; i++) el.appendChild(document.createElement('span'));
+    return el;
+  })();
+
+  function findResponse(text) {
+    if (!patternMap) buildPatternMap();
+    var lower = text.toLowerCase().replace(/[^\w\s]/g, '');
+    var words = lower.split(/\s+/);
+
+    // Check single words first (most patterns are single keywords)
+    for (var i = 0; i < words.length; i++) {
+      if (patternMap[words[i]]) return patternMap[words[i]];
+    }
+
+    // Fall back to substring match for multi-word patterns
+    for (var key in patternMap) {
+      if (key.indexOf(' ') !== -1 && lower.indexOf(key) !== -1) {
+        return patternMap[key];
+      }
+    }
+
     var fb = fallbacks[fallbackIdx % fallbacks.length];
     fallbackIdx++;
     return fb;
@@ -2289,13 +2329,19 @@ var Playground = (function () {
   }
 
   function addTyping() {
-    var el = document.createElement('div');
-    el.className = 'typing-indicator';
-    for (var i = 0; i < 3; i++) el.appendChild(document.createElement('span'));
+    var el = typingTemplate.cloneNode(true);
     el.id = 'playgroundTyping';
     messagesEl.appendChild(el);
     messagesEl.scrollTop = messagesEl.scrollHeight;
     return el;
+  }
+
+  /** Remove current typing indicator if present. */
+  function clearTyping() {
+    if (currentTyping && currentTyping.parentNode) {
+      currentTyping.parentNode.removeChild(currentTyping);
+    }
+    currentTyping = null;
   }
 
   function handleSubmit(e) {
@@ -2303,15 +2349,23 @@ var Playground = (function () {
     var text = inputEl.value.trim();
     if (!text) return;
 
+    // Cancel any pending reply to prevent stacking
+    if (pendingTimer) {
+      clearTimeout(pendingTimer);
+      pendingTimer = null;
+      clearTyping();
+    }
+
     addBubble('user', text);
     inputEl.value = '';
 
     var reply = findResponse(text);
-    var typing = addTyping();
+    currentTyping = addTyping();
     var delay = prefersReducedMotion ? 200 : 800 + Math.min(reply.length * 5, 1200);
 
-    setTimeout(function () {
-      if (typing.parentNode) typing.parentNode.removeChild(typing);
+    pendingTimer = setTimeout(function () {
+      pendingTimer = null;
+      clearTyping();
       addBubble('bot', reply);
     }, delay);
   }
