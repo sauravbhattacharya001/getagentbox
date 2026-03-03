@@ -1898,6 +1898,7 @@ var CommandPalette = (function () {
   var overlay, input, results;
   var selectedIndex = 0;
   var filtered = [];
+  var pool = []; // Pre-created <li> elements, one per SECTIONS entry
 
   function init() {
     overlay = document.getElementById('cmdPaletteOverlay');
@@ -1929,6 +1930,7 @@ var CommandPalette = (function () {
       else if (e.key === 'Enter') { e.preventDefault(); go(); }
     });
 
+    buildPool();
     filter('');
   }
 
@@ -1959,13 +1961,12 @@ var CommandPalette = (function () {
     render();
   }
 
-  function render() {
-    results.innerHTML = '';
-    filtered.forEach(function (s, i) {
+  function buildPool() {
+    SECTIONS.forEach(function (s, idx) {
       var li = document.createElement('li');
       li.className = 'cmd-palette-item';
       li.setAttribute('role', 'option');
-      if (i === selectedIndex) li.setAttribute('aria-selected', 'true');
+      li.dataset.sectionId = s.id;
 
       var iconSpan = document.createElement('span');
       iconSpan.className = 'cmd-palette-item-icon';
@@ -1984,11 +1985,55 @@ var CommandPalette = (function () {
       li.appendChild(hintSpan);
 
       li.addEventListener('click', function () {
-        selectedIndex = i;
-        go();
+        // Find this item's current index in filtered list
+        for (var j = 0; j < filtered.length; j++) {
+          if (filtered[j].id === s.id) {
+            selectedIndex = j;
+            go();
+            break;
+          }
+        }
       });
+
+      pool[idx] = { el: li, section: s };
       results.appendChild(li);
     });
+  }
+
+  function render() {
+    // Build lookup of visible section ids
+    var visibleIds = {};
+    for (var i = 0; i < filtered.length; i++) {
+      visibleIds[filtered[i].id] = i;
+    }
+
+    // Show/hide pooled elements and reorder visible ones
+    var fragment = document.createDocumentFragment();
+    // First, append visible items in filtered order
+    for (var i = 0; i < filtered.length; i++) {
+      for (var j = 0; j < pool.length; j++) {
+        if (pool[j].section.id === filtered[i].id) {
+          var li = pool[j].el;
+          li.hidden = false;
+          if (i === selectedIndex) {
+            li.setAttribute('aria-selected', 'true');
+          } else {
+            li.removeAttribute('aria-selected');
+          }
+          fragment.appendChild(li);
+          break;
+        }
+      }
+    }
+    // Then append hidden items (keeps them in DOM but invisible)
+    for (var j = 0; j < pool.length; j++) {
+      if (!(pool[j].section.id in visibleIds)) {
+        pool[j].el.hidden = true;
+        pool[j].el.removeAttribute('aria-selected');
+        fragment.appendChild(pool[j].el);
+      }
+    }
+    results.appendChild(fragment);
   }
 
   /**
