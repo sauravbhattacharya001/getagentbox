@@ -612,6 +612,13 @@ var Stats = (function () {
 
 var UseCases = (function () {
   var currentTab = 'dev';
+  var _section = null;
+
+  /** Lazily resolve the section element (cache on first use). */
+  function section() {
+    if (!_section) _section = document.getElementById('usecasesSection');
+    return _section;
+  }
 
   /**
    * Switch to a different use-case tab.
@@ -621,12 +628,11 @@ var UseCases = (function () {
   function switchTo(tabId) {
     if (!tabId || tabId === currentTab) return;
 
-    var section = document.getElementById('usecasesSection');
-    if (!section) return;
+    if (!section()) return;
 
     // Deactivate current tab button.
-    var tabs = section.querySelectorAll('.usecase-tab');
-    var panels = section.querySelectorAll('.usecase-panel');
+    var tabs = section().querySelectorAll('.usecase-tab');
+    var panels = section().querySelectorAll('.usecase-panel');
 
     var found = false;
     for (var i = 0; i < tabs.length; i++) {
@@ -665,9 +671,8 @@ var UseCases = (function () {
 
   /** Get list of all available tab ids. */
   function getTabs() {
-    var section = document.getElementById('usecasesSection');
-    if (!section) return [];
-    var tabs = section.querySelectorAll('.usecase-tab');
+    if (!section()) return [];
+    var tabs = section().querySelectorAll('.usecase-tab');
     var ids = [];
     for (var i = 0; i < tabs.length; i++) {
       if (tabs[i].dataset.usecase) ids.push(tabs[i].dataset.usecase);
@@ -681,10 +686,10 @@ var UseCases = (function () {
    * DOMContentLoaded block to avoid stale closure issues.
    */
   function init() {
-    var section = document.getElementById('usecasesSection');
-    if (!section) return;
+    _section = document.getElementById('usecasesSection');
+    if (!section()) return;
 
-    var tablist = section.querySelector('[role="tablist"]');
+    var tablist = section().querySelector('[role="tablist"]');
     if (!tablist) return;
 
     // Set initial tabindex values.
@@ -708,6 +713,13 @@ var UseCases = (function () {
 
 var Integrations = (function () {
   var currentCategory = 'all';
+  var _section = null;
+
+  /** Lazily resolve the section element (cache on first use). */
+  function section() {
+    if (!_section) _section = document.getElementById('integrationsSection');
+    return _section;
+  }
 
   /**
    * Filter integration cards by category.
@@ -716,11 +728,10 @@ var Integrations = (function () {
   function filterBy(category) {
     if (!category) return;
 
-    var section = document.getElementById('integrationsSection');
-    if (!section) return;
+    if (!section()) return;
 
-    var cards = section.querySelectorAll('.integration-card');
-    var buttons = section.querySelectorAll('.integration-filter-btn');
+    var cards = section().querySelectorAll('.integration-card');
+    var buttons = section().querySelectorAll('.integration-filter-btn');
 
     // Update filter buttons
     for (var i = 0; i < buttons.length; i++) {
@@ -748,9 +759,8 @@ var Integrations = (function () {
 
   /** Get all available categories. */
   function getCategories() {
-    var section = document.getElementById('integrationsSection');
-    if (!section) return [];
-    var buttons = section.querySelectorAll('.integration-filter-btn');
+    if (!section()) return [];
+    var buttons = section().querySelectorAll('.integration-filter-btn');
     var cats = [];
     for (var i = 0; i < buttons.length; i++) {
       if (buttons[i].dataset.category) cats.push(buttons[i].dataset.category);
@@ -760,9 +770,8 @@ var Integrations = (function () {
 
   /** Get integration cards data. */
   function getIntegrations(category) {
-    var section = document.getElementById('integrationsSection');
-    if (!section) return [];
-    var cards = section.querySelectorAll('.integration-card');
+    if (!section()) return [];
+    var cards = section().querySelectorAll('.integration-card');
     var result = [];
     for (var i = 0; i < cards.length; i++) {
       var card = cards[i];
@@ -790,10 +799,10 @@ var Integrations = (function () {
 
   /** Initialize click handlers on filter buttons. */
   function init() {
-    var section = document.getElementById('integrationsSection');
-    if (!section) return;
+    _section = document.getElementById('integrationsSection');
+    if (!section()) return;
 
-    var filterContainer = section.querySelector('.integrations-filter');
+    var filterContainer = section().querySelector('.integrations-filter');
     if (!filterContainer) return;
 
     filterContainer.addEventListener('click', function (e) {
@@ -819,6 +828,13 @@ var Integrations = (function () {
 
 var Changelog = (function () {
   var currentTag = 'all';
+  var _section = null;
+
+  /** Lazily resolve the section element (cache on first use). */
+  function section() {
+    if (!_section) _section = document.getElementById('changelogSection');
+    return _section;
+  }
 
   /**
    * Filter changelog entries by tag.
@@ -828,11 +844,10 @@ var Changelog = (function () {
   function filterBy(tag) {
     if (!tag) return 0;
 
-    var section = document.getElementById('changelogSection');
-    if (!section) return 0;
+    if (!section()) return 0;
 
-    var entries = section.querySelectorAll('.changelog-entry');
-    var buttons = section.querySelectorAll('.changelog-filter-btn');
+    var entries = section().querySelectorAll('.changelog-entry');
+    var buttons = section().querySelectorAll('.changelog-filter-btn');
 
     // Update filter buttons
     for (var i = 0; i < buttons.length; i++) {
@@ -860,9 +875,8 @@ var Changelog = (function () {
 
   /** Get all available filter tags. */
   function getTags() {
-    var section = document.getElementById('changelogSection');
-    if (!section) return [];
-    var buttons = section.querySelectorAll('.changelog-filter-btn');
+    if (!section()) return [];
+    var buttons = section().querySelectorAll('.changelog-filter-btn');
     var tags = [];
     for (var i = 0; i < buttons.length; i++) {
       if (buttons[i].dataset.tag) tags.push(buttons[i].dataset.tag);
@@ -872,9 +886,8 @@ var Changelog = (function () {
 
   /** Get changelog entries data, optionally filtered by tag. */
   function getEntries(tag) {
-    var section = document.getElementById('changelogSection');
-    if (!section) return [];
-    var entries = section.querySelectorAll('.changelog-entry');
+    if (!section()) return [];
+    var entries = section().querySelectorAll('.changelog-entry');
     var result = [];
     for (var i = 0; i < entries.length; i++) {
       var entry = entries[i];
@@ -902,10 +915,10 @@ var Changelog = (function () {
 
   /** Initialize click handlers on filter buttons. */
   function init() {
-    var section = document.getElementById('changelogSection');
-    if (!section) return;
+    _section = document.getElementById('changelogSection');
+    if (!section()) return;
 
-    var filterContainer = section.querySelector('.changelog-filter');
+    var filterContainer = section().querySelector('.changelog-filter');
     if (!filterContainer) return;
 
     filterContainer.addEventListener('click', function (e) {
@@ -1340,14 +1353,28 @@ var Newsletter = (function () {
 var Roadmap = (function () {
   var STORAGE_KEY = 'agentbox_roadmap_votes';
   var currentFilter = 'all';
+  var _container = null;
+  var _grid = null;
+
+  /** Lazily resolve the container element (cache on first use). */
+  function container() {
+    if (!_container) _container = document.getElementById('roadmapSection');
+    return _container;
+  }
+
+  /** Lazily resolve the grid element (cache on first use). */
+  function grid() {
+    if (!_grid) _grid = document.getElementById('roadmapGrid');
+    return _grid;
+  }
 
   function init() {
-    var container = document.getElementById('roadmapSection');
-    if (!container) return;
+    _container = document.getElementById('roadmapSection');
+    if (!container()) return;
 
     restoreVotes();
 
-    var filterBtns = container.querySelectorAll('.roadmap-filter-btn');
+    var filterBtns = container().querySelectorAll('.roadmap-filter-btn');
     for (var i = 0; i < filterBtns.length; i++) {
       filterBtns[i].addEventListener('click', function (e) {
         var status = e.currentTarget.getAttribute('data-status');
@@ -1355,19 +1382,19 @@ var Roadmap = (function () {
       });
     }
 
-    var grid = document.getElementById('roadmapGrid');
-    if (grid) {
-      grid.addEventListener('click', function (e) {
+    _grid = document.getElementById('roadmapGrid');
+    if (grid()) {
+      grid().addEventListener('click', function (e) {
         var btn = e.target.closest('.roadmap-vote-btn');
         if (!btn) return;
         toggleVote(btn);
       });
     }
 
-    container.addEventListener('keydown', function (e) {
+    container().addEventListener('keydown', function (e) {
       if (e.target.className.indexOf('roadmap-filter-btn') === -1) return;
       var btns = Array.prototype.slice.call(
-        container.querySelectorAll('.roadmap-filter-btn')
+        container().querySelectorAll('.roadmap-filter-btn')
       );
       var idx = btns.indexOf(e.target);
       if (idx === -1) return;
@@ -1393,10 +1420,9 @@ var Roadmap = (function () {
 
   function filterBy(status) {
     currentFilter = status || 'all';
-    var container = document.getElementById('roadmapSection');
-    if (!container) return;
+    if (!container()) return;
 
-    var filterBtns = container.querySelectorAll('.roadmap-filter-btn');
+    var filterBtns = container().querySelectorAll('.roadmap-filter-btn');
     for (var i = 0; i < filterBtns.length; i++) {
       var isActive =
         filterBtns[i].getAttribute('data-status') === currentFilter;
@@ -1407,14 +1433,14 @@ var Roadmap = (function () {
       );
     }
 
-    var cards = container.querySelectorAll('.roadmap-card');
+    var cards = container().querySelectorAll('.roadmap-card');
     for (var j = 0; j < cards.length; j++) {
       var cardStatus = cards[j].getAttribute('data-status');
       var visible = currentFilter === 'all' || cardStatus === currentFilter;
       cards[j].setAttribute('data-hidden', visible ? 'false' : 'true');
     }
 
-    var summaryItems = container.querySelectorAll('.roadmap-summary-item');
+    var summaryItems = container().querySelectorAll('.roadmap-summary-item');
     for (var k = 0; k < summaryItems.length; k++) {
       var itemStatus = summaryItems[k].getAttribute('data-status');
       var highlighted =
@@ -1448,9 +1474,8 @@ var Roadmap = (function () {
   }
 
   function getCards() {
-    var grid = document.getElementById('roadmapGrid');
-    if (!grid) return [];
-    return Array.prototype.slice.call(grid.querySelectorAll('.roadmap-card'));
+    if (!grid()) return [];
+    return Array.prototype.slice.call(grid().querySelectorAll('.roadmap-card'));
   }
 
   function getVisibleCards() {
@@ -1552,24 +1577,46 @@ var Roadmap = (function () {
 
 var StatusDashboard = (function () {
   var STATUS_LEVELS = ['operational', 'degraded', 'outage'];
+  var _grid = null;
+  var _incidents = null;
+  var _overall = null;
+
+  /** Lazily resolve grid element. */
+  function getGrid() {
+    if (!_grid) _grid = document.getElementById('statusGrid');
+    return _grid;
+  }
+
+  /** Lazily resolve incidents container. */
+  function getIncidentsEl() {
+    if (!_incidents) _incidents = document.getElementById('statusIncidents');
+    return _incidents;
+  }
+
+  /** Lazily resolve overall status element. */
+  function getOverall() {
+    if (!_overall) _overall = document.getElementById('statusOverall');
+    return _overall;
+  }
 
   function init() {
+    _grid = document.getElementById('statusGrid');
+    _incidents = document.getElementById('statusIncidents');
+    _overall = document.getElementById('statusOverall');
     updateOverall();
   }
 
   function getServices() {
-    var grid = document.getElementById('statusGrid');
-    if (!grid) return [];
+    if (!getGrid()) return [];
     return Array.prototype.slice.call(
-      grid.querySelectorAll('.status-service')
+      getGrid().querySelectorAll('.status-service')
     );
   }
 
   function getIncidents() {
-    var container = document.getElementById('statusIncidents');
-    if (!container) return [];
+    if (!getIncidentsEl()) return [];
     return Array.prototype.slice.call(
-      container.querySelectorAll('.status-incident')
+      getIncidentsEl().querySelectorAll('.status-incident')
     );
   }
 
@@ -1635,11 +1682,10 @@ var StatusDashboard = (function () {
       }
     }
 
-    var overall = document.getElementById('statusOverall');
-    if (!overall) return;
+    if (!getOverall()) return;
 
-    var dot = overall.querySelector('.status-dot');
-    var text = overall.querySelector('.status-overall-text');
+    var dot = getOverall().querySelector('.status-dot');
+    var text = getOverall().querySelector('.status-overall-text');
     if (dot) dot.className = 'status-dot ' + worst;
 
     var messages = {
@@ -1651,9 +1697,8 @@ var StatusDashboard = (function () {
   }
 
   function getOverallStatus() {
-    var overall = document.getElementById('statusOverall');
-    if (!overall) return null;
-    var dot = overall.querySelector('.status-dot');
+    if (!getOverall()) return null;
+    var dot = getOverall().querySelector('.status-dot');
     if (!dot) return null;
     for (var i = STATUS_LEVELS.length - 1; i >= 0; i--) {
       if (dot.classList.contains(STATUS_LEVELS[i])) return STATUS_LEVELS[i];
@@ -1715,6 +1760,12 @@ if (typeof window !== 'undefined') {
   window.SiteNav = SiteNav;
   window.Newsletter = Newsletter;
   window.Calculator = Calculator;
+  window.CommandPalette = CommandPalette;
+  window.ShareFab = ShareFab;
+  window.ThemeToggle = ThemeToggle;
+  window.ScrollProgress = ScrollProgress;
+  window.ShortcutsHelp = ShortcutsHelp;
+  window.Playground = Playground;
 }
 
 
@@ -1723,11 +1774,19 @@ if (typeof window !== 'undefined') {
 // ---------------------------------------------------------------------------
 
 var Calculator = (function () {
-  function init() {
-    var section = document.getElementById('calculatorSection');
-    if (!section) return;
+  var _section = null;
 
-    var sliders = section.querySelectorAll('.calc-range');
+  /** Lazily resolve the section element (cache on first use). */
+  function section() {
+    if (!_section) _section = document.getElementById('calculatorSection');
+    return _section;
+  }
+
+  function init() {
+    _section = document.getElementById('calculatorSection');
+    if (!section()) return;
+
+    var sliders = section().querySelectorAll('.calc-range');
     for (var i = 0; i < sliders.length; i++) {
       sliders[i].addEventListener('input', update);
     }
@@ -1735,10 +1794,9 @@ var Calculator = (function () {
   }
 
   function update() {
-    var section = document.getElementById('calculatorSection');
-    if (!section) return;
+    if (!section()) return;
 
-    var groups = section.querySelectorAll('.calc-slider-group');
+    var groups = section().querySelectorAll('.calc-slider-group');
     var totalMinutes = 0;
 
     for (var i = 0; i < groups.length; i++) {
@@ -1777,8 +1835,7 @@ var Calculator = (function () {
   }
 
   function getTotal() {
-    var section = document.getElementById('calculatorSection');
-    if (!section) return 0;
+    if (!section()) return 0;
     var weeklyEl = document.getElementById('calcWeekly');
     return weeklyEl ? parseInt(weeklyEl.textContent, 10) || 0 : 0;
   }
@@ -2238,4 +2295,6 @@ document.addEventListener('DOMContentLoaded', function () {
   ShortcutsHelp.init();
   Calculator.init();
   Playground.init();
+  CommandPalette.init();
+  ShareFab.init();
 });
