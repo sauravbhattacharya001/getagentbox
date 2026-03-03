@@ -1824,12 +1824,21 @@ var Calculator = (function () {
 
     if (equivEl) {
       var workdays = (yearlyHours / 8).toFixed(1);
+      equivEl.textContent = '';
       if (yearlyHours === 0) {
-        equivEl.innerHTML = 'Move the sliders to see your potential time savings ☝️';
+        equivEl.textContent = 'Move the sliders to see your potential time savings \u261D\uFE0F';
       } else if (yearlyHours < 8) {
-        equivEl.innerHTML = 'That\'s <strong>' + Math.round(yearlyHours) + ' hours</strong> back every year — time for what matters ✨';
+        equivEl.appendChild(document.createTextNode('That\u2019s '));
+        var strong1 = document.createElement('strong');
+        strong1.textContent = Math.round(yearlyHours) + ' hours';
+        equivEl.appendChild(strong1);
+        equivEl.appendChild(document.createTextNode(' back every year \u2014 time for what matters \u2728'));
       } else {
-        equivEl.innerHTML = 'That\'s like getting <strong>' + workdays + ' extra workdays</strong> back every year ✨';
+        equivEl.appendChild(document.createTextNode('That\u2019s like getting '));
+        var strong2 = document.createElement('strong');
+        strong2.textContent = workdays + ' extra workdays';
+        equivEl.appendChild(strong2);
+        equivEl.appendChild(document.createTextNode(' back every year \u2728'));
       }
     }
   }
@@ -2253,7 +2262,7 @@ var Playground = (function () {
   function addTyping() {
     var el = document.createElement('div');
     el.className = 'typing-indicator';
-    el.innerHTML = '<span></span><span></span><span></span>';
+    for (var i = 0; i < 3; i++) el.appendChild(document.createElement('span'));
     el.id = 'playgroundTyping';
     messagesEl.appendChild(el);
     messagesEl.scrollTop = messagesEl.scrollHeight;

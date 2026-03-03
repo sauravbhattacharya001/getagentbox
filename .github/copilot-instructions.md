@@ -2,101 +2,155 @@
 
 ## Project Overview
 
-**getagentbox** is the landing page for [AgentBox](https://t.me/AgentBox11Bot), a personal AI agent that lives in Telegram. The entire site is a single `index.html` file — no build step, no framework, no dependencies.
+**getagentbox** is the landing page and npm package for [AgentBox](https://t.me/AgentBox11Bot), a personal AI agent that lives in Telegram. The site is a vanilla HTML/CSS/JS project — no build step, no framework, no runtime dependencies.
 
 **Live site:** https://sauravbhattacharya001.github.io/getagentbox/
+**npm package:** `agentbox-landing` (reusable FAQ, Pricing, Stats components)
 
 ## Architecture
 
 ```
 getagentbox/
-├── index.html          # The entire landing page (HTML + CSS + JS)
-├── README.md           # Project documentation
+├── index.html              # Main landing page (HTML structure)
+├── styles.css              # All styles (67KB — responsive, dark theme, CSS vars)
+├── app.js                  # 21 interactive modules (~2,300 lines)
+├── src/
+│   └── index.js            # npm package — UMD reusable components (FAQ, Pricing, Stats)
+├── docs/
+│   ├── index.html          # Developer documentation site
+│   └── getting-started.html
+├── vendor/
+│   └── count.js            # Vendored GoatCounter analytics (do NOT modify)
+├── __tests__/              # Jest + jsdom test suites
+│   ├── index.test.js       # Main app.js module tests (~58KB)
+│   ├── lib.test.js         # npm package (src/index.js) tests
+│   ├── sitenav.test.js     # SiteNav module tests
+│   ├── integrations.test.js
+│   ├── changelog.test.js
+│   ├── roadmap.test.js
+│   ├── status.test.js      # StatusDashboard tests
+│   ├── trust.test.js       # Trust module tests
+│   └── docs-security.test.js
+├── Dockerfile              # Multi-stage nginx production container
+├── SECURITY.md             # CSP policy, XSS prevention, security headers
+├── CONTRIBUTING.md         # Development guide, conventions, PR process
 └── .github/
+    ├── workflows/
+    │   ├── ci.yml           # Build + test + lint
+    │   ├── pages.yml        # GitHub Pages deployment
+    │   ├── docker.yml       # Docker build/push
+    │   ├── publish.yml      # npm publish
+    │   ├── codeql.yml       # Security scanning
+    │   ├── labeler.yml      # Auto-label PRs
+    │   └── stale.yml        # Stale issue management
+    ├── dependabot.yml
     ├── copilot-setup-steps.yml
-    └── copilot-instructions.md
+    └── copilot-instructions.md  # ← this file
 ```
 
-### index.html Structure
+## app.js Modules (21 total)
 
-The file is a self-contained single-page app with three embedded sections:
+Each module follows the IIFE pattern and exposes an object with `init()` plus module-specific methods. Most also have `reset()` for test cleanup.
 
-1. **`<style>`** — All CSS (responsive, dark theme, gradient backgrounds, animations)
-2. **`<body>`** — Semantic HTML with these sections:
-   - Hero (logo + title + tagline)
-   - Features grid (6 feature cards with icons)
-   - Interactive chat demo (animated conversation bubbles)
-   - CTA section (Telegram link + free tier badge)
-   - Footer
-3. **`<script>`** — Interactive chat demo logic:
-   - 4 conversation scenarios (memory, search, reminder, image)
-   - Typing indicator animation
-   - Bubble-by-bubble playback with timing
-   - Scenario switching via tab buttons
+| Module | Purpose |
+|--------|---------|
+| `ChatDemo` | Animated chat scenario player (4 scenarios) |
+| `Testimonials` | Auto-rotating testimonials carousel with dots |
+| `Pricing` | Monthly/yearly billing toggle |
+| `FAQ` | Accessible accordion (aria-expanded, keyboard nav) |
+| `HowItWorks` | Step-by-step reveal animation |
+| `Stats` | Animated social proof counters with easing |
+| `UseCases` | Tabbed use case browser |
+| `Integrations` | Filterable integration cards by category |
+| `Changelog` | Filterable changelog entries by tag |
+| `Trust` | Expandable privacy detail cards |
+| `SiteNav` | Sticky nav with scroll tracking + mobile menu |
+| `Newsletter` | Email subscription form with validation |
+| `Roadmap` | Status-filterable roadmap cards with voting |
+| `StatusDashboard` | Service status grid with uptime bars + incidents |
+| `Calculator` | Interactive time-savings calculator with sliders |
+| `CommandPalette` | Keyboard-triggered section search (Ctrl+K) |
+| `ShareFab` | Floating share button (Twitter, LinkedIn, copy link) |
+| `ThemeToggle` | Light/dark mode with localStorage persistence |
+| `ScrollProgress` | Progress bar + back-to-top button |
+| `ShortcutsHelp` | Keyboard shortcuts overlay (?) |
+| `Playground` | Interactive chat demo with pattern-matched responses |
 
-### Key Design Decisions
+**Two DOMContentLoaded blocks:** Modules are initialized in two separate `DOMContentLoaded` listeners (lines ~979 and ~2292). The first handles the core set; the second handles later additions.
 
-- **No framework** — Vanilla HTML/CSS/JS for maximum simplicity and zero build overhead
-- **Single file** — Everything in `index.html` for easy deployment via GitHub Pages
-- **Dark theme** — Gradient background (#1a1a2e → #16213e → #0f3460), light text
-- **Telegram-style chat** — Demo uses realistic chat bubble styling matching Telegram's dark mode
-- **GoatCounter analytics** — Privacy-friendly, lightweight analytics at the bottom of the page
+## src/index.js (npm Package)
+
+UMD module exporting `AgentBoxComponents` with three reusable components:
+- **FAQ** — Accessible accordion
+- **Pricing** — Billing toggle
+- **Stats** — Animated counters
+
+Tests in `__tests__/lib.test.js`. Methods can be called without `init()` for backward compatibility.
 
 ## Conventions
 
-- **Colors:** Primary gradient `#00d4ff` → `#7b2cbf`, text white, muted text `#888` / `#a0a0a0`
-- **Border radius:** 16px for cards/sections, 12px for chat bubbles, 8px for buttons, 20px for badges
-- **Font stack:** System fonts (`-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, ...`)
-- **Responsive:** Single breakpoint at 480px for mobile
-- **Animations:** `bubbleIn` (chat messages), `typingBounce` (typing dots)
+### JavaScript
+- **ES5 only** — no `let`/`const`, no arrow functions, no template literals
+- Modules are global IIFEs (e.g., `var ChatDemo = (function () { ... })();`)
+- `/* exported ... */` comments for linter hints
+- All DOM content creation uses `document.createElement()` / `createTextNode()` — avoid `innerHTML` with dynamic content (see Security)
+- `prefersReducedMotion` global for WCAG 2.3.3 compliance
 
-## How to Test
+### CSS
+- CSS custom properties (variables) in `:root` for theming
+- Dark theme default, light mode via `.light-mode` body class
+- Breakpoints: 768px (tablet), 480px (phone)
+- `contain: content` on independent sections for layout isolation
+- `will-change` on animated elements for GPU compositing
 
-Since there's no build step:
+### Testing
+- **Jest + jsdom** — configured in `jest.config.js`
+- `npm test` runs all suites; `npm run test:coverage` for coverage
+- Test files use `@jest-environment jsdom` pragma when needed
+- Functions are copied/re-evaluated in test files (jsdom can't `require` browser globals)
+- **Jest exit code is consistently 1 even when all tests pass** (pre-existing config issue)
 
-1. Open `index.html` in a browser to verify visual appearance
-2. Check all 4 chat demo scenarios cycle correctly
-3. Verify responsive layout at mobile widths (< 480px)
-4. Confirm the Telegram CTA link goes to `https://t.me/AgentBox11Bot`
-5. Run `htmlhint index.html` to catch HTML issues
+### Security
+- Strict CSP via `<meta>` tag — `script-src 'self'`, `style-src 'self'`
+- No `innerHTML` for user-facing content — use safe DOM APIs
+- `vendor/count.js` is vendored GoatCounter — **do not modify**
+- XSS prevention: `createElement` + `createTextNode` for dynamic content
+- See `SECURITY.md` for full policy
 
-## Guidelines for Changes
+## How to Work on This
 
-- Keep everything in `index.html` — do not extract CSS/JS into separate files
-- Maintain the dark theme aesthetic — avoid light backgrounds or clashing colors
-- Test mobile responsiveness for any layout changes
-- The chat demo is the key interactive element — preserve its timing and animations
-- GoatCounter script at the bottom should not be removed or modified
-- Keep the page lightweight (no heavy images, no CDN dependencies, no frameworks)
-- All external links should use `target="_blank"` with proper `rel` attributes
+```bash
+# Install test dependencies
+npm install
 
-## Performance Architecture
+# Run tests
+npm test
 
-The site uses several performance patterns — preserve them when making changes:
+# Serve locally
+npx serve .
+# Then open http://localhost:3000
+```
 
-### CSS Containment
-Independent page sections (`.features`, `.demo-section`, `.comparison-section`, `.faq-section`, `.cta-section`, `.chat-window`) use `contain: content` or `contain: layout style` to isolate their layout/paint from each other. This tells the browser that changes inside one section can't affect layout outside it, eliminating unnecessary recalculations.
+### Adding a New Module to app.js
 
-### GPU-Composited Animations
-- `.chat-bubble` uses `will-change: transform, opacity` for its `bubbleIn` animation
-- `.typing-indicator span` uses `will-change: transform` for the bounce animation
-- `.chat-window` uses `will-change: scroll-position` for smooth scrolling
-- These promote elements to their own compositor layers, avoiding main-thread paint work
+1. Create an IIFE following the existing pattern:
+   ```javascript
+   var MyModule = (function () {
+       function init() { /* DOM setup */ }
+       function reset() { /* cleanup for tests */ }
+       return { init: init, reset: reset };
+   })();
+   ```
+2. Call `MyModule.init()` in the DOMContentLoaded block (line ~2292)
+3. Add corresponding HTML in `index.html`
+4. Add styles in `styles.css` (section-based organization)
+5. Add tests in `__tests__/`
 
-### Batched Scrolling
-Chat demo scrolling uses `requestAnimationFrame` via `scheduleScroll()` instead of direct `scrollTop` writes. This avoids forced synchronous layout — reading `scrollHeight` after a DOM write forces the browser to compute layout immediately. The rAF defers the read+write to the browser's next paint frame.
+### What NOT to Do
 
-### DOM Optimization
-- `addBubble()` builds content in a `DocumentFragment` before appending to the DOM (one reflow instead of N)
-- Typing indicator uses `cloneNode(true)` from a pre-built template instead of creating 4 new nodes each time
-
-### Resource Hints
-- `<link rel="preconnect">` and `<link rel="dns-prefetch">` for `gc.zgo.at` (GoatCounter CDN) — eliminates DNS + TCP + TLS overhead on first analytics request
-
-## Security
-
-See `SECURITY.md` in the repo root for the full security policy. Key points:
-- Strict CSP blocks all unexpected resource loading
-- No `innerHTML` for dynamic content — only safe DOM APIs
-- External scripts require `crossorigin` attribute
-- Clickjacking prevented via `frame-ancestors 'none'`
+- Do not add build tools, transpilers, or frameworks (keep vanilla)
+- Do not modify `vendor/count.js` (third-party GoatCounter)
+- Do not use `innerHTML` with any dynamic or user-influenced content
+- Do not break the CSP policy (no inline scripts/styles, no external CDNs)
+- Do not remove existing functionality without discussion
+- Do not use ES6+ syntax (the codebase is ES5 for broad compatibility)
