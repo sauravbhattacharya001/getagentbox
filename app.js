@@ -10,8 +10,23 @@
  *  - Trust:          expandable privacy detail cards
  */
 
-/** Global reduced-motion check (WCAG 2.3.3 compliance). */
-var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** Global reduced-motion check (WCAG 2.3.3 compliance).
+ *  Reactive: listens for OS preference changes at runtime so toggling
+ *  "Reduce motion" in system settings takes effect immediately.
+ */
+var _prefersReducedMotionQuery = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+var prefersReducedMotion = _prefersReducedMotionQuery ? _prefersReducedMotionQuery.matches : false;
+
+if (_prefersReducedMotionQuery && _prefersReducedMotionQuery.addEventListener) {
+  _prefersReducedMotionQuery.addEventListener('change', function (e) {
+    prefersReducedMotion = e.matches;
+
+    // Stop or resume testimonial autoplay based on the new preference.
+    if (typeof Testimonials !== 'undefined' && Testimonials._onMotionChange) {
+      Testimonials._onMotionChange(e.matches);
+    }
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Chat Demo Scenarios
@@ -299,6 +314,14 @@ var Testimonials = (function () {
     stopAutoPlay: stopAutoPlay,
     getCurrent: getCurrent,
     getTotal: getTotal,
+    /** Called when the OS prefers-reduced-motion setting changes at runtime. */
+    _onMotionChange: function (reducedMotion) {
+      if (reducedMotion) {
+        stopAutoPlay();
+      } else {
+        startAutoPlay();
+      }
+    },
   };
 })();
 
