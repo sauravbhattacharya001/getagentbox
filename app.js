@@ -249,14 +249,16 @@ var Testimonials = (function () {
     }
   }
 
-  /** Go to the next slide. */
+  /** Go to the next slide. Restarts autoplay to avoid premature advances. */
   function next() {
     goTo(currentIndex + 1);
+    if (autoPlayTimer) startAutoPlay();
   }
 
-  /** Go to the previous slide. */
+  /** Go to the previous slide. Restarts autoplay to avoid premature advances. */
   function prev() {
     goTo(currentIndex - 1);
+    if (autoPlayTimer) startAutoPlay();
   }
 
   /** Start the auto-play timer. */
@@ -1040,6 +1042,9 @@ document.addEventListener('DOMContentLoaded', function () {
       var dot = e.target.closest('.testimonial-dot');
       if (dot && dot.dataset.index !== undefined) {
         Testimonials.goTo(parseInt(dot.dataset.index, 10));
+        // Reset autoplay timer so next auto-advance waits a full interval
+        Testimonials.stopAutoPlay();
+        Testimonials.startAutoPlay();
       }
     });
   }
@@ -2234,7 +2239,7 @@ var ThemeToggle = (function () {
     var saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'light') {
       document.body.classList.add('light-mode');
-      icon.textContent = '🌙';
+      if (icon) icon.textContent = '🌙';
     }
 
     btn.addEventListener('click', toggle);
@@ -2242,7 +2247,7 @@ var ThemeToggle = (function () {
 
   function toggle() {
     var isLight = document.body.classList.toggle('light-mode');
-    icon.textContent = isLight ? '🌙' : '☀️';
+    if (icon) icon.textContent = isLight ? '🌙' : '☀️';
     localStorage.setItem(STORAGE_KEY, isLight ? 'light' : 'dark');
   }
 
