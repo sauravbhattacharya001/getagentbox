@@ -1866,6 +1866,15 @@ if (typeof window !== 'undefined') {
 var Calculator = (function () {
   var _section = null;
 
+  // Cached DOM references — resolved once in init(), reused on every
+  // slider input event.  Eliminates 5 getElementById + 1 querySelectorAll
+  // calls per update (~dozens per second while dragging a slider).
+  var _weeklyEl = null;
+  var _monthlyEl = null;
+  var _yearlyEl = null;
+  var _equivEl = null;
+  var _groups = [];
+
   /** Lazily resolve the section element (cache on first use). */
   function section() {
     if (!_section) _section = document.getElementById('calculatorSection');
@@ -1875,6 +1884,13 @@ var Calculator = (function () {
   function init() {
     _section = document.getElementById('calculatorSection');
     if (!section()) return;
+
+    // Cache all static elements once
+    _weeklyEl = document.getElementById('calcWeekly');
+    _monthlyEl = document.getElementById('calcMonthly');
+    _yearlyEl = document.getElementById('calcYearly');
+    _equivEl = document.getElementById('calcEquivalent');
+    _groups = section().querySelectorAll('.calc-slider-group');
 
     var sliders = section().querySelectorAll('.calc-range');
     for (var i = 0; i < sliders.length; i++) {
@@ -1886,57 +1902,45 @@ var Calculator = (function () {
   function update() {
     if (!section()) return;
 
-    var groups = section().querySelectorAll('.calc-slider-group');
     var totalMinutes = 0;
 
-    for (var i = 0; i < groups.length; i++) {
-      var slider = groups[i].querySelector('.calc-range');
-      var valueEl = groups[i].querySelector('.calc-slider-value');
-      var minutesPer = parseInt(groups[i].dataset.minutes, 10) || 0;
+    for (var i = 0; i < _groups.length; i++) {
+      var slider = _groups[i].querySelector('.calc-range');
+      var valueEl = _groups[i].querySelector('.calc-slider-value');
+      var minutesPer = parseInt(_groups[i].dataset.minutes, 10) || 0;
       var count = parseInt(slider.value, 10) || 0;
 
       if (valueEl) valueEl.textContent = count + ' /week';
       totalMinutes += count * minutesPer;
     }
 
-    var weeklyEl = document.getElementById('calcWeekly');
-    var monthlyEl = document.getElementById('calcMonthly');
-    var yearlyEl = document.getElementById('calcYearly');
-    var equivEl = document.getElementById('calcEquivalent');
-
-    if (weeklyEl) weeklyEl.textContent = totalMinutes;
+    if (_weeklyEl) _weeklyEl.textContent = totalMinutes;
 
     var monthlyHours = (totalMinutes * 4.33 / 60);
-    if (monthlyEl) monthlyEl.textContent = monthlyHours < 10 ? monthlyHours.toFixed(1) : Math.round(monthlyHours);
+    if (_monthlyEl) _monthlyEl.textContent = monthlyHours < 10 ? monthlyHours.toFixed(1) : Math.round(monthlyHours);
 
     var yearlyHours = (totalMinutes * 52 / 60);
-    if (yearlyEl) yearlyEl.textContent = Math.round(yearlyHours);
+    if (_yearlyEl) _yearlyEl.textContent = Math.round(yearlyHours);
 
-    if (equivEl) {
-      var workdays = (yearlyHours / 8).toFixed(1);
-      equivEl.textContent = '';
+    if (_equivEl) {
       if (yearlyHours === 0) {
-        equivEl.textContent = 'Move the sliders to see your potential time savings \u261D\uFE0F';
+        _equivEl.textContent = 'Move the sliders to see your potential time savings \u261D\uFE0F';
       } else if (yearlyHours < 8) {
-        equivEl.appendChild(document.createTextNode('That\u2019s '));
-        var strong1 = document.createElement('strong');
-        strong1.textContent = Math.round(yearlyHours) + ' hours';
-        equivEl.appendChild(strong1);
-        equivEl.appendChild(document.createTextNode(' back every year \u2014 time for what matters \u2728'));
+        _equivEl.innerHTML = 'That\u2019s <strong>' +
+          Math.round(yearlyHours) + ' hours</strong>' +
+          ' back every year \u2014 time for what matters \u2728';
       } else {
-        equivEl.appendChild(document.createTextNode('That\u2019s like getting '));
-        var strong2 = document.createElement('strong');
-        strong2.textContent = workdays + ' extra workdays';
-        equivEl.appendChild(strong2);
-        equivEl.appendChild(document.createTextNode(' back every year \u2728'));
+        var workdays = (yearlyHours / 8).toFixed(1);
+        _equivEl.innerHTML = 'That\u2019s like getting <strong>' +
+          workdays + ' extra workdays</strong>' +
+          ' back every year \u2728';
       }
     }
   }
 
   function getTotal() {
-    if (!section()) return 0;
-    var weeklyEl = document.getElementById('calcWeekly');
-    return weeklyEl ? parseInt(weeklyEl.textContent, 10) || 0 : 0;
+    if (!_weeklyEl || !_weeklyEl.isConnected) return 0;
+    return parseInt(_weeklyEl.textContent, 10) || 0;
   }
 
   return { init: init, update: update, getTotal: getTotal };
