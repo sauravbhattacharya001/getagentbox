@@ -877,21 +877,28 @@ var Changelog = (function () {
 
     if (!section()) return 0;
 
-    var entries = section().querySelectorAll('.changelog-entry');
-    var buttons = section().querySelectorAll('.changelog-filter-btn');
-
-    // Update filter buttons
-    for (var i = 0; i < buttons.length; i++) {
-      var isActive = buttons[i].dataset.tag === tag;
-      buttons[i].classList.toggle('active', isActive);
-      buttons[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
+    // Lazy-init cached arrays (avoids DOM queries on repeat calls)
+    if (_filterBtns.length === 0) {
+      _filterBtns = Array.prototype.slice.call(
+        section().querySelectorAll('.changelog-filter-btn')
+      );
+    }
+    if (_entries.length === 0) {
+      _entries = Array.prototype.slice.call(
+        section().querySelectorAll('.changelog-entry')
+      );
     }
 
-    // Show/hide entries
+    for (var i = 0; i < _filterBtns.length; i++) {
+      var isActive = _filterBtns[i].dataset.tag === tag;
+      _filterBtns[i].classList.toggle('active', isActive);
+      _filterBtns[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
+
     var visibleCount = 0;
-    for (var j = 0; j < entries.length; j++) {
-      var match = tag === 'all' || entries[j].dataset.tag === tag;
-      entries[j].classList.toggle('hidden', !match);
+    for (var j = 0; j < _entries.length; j++) {
+      var match = tag === 'all' || _entries[j].dataset.tag === tag;
+      _entries[j].classList.toggle('hidden', !match);
       if (match) visibleCount++;
     }
 
@@ -944,10 +951,21 @@ var Changelog = (function () {
     return counts;
   }
 
+  /** Cached DOM collections — resolved once on init. */
+  var _filterBtns = [];
+  var _entries = [];
+
   /** Initialize click handlers on filter buttons. */
   function init() {
     _section = document.getElementById('changelogSection');
     if (!section()) return;
+
+    _filterBtns = Array.prototype.slice.call(
+      section().querySelectorAll('.changelog-filter-btn')
+    );
+    _entries = Array.prototype.slice.call(
+      section().querySelectorAll('.changelog-entry')
+    );
 
     var filterContainer = section().querySelector('.changelog-filter');
     if (!filterContainer) return;
@@ -1461,21 +1479,36 @@ var Roadmap = (function () {
     return _grid;
   }
 
+  /** Cached DOM collections — resolved once on init, reused on every filter. */
+  var _filterBtns = [];
+  var _cards = [];
+  var _summaryItems = [];
+
   function init() {
     _container = document.getElementById('roadmapSection');
     if (!container()) return;
 
     restoreVotes();
 
-    var filterBtns = container().querySelectorAll('.roadmap-filter-btn');
-    for (var i = 0; i < filterBtns.length; i++) {
-      filterBtns[i].addEventListener('click', function (e) {
+    _filterBtns = Array.prototype.slice.call(
+      container().querySelectorAll('.roadmap-filter-btn')
+    );
+    for (var i = 0; i < _filterBtns.length; i++) {
+      _filterBtns[i].addEventListener('click', function (e) {
         var status = e.currentTarget.getAttribute('data-status');
         filterBy(status);
       });
     }
 
     _grid = document.getElementById('roadmapGrid');
+
+    _cards = Array.prototype.slice.call(
+      container().querySelectorAll('.roadmap-card')
+    );
+    _summaryItems = Array.prototype.slice.call(
+      container().querySelectorAll('.roadmap-summary-item')
+    );
+
     if (grid()) {
       grid().addEventListener('click', function (e) {
         var btn = e.target.closest('.roadmap-vote-btn');
@@ -1494,30 +1527,44 @@ var Roadmap = (function () {
     currentFilter = status || 'all';
     if (!container()) return;
 
-    var filterBtns = container().querySelectorAll('.roadmap-filter-btn');
-    for (var i = 0; i < filterBtns.length; i++) {
+    // Lazy-init cached arrays (avoids DOM queries on repeat calls)
+    if (_filterBtns.length === 0) {
+      _filterBtns = Array.prototype.slice.call(
+        container().querySelectorAll('.roadmap-filter-btn')
+      );
+    }
+    if (_cards.length === 0) {
+      _cards = Array.prototype.slice.call(
+        container().querySelectorAll('.roadmap-card')
+      );
+    }
+    if (_summaryItems.length === 0) {
+      _summaryItems = Array.prototype.slice.call(
+        container().querySelectorAll('.roadmap-summary-item')
+      );
+    }
+
+    for (var i = 0; i < _filterBtns.length; i++) {
       var isActive =
-        filterBtns[i].getAttribute('data-status') === currentFilter;
-      filterBtns[i].classList.toggle('active', isActive);
-      filterBtns[i].setAttribute(
+        _filterBtns[i].getAttribute('data-status') === currentFilter;
+      _filterBtns[i].classList.toggle('active', isActive);
+      _filterBtns[i].setAttribute(
         'aria-selected',
         isActive ? 'true' : 'false'
       );
     }
 
-    var cards = container().querySelectorAll('.roadmap-card');
-    for (var j = 0; j < cards.length; j++) {
-      var cardStatus = cards[j].getAttribute('data-status');
+    for (var j = 0; j < _cards.length; j++) {
+      var cardStatus = _cards[j].getAttribute('data-status');
       var visible = currentFilter === 'all' || cardStatus === currentFilter;
-      cards[j].setAttribute('data-hidden', visible ? 'false' : 'true');
+      _cards[j].setAttribute('data-hidden', visible ? 'false' : 'true');
     }
 
-    var summaryItems = container().querySelectorAll('.roadmap-summary-item');
-    for (var k = 0; k < summaryItems.length; k++) {
-      var itemStatus = summaryItems[k].getAttribute('data-status');
+    for (var k = 0; k < _summaryItems.length; k++) {
+      var itemStatus = _summaryItems[k].getAttribute('data-status');
       var highlighted =
         currentFilter === 'all' || itemStatus === currentFilter;
-      summaryItems[k].style.opacity = highlighted ? '1' : '0.4';
+      _summaryItems[k].style.opacity = highlighted ? '1' : '0.4';
     }
   }
 
