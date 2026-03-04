@@ -69,6 +69,8 @@ var ChatDemo = (function () {
   var animationTimer = null;
   var animationGeneration = 0;
   var scrollRafId = 0;
+  /** Cached scenario buttons — avoids querySelectorAll on every switch. */
+  var _scenarioBtns = null;
 
   /**
    * Batched scroll-to-bottom via requestAnimationFrame to avoid forced
@@ -166,9 +168,12 @@ var ChatDemo = (function () {
       cancelAnimationFrame(scrollRafId);
       scrollRafId = 0;
     }
-    document.querySelectorAll('.scenario-btn').forEach(function (btn) {
-      btn.classList.toggle('active', btn.dataset.scenario === name);
-    });
+    if (!_scenarioBtns) {
+      _scenarioBtns = document.querySelectorAll('.scenario-btn');
+    }
+    for (var i = 0; i < _scenarioBtns.length; i++) {
+      _scenarioBtns[i].classList.toggle('active', _scenarioBtns[i].dataset.scenario === name);
+    }
     play(name);
   }
 
@@ -1731,6 +1736,10 @@ var StatusDashboard = (function () {
   var _grid = null;
   var _incidents = null;
   var _overall = null;
+  /** Cached service elements keyed by data-service name for O(1) lookup. */
+  var _serviceCache = null;
+  /** Cached service element array (avoids querySelectorAll on every call). */
+  var _serviceList = null;
 
   /** Lazily resolve grid element. */
   function getGrid() {
@@ -1754,14 +1763,28 @@ var StatusDashboard = (function () {
     _grid = document.getElementById('statusGrid');
     _incidents = document.getElementById('statusIncidents');
     _overall = document.getElementById('statusOverall');
+    _buildServiceCache();
     updateOverall();
   }
 
+  /** Build O(1) service lookup from DOM. Called once on init. */
+  function _buildServiceCache() {
+    _serviceCache = Object.create(null);
+    _serviceList = [];
+    if (!getGrid()) return;
+    var els = getGrid().querySelectorAll('.status-service');
+    for (var i = 0; i < els.length; i++) {
+      _serviceList.push(els[i]);
+      var name = els[i].getAttribute('data-service');
+      if (name) _serviceCache[name] = els[i];
+    }
+  }
+
   function getServices() {
+    if (_serviceList) return _serviceList;
     if (!getGrid()) return [];
-    return Array.prototype.slice.call(
-      getGrid().querySelectorAll('.status-service')
-    );
+    _buildServiceCache();
+    return _serviceList;
   }
 
   function getIncidents() {
@@ -1772,55 +1795,40 @@ var StatusDashboard = (function () {
   }
 
   function getServiceStatus(serviceName) {
-    var services = getServices();
-    for (var i = 0; i < services.length; i++) {
-      if (services[i].getAttribute('data-service') === serviceName) {
-        return services[i].getAttribute('data-status');
-      }
-    }
-    return null;
+    if (!_serviceCache) _buildServiceCache();
+    var el = _serviceCache[serviceName];
+    return el ? el.getAttribute('data-status') : null;
   }
 
   function getServiceUptime(serviceName) {
-    var services = getServices();
-    for (var i = 0; i < services.length; i++) {
-      if (services[i].getAttribute('data-service') === serviceName) {
-        var el = services[i].querySelector('.status-uptime');
-        if (!el) return null;
-        return parseFloat(el.textContent);
-      }
-    }
-    return null;
+    if (!_serviceCache) _buildServiceCache();
+    var el = _serviceCache[serviceName];
+    if (!el) return null;
+    var uptimeEl = el.querySelector('.status-uptime');
+    return uptimeEl ? parseFloat(uptimeEl.textContent) : null;
   }
 
   function setServiceStatus(serviceName, status) {
-    var services = getServices();
-    for (var i = 0; i < services.length; i++) {
-      if (services[i].getAttribute('data-service') === serviceName) {
-        services[i].setAttribute('data-status', status);
-        var dot = services[i].querySelector('.status-dot');
-        if (dot) {
-          dot.className = 'status-dot ' + status;
-        }
-        break;
-      }
+    if (!_serviceCache) _buildServiceCache();
+    var el = _serviceCache[serviceName];
+    if (el) {
+      el.setAttribute('data-status', status);
+      var dot = el.querySelector('.status-dot');
+      if (dot) dot.className = 'status-dot ' + status;
     }
     updateOverall();
   }
 
   function setServiceUptime(serviceName, uptime) {
-    var services = getServices();
-    for (var i = 0; i < services.length; i++) {
-      if (services[i].getAttribute('data-service') === serviceName) {
-        var el = services[i].querySelector('.status-uptime');
-        if (el) el.textContent = uptime.toFixed(2) + '%';
-        var bar = services[i].querySelector('.status-bar-fill');
-        if (bar) bar.style.width = Math.min(100, Math.max(0, uptime)) + '%';
-        var meter = services[i].querySelector('.status-bar');
-        if (meter) meter.setAttribute('aria-valuenow', String(uptime));
-        break;
-      }
-    }
+    if (!_serviceCache) _buildServiceCache();
+    var svc = _serviceCache[serviceName];
+    if (!svc) return;
+    var el = svc.querySelector('.status-uptime');
+    if (el) el.textContent = uptime.toFixed(2) + '%';
+    var bar = svc.querySelector('.status-bar-fill');
+    if (bar) bar.style.width = Math.min(100, Math.max(0, uptime)) + '%';
+    var meter = svc.querySelector('.status-bar');
+    if (meter) meter.setAttribute('aria-valuenow', String(uptime));
   }
 
   function updateOverall() {
