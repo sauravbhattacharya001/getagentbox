@@ -47,6 +47,21 @@ var SCENARIOS = Object.freeze({
 });
 
 // ---------------------------------------------------------------------------
+// Shared Utilities
+// ---------------------------------------------------------------------------
+
+/**
+ * Reusable typing indicator template.
+ * Shared between ChatDemo and Playground — clone with cloneNode(true).
+ */
+var _typingIndicatorTemplate = (function () {
+  var el = document.createElement('div');
+  el.className = 'typing-indicator';
+  for (var i = 0; i < 3; i++) el.appendChild(document.createElement('span'));
+  return el;
+})();
+
+// ---------------------------------------------------------------------------
 // Chat Demo Module
 // ---------------------------------------------------------------------------
 
@@ -54,14 +69,6 @@ var ChatDemo = (function () {
   var animationTimer = null;
   var animationGeneration = 0;
   var scrollRafId = 0;
-
-  // Reusable typing indicator template (cloned for each use).
-  var typingTemplate = (function () {
-    var el = document.createElement('div');
-    el.className = 'typing-indicator';
-    for (var i = 0; i < 3; i++) el.appendChild(document.createElement('span'));
-    return el;
-  })();
 
   /**
    * Batched scroll-to-bottom via requestAnimationFrame to avoid forced
@@ -125,7 +132,7 @@ var ChatDemo = (function () {
       var msg = messages[idx];
 
       if (msg.role === 'bot') {
-        var typing = typingTemplate.cloneNode(true);
+        var typing = _typingIndicatorTemplate.cloneNode(true);
         chatWindow.appendChild(typing);
         scheduleScroll(chatWindow);
 
@@ -1164,6 +1171,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Auto-play the default scenario.
   ChatDemo.play('memory');
+
+  // Additional component initialization
+  ThemeToggle.init();
+  ScrollProgress.init();
+  ShortcutsHelp.init();
+  Calculator.init();
+  Playground.init();
+  CommandPalette.init();
+  ShareFab.init();
 });
 
 // ---------------------------------------------------------------------------
@@ -2344,6 +2360,16 @@ var Playground = (function () {
   /** Typing indicator currently in the DOM. */
   var currentTyping = null;
 
+  /**
+   * Security limits to prevent resource exhaustion.
+   * MAX_INPUT_LENGTH: caps the text processed by findResponse() to avoid
+   *   unbounded regex/split operations on multi-MB pastes.
+   * MAX_MESSAGES: caps DOM children in the messages container to prevent
+   *   memory exhaustion from automated or rapid submissions.
+   */
+  var MAX_INPUT_LENGTH = 500;
+  var MAX_MESSAGES = 50;
+
   var responses = [
     { patterns: ['hi', 'hello', 'hey', 'sup', 'yo'], reply: 'Hey there! \u{1F44B} I\'m your AgentBox agent. Ask me anything \u2014 weather, recipes, coding help, reminders, or whatever\'s on your mind.' },
     { patterns: ['weather', 'temperature', 'rain', 'sunny', 'forecast'], reply: '\u{1F324}\uFE0F I can check real-time weather for any city! In the full version, I search the web and give you current conditions + forecasts. Try me on Telegram to get live data!' },
@@ -2381,17 +2407,6 @@ var Playground = (function () {
     }
   }
 
-  /**
-   * Reusable typing indicator template (cloned instead of rebuilt).
-   * Matches the pattern used by ChatDemo.
-   */
-  var typingTemplate = (function () {
-    var el = document.createElement('div');
-    el.className = 'typing-indicator';
-    for (var i = 0; i < 3; i++) el.appendChild(document.createElement('span'));
-    return el;
-  })();
-
   function findResponse(text) {
     if (!patternMap) buildPatternMap();
     var lower = text.toLowerCase().replace(/[^\w\s]/g, '');
@@ -2415,6 +2430,10 @@ var Playground = (function () {
   }
 
   function addBubble(role, text) {
+    // Evict oldest messages when DOM children exceed safety limit.
+    while (messagesEl.children.length >= MAX_MESSAGES) {
+      messagesEl.removeChild(messagesEl.firstChild);
+    }
     var bubble = document.createElement('div');
     bubble.className = 'chat-bubble ' + role;
     bubble.textContent = text;
@@ -2423,7 +2442,7 @@ var Playground = (function () {
   }
 
   function addTyping() {
-    var el = typingTemplate.cloneNode(true);
+    var el = _typingIndicatorTemplate.cloneNode(true);
     el.id = 'playgroundTyping';
     messagesEl.appendChild(el);
     messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -2442,6 +2461,11 @@ var Playground = (function () {
     e.preventDefault();
     var text = inputEl.value.trim();
     if (!text) return;
+
+    // Truncate to prevent unbounded regex/split in findResponse().
+    if (text.length > MAX_INPUT_LENGTH) {
+      text = text.slice(0, MAX_INPUT_LENGTH);
+    }
 
     // Cancel any pending reply to prevent stacking
     if (pendingTimer) {
@@ -2469,18 +2493,11 @@ var Playground = (function () {
     inputEl = document.getElementById('playgroundInput');
     messagesEl = document.getElementById('playgroundMessages');
     if (!formEl || !inputEl || !messagesEl) return;
+    inputEl.setAttribute('maxlength', String(MAX_INPUT_LENGTH));
     formEl.addEventListener('submit', handleSubmit);
   }
 
   return { init: init };
 })();
 
-document.addEventListener('DOMContentLoaded', function () {
-  ThemeToggle.init();
-  ScrollProgress.init();
-  ShortcutsHelp.init();
-  Calculator.init();
-  Playground.init();
-  CommandPalette.init();
-  ShareFab.init();
-});
+
