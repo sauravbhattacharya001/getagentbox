@@ -521,6 +521,7 @@ var Stats = (function () {
       }
 
       var display = prefix + formatNumber(current);
+      if (decimal) display += '.' + decimal;
       display += suffix;
       numberEl.textContent = display;
 
@@ -1238,6 +1239,9 @@ var SiteNav = (function () {
    * only on resize when layout actually changes.
    */
   var sectionOffsets = [];
+  var _resizeHandler = null;
+  var _keydownHandler = null;
+  var _resizeTimer = null;
 
   function cacheSectionOffsets() {
     sectionOffsets = [];
@@ -1265,11 +1269,11 @@ var SiteNav = (function () {
 
     // Cache section positions (recompute on resize, debounced)
     cacheSectionOffsets();
-    var resizeTimer = null;
-    window.addEventListener('resize', function () {
-      if (resizeTimer) clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(cacheSectionOffsets, 200);
-    }, { passive: true });
+    _resizeHandler = function () {
+      if (_resizeTimer) clearTimeout(_resizeTimer);
+      _resizeTimer = setTimeout(cacheSectionOffsets, 200);
+    };
+    window.addEventListener('resize', _resizeHandler, { passive: true });
 
     // Smooth scroll + close mobile menu on click
     linksContainer.addEventListener('click', function (e) {
@@ -1303,9 +1307,10 @@ var SiteNav = (function () {
     }
 
     // Close menu on Escape
-    document.addEventListener('keydown', function (e) {
+    _keydownHandler = function (e) {
       if (e.key === 'Escape') closeMenu();
-    });
+    };
+    document.addEventListener('keydown', _keydownHandler);
 
     // Scroll listener for active link + scrolled class
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -1365,8 +1370,20 @@ var SiteNav = (function () {
     closeMenu();
   }
 
+  function destroy() {
+    if (_resizeHandler) window.removeEventListener('resize', _resizeHandler);
+    if (_keydownHandler) document.removeEventListener('keydown', _keydownHandler);
+    window.removeEventListener('scroll', onScroll);
+    if (_resizeTimer) clearTimeout(_resizeTimer);
+    _resizeHandler = null;
+    _keydownHandler = null;
+    _resizeTimer = null;
+    reset();
+  }
+
   return {
     init: init,
+    destroy: destroy,
     getActiveSection: getActiveSection,
     reset: reset,
     closeMenu: closeMenu,
@@ -1996,6 +2013,7 @@ var CommandPalette = (function () {
   var filtered = [];
   var pool = []; // Pre-created <li> elements, one per SECTIONS entry
   var poolIndex = Object.create(null); // section.id -> pool array index (O(1) lookup)
+  var _globalKeyHandler = null;
 
   function init() {
     overlay = document.getElementById('cmdPaletteOverlay');
@@ -2003,7 +2021,7 @@ var CommandPalette = (function () {
     results = document.getElementById('cmdPaletteResults');
     if (!overlay || !input || !results) return;
 
-    document.addEventListener('keydown', function (e) {
+    _globalKeyHandler = function (e) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         toggle();
@@ -2011,7 +2029,8 @@ var CommandPalette = (function () {
       if (e.key === 'Escape' && !overlay.hidden) {
         close();
       }
-    });
+    };
+    document.addEventListener('keydown', _globalKeyHandler);
 
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) close();
@@ -2159,7 +2178,13 @@ var CommandPalette = (function () {
     }
   }
 
-  return { init: init, open: open, close: close };
+  function destroy() {
+    if (_globalKeyHandler) document.removeEventListener('keydown', _globalKeyHandler);
+    _globalKeyHandler = null;
+    close();
+  }
+
+  return { init: init, destroy: destroy, open: open, close: close };
 })();
 
 // ---------------------------------------------------------------------------
