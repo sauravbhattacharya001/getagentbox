@@ -20,8 +20,18 @@ const appJs = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 /**
  * Re-initialise the page DOM, inject external CSS, and execute app.js.
  * Simulates what a browser does when loading the three files.
+ *
+ * Uses fake timers during initialisation to prevent real setInterval /
+ * setTimeout / rAF handles from keeping the Node process alive (fixes
+ * the "test hangs indefinitely" issue on Windows — see #24).
  */
 function loadPage() {
+  // Snapshot whether fake timers are already active so we only install
+  // them when the caller hasn't done so (avoids double-install errors).
+  const callerOwnsFakeTimers = typeof setTimeout.clock !== 'undefined';
+
+  if (!callerOwnsFakeTimers) jest.useFakeTimers();
+
   document.documentElement.innerHTML = '';
   document.write(html);
   document.close();
@@ -39,7 +49,20 @@ function loadPage() {
 
   // Manually fire DOMContentLoaded so the event listeners in app.js bind.
   document.dispatchEvent(new Event('DOMContentLoaded'));
+
+  if (!callerOwnsFakeTimers) jest.useRealTimers();
 }
+
+/**
+ * Global teardown: clean up any lingering intervals, observers, and event
+ * listeners that app.js modules may have started during tests.
+ */
+afterAll(() => {
+  try { if (window.Testimonials) window.Testimonials.stopAutoPlay(); } catch (_) {}
+  try { if (window.SiteNav) window.SiteNav.destroy(); } catch (_) {}
+  try { if (window.CommandPalette) window.CommandPalette.destroy(); } catch (_) {}
+  try { if (window.MobileNav) window.MobileNav.destroy(); } catch (_) {}
+});
 
 // ─── HTML structure & SEO ────────────────────────────────────────────────
 
