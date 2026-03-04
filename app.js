@@ -1357,7 +1357,15 @@ var Newsletter = (function () {
   function getSubscribers() {
     try {
       var data = localStorage.getItem('agentbox_newsletter');
-      return data ? JSON.parse(data) : [];
+      if (!data) return [];
+      var parsed = JSON.parse(data);
+      // Validate: must be an array of strings (email addresses)
+      if (!Array.isArray(parsed)) return [];
+      var safe = [];
+      for (var i = 0; i < parsed.length; i++) {
+        if (typeof parsed[i] === 'string') safe.push(parsed[i]);
+      }
+      return safe;
     } catch (_) {
       return [];
     }
@@ -1524,7 +1532,7 @@ var Roadmap = (function () {
 
   function getVotes() {
     var cards = getCards();
-    var votes = {};
+    var votes = Object.create(null);
     for (var i = 0; i < cards.length; i++) {
       var h3 = cards[i].querySelector('h3');
       var countEl = cards[i].querySelector('.roadmap-vote-count');
@@ -1538,7 +1546,7 @@ var Roadmap = (function () {
   function saveVotes() {
     try {
       var cards = getCards();
-      var data = {};
+      var data = Object.create(null);
       for (var i = 0; i < cards.length; i++) {
         var h3 = cards[i].querySelector('h3');
         var btn = cards[i].querySelector('.roadmap-vote-btn');
@@ -1560,22 +1568,36 @@ var Roadmap = (function () {
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
-      var data = JSON.parse(raw);
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
+      // Rebuild as prototype-safe map with validated entries
+      var data = Object.create(null);
+      for (var key in parsed) {
+        if (!Object.prototype.hasOwnProperty.call(parsed, key)) continue;
+        var entry = parsed[key];
+        if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+          data[key] = entry;
+        }
+      }
       var cards = getCards();
       for (var i = 0; i < cards.length; i++) {
         var h3 = cards[i].querySelector('h3');
         if (!h3 || !data[h3.textContent]) continue;
-        var entry = data[h3.textContent];
+        var item = data[h3.textContent];
         var countEl = cards[i].querySelector('.roadmap-vote-count');
         var btn = cards[i].querySelector('.roadmap-vote-btn');
-        if (countEl) countEl.textContent = String(entry.count);
-        if (btn && entry.voted) {
+        // Validate count is a safe integer before rendering
+        var count = parseInt(item.count, 10);
+        if (countEl && !isNaN(count) && count >= 0 && count <= 999999) {
+          countEl.textContent = String(count);
+        }
+        if (btn && item.voted === true) {
           btn.classList.add('voted');
           btn.setAttribute('aria-pressed', 'true');
         }
       }
     } catch (_) {
-      /* localStorage unavailable */
+      /* localStorage unavailable or corrupted */
     }
   }
 
