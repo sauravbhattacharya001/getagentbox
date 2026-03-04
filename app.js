@@ -1964,6 +1964,7 @@ var CommandPalette = (function () {
   var selectedIndex = 0;
   var filtered = [];
   var pool = []; // Pre-created <li> elements, one per SECTIONS entry
+  var poolIndex = Object.create(null); // section.id -> pool array index (O(1) lookup)
 
   function init() {
     overlay = document.getElementById('cmdPaletteOverlay');
@@ -2061,33 +2062,32 @@ var CommandPalette = (function () {
       });
 
       pool[idx] = { el: li, section: s };
+      poolIndex[s.id] = idx;
       results.appendChild(li);
     });
   }
 
   function render() {
     // Build lookup of visible section ids
-    var visibleIds = {};
+    var visibleIds = Object.create(null);
     for (var i = 0; i < filtered.length; i++) {
       visibleIds[filtered[i].id] = i;
     }
 
     // Show/hide pooled elements and reorder visible ones
     var fragment = document.createDocumentFragment();
-    // First, append visible items in filtered order
+    // First, append visible items in filtered order — O(n) via poolIndex
     for (var i = 0; i < filtered.length; i++) {
-      for (var j = 0; j < pool.length; j++) {
-        if (pool[j].section.id === filtered[i].id) {
-          var li = pool[j].el;
-          li.hidden = false;
-          if (i === selectedIndex) {
-            li.setAttribute('aria-selected', 'true');
-          } else {
-            li.removeAttribute('aria-selected');
-          }
-          fragment.appendChild(li);
-          break;
+      var idx = poolIndex[filtered[i].id];
+      if (idx !== undefined) {
+        var li = pool[idx].el;
+        li.hidden = false;
+        if (i === selectedIndex) {
+          li.setAttribute('aria-selected', 'true');
+        } else {
+          li.removeAttribute('aria-selected');
         }
+        fragment.appendChild(li);
       }
     }
     // Then append hidden items (keeps them in DOM but invisible)
