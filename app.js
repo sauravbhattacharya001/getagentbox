@@ -1231,9 +1231,13 @@ var SiteNav = (function () {
       }
     }
 
-    // Cache section positions (recompute on resize)
+    // Cache section positions (recompute on resize, debounced)
     cacheSectionOffsets();
-    window.addEventListener('resize', cacheSectionOffsets, { passive: true });
+    var resizeTimer = null;
+    window.addEventListener('resize', function () {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(cacheSectionOffsets, 200);
+    }, { passive: true });
 
     // Smooth scroll + close mobile menu on click
     linksContainer.addEventListener('click', function (e) {
