@@ -1876,30 +1876,8 @@ var StatusDashboard = (function () {
   };
 })();
 
-// Expose modules globally for external access and testability.
-if (typeof window !== 'undefined') {
-  window.SCENARIOS = SCENARIOS;
-  window.ChatDemo = ChatDemo;
-  window.Testimonials = Testimonials;
-  window.Pricing = Pricing;
-  window.FAQ = FAQ;
-  window.HowItWorks = HowItWorks;
-  window.Stats = Stats;
-  window.UseCases = UseCases;
-  window.Integrations = Integrations;
-  window.Changelog = Changelog;
-  window.Roadmap = Roadmap;
-  window.StatusDashboard = StatusDashboard;
-  window.SiteNav = SiteNav;
-  window.Newsletter = Newsletter;
-  window.Calculator = Calculator;
-  window.CommandPalette = CommandPalette;
-  window.ShareFab = ShareFab;
-  window.ThemeToggle = ThemeToggle;
-  window.ScrollProgress = ScrollProgress;
-  window.ShortcutsHelp = ShortcutsHelp;
-  window.Playground = Playground;
-}
+// Module exposure moved to end of file (after all IIFEs) to ensure
+// every module is defined before assignment. See #23.
 
 
 // ---------------------------------------------------------------------------
@@ -2552,4 +2530,32 @@ var Playground = (function () {
   return { init: init };
 })();
 
-
+// ---------------------------------------------------------------------------
+// Expose modules globally for external access and testability.
+// This block MUST remain after all module IIFEs to avoid hoisting bugs
+// where window.X is set to undefined. See issue #23.
+// ---------------------------------------------------------------------------
+if (typeof window !== 'undefined') {
+  window.SCENARIOS = SCENARIOS;
+  window.ChatDemo = ChatDemo;
+  window.Testimonials = Testimonials;
+  window.Pricing = Pricing;
+  window.FAQ = FAQ;
+  window.HowItWorks = HowItWorks;
+  window.Stats = Stats;
+  window.UseCases = UseCases;
+  window.Integrations = Integrations;
+  window.Changelog = Changelog;
+  window.Roadmap = Roadmap;
+  window.StatusDashboard = StatusDashboard;
+  window.SiteNav = SiteNav;
+  window.Newsletter = Newsletter;
+  window.Calculator = Calculator;
+  window.CommandPalette = CommandPalette;
+  window.ShareFab = ShareFab;
+  window.ThemeToggle = ThemeToggle;
+  window.ScrollProgress = ScrollProgress;
+  window.ShortcutsHelp = ShortcutsHelp;
+  window.Playground = Playground;
+  window.Trust = Trust;
+}
