@@ -178,12 +178,18 @@ var Testimonials = (function () {
   var autoPlayTimer = null;
   var AUTO_PLAY_INTERVAL = 5000;
 
+  // Cached DOM references — avoid re-querying on every goTo() call.
+  // goTo() runs every 5s via autoplay; caching eliminates ~12
+  // getElementById + querySelectorAll calls per minute.
+  var _track = null;
+  var _dots = [];
+
   /** Initialise the carousel: count slides, build dots, start auto-play. */
   function init() {
-    var track = document.getElementById('testimonialsTrack');
-    if (!track) return;
+    _track = document.getElementById('testimonialsTrack');
+    if (!_track) return;
 
-    totalSlides = track.querySelectorAll('.testimonial-card').length;
+    totalSlides = _track.querySelectorAll('.testimonial-card').length;
     if (totalSlides === 0) return;
 
     buildDots();
@@ -210,12 +216,14 @@ var Testimonials = (function () {
     if (!dotsContainer) return;
 
     dotsContainer.innerHTML = '';
+    _dots = [];
     for (var i = 0; i < totalSlides; i++) {
       var dot = document.createElement('button');
       dot.className = 'testimonial-dot';
       dot.setAttribute('aria-label', 'Go to testimonial ' + (i + 1));
       dot.dataset.index = String(i);
       dotsContainer.appendChild(dot);
+      _dots.push(dot);
     }
   }
 
@@ -225,15 +233,13 @@ var Testimonials = (function () {
     if (index >= totalSlides) index = 0;
     currentIndex = index;
 
-    var track = document.getElementById('testimonialsTrack');
-    if (track) {
-      track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+    if (_track) {
+      _track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
     }
 
-    var dots = document.querySelectorAll('.testimonial-dot');
-    dots.forEach(function (dot, i) {
-      dot.classList.toggle('active', i === currentIndex);
-    });
+    for (var i = 0; i < _dots.length; i++) {
+      _dots[i].classList.toggle('active', i === currentIndex);
+    }
   }
 
   /** Go to the next slide. */
@@ -289,28 +295,42 @@ var Testimonials = (function () {
 var Pricing = (function () {
   var isYearly = false;
 
+  // Cached DOM references — resolved once, reused on each toggle.
+  var _toggleEl = null;
+  var _monthlyLabel = null;
+  var _yearlyLabel = null;
+  var _priceAmounts = null;
+  var _pricePeriods = null;
+  var _resolved = false;
+
+  function _resolve() {
+    if (_resolved) return;
+    _toggleEl = document.getElementById('billingToggle');
+    _monthlyLabel = document.getElementById('monthlyLabel');
+    _yearlyLabel = document.getElementById('yearlyLabel');
+    _priceAmounts = document.querySelectorAll('.price-amount');
+    _pricePeriods = document.querySelectorAll('.price-period-dynamic');
+    _resolved = true;
+  }
+
   function toggle() {
     isYearly = !isYearly;
+    _resolve();
 
-    var toggleEl = document.getElementById('billingToggle');
-    var monthlyLabel = document.getElementById('monthlyLabel');
-    var yearlyLabel = document.getElementById('yearlyLabel');
-
-    if (toggleEl) {
-      toggleEl.classList.toggle('yearly', isYearly);
-      toggleEl.setAttribute('aria-checked', String(isYearly));
+    if (_toggleEl) {
+      _toggleEl.classList.toggle('yearly', isYearly);
+      _toggleEl.setAttribute('aria-checked', String(isYearly));
     }
-    if (monthlyLabel) monthlyLabel.classList.toggle('active-label', !isYearly);
-    if (yearlyLabel) yearlyLabel.classList.toggle('active-label', isYearly);
+    if (_monthlyLabel) _monthlyLabel.classList.toggle('active-label', !isYearly);
+    if (_yearlyLabel) _yearlyLabel.classList.toggle('active-label', isYearly);
 
-    document.querySelectorAll('.price-amount').forEach(function (el) {
-      var priceEl = el.parentElement;
-      el.textContent = isYearly ? priceEl.dataset.yearly : priceEl.dataset.monthly;
-    });
-
-    document.querySelectorAll('.price-period-dynamic').forEach(function (el) {
-      el.textContent = isYearly ? 'per month, billed yearly' : 'per month';
-    });
+    for (var pi = 0; pi < _priceAmounts.length; pi++) {
+      var priceEl = _priceAmounts[pi].parentElement;
+      _priceAmounts[pi].textContent = isYearly ? priceEl.dataset.yearly : priceEl.dataset.monthly;
+    }
+    for (var pj = 0; pj < _pricePeriods.length; pj++) {
+      _pricePeriods[pj].textContent = isYearly ? 'per month, billed yearly' : 'per month';
+    }
   }
 
   return { toggle: toggle };
@@ -327,12 +347,14 @@ var FAQ = (function () {
 
     var wasOpen = item.classList.contains('open');
 
-    // Close all items first (accordion behaviour).
-    document.querySelectorAll('.faq-item.open').forEach(function (faq) {
-      faq.classList.remove('open');
-      var q = faq.querySelector('.faq-question');
+    // Close sibling items (accordion behaviour).
+    // Scoped to parent container instead of full document scan.
+    var siblings = item.parentElement ? item.parentElement.querySelectorAll('.faq-item.open') : [];
+    for (var si = 0; si < siblings.length; si++) {
+      siblings[si].classList.remove('open');
+      var q = siblings[si].querySelector('.faq-question');
       if (q) q.setAttribute('aria-expanded', 'false');
-    });
+    }
 
     // Re-open the clicked item if it wasn't already open.
     if (!wasOpen) {
@@ -955,12 +977,17 @@ var Trust = (function () {
 
     var wasExpanded = card.classList.contains('expanded');
 
-    // Collapse all cards first.
-    document.querySelectorAll('.trust-card.expanded').forEach(function (c) {
-      c.classList.remove('expanded');
-      var d = c.querySelector('.trust-detail');
-      if (d) d.hidden = true;
-    });
+    // Collapse sibling cards (accordion).
+    // Scoped to parent instead of full document scan.
+    var parent = card.parentElement;
+    if (parent) {
+      var expanded = parent.querySelectorAll('.trust-card.expanded');
+      for (var ei = 0; ei < expanded.length; ei++) {
+        expanded[ei].classList.remove('expanded');
+        var d = expanded[ei].querySelector('.trust-detail');
+        if (d) d.hidden = true;
+      }
+    }
 
     // Toggle the clicked card.
     if (!wasExpanded) {
