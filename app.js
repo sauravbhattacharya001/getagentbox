@@ -1012,6 +1012,48 @@ var Trust = (function () {
 // Event Binding (replaces inline onclick handlers)
 // ---------------------------------------------------------------------------
 
+
+// ── Shared Helpers ────────────────────────────────────────────────────
+
+/**
+ * Set up arrow-key (+ Home/End) keyboard navigation on a group of buttons.
+ * Handles wrapping at both ends.  The caller-supplied callback receives
+ * the newly-focused element so it can trigger module-specific actions
+ * (e.g. tab switch, filter click).
+ *
+ * @param {Element}  container  The element to listen on (event delegation).
+ * @param {string}   selector   CSS selector for the navigable children.
+ * @param {function} onNavigate Called with (element, index) when focus moves.
+ */
+function arrowKeyNav(container, selector, onNavigate) {
+  container.addEventListener('keydown', function (e) {
+    var items = Array.prototype.slice.call(
+      container.querySelectorAll(selector)
+    );
+    if (items.length === 0) return;
+
+    var idx = items.indexOf(e.target);
+    // Only handle events originating from one of the navigable items.
+    if (idx === -1) return;
+
+    var next = -1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      next = (idx + 1) % items.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      next = (idx - 1 + items.length) % items.length;
+    } else if (e.key === 'Home') {
+      next = 0;
+    } else if (e.key === 'End') {
+      next = items.length - 1;
+    }
+
+    if (next >= 0 && next !== idx) {
+      e.preventDefault();
+      onNavigate(items[next], next);
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   // Scenario buttons - event delegation on the container.
   var scenarioContainer = document.querySelector('.demo-scenarios');
@@ -1120,38 +1162,9 @@ document.addEventListener('DOMContentLoaded', function () {
       });
 
       // Keyboard navigation (arrow keys, Home, End).
-      usecasesTablist.addEventListener('keydown', function (e) {
-        var tabs = usecasesTablist.querySelectorAll('.usecase-tab');
-        if (tabs.length === 0) return;
-
-        var currentIndex = -1;
-        for (var ci = 0; ci < tabs.length; ci++) {
-          if (tabs[ci].classList.contains('active')) {
-            currentIndex = ci;
-            break;
-          }
-        }
-
-        var newIndex = currentIndex;
-
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-          e.preventDefault();
-          newIndex = (currentIndex + 1) % tabs.length;
-        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-          e.preventDefault();
-          newIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-        } else if (e.key === 'Home') {
-          e.preventDefault();
-          newIndex = 0;
-        } else if (e.key === 'End') {
-          e.preventDefault();
-          newIndex = tabs.length - 1;
-        }
-
-        if (newIndex !== currentIndex && newIndex >= 0) {
-          window.UseCases.switchTo(tabs[newIndex].dataset.usecase);
-          tabs[newIndex].focus();
-        }
+      arrowKeyNav(usecasesTablist, '.usecase-tab', function (tab) {
+        window.UseCases.switchTo(tab.dataset.usecase);
+        tab.focus();
       });
     }
   }
@@ -1471,30 +1484,9 @@ var Roadmap = (function () {
       });
     }
 
-    container().addEventListener('keydown', function (e) {
-      if (e.target.className.indexOf('roadmap-filter-btn') === -1) return;
-      var btns = Array.prototype.slice.call(
-        container().querySelectorAll('.roadmap-filter-btn')
-      );
-      var idx = btns.indexOf(e.target);
-      if (idx === -1) return;
-
-      var next = -1;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        next = (idx + 1) % btns.length;
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        next = (idx - 1 + btns.length) % btns.length;
-      } else if (e.key === 'Home') {
-        next = 0;
-      } else if (e.key === 'End') {
-        next = btns.length - 1;
-      }
-
-      if (next >= 0) {
-        e.preventDefault();
-        btns[next].focus();
-        btns[next].click();
-      }
+    arrowKeyNav(container(), '.roadmap-filter-btn', function (btn) {
+      btn.focus();
+      btn.click();
     });
   }
 

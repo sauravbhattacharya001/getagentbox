@@ -1790,10 +1790,6 @@ h1 {
     background: rgba(34,197,94,0.15);
     color: #4ade80;
 }
-.status-incident-badge.investigating {
-    background: rgba(251,191,36,0.15);
-    color: #fbbf24;
-}
 .status-incident-text {
     font-size: 13px;
     color: rgba(255,255,255,0.55);
@@ -2752,8 +2748,6 @@ body.light-mode .chat-window {
     background: #f7fafc;
     border-color: rgba(0,0,0,0.1);
 }
-body.light-mode .chat-msg-user { background: #0077cc; color: #fff; }
-body.light-mode .chat-msg-bot { background: #e2e8f0; color: #1a202c; }
 
 body.light-mode .scenario-btn {
     background: rgba(0,0,0,0.04);
