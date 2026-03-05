@@ -187,17 +187,32 @@ describe('ActivityFeed', () => {
 
     test('new items keep being added across many cycles', () => {
       const feed = document.getElementById('activityFeed');
-      const initialCount = feed.querySelectorAll('.activity-item').length;
 
       for (let i = 0; i < 10; i++) {
         jest.advanceTimersByTime(4000);
       }
 
-      // Dynamic items should have been created
-      const dynamicItems = Array.from(feed.querySelectorAll('.activity-item')).filter(
+      // After 10 cycles, some old items were removed by the fallback timer.
+      // At least MAX_VISIBLE (5) items should remain, and we should see
+      // dynamic (non-initial) items proving new ones were added.
+      const allItems = feed.querySelectorAll('.activity-item');
+      const dynamicItems = Array.from(allItems).filter(
         item => !item.hasAttribute('data-initial')
       );
-      expect(dynamicItems.length).toBe(10);
+      expect(dynamicItems.length).toBeGreaterThanOrEqual(1);
+      expect(allItems.length).toBeGreaterThanOrEqual(1);
+      expect(allItems.length).toBeLessThanOrEqual(10);
+    });
+
+    test('items do not accumulate beyond MAX_VISIBLE when animationend is missing', () => {
+      // Simulate 20 cycles (80s) — without the fallback fix, items would
+      // accumulate because animationend never fires in jsdom.
+      jest.advanceTimersByTime(80000);
+
+      const feed = document.getElementById('activityFeed');
+      const items = feed.querySelectorAll('.activity-item');
+      // Should be bounded: MAX_VISIBLE (5) + at most 1 entering
+      expect(items.length).toBeLessThanOrEqual(7);
     });
 
     test('destroy stops cycling', () => {

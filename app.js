@@ -2723,12 +2723,24 @@ var ActivityFeed = (function () {
     if (items.length >= MAX_VISIBLE) {
       var last = items[items.length - 1];
       last.classList.add('exiting');
-      last.addEventListener('animationend', function () {
+
+      // Guard: prevent double-removal if animationend races with fallback
+      var removed = false;
+      function removeOnce() {
+        if (removed) return;
+        removed = true;
         if (last.parentNode) last.parentNode.removeChild(last);
-      });
-      // Fallback removal for reduced-motion
+      }
+
       if (prefersReducedMotion) {
-        if (last.parentNode) last.parentNode.removeChild(last);
+        // Immediate removal when animations are disabled
+        removeOnce();
+      } else {
+        last.addEventListener('animationend', removeOnce);
+        // Fallback: if animationend never fires (CSS animation missing,
+        // browser throttled, or tab backgrounded), remove after 1s to
+        // prevent unbounded DOM growth.
+        setTimeout(removeOnce, 1000);
       }
     }
 
