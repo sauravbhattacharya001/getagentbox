@@ -2044,16 +2044,30 @@ var Calculator = (function () {
       if (yearlyHours === 0) {
         _equivEl.textContent = 'Move the sliders to see your potential time savings \u261D\uFE0F';
       } else if (yearlyHours < 8) {
-        _equivEl.innerHTML = 'That\u2019s <strong>' +
-          Math.round(yearlyHours) + ' hours</strong>' +
-          ' back every year \u2014 time for what matters \u2728';
+        _setEquivText(_equivEl, 'That\u2019s ', Math.round(yearlyHours) + ' hours',
+          ' back every year \u2014 time for what matters \u2728');
       } else {
         var workdays = (yearlyHours / 8).toFixed(1);
-        _equivEl.innerHTML = 'That\u2019s like getting <strong>' +
-          workdays + ' extra workdays</strong>' +
-          ' back every year \u2728';
+        _setEquivText(_equivEl, 'That\u2019s like getting ', workdays + ' extra workdays',
+          ' back every year \u2728');
       }
     }
+  }
+
+  /**
+   * Safely set equivalent text with a bold middle portion (no innerHTML).
+   * @param {Element} el - target element
+   * @param {string} prefix - text before bold
+   * @param {string} boldText - text to make bold
+   * @param {string} suffix - text after bold
+   */
+  function _setEquivText(el, prefix, boldText, suffix) {
+    while (el.firstChild) el.removeChild(el.firstChild);
+    el.appendChild(document.createTextNode(prefix));
+    var strong = document.createElement('strong');
+    strong.textContent = boldText;
+    el.appendChild(strong);
+    el.appendChild(document.createTextNode(suffix));
   }
 
   function getTotal() {
