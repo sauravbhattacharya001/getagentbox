@@ -3411,3 +3411,106 @@ if (typeof window !== 'undefined') {
   window.PromptGallery = PromptGallery;
   window.PersonalityConfigurator = PersonalityConfigurator;
 }
+
+// ── Feature Comparison Table ──────────────────────────────────────
+(function() {
+  'use strict';
+
+  var YES = '<span class="comp-yes" aria-label="Yes">✓</span>';
+  var NO = '<span class="comp-no" aria-label="No">✗</span>';
+  function PARTIAL(t) { return '<span class="comp-partial">' + t + '</span>'; }
+  function TEXT(t) { return '<span class="comp-text">' + t + '</span>'; }
+
+  var features = [
+    {
+      name: 'Personal AI assistant',
+      agentbox: YES, chatgpt: YES, google: YES, alexa: YES, siri: YES
+    },
+    {
+      name: 'Runs on your own device',
+      agentbox: YES, chatgpt: NO, google: NO, alexa: NO, siri: PARTIAL('iCloud')
+    },
+    {
+      name: 'Privacy-first (local data)',
+      agentbox: YES, chatgpt: NO, google: NO, alexa: NO, siri: PARTIAL('Partial')
+    },
+    {
+      name: 'Multi-platform messaging',
+      agentbox: TEXT('Telegram, WhatsApp, Discord, Signal, iMessage'),
+      chatgpt: NO, google: TEXT('Google Home'), alexa: TEXT('Echo only'), siri: TEXT('iMessage')
+    },
+    {
+      name: 'Custom personality',
+      agentbox: YES, chatgpt: PARTIAL('GPTs'), google: NO, alexa: PARTIAL('Skills'), siri: NO
+    },
+    {
+      name: 'Browser automation',
+      agentbox: YES, chatgpt: NO, google: NO, alexa: NO, siri: NO
+    },
+    {
+      name: 'File system access',
+      agentbox: YES, chatgpt: PARTIAL('Uploads'), google: NO, alexa: NO, siri: PARTIAL('Shortcuts')
+    },
+    {
+      name: 'Proactive check-ins',
+      agentbox: YES, chatgpt: NO, google: PARTIAL('Routines'), alexa: PARTIAL('Hunches'), siri: NO
+    },
+    {
+      name: 'Cron jobs & scheduling',
+      agentbox: YES, chatgpt: NO, google: PARTIAL('Routines'), alexa: PARTIAL('Routines'), siri: PARTIAL('Shortcuts')
+    },
+    {
+      name: 'Extensible skills/plugins',
+      agentbox: YES, chatgpt: PARTIAL('GPTs'), google: PARTIAL('Actions'), alexa: TEXT('Skills'), siri: PARTIAL('Shortcuts')
+    },
+    {
+      name: 'Code execution',
+      agentbox: YES, chatgpt: YES, google: NO, alexa: NO, siri: NO
+    },
+    {
+      name: 'Long-term memory',
+      agentbox: YES, chatgpt: PARTIAL('Limited'), google: NO, alexa: NO, siri: NO
+    },
+    {
+      name: 'Self-hosted / open source',
+      agentbox: YES, chatgpt: NO, google: NO, alexa: NO, siri: NO
+    },
+    {
+      name: 'Smart home control',
+      agentbox: PARTIAL('Via nodes'), chatgpt: NO, google: YES, alexa: YES, siri: YES
+    },
+    {
+      name: 'Sub-agent delegation',
+      agentbox: YES, chatgpt: NO, google: NO, alexa: NO, siri: NO
+    },
+    {
+      name: 'Free tier',
+      agentbox: TEXT('20 msg/day'), chatgpt: TEXT('Limited'), google: YES, alexa: YES, siri: YES
+    }
+  ];
+
+  function render() {
+    var tbody = document.getElementById('comparisonBody');
+    if (!tbody) return;
+
+    var html = '';
+    for (var i = 0; i < features.length; i++) {
+      var f = features[i];
+      html += '<tr>' +
+        '<td>' + f.name + '</td>' +
+        '<td class="highlight-cell">' + f.agentbox + '</td>' +
+        '<td>' + f.chatgpt + '</td>' +
+        '<td>' + f.google + '</td>' +
+        '<td>' + f.alexa + '</td>' +
+        '<td>' + f.siri + '</td>' +
+        '</tr>';
+    }
+    tbody.innerHTML = html;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', render);
+  } else {
+    render();
+  }
+})();

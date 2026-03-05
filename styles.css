@@ -750,12 +750,19 @@ h1 {
     margin-bottom: 20px;
 }
 
+.comparison-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+}
+
 .comparison-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     text-align: left;
     font-size: 0.88rem;
+    min-width: 650px;
 }
 
 .comparison-table thead th {
@@ -766,10 +773,13 @@ h1 {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
+    white-space: nowrap;
 }
 
+.comparison-table thead th.feature-col,
 .comparison-table thead th:first-child {
     text-align: left;
+    min-width: 160px;
 }
 
 .comparison-table thead th:not(:first-child) {
@@ -780,6 +790,11 @@ h1 {
     color: #00d4ff;
     background: rgba(0, 212, 255, 0.06);
     border-radius: 8px 8px 0 0;
+}
+
+.comparison-table thead th.highlight-col::after {
+    content: ' ★';
+    font-size: 0.85em;
 }
 
 .comparison-table tbody td {
@@ -797,21 +812,40 @@ h1 {
     text-align: center;
 }
 
-.comparison-table tbody td.highlight-col {
+.comparison-table tbody td.highlight-cell {
     background: rgba(0, 212, 255, 0.04);
+}
+
+.comparison-table tbody tr:hover td {
+    background: rgba(0, 212, 255, 0.03);
+}
+
+.comparison-table tbody tr:hover td.highlight-cell {
+    background: rgba(0, 212, 255, 0.08);
 }
 
 .comparison-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-.comparison-table tbody tr:last-child td.highlight-col {
+.comparison-table tbody tr:last-child td.highlight-cell {
     border-radius: 0 0 8px 8px;
 }
+
+.comp-yes { color: #4ade80; font-size: 1.15em; }
+.comp-no { color: #888; font-size: 1.15em; }
+.comp-partial { color: #facc15; font-size: 0.85em; }
+.comp-text { font-size: 0.82em; color: #aaa; }
 
 .check { color: #4ade80; }
 .cross { color: #f87171; }
 .partial { color: #facc15; }
+
+.comparison-note {
+    margin-top: 16px;
+    font-size: 0.78rem;
+    color: #666;
+}
 
 /* Time Saved Calculator Section */
 .calculator-section {
