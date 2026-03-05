@@ -29,6 +29,7 @@
                 <li role="none"><a href="#howItWorks" role="menuitem">How It Works</a></li>
                 <li role="none"><a href="#demoSection" role="menuitem">Demo</a></li>
                 <li role="none"><a href="#playgroundSection" role="menuitem">Playground</a></li>
+                <li role="none"><a href="#promptGallerySection" role="menuitem">Prompts</a></li>
                 <li role="none"><a href="#usecasesSection" role="menuitem">Use Cases</a></li>
                 <li role="none"><a href="#integrationsSection" role="menuitem">Integrations</a></li>
                 <li role="none"><a href="#comparisonSection" role="menuitem">Compare</a></li>
@@ -149,6 +150,36 @@
                 </form>
             </div>
             <p class="playground-note">💡 This is a simulated demo. <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer">Try the real thing on Telegram →</a></p>
+        </div>
+
+        <div class="prompt-gallery-section" id="promptGallerySection">
+            <h2>What can I ask?</h2>
+            <p class="prompt-gallery-subtitle">Tap any prompt to see how AgentBox responds</p>
+            <div class="prompt-gallery-filters" role="tablist" aria-label="Prompt categories">
+                <button class="prompt-filter-btn active" role="tab" aria-selected="true" data-prompt-category="all">All</button>
+                <button class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="productivity">⚡ Productivity</button>
+                <button class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="learning">📚 Learning</button>
+                <button class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="coding">💻 Coding</button>
+                <button class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="creative">🎨 Creative</button>
+                <button class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="daily">☀️ Daily Life</button>
+            </div>
+            <div class="prompt-search-wrapper">
+                <input type="text" class="prompt-search-input" id="promptSearchInput" placeholder="Search prompts..." aria-label="Search prompts" maxlength="100">
+            </div>
+            <div class="prompt-gallery-grid" id="promptGalleryGrid" role="list"></div>
+            <div class="prompt-gallery-empty" id="promptGalleryEmpty" hidden>
+                <span class="prompt-empty-icon">🔍</span>
+                <p>No prompts match your search. Try a different keyword!</p>
+            </div>
+            <div class="prompt-response-modal" id="promptResponseModal" hidden>
+                <div class="prompt-modal-backdrop" id="promptModalBackdrop"></div>
+                <div class="prompt-modal-content" role="dialog" aria-label="Example response" aria-modal="true">
+                    <button class="prompt-modal-close" id="promptModalClose" aria-label="Close">&times;</button>
+                    <div class="prompt-modal-question" id="promptModalQuestion"></div>
+                    <div class="prompt-modal-answer" id="promptModalAnswer"></div>
+                    <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer" class="prompt-modal-cta">Try it for real on Telegram →</a>
+                </div>
+            </div>
         </div>
 
         <div class="stats-section" id="statsSection">
