@@ -1,13 +1,37 @@
 /**
  * AgentBox Landing Page - Interactive Components
  *
+ * Architecture:
+ *   Each module is a self-contained IIFE exposing a public API via
+ *   return object.  All DOM wiring happens in the DOMContentLoaded
+ *   block.  Shared utilities (arrowKeyNav, activateOnKeyboard,
+ *   prefersReducedMotion) are defined at the top level.
+ *
  * Modules:
- *  - ChatDemo:       animated chat scenario player
- *  - Testimonials:   auto-rotating testimonials carousel
- *  - Pricing:        monthly/yearly billing toggle
- *  - FAQ:            accordion behaviour
- *  - Stats:          animated social proof counters
- *  - Trust:          expandable privacy detail cards
+ *  - ChatDemo:                 animated chat scenario player
+ *  - Testimonials:             auto-rotating testimonials carousel
+ *  - Pricing:                  monthly/yearly billing toggle
+ *  - FAQ:                      accordion behaviour
+ *  - HowItWorks:               scroll-triggered step animations
+ *  - Stats:                    animated social proof counters
+ *  - UseCases:                 tabbed section with keyboard nav
+ *  - Integrations:             category-filtered integration grid
+ *  - Changelog:                tag-filtered changelog entries
+ *  - Trust:                    expandable privacy detail cards
+ *  - SiteNav:                  sticky nav bar with scroll spy
+ *  - Newsletter:               signup form with email validation
+ *  - Roadmap:                  product roadmap with voting + filters
+ *  - StatusDashboard:          service health monitoring panel
+ *  - Calculator:               interactive time-saved calculator
+ *  - CommandPalette:           Ctrl+K quick section navigation
+ *  - ShareFab:                 floating share button with link copy
+ *  - ThemeToggle:              dark/light theme switch
+ *  - ScrollProgress:           scroll progress bar + back-to-top
+ *  - ShortcutsHelp:            keyboard shortcuts help dialog
+ *  - Playground:               interactive chat playground
+ *  - ActivityFeed:             simulated real-time activity feed
+ *  - PromptGallery:            interactive prompt template gallery
+ *  - PersonalityConfigurator:  agent personality sliders + preview
  */
 
 /** Global reduced-motion check (WCAG 2.3.3 compliance).
@@ -1101,6 +1125,28 @@ function arrowKeyNav(container, selector, onNavigate) {
   });
 }
 
+/**
+ * Attach Enter/Space keyboard activation to a container (event delegation).
+ *
+ * Replaces the repeated pattern of:
+ *   container.addEventListener('keydown', function (e) {
+ *     if (e.key === 'Enter' || e.key === ' ') { ... }
+ *   });
+ *
+ * @param {Element}  container  The element to listen on.
+ * @param {string}   selector   CSS selector for activatable children.
+ * @param {function} onActivate Called with the matched element.
+ */
+function activateOnKeyboard(container, selector, onActivate) {
+  container.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var target = e.target.closest(selector);
+    if (!target) return;
+    e.preventDefault();
+    onActivate(target);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   // Scenario buttons - event delegation on the container.
   var scenarioContainer = document.querySelector('.demo-scenarios');
@@ -1142,11 +1188,8 @@ document.addEventListener('DOMContentLoaded', function () {
   var billingToggle = document.getElementById('billingToggle');
   if (billingToggle) {
     billingToggle.addEventListener('click', Pricing.toggle);
-    billingToggle.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        Pricing.toggle();
-      }
+    activateOnKeyboard(billingToggle.parentElement || billingToggle, '#billingToggle', function () {
+      Pricing.toggle();
     });
   }
 
@@ -1157,14 +1200,8 @@ document.addEventListener('DOMContentLoaded', function () {
       var question = e.target.closest('.faq-question');
       if (question) FAQ.toggle(question);
     });
-    faqSection.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        var question = e.target.closest('.faq-question');
-        if (question) {
-          e.preventDefault();
-          FAQ.toggle(question);
-        }
-      }
+    activateOnKeyboard(faqSection, '.faq-question', function (question) {
+      FAQ.toggle(question);
     });
   }
 
@@ -1181,14 +1218,8 @@ document.addEventListener('DOMContentLoaded', function () {
       var card = e.target.closest('.trust-card');
       if (card) Trust.toggle(card);
     });
-    trustSection.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        var card = e.target.closest('.trust-card');
-        if (card) {
-          e.preventDefault();
-          Trust.toggle(card);
-        }
-      }
+    activateOnKeyboard(trustSection, '.trust-card', function (card) {
+      Trust.toggle(card);
     });
   }
 
