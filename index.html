@@ -29,6 +29,7 @@
                 <li role="none"><a href="#howItWorks" role="menuitem">How It Works</a></li>
                 <li role="none"><a href="#demoSection" role="menuitem">Demo</a></li>
                 <li role="none"><a href="#playgroundSection" role="menuitem">Playground</a></li>
+                <li role="none"><a href="#personalitySection" role="menuitem">Personality</a></li>
                 <li role="none"><a href="#promptGallerySection" role="menuitem">Prompts</a></li>
                 <li role="none"><a href="#usecasesSection" role="menuitem">Use Cases</a></li>
                 <li role="none"><a href="#integrationsSection" role="menuitem">Integrations</a></li>
@@ -150,6 +151,52 @@
                 </form>
             </div>
             <p class="playground-note">💡 This is a simulated demo. <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer">Try the real thing on Telegram →</a></p>
+        </div>
+
+        <div class="personality-section" id="personalitySection">
+            <h2>Make it yours</h2>
+            <p class="personality-subtitle">Your agent adapts to your style. Adjust the sliders and see the difference.</p>
+            <div class="personality-container">
+                <div class="personality-controls" role="group" aria-label="Agent personality settings">
+                    <div class="personality-slider-group">
+                        <label for="sliderFormality">Formality</label>
+                        <div class="slider-labels"><span>Casual</span><span>Formal</span></div>
+                        <input type="range" id="sliderFormality" min="0" max="100" value="25" class="personality-range" aria-label="Formality level">
+                    </div>
+                    <div class="personality-slider-group">
+                        <label for="sliderHumor">Humor</label>
+                        <div class="slider-labels"><span>Serious</span><span>Playful</span></div>
+                        <input type="range" id="sliderHumor" min="0" max="100" value="60" class="personality-range" aria-label="Humor level">
+                    </div>
+                    <div class="personality-slider-group">
+                        <label for="sliderDetail">Detail</label>
+                        <div class="slider-labels"><span>Brief</span><span>Thorough</span></div>
+                        <input type="range" id="sliderDetail" min="0" max="100" value="50" class="personality-range" aria-label="Detail level">
+                    </div>
+                    <div class="personality-slider-group">
+                        <label for="sliderEmoji">Emoji use</label>
+                        <div class="slider-labels"><span>None</span><span>Lots</span></div>
+                        <input type="range" id="sliderEmoji" min="0" max="100" value="40" class="personality-range" aria-label="Emoji usage level">
+                    </div>
+                    <div class="personality-presets" role="group" aria-label="Personality presets">
+                        <button class="preset-btn" data-preset="professional">&#x1F4BC; Professional</button>
+                        <button class="preset-btn" data-preset="friendly">&#x1F60A; Friendly</button>
+                        <button class="preset-btn" data-preset="minimal">&#x1F3AF; Minimal</button>
+                        <button class="preset-btn" data-preset="enthusiastic">&#x1F389; Enthusiastic</button>
+                    </div>
+                </div>
+                <div class="personality-preview">
+                    <div class="preview-question">
+                        <span class="preview-label">You ask:</span>
+                        <p id="personalityQuestion">"What's a good recipe for dinner tonight?"</p>
+                        <button class="preview-cycle-btn" id="personalityCycleBtn" aria-label="Try a different question">&#x1F504; Different question</button>
+                    </div>
+                    <div class="preview-response">
+                        <span class="preview-label">Your agent responds:</span>
+                        <div class="preview-chat-bubble" id="personalityResponse"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="prompt-gallery-section" id="promptGallerySection">

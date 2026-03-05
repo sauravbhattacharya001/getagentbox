@@ -1247,6 +1247,7 @@ document.addEventListener('DOMContentLoaded', function () {
   CommandPalette.init();
   ShareFab.init();
   PromptGallery.init();
+  PersonalityConfigurator.init();
 });
 
 // ---------------------------------------------------------------------------
@@ -3015,6 +3016,211 @@ var PromptGallery = (function () {
   return { init: init };
 })();
 
+// ---------------------------------------------------------------------------
+// Personality Configurator
+// ---------------------------------------------------------------------------
+
+/* exported PersonalityConfigurator */
+var PersonalityConfigurator = (function () {
+  'use strict';
+
+  var QUESTIONS = [
+    { q: 'What\'s a good recipe for dinner tonight?', key: 'recipe' },
+    { q: 'Explain how DNS works.', key: 'dns' },
+    { q: 'What should I do this weekend?', key: 'weekend' },
+    { q: 'Remind me about my meeting at 3pm.', key: 'reminder' },
+    { q: 'Help me write a thank-you email.', key: 'email' }
+  ];
+
+  var RESPONSES = {
+    recipe: {
+      casualBrief: 'Garlic butter shrimp pasta. 20 min, one pan. Can\'t go wrong.',
+      casualDetailed: 'Garlic butter shrimp pasta is my go-to.\n\nHere\'s the play:\n1. Cook pasta (linguine works great)\n2. Saute garlic in butter until fragrant\n3. Toss in shrimp, cook 2-3 min per side\n4. Add pasta, splash of pasta water, lemon juice\n5. Fresh parsley on top\n\nTotal time: 20 min. Leftovers reheat well too.',
+      formalBrief: 'I\'d recommend garlic butter shrimp pasta. It takes approximately 20 minutes and requires minimal cleanup.',
+      formalDetailed: 'I would recommend garlic butter shrimp pasta. It\'s an efficient yet impressive dish.\n\nIngredients:\n- 400g linguine\n- 450g large shrimp, peeled\n- 4 cloves garlic, minced\n- 3 tbsp butter\n- Lemon juice, fresh parsley\n\nPreparation:\n1. Cook pasta to al dente, reserve 1 cup pasta water\n2. Saute garlic in butter over medium heat (60 seconds)\n3. Add shrimp, cook 2-3 minutes per side until pink\n4. Toss in pasta with a splash of reserved water\n5. Finish with lemon juice and parsley\n\nTotal preparation time: approximately 20 minutes.'
+    },
+    dns: {
+      casualBrief: 'DNS is basically the internet\'s phone book. You type a domain, it finds the IP address.',
+      casualDetailed: 'DNS is the internet\'s phone book.\n\nWhen you type "google.com":\n1. Your browser asks a DNS resolver (usually your ISP\'s)\n2. The resolver checks its cache first\n3. If not cached, it asks root servers -> TLD servers -> authoritative servers\n4. Gets back an IP like 142.250.80.46\n5. Your browser connects to that IP\n\nThe whole thing takes milliseconds. It\'s cached at multiple levels so repeat lookups are instant.',
+      formalBrief: 'DNS (Domain Name System) translates human-readable domain names into IP addresses that computers use to identify each other on the network.',
+      formalDetailed: 'The Domain Name System (DNS) is a hierarchical, distributed naming system that translates domain names into IP addresses.\n\nResolution process:\n1. Client sends query to configured recursive resolver\n2. Resolver checks local cache for existing records\n3. If uncached, resolver queries root nameservers for TLD delegation\n4. TLD nameserver provides authoritative nameserver reference\n5. Authoritative server returns the definitive A/AAAA record\n6. Resolver caches the result per the TTL value and returns it to the client\n\nThis process typically completes in under 100ms, with caching at each layer significantly reducing latency for subsequent queries.'
+    },
+    weekend: {
+      casualBrief: 'If the weather\'s nice, hit a trail or check out a farmer\'s market. Rainy? Movie marathon.',
+      casualDetailed: 'Here are some ideas depending on your vibe:\n\nOutdoor:\n- Hit a local trail or park\n- Check out a farmer\'s market\n- Bike ride or picnic\n\nChill:\n- Movie marathon (got any genres in mind?)\n- Try a new coffee shop\n- Cook something ambitious you\'ve been putting off\n\nSocial:\n- Board game night with friends\n- Check for local events or live music\n\nWant me to look up what\'s happening near you this weekend?',
+      formalBrief: 'I\'d suggest considering outdoor activities if weather permits, or exploring local cultural events. Shall I look up options in your area?',
+      formalDetailed: 'Here are some well-rounded weekend suggestions:\n\nOutdoor Activities:\n- Nature hikes at local trails\n- Farmer\'s market visits\n- Cycling or outdoor dining\n\nCultural & Social:\n- Local museum exhibitions\n- Live music or community events\n- Restaurant exploration\n\nRelaxation:\n- Cooking a new recipe\n- Reading or creative projects\n- Wellness activities (yoga, spa)\n\nI can look up specific events and weather conditions for your area to help narrow down the options. Would that be helpful?'
+    },
+    reminder: {
+      casualBrief: 'Done! I\'ll ping you at 3pm about your meeting.',
+      casualDetailed: 'You got it! Reminder set.\n\nI\'ll message you at 3:00 PM about your meeting. If you want, I can also remind you 15 min before so you have time to prep. Just say the word.',
+      formalBrief: 'Reminder set. You will receive a notification at 3:00 PM regarding your meeting.',
+      formalDetailed: 'Your reminder has been configured with the following details:\n\nEvent: Meeting\nReminder time: 3:00 PM today\nNotification: Push message via Telegram\n\nWould you like me to add a 15-minute advance warning as well? I can also include any preparation notes or agenda items you\'d like to review beforehand.'
+    },
+    email: {
+      casualBrief: 'Sure! Who\'s it for and what are you thanking them for? I\'ll draft something quick.',
+      casualDetailed: 'Happy to help! Just need a couple things:\n\n1. Who\'s it to? (boss, friend, client?)\n2. What are you thanking them for?\n3. How formal should it be?\n\nI\'ll write a draft you can tweak. Usually a good thank-you email is 3-4 sentences max \u2014 specific about what you\'re grateful for, and genuine.',
+      formalBrief: 'I\'d be glad to assist. Could you share the recipient and the context for the thank-you? I\'ll prepare an appropriate draft.',
+      formalDetailed: 'I would be happy to help you compose a thank-you email. To craft the most appropriate message, I\'ll need a few details:\n\n1. Recipient: Who is the email addressed to?\n2. Context: What specific action or gesture are you expressing gratitude for?\n3. Relationship: Professional colleague, supervisor, client, or personal contact?\n4. Tone preference: Warm and personal, or strictly professional?\n\nOnce I have this information, I\'ll draft a polished message that you can review and adjust before sending.'
+    }
+  };
+
+  var HUMOR_ADDITIONS = {
+    recipe: { low: '', mid: ' Trust me on this one.', high: ' Chef\'s kiss, honestly. Gordon Ramsay would nod approvingly. Probably.' },
+    dns: { low: '', mid: ' Pretty clever system, honestly.', high: ' It\'s like asking 10 people for directions and somehow getting there in 50ms. The internet is wild.' },
+    weekend: { low: '', mid: ' Life\'s short, pick the fun one.', high: ' Plot twist: do ALL of them. Sleep is overrated anyway.' },
+    reminder: { low: '', mid: ' I never forget.', high: ' I\'m basically your brain\'s backup server now. You\'re welcome.' },
+    email: { low: '', mid: ' A good thank-you goes a long way.', high: ' Pro tip: don\'t start with "Per my last email" \u2014 save that energy for passive-aggressive Mondays.' }
+  };
+
+  var EMOJI_SETS = {
+    recipe: { none: '', some: ' \uD83C\uDF5D', lots: ' \uD83C\uDF5D\uD83E\uDD29\uD83D\uDE0B' },
+    dns: { none: '', some: ' \uD83C\uDF10', lots: ' \uD83C\uDF10\uD83D\uDD0D\u26A1' },
+    weekend: { none: '', some: ' \u2600\uFE0F', lots: ' \u2600\uFE0F\uD83C\uDF89\uD83C\uDF1F' },
+    reminder: { none: '', some: ' \u23F0', lots: ' \u23F0\u2705\uD83D\uDCAA' },
+    email: { none: '', some: ' \u2709\uFE0F', lots: ' \u2709\uFE0F\u270D\uFE0F\uD83D\uDE4F' }
+  };
+
+  var PRESETS = {
+    professional: { formality: 85, humor: 10, detail: 70, emoji: 5 },
+    friendly: { formality: 25, humor: 60, detail: 50, emoji: 55 },
+    minimal: { formality: 40, humor: 15, detail: 10, emoji: 0 },
+    enthusiastic: { formality: 15, humor: 80, detail: 65, emoji: 90 }
+  };
+
+  var currentQuestionIndex = 0;
+  var _debounceTimer = null;
+
+  function getSliderValues() {
+    var fEl = document.getElementById('sliderFormality');
+    var hEl = document.getElementById('sliderHumor');
+    var dEl = document.getElementById('sliderDetail');
+    var eEl = document.getElementById('sliderEmoji');
+    return {
+      formality: fEl ? parseInt(fEl.value, 10) : 50,
+      humor: hEl ? parseInt(hEl.value, 10) : 50,
+      detail: dEl ? parseInt(dEl.value, 10) : 50,
+      emoji: eEl ? parseInt(eEl.value, 10) : 50
+    };
+  }
+
+  function generateResponse(questionKey, values) {
+    var responses = RESPONSES[questionKey];
+    if (!responses) { return ''; }
+
+    var formalKey = values.formality >= 50 ? 'formal' : 'casual';
+    var detailKey = values.detail >= 50 ? 'Detailed' : 'Brief';
+    var base = responses[formalKey + detailKey];
+
+    var humorData = HUMOR_ADDITIONS[questionKey];
+    if (humorData) {
+      var humorLevel = values.humor < 30 ? 'low' : (values.humor < 70 ? 'mid' : 'high');
+      base += humorData[humorLevel];
+    }
+
+    var emojiData = EMOJI_SETS[questionKey];
+    if (emojiData) {
+      var emojiLevel = values.emoji < 20 ? 'none' : (values.emoji < 65 ? 'some' : 'lots');
+      base += emojiData[emojiLevel];
+    }
+
+    return base;
+  }
+
+  function updatePreview() {
+    var bubble = document.getElementById('personalityResponse');
+    if (!bubble) { return; }
+
+    var values = getSliderValues();
+    var question = QUESTIONS[currentQuestionIndex];
+    var response = generateResponse(question.key, values);
+
+    bubble.classList.add('updating');
+    setTimeout(function () {
+      bubble.textContent = response;
+      bubble.classList.remove('updating');
+    }, 150);
+
+    var presetBtns = document.querySelectorAll('.preset-btn');
+    for (var i = 0; i < presetBtns.length; i++) {
+      var presetName = presetBtns[i].getAttribute('data-preset');
+      var preset = PRESETS[presetName];
+      if (!preset) { continue; }
+      var isMatch = Math.abs(preset.formality - values.formality) <= 5 &&
+                    Math.abs(preset.humor - values.humor) <= 5 &&
+                    Math.abs(preset.detail - values.detail) <= 5 &&
+                    Math.abs(preset.emoji - values.emoji) <= 5;
+      if (isMatch) {
+        presetBtns[i].classList.add('active');
+      } else {
+        presetBtns[i].classList.remove('active');
+      }
+    }
+  }
+
+  function debouncedUpdate() {
+    if (_debounceTimer) { clearTimeout(_debounceTimer); }
+    _debounceTimer = setTimeout(updatePreview, 80);
+  }
+
+  function cycleQuestion() {
+    currentQuestionIndex = (currentQuestionIndex + 1) % QUESTIONS.length;
+    var questionEl = document.getElementById('personalityQuestion');
+    if (questionEl) {
+      questionEl.textContent = '"' + QUESTIONS[currentQuestionIndex].q + '"';
+    }
+    updatePreview();
+  }
+
+  function applyPreset(presetName) {
+    var preset = PRESETS[presetName];
+    if (!preset) { return; }
+
+    var fEl = document.getElementById('sliderFormality');
+    var hEl = document.getElementById('sliderHumor');
+    var dEl = document.getElementById('sliderDetail');
+    var eEl = document.getElementById('sliderEmoji');
+    if (fEl) { fEl.value = preset.formality; }
+    if (hEl) { hEl.value = preset.humor; }
+    if (dEl) { dEl.value = preset.detail; }
+    if (eEl) { eEl.value = preset.emoji; }
+    updatePreview();
+  }
+
+  function init() {
+    var sliders = document.querySelectorAll('.personality-range');
+    for (var i = 0; i < sliders.length; i++) {
+      sliders[i].addEventListener('input', debouncedUpdate);
+    }
+
+    var presetBtns = document.querySelectorAll('.preset-btn');
+    for (var j = 0; j < presetBtns.length; j++) {
+      presetBtns[j].addEventListener('click', function () {
+        var preset = this.getAttribute('data-preset');
+        applyPreset(preset);
+      });
+    }
+
+    var cycleBtn = document.getElementById('personalityCycleBtn');
+    if (cycleBtn) {
+      cycleBtn.addEventListener('click', cycleQuestion);
+    }
+
+    updatePreview();
+  }
+
+  return {
+    init: init,
+    applyPreset: applyPreset,
+    cycleQuestion: cycleQuestion,
+    getSliderValues: getSliderValues,
+    _QUESTIONS: QUESTIONS,
+    _PRESETS: PRESETS,
+    _RESPONSES: RESPONSES,
+    _generateResponse: generateResponse
+  };
+})();
+
 // Expose modules globally for external access and testability.
 // This block MUST remain after all module IIFEs to avoid hoisting bugs
 // where window.X is set to undefined. See issue #23.
@@ -3044,4 +3250,5 @@ if (typeof window !== 'undefined') {
   window.ActivityFeed = ActivityFeed;
   window.Trust = Trust;
   window.PromptGallery = PromptGallery;
+  window.PersonalityConfigurator = PersonalityConfigurator;
 }
