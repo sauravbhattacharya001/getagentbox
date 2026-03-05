@@ -2539,7 +2539,15 @@ var Playground = (function () {
     }
     var bubble = document.createElement('div');
     bubble.className = 'chat-bubble ' + role;
-    bubble.textContent = text;
+
+    // Render newlines as <br> for multi-line bot responses (safe: text
+    // is from hardcoded responses or user input escaped via textContent).
+    var lines = text.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      if (i > 0) bubble.appendChild(document.createElement('br'));
+      if (lines[i]) bubble.appendChild(document.createTextNode(lines[i]));
+    }
+
     messagesEl.appendChild(bubble);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
