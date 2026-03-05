@@ -3,6 +3,13 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [master]
+    paths:
+      - '*.html'
+      - '*.css'
+      - '*.js'
+      - 'vendor/**'
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -27,10 +34,19 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Prepare site directory
+        run: |
+          mkdir -p _site
+          cp -r index.html styles.css app.js _site/
+          [ -d vendor ] && cp -r vendor _site/ || true
+          [ -d docs ] && cp -r docs _site/ || true
+          [ -f favicon.ico ] && cp favicon.ico _site/ || true
+          [ -f robots.txt ] && cp robots.txt _site/ || true
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: .
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment

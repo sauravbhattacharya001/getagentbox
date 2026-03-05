@@ -1260,6 +1260,7 @@ var SiteNav = (function () {
   var toggle = null;
   var linksContainer = null;
   var activeLink = null;
+  var _lastActiveIdx = -1;
   var ticking = false;
 
   /**
@@ -1372,12 +1373,24 @@ var SiteNav = (function () {
 
   function updateActiveLink() {
     var scrollY = window.scrollY + 100; // offset for nav height + margin
+
+    // Fast path: if scroll position is within the same section as last time,
+    // skip the full scan.  This avoids redundant classList operations during
+    // continuous scrolling within a long section.
+    if (activeLink !== null && _lastActiveIdx >= 0 && _lastActiveIdx < sectionOffsets.length) {
+      var lo = sectionOffsets[_lastActiveIdx];
+      var hi = _lastActiveIdx + 1 < sectionOffsets.length ? sectionOffsets[_lastActiveIdx + 1] : Infinity;
+      if (scrollY >= lo && scrollY < hi) return;
+    }
+
     var current = null;
+    var currentIdx = -1;
 
     // Use cached offsets instead of reading offsetTop (avoids forced layout)
     for (var i = sectionOffsets.length - 1; i >= 0; i--) {
       if (sectionOffsets[i] <= scrollY) {
         current = links[i];
+        currentIdx = i;
         break;
       }
     }
@@ -1386,6 +1399,7 @@ var SiteNav = (function () {
       if (activeLink) activeLink.classList.remove('active');
       if (current) current.classList.add('active');
       activeLink = current;
+      _lastActiveIdx = currentIdx;
     }
   }
 
@@ -1396,6 +1410,7 @@ var SiteNav = (function () {
   function reset() {
     if (activeLink) activeLink.classList.remove('active');
     activeLink = null;
+    _lastActiveIdx = -1;
     closeMenu();
   }
 
