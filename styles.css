@@ -3988,3 +3988,143 @@ body.light-mode .nav-hamburger::after { background: #1a202c; }
   .onboarding-trigger-pulse { animation: none; }
   .onboarding-panel { animation: none; }
 }
+
+/* -- Commands Cheat Sheet -- */
+.commands-section {
+  margin: 60px 0;
+  text-align: center;
+}
+.commands-subtitle {
+  color: var(--text-secondary, #666);
+  margin-bottom: 24px;
+  font-size: 1.05rem;
+}
+.commands-search-wrapper {
+  max-width: 400px;
+  margin: 0 auto 16px;
+}
+.commands-search-input {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--bg-secondary, #f9f9f9);
+  color: var(--text-primary, #222);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.commands-search-input:focus {
+  border-color: var(--accent, #6c5ce7);
+}
+.commands-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.commands-filter-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 20px;
+  background: var(--bg-secondary, #f9f9f9);
+  color: var(--text-primary, #333);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.commands-filter-btn.active,
+.commands-filter-btn:hover {
+  background: var(--accent, #6c5ce7);
+  color: #fff;
+  border-color: var(--accent, #6c5ce7);
+}
+.commands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  text-align: left;
+}
+.command-card {
+  background: var(--bg-secondary, #f9f9f9);
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  position: relative;
+}
+.command-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: var(--accent, #6c5ce7);
+}
+.command-card.copied {
+  border-color: #00b894;
+}
+.command-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.command-card-icon { font-size: 1.2rem; }
+.command-card-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary, #222);
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+.command-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #666);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+.command-card-example {
+  font-size: 0.8rem;
+  color: var(--text-tertiary, #999);
+  font-style: italic;
+}
+.command-card-example::before { content: "\1F4AC "; }
+.command-card-copy-hint {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #999);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.command-card:hover .command-card-copy-hint { opacity: 1; }
+.commands-empty {
+  text-align: center;
+  padding: 32px;
+  color: var(--text-secondary, #666);
+}
+.commands-empty-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 8px;
+}
+.commands-copied-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #00b894;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  z-index: 9999;
+  animation: cmdToastIn 0.3s ease;
+}
+@keyframes cmdToastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@media (max-width: 600px) {
+  .commands-grid { grid-template-columns: 1fr; }
+}

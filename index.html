@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1146,6 +1146,27 @@
             </div>
         </div>
 
+                <div class="commands-section" id="commandsSection">
+            <h2>Commands cheat sheet</h2>
+            <p class="commands-subtitle">Quick reference for everything your agent can do. Tap any command to copy it.</p>
+            <div class="commands-search-wrapper">
+                <input type="text" class="commands-search-input" id="commandsSearchInput" placeholder="Search commands..." aria-label="Search commands" maxlength="100">
+            </div>
+            <div class="commands-filter" role="tablist" aria-label="Command categories">
+                <button class="commands-filter-btn active" role="tab" aria-selected="true" data-cmd-category="all">All</button>
+                <button class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="memory">&#x1F9E0; Memory</button>
+                <button class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="productivity">&#x26A1; Productivity</button>
+                <button class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="search">&#x1F50D; Search</button>
+                <button class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="media">&#x1F4F7; Media</button>
+                <button class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="settings">&#x2699;&#xFE0F; Settings</button>
+            </div>
+            <div class="commands-grid" id="commandsGrid" role="list"></div>
+            <div class="commands-empty" id="commandsEmpty" hidden>
+                <span class="commands-empty-icon">&#x1F50D;</span>
+                <p>No commands match your search. Try a different keyword!</p>
+            </div>
+            <div class="commands-copied-toast" id="commandsCopiedToast" hidden>Copied to clipboard! &#x1F4CB;</div>
+        </div>
         <div class="newsletter-section" id="newsletterSection">
             <div class="newsletter-icon">📬</div>
             <h2>Stay in the loop</h2>
