@@ -2409,6 +2409,9 @@ var ScrollProgress = (function () {
   var bar, btn, ticking;
 
   function init() {
+    // Guard against double-init: destroy previous listeners first
+    destroy();
+
     bar = document.getElementById('scrollProgressBar');
     btn = document.getElementById('backToTop');
     if (!bar || !btn) return;
@@ -2430,16 +2433,21 @@ var ScrollProgress = (function () {
   }
 
   function update() {
+    // Guard against stale DOM references (element removed or hidden)
+    if (!bar || bar.offsetParent === null) return;
+
     var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
     var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
 
     bar.style.width = progress + '%';
 
-    if (scrollTop > 400) {
-      btn.classList.add('visible');
-    } else {
-      btn.classList.remove('visible');
+    if (btn) {
+      if (scrollTop > 400) {
+        btn.classList.add('visible');
+      } else {
+        btn.classList.remove('visible');
+      }
     }
   }
 
@@ -2451,7 +2459,21 @@ var ScrollProgress = (function () {
     }
   }
 
-  return { init: init };
+  /**
+   * Remove scroll listener and release DOM references.
+   * Safe to call multiple times or before init().
+   */
+  function destroy() {
+    window.removeEventListener('scroll', onScroll);
+    if (btn) {
+      btn.removeEventListener('click', scrollToTop);
+    }
+    bar = null;
+    btn = null;
+    ticking = false;
+  }
+
+  return { init: init, destroy: destroy };
 })();
 
 /* ── Keyboard Shortcuts Help (?) ── */
