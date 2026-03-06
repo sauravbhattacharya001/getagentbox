@@ -37,6 +37,7 @@
                 <li role="none"><a href="#calculatorSection" role="menuitem">Calculator</a></li>
                 <li role="none"><a href="#trustSection" role="menuitem">Trust</a></li>
                 <li role="none"><a href="#pricingSection" role="menuitem">Pricing</a></li>
+                <li role="none"><a href="#quizSection" role="menuitem">Quiz</a></li>
                 <li role="none"><a href="#roadmapSection" role="menuitem">Roadmap</a></li>
                 <li role="none"><a href="#statusSection" role="menuitem">Status</a></li>
                 <li role="none"><a href="#faqSection" role="menuitem">FAQ</a></li>
@@ -795,6 +796,32 @@
                         <li>Custom instructions</li>
                     </ul>
                     <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer" class="plan-btn btn-team">Contact us</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="quiz-section" id="quizSection">
+            <h2>Not sure which plan is right?</h2>
+            <p class="quiz-subtitle">Answer 5 quick questions and we'll recommend the perfect plan for you.</p>
+            <div class="quiz-container" id="quizContainer">
+                <div class="quiz-progress" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" aria-label="Quiz progress">
+                    <div class="quiz-progress-bar" id="quizProgressBar" style="width:0%"></div>
+                    <span class="quiz-progress-text" id="quizProgressText">0 / 5</span>
+                </div>
+                <div class="quiz-question-area" id="quizQuestionArea">
+                    <div class="quiz-start" id="quizStart">
+                        <span class="quiz-start-icon">🎯</span>
+                        <p class="quiz-start-text">Find your ideal plan in under 30 seconds</p>
+                        <button class="quiz-start-btn" id="quizStartBtn">Take the Quiz</button>
+                    </div>
+                </div>
+                <div class="quiz-result" id="quizResult" hidden>
+                    <div class="quiz-result-icon" id="quizResultIcon"></div>
+                    <h3 class="quiz-result-title" id="quizResultTitle"></h3>
+                    <p class="quiz-result-desc" id="quizResultDesc"></p>
+                    <ul class="quiz-result-reasons" id="quizResultReasons"></ul>
+                    <a class="quiz-result-cta" id="quizResultCta" href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer"></a>
+                    <button class="quiz-retake-btn" id="quizRetakeBtn">↩ Retake Quiz</button>
                 </div>
             </div>
         </div>
