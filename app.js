@@ -1500,6 +1500,12 @@ var Newsletter = (function () {
         return;
       }
 
+      // Prevent unbounded localStorage growth (demo — no real backend)
+      if (subs.length >= 1000) {
+        showStatus(status, 'Subscriber list is full.', 'error');
+        return;
+      }
+
       // Simulate subscribe
       btn.disabled = true;
       btn.textContent = 'Subscribing…';
@@ -1523,6 +1529,9 @@ var Newsletter = (function () {
   }
 
   function isValidEmail(email) {
+    // Length cap prevents localStorage pollution via oversized payloads.
+    // RFC 5321 limits local-part to 64 chars, domain to 255 chars, total ≤ 320.
+    if (email.length > 320) return false;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
@@ -1673,11 +1682,15 @@ var Roadmap = (function () {
     var count = parseInt(countEl.textContent, 10) || 0;
     var wasVoted = btn.classList.contains('voted');
 
+    // Cap at 999999 to match restoreVotes validation and prevent overflow
+    var MAX_VOTES = 999999;
+
     if (wasVoted) {
       count = Math.max(0, count - 1);
       btn.classList.remove('voted');
       btn.setAttribute('aria-pressed', 'false');
     } else {
+      if (count >= MAX_VOTES) return; // Prevent overflow
       count += 1;
       btn.classList.add('voted');
       btn.setAttribute('aria-pressed', 'true');

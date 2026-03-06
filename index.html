@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://agentbox.goatcounter.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://agentbox.goatcounter.com; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'; worker-src 'none';">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()">
@@ -1312,6 +1312,6 @@
         <script src="app.js" defer></script>
 
     <!-- GoatCounter Analytics (free, privacy-friendly) -->
-    <script data-goatcounter="https://agentbox.goatcounter.com/count" async src="vendor/count.js"></script>
+    <script data-goatcounter="https://agentbox.goatcounter.com/count" async src="vendor/count.js" integrity="sha384-YfTrUFhZmCP15/JcRSSEKBXKmBDJNyJ2NwaO5P4K98YEWtQjpg5DKXrk2lnl68CC" crossorigin="anonymous"></script>
 </body>
 </html>
