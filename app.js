@@ -2969,41 +2969,60 @@ var PromptGallery = (function () {
   var filterBtns = null;
   var activeCategory = 'all';
 
+  /** Pre-created card elements — one per PROMPTS entry, created once in init. */
+  var cardPool = [];
+  /** Pre-lowercased search text for each prompt (prompt + response), avoids
+   *  repeated toLowerCase() on every keystroke. */
+  var searchIndex = [];
+
   function escapeHtml(str) {
     var d = document.createElement('div');
     d.textContent = str;
     return d.innerHTML;
   }
 
-  function createCard(p, index) {
-    var card = document.createElement('div');
-    card.className = 'prompt-card';
-    card.setAttribute('role', 'listitem');
-    card.setAttribute('tabindex', '0');
-    card.dataset.category = p.category;
-    card.dataset.index = index;
-    card.innerHTML =
-      '<div class="prompt-card-category">' + p.icon + ' ' + p.category + '</div>' +
-      '<div class="prompt-card-text">\u201c' + escapeHtml(p.prompt) + '\u201d</div>' +
-      '<div class="prompt-card-hint">Tap to see response \u2192</div>';
-    card.addEventListener('click', function () { openModal(p); });
-    card.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(p); }
-    });
-    return card;
+  /** Build the card pool once. Cards are shown/hidden instead of recreated. */
+  function buildCardPool() {
+    if (cardPool.length > 0) return; // already built
+    for (var i = 0; i < PROMPTS.length; i++) {
+      var p = PROMPTS[i];
+      var card = document.createElement('div');
+      card.className = 'prompt-card';
+      card.setAttribute('role', 'listitem');
+      card.setAttribute('tabindex', '0');
+      card.dataset.category = p.category;
+      card.dataset.index = i;
+      card.innerHTML =
+        '<div class="prompt-card-category">' + p.icon + ' ' + p.category + '</div>' +
+        '<div class="prompt-card-text">\u201c' + escapeHtml(p.prompt) + '\u201d</div>' +
+        '<div class="prompt-card-hint">Tap to see response \u2192</div>';
+      (function (prompt) {
+        card.addEventListener('click', function () { openModal(prompt); });
+        card.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(prompt); }
+        });
+      })(p);
+      cardPool.push(card);
+      grid.appendChild(card);
+      // Pre-lowercase for search — avoids repeated toLowerCase per keystroke
+      searchIndex.push(p.prompt.toLowerCase() + ' ' + p.response.toLowerCase());
+    }
   }
 
+  /**
+   * Show/hide pre-created cards based on active category and search query.
+   * O(n) visibility toggles instead of O(n) DOM create+destroy per keystroke.
+   */
   function renderCards() {
     var search = (searchInput.value || '').toLowerCase().trim();
-    grid.innerHTML = '';
     var count = 0;
     for (var i = 0; i < PROMPTS.length; i++) {
       var p = PROMPTS[i];
-      if (activeCategory !== 'all' && p.category !== activeCategory) continue;
-      if (search && p.prompt.toLowerCase().indexOf(search) === -1 &&
-          p.response.toLowerCase().indexOf(search) === -1) continue;
-      grid.appendChild(createCard(p, i));
-      count++;
+      var visible = true;
+      if (activeCategory !== 'all' && p.category !== activeCategory) visible = false;
+      if (visible && search && searchIndex[i].indexOf(search) === -1) visible = false;
+      cardPool[i].hidden = !visible;
+      if (visible) count++;
     }
     emptyState.hidden = count > 0;
   }
@@ -3055,6 +3074,7 @@ var PromptGallery = (function () {
       if (e.key === 'Escape' && !modal.hidden) closeModal();
     });
 
+    buildCardPool();
     renderCards();
   }
 
