@@ -3249,6 +3249,23 @@ var PersonalityConfigurator = (function () {
   var currentQuestionIndex = 0;
   var _debounceTimer = null;
 
+  // Cached slider DOM references — resolved once in init(), avoids
+  // repeated getElementById calls in getSliderValues/applyPreset.
+  var _sliders = null;
+
+  /** Resolve & cache the four personality slider elements. */
+  function _getSliders() {
+    if (!_sliders) {
+      _sliders = {
+        formality: document.getElementById('sliderFormality'),
+        humor:     document.getElementById('sliderHumor'),
+        detail:    document.getElementById('sliderDetail'),
+        emoji:     document.getElementById('sliderEmoji')
+      };
+    }
+    return _sliders;
+  }
+
   function saveToStorage(values) {
     try {
       localStorage.setItem(STORAGE_KEY_PERSONALITY, JSON.stringify(values));
@@ -3271,15 +3288,12 @@ var PersonalityConfigurator = (function () {
   }
 
   function getSliderValues() {
-    var fEl = document.getElementById('sliderFormality');
-    var hEl = document.getElementById('sliderHumor');
-    var dEl = document.getElementById('sliderDetail');
-    var eEl = document.getElementById('sliderEmoji');
+    var s = _getSliders();
     return {
-      formality: fEl ? parseInt(fEl.value, 10) : 50,
-      humor: hEl ? parseInt(hEl.value, 10) : 50,
-      detail: dEl ? parseInt(dEl.value, 10) : 50,
-      emoji: eEl ? parseInt(eEl.value, 10) : 50
+      formality: s.formality ? parseInt(s.formality.value, 10) : 50,
+      humor:     s.humor     ? parseInt(s.humor.value, 10)     : 50,
+      detail:    s.detail    ? parseInt(s.detail.value, 10)    : 50,
+      emoji:     s.emoji     ? parseInt(s.emoji.value, 10)     : 50
     };
   }
 
@@ -3356,30 +3370,26 @@ var PersonalityConfigurator = (function () {
     var preset = PRESETS[presetName];
     if (!preset) { return; }
 
-    var fEl = document.getElementById('sliderFormality');
-    var hEl = document.getElementById('sliderHumor');
-    var dEl = document.getElementById('sliderDetail');
-    var eEl = document.getElementById('sliderEmoji');
-    if (fEl) { fEl.value = preset.formality; }
-    if (hEl) { hEl.value = preset.humor; }
-    if (dEl) { dEl.value = preset.detail; }
-    if (eEl) { eEl.value = preset.emoji; }
+    var s = _getSliders();
+    if (s.formality) { s.formality.value = preset.formality; }
+    if (s.humor)     { s.humor.value     = preset.humor; }
+    if (s.detail)    { s.detail.value    = preset.detail; }
+    if (s.emoji)     { s.emoji.value     = preset.emoji; }
     saveToStorage(preset);
     updatePreview();
   }
 
   function init() {
+    // Eagerly resolve and cache slider references
+    var s = _getSliders();
+
     // Restore saved slider values from localStorage
     var saved = loadFromStorage();
     if (saved) {
-      var fEl = document.getElementById('sliderFormality');
-      var hEl = document.getElementById('sliderHumor');
-      var dEl = document.getElementById('sliderDetail');
-      var eEl = document.getElementById('sliderEmoji');
-      if (fEl) { fEl.value = saved.formality; }
-      if (hEl) { hEl.value = saved.humor; }
-      if (dEl) { dEl.value = saved.detail; }
-      if (eEl) { eEl.value = saved.emoji; }
+      if (s.formality) { s.formality.value = saved.formality; }
+      if (s.humor)     { s.humor.value     = saved.humor; }
+      if (s.detail)    { s.detail.value    = saved.detail; }
+      if (s.emoji)     { s.emoji.value     = saved.emoji; }
     }
 
     var sliders = document.querySelectorAll('.personality-range');
