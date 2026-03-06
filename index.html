@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1242,6 +1242,72 @@
     <!-- Back to Top Button -->
     <button class="back-to-top" id="backToTop" aria-label="Back to top" title="Back to top">↑</button>
 
+
+    <!-- Onboarding Wizard -->
+    <div class="onboarding-widget" id="onboardingWidget" hidden>
+        <button class="onboarding-trigger" id="onboardingTrigger" aria-label="Get personalized recommendations" title="Get started">
+            <span class="onboarding-trigger-icon">🚀</span>
+            <span class="onboarding-trigger-pulse"></span>
+        </button>
+        <div class="onboarding-panel" id="onboardingPanel" role="dialog" aria-label="Personalized setup wizard" aria-modal="false" hidden>
+            <div class="onboarding-header">
+                <h3 class="onboarding-title" id="onboardingTitle">Let's find your fit</h3>
+                <button class="onboarding-close" id="onboardingClose" aria-label="Close wizard">&times;</button>
+            </div>
+            <div class="onboarding-progress">
+                <div class="onboarding-progress-bar" id="onboardingProgressBar" style="width: 33%"></div>
+            </div>
+            <div class="onboarding-body" id="onboardingBody">
+                <!-- Step 1: Role -->
+                <div class="onboarding-step" id="onboardingStep1" data-step="1">
+                    <p class="onboarding-question">What describes you best?</p>
+                    <div class="onboarding-options" role="radiogroup" aria-label="Select your role">
+                        <button class="onboarding-option" data-role="developer" aria-pressed="false">
+                            <span class="onboarding-option-icon">💻</span>
+                            <span class="onboarding-option-label">Developer</span>
+                            <span class="onboarding-option-desc">Code, debug, automate</span>
+                        </button>
+                        <button class="onboarding-option" data-role="student" aria-pressed="false">
+                            <span class="onboarding-option-icon">🎓</span>
+                            <span class="onboarding-option-label">Student</span>
+                            <span class="onboarding-option-desc">Learn, research, study</span>
+                        </button>
+                        <button class="onboarding-option" data-role="professional" aria-pressed="false">
+                            <span class="onboarding-option-icon">💼</span>
+                            <span class="onboarding-option-label">Professional</span>
+                            <span class="onboarding-option-desc">Productivity, writing, planning</span>
+                        </button>
+                        <button class="onboarding-option" data-role="casual" aria-pressed="false">
+                            <span class="onboarding-option-icon">🌟</span>
+                            <span class="onboarding-option-label">Casual User</span>
+                            <span class="onboarding-option-desc">Fun, creativity, curiosity</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Step 2: Goals -->
+                <div class="onboarding-step" id="onboardingStep2" data-step="2" hidden>
+                    <p class="onboarding-question">What matters most to you?</p>
+                    <div class="onboarding-options onboarding-goals" role="group" aria-label="Select your goals (pick up to 2)">
+                    </div>
+                    <p class="onboarding-hint">Pick up to 2</p>
+                </div>
+                <!-- Step 3: Recommendation -->
+                <div class="onboarding-step" id="onboardingStep3" data-step="3" hidden>
+                    <div class="onboarding-result" id="onboardingResult">
+                    </div>
+                </div>
+            </div>
+            <div class="onboarding-footer">
+                <button class="onboarding-btn onboarding-btn-back" id="onboardingBack" hidden>← Back</button>
+                <div class="onboarding-step-dots">
+                    <span class="onboarding-dot active" data-dot="1"></span>
+                    <span class="onboarding-dot" data-dot="2"></span>
+                    <span class="onboarding-dot" data-dot="3"></span>
+                </div>
+                <button class="onboarding-btn onboarding-btn-next" id="onboardingNext" disabled>Next →</button>
+            </div>
+        </div>
+    </div>
     <!-- Interactive Chat Demo -->
         <script src="app.js" defer></script>
 

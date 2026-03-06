@@ -3528,3 +3528,278 @@ if (typeof window !== 'undefined') {
     render();
   }
 })();
+
+// ── Onboarding Wizard ──────────────────────────────────────
+(function initOnboardingWizard() {
+  var STORAGE_KEY = 'agentbox_onboarding_done';
+  if (localStorage.getItem(STORAGE_KEY)) return;
+
+  var widget = document.getElementById('onboardingWidget');
+  var trigger = document.getElementById('onboardingTrigger');
+  var panel = document.getElementById('onboardingPanel');
+  var closeBtn = document.getElementById('onboardingClose');
+  var backBtn = document.getElementById('onboardingBack');
+  var nextBtn = document.getElementById('onboardingNext');
+  var progressBar = document.getElementById('onboardingProgressBar');
+  var titleEl = document.getElementById('onboardingTitle');
+  var step1 = document.getElementById('onboardingStep1');
+  var step2 = document.getElementById('onboardingStep2');
+  var step3 = document.getElementById('onboardingStep3');
+  var resultEl = document.getElementById('onboardingResult');
+
+  if (!widget || !trigger || !panel) return;
+
+  var currentStep = 1;
+  var selectedRole = null;
+  var selectedGoals = [];
+
+  var GOAL_MAP = {
+    developer: [
+      { key: 'code', icon: '🛠', label: 'Code generation & debugging' },
+      { key: 'automate', icon: '⚡', label: 'Task automation' },
+      { key: 'learn_tech', icon: '📚', label: 'Learning new tech' },
+      { key: 'review', icon: '🔍', label: 'Code review & docs' }
+    ],
+    student: [
+      { key: 'homework', icon: '📝', label: 'Homework & assignments' },
+      { key: 'research', icon: '🔬', label: 'Research assistance' },
+      { key: 'writing', icon: '✍️', label: 'Essay & paper writing' },
+      { key: 'study', icon: '🧠', label: 'Study & memorization' }
+    ],
+    professional: [
+      { key: 'email', icon: '📧', label: 'Email drafting & replies' },
+      { key: 'planning', icon: '📋', label: 'Project planning' },
+      { key: 'analysis', icon: '📊', label: 'Data analysis & reports' },
+      { key: 'meetings', icon: '🗓', label: 'Meeting prep & notes' }
+    ],
+    casual: [
+      { key: 'creative', icon: '🎨', label: 'Creative writing & art' },
+      { key: 'travel', icon: '✈️', label: 'Travel planning' },
+      { key: 'cooking', icon: '🍳', label: 'Recipes & meal planning' },
+      { key: 'trivia', icon: '🧩', label: 'Trivia & general knowledge' }
+    ]
+  };
+
+  var RECOMMENDATIONS = {
+    developer: {
+      badge: '💻',
+      title: 'The Developer\'s Sidekick',
+      desc: 'AgentBox is perfect for devs — it remembers your stack, debugs with you, and codes alongside you in Telegram.',
+      features: [
+        '✅ Code generation in 50+ languages',
+        '✅ Paste errors → get fixes instantly',
+        '✅ Search docs and Stack Overflow inline',
+        '✅ Set reminders for deployments & standups'
+      ],
+      plan: 'Recommended: Pro plan (unlimited messages)',
+      goalTips: {
+        code: 'Pro tip: Paste code directly — AgentBox formats and debugs it.',
+        automate: 'Pro tip: Set recurring reminders for CI/CD checks.',
+        learn_tech: 'Pro tip: Ask "explain X like I\'m 5" for quick concept breakdowns.',
+        review: 'Pro tip: Paste PRs for instant review feedback.'
+      }
+    },
+    student: {
+      badge: '🎓',
+      title: 'The Study Companion',
+      desc: 'Like having a tutor in your pocket. AgentBox breaks down complex topics and helps you write better.',
+      features: [
+        '✅ Explain any concept step by step',
+        '✅ Help structure essays & papers',
+        '✅ Quiz you on study material',
+        '✅ Search academic sources inline'
+      ],
+      plan: 'Recommended: Free plan (20 msgs/day is plenty for study sessions)',
+      goalTips: {
+        homework: 'Pro tip: Describe the problem in your own words first for better help.',
+        research: 'Pro tip: Ask for sources and AgentBox will search the web.',
+        writing: 'Pro tip: Share your outline first, then ask for paragraph-by-paragraph help.',
+        study: 'Pro tip: Ask AgentBox to quiz you on any topic.'
+      }
+    },
+    professional: {
+      badge: '💼',
+      title: 'The Productivity Multiplier',
+      desc: 'AgentBox handles the busywork so you can focus on high-impact tasks. It remembers your preferences and context.',
+      features: [
+        '✅ Draft emails in your tone and style',
+        '✅ Summarize long documents & threads',
+        '✅ Set smart reminders that stick',
+        '✅ Analyze data and generate reports'
+      ],
+      plan: 'Recommended: Pro plan (unlimited = no friction in your flow)',
+      goalTips: {
+        email: 'Pro tip: Tell AgentBox your writing style once — it remembers.',
+        planning: 'Pro tip: Brain-dump tasks and ask for a structured plan.',
+        analysis: 'Pro tip: Paste CSV data directly for quick insights.',
+        meetings: 'Pro tip: Send agenda before meetings, get prep notes back.'
+      }
+    },
+    casual: {
+      badge: '🌟',
+      title: 'The Creative Companion',
+      desc: 'AgentBox is fun to talk to — creative, knowledgeable, and always up for a good conversation.',
+      features: [
+        '✅ Write stories, poems, and jokes',
+        '✅ Plan trips with detailed itineraries',
+        '✅ Get recipes based on what you have',
+        '✅ Settle debates with sourced facts'
+      ],
+      plan: 'Recommended: Free plan (20 msgs/day for casual fun)',
+      goalTips: {
+        creative: 'Pro tip: Give AgentBox a character or style to write in.',
+        travel: 'Pro tip: Share dates + budget for personalized itineraries.',
+        cooking: 'Pro tip: List ingredients you have and get instant recipes.',
+        trivia: 'Pro tip: Challenge AgentBox to trivia — it keeps score!'
+      }
+    }
+  };
+
+  // Show widget after 5 seconds
+  setTimeout(function() {
+    widget.removeAttribute('hidden');
+  }, 5000);
+
+  function updateStepUI() {
+    step1.hidden = currentStep !== 1;
+    step2.hidden = currentStep !== 2;
+    step3.hidden = currentStep !== 3;
+    progressBar.style.width = (currentStep * 33.33) + '%';
+    backBtn.hidden = currentStep === 1;
+
+    var dots = widget.querySelectorAll('.onboarding-dot');
+    dots.forEach(function(d) {
+      d.classList.toggle('active', parseInt(d.getAttribute('data-dot')) === currentStep);
+    });
+
+    var titles = ['Let\'s find your fit', 'What are your goals?', 'Your personalized plan'];
+    titleEl.textContent = titles[currentStep - 1];
+
+    if (currentStep === 1) {
+      nextBtn.disabled = !selectedRole;
+      nextBtn.textContent = 'Next →';
+    } else if (currentStep === 2) {
+      nextBtn.disabled = selectedGoals.length === 0;
+      nextBtn.textContent = 'See my plan →';
+    } else {
+      nextBtn.textContent = 'Done ✓';
+      nextBtn.disabled = false;
+    }
+  }
+
+  function populateGoals() {
+    var goalsContainer = step2.querySelector('.onboarding-goals');
+    goalsContainer.innerHTML = '';
+    var goals = GOAL_MAP[selectedRole] || [];
+    goals.forEach(function(g) {
+      var btn = document.createElement('button');
+      btn.className = 'onboarding-option';
+      btn.setAttribute('data-goal', g.key);
+      btn.setAttribute('aria-pressed', 'false');
+      btn.innerHTML = '<span class="onboarding-option-icon">' + g.icon + '</span>' +
+        '<span class="onboarding-option-label">' + g.label + '</span>';
+      btn.addEventListener('click', function() {
+        toggleGoal(g.key, btn);
+      });
+      goalsContainer.appendChild(btn);
+    });
+  }
+
+  function toggleGoal(key, btn) {
+    var idx = selectedGoals.indexOf(key);
+    if (idx > -1) {
+      selectedGoals.splice(idx, 1);
+      btn.setAttribute('aria-pressed', 'false');
+      btn.classList.remove('selected');
+    } else if (selectedGoals.length < 2) {
+      selectedGoals.push(key);
+      btn.setAttribute('aria-pressed', 'true');
+      btn.classList.add('selected');
+    }
+    nextBtn.disabled = selectedGoals.length === 0;
+  }
+
+  function buildResult() {
+    var rec = RECOMMENDATIONS[selectedRole] || RECOMMENDATIONS.casual;
+    var tips = [];
+    selectedGoals.forEach(function(g) {
+      if (rec.goalTips[g]) tips.push(rec.goalTips[g]);
+    });
+
+    var featuresHTML = rec.features.map(function(f) {
+      return '<li>' + f + '</li>';
+    }).join('');
+
+    var tipsHTML = tips.length > 0
+      ? tips.map(function(t) { return '<li>💡 ' + t + '</li>'; }).join('')
+      : '';
+
+    resultEl.innerHTML =
+      '<div class="onboarding-result-badge">' + rec.badge + '</div>' +
+      '<h4 class="onboarding-result-title">' + rec.title + '</h4>' +
+      '<p class="onboarding-result-desc">' + rec.desc + '</p>' +
+      '<ul class="onboarding-result-features">' + featuresHTML + tipsHTML + '</ul>' +
+      '<p class="onboarding-result-plan">' + rec.plan + '</p>' +
+      '<a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer" class="onboarding-result-cta">Start Chatting →</a>';
+  }
+
+  // Event: trigger button
+  trigger.addEventListener('click', function() {
+    var isOpen = !panel.hidden;
+    panel.hidden = isOpen;
+    if (!isOpen) trigger.querySelector('.onboarding-trigger-pulse').style.display = 'none';
+  });
+
+  // Event: close
+  closeBtn.addEventListener('click', function() {
+    panel.hidden = true;
+    localStorage.setItem(STORAGE_KEY, '1');
+    widget.hidden = true;
+  });
+
+  // Event: next
+  nextBtn.addEventListener('click', function() {
+    if (currentStep === 1 && selectedRole) {
+      currentStep = 2;
+      selectedGoals = [];
+      populateGoals();
+    } else if (currentStep === 2 && selectedGoals.length > 0) {
+      currentStep = 3;
+      buildResult();
+    } else if (currentStep === 3) {
+      localStorage.setItem(STORAGE_KEY, '1');
+      widget.hidden = true;
+      return;
+    }
+    updateStepUI();
+  });
+
+  // Event: back
+  backBtn.addEventListener('click', function() {
+    if (currentStep > 1) {
+      currentStep--;
+      updateStepUI();
+    }
+  });
+
+  // Event: role selection (step 1)
+  step1.querySelectorAll('.onboarding-option').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      selectedRole = btn.getAttribute('data-role');
+      step1.querySelectorAll('.onboarding-option').forEach(function(b) {
+        b.setAttribute('aria-pressed', 'false');
+        b.classList.remove('selected');
+      });
+      btn.setAttribute('aria-pressed', 'true');
+      btn.classList.add('selected');
+      nextBtn.disabled = false;
+    });
+  });
+
+  // Keyboard: Escape to close
+  panel.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      panel.hidden = true;
+    }
+  });
+})();
