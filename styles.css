@@ -2829,7 +2829,17 @@ body.light-mode .usecase-list li { color: #4a5568; }
 
 body.light-mode .comparison-table th { background: rgba(0,0,0,0.04); color: #1a202c; }
 body.light-mode .comparison-table td { border-color: rgba(0,0,0,0.06); color: #4a5568; }
-body.light-mode .highlight-col { background: rgba(0,119,204,0.06); }
+body.light-mode .comparison-table td:first-child { color: #1a202c; }
+body.light-mode .comparison-table thead th.highlight-col { background: rgba(0,119,204,0.08); color: #0077cc; }
+body.light-mode .comparison-table tbody td.highlight-cell { background: rgba(0,119,204,0.05); }
+body.light-mode .comparison-table tbody tr:hover td { background: rgba(0,119,204,0.03); }
+body.light-mode .comparison-table tbody tr:hover td.highlight-cell { background: rgba(0,119,204,0.09); }
+body.light-mode .comp-yes { color: #16a34a; }
+body.light-mode .comp-no { color: #9ca3af; }
+body.light-mode .comp-partial { color: #ca8a04; }
+body.light-mode .comp-text { color: #6b7280; }
+body.light-mode .comparison-note { color: #9ca3af; }
+body.light-mode .comparison-table-wrapper { border: 1px solid rgba(0,0,0,0.06); border-radius: 8px; }
 
 body.light-mode .trust-badge {
     background: rgba(0,0,0,0.04);
