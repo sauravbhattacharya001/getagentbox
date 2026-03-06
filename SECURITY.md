@@ -29,8 +29,11 @@ The site uses a strict CSP via `<meta>` tag:
 
 ### XSS Prevention
 
-- **No innerHTML for user-facing content** - all dynamic chat demo content is built using `document.createElement()`, `document.createTextNode()`, and `DocumentFragment`
-- `chatWindow.innerHTML = ''` is the only innerHTML usage (clearing, not setting content)
+- **No user-supplied content in innerHTML** — all dynamic content (chat demo, quiz, personality configurator, command palette) is built from static data defined in `app.js`, never from user input or URL parameters
+- DOM APIs (`document.createElement()`, `document.createTextNode()`, `DocumentFragment`) are used where possible
+- `innerHTML` is used only to render static template strings from trusted application data (e.g., plan descriptions, command cards) or to clear containers (`innerHTML = ''`)
+- Email addresses stored in localStorage are validated, length-capped (RFC 5321), and never rendered into the DOM
+- No `eval()`, `Function()`, or `document.write()` in production code
 
 ### Third-Party Script Vendoring
 
@@ -38,9 +41,16 @@ GoatCounter analytics (`count.js`) is vendored locally under `vendor/` rather th
 
 ### Additional Headers
 
-- `X-Content-Type-Options: nosniff` - prevents MIME-type sniffing
-- `Referrer-Policy: strict-origin-when-cross-origin` - limits referrer leakage
-- `Permissions-Policy` - disables camera, microphone, geolocation, payment, USB, and FLoC on all pages
+- `X-Frame-Options: DENY` — blocks all iframe embedding (defense-in-depth with `frame-ancestors`)
+- `X-Content-Type-Options: nosniff` — prevents MIME-type sniffing
+- `Referrer-Policy: strict-origin-when-cross-origin` — limits referrer leakage
+- `Permissions-Policy` — disables camera, microphone, geolocation, payment, USB, and FLoC on all pages
+- `Cross-Origin-Opener-Policy: same-origin` — isolates browsing context from cross-origin popups
+- `Cross-Origin-Embedder-Policy: require-corp` — prevents loading cross-origin resources without explicit permission
+- `Cross-Origin-Resource-Policy: same-origin` — prevents other sites from embedding this site's resources
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` — enforces HTTPS with HSTS preload
+
+> **CSP parity:** The nginx CSP in the Dockerfile is kept in sync with the `<meta>` tag in `index.html`. Both use identical directives. Changes to one must be mirrored in the other.
 
 ### Docker Security
 
