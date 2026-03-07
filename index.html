@@ -1194,6 +1194,45 @@
             </div>
             <div class="commands-copied-toast" id="commandsCopiedToast" hidden>Copied to clipboard! &#x1F4CB;</div>
         </div>
+        <div class="api-explorer-section" id="apiExplorerSection">
+            <h2>API Explorer</h2>
+            <p class="api-explorer-subtitle">Browse the AgentBox API. Click any endpoint to see details, sample requests, and responses.</p>
+            <div class="api-explorer-filter" role="tablist" aria-label="API categories">
+                <button class="api-filter-btn active" role="tab" aria-selected="true" data-api-cat="all">All</button>
+            </div>
+            <div class="api-explorer-grid" id="apiExplorerGrid" role="list"></div>
+            <div class="api-detail-panel" id="apiDetailPanel" hidden>
+                <div class="api-detail-header">
+                    <h3 id="apiDetailTitle"></h3>
+                    <button class="api-detail-close" id="apiDetailClose" aria-label="Close detail panel">&times;</button>
+                </div>
+                <div class="api-detail-body">
+                    <div class="api-detail-meta" id="apiDetailMeta"></div>
+                    <div class="api-detail-section">
+                        <h4>Request</h4>
+                        <div class="api-code-block">
+                            <button class="api-copy-btn" data-copy-target="apiCurlCode" aria-label="Copy curl command">📋 Copy</button>
+                            <pre id="apiCurlCode"></pre>
+                        </div>
+                    </div>
+                    <div class="api-detail-section" id="apiReqBodySection" hidden>
+                        <h4>Request Body</h4>
+                        <div class="api-code-block">
+                            <pre id="apiReqBody"></pre>
+                        </div>
+                    </div>
+                    <div class="api-detail-section">
+                        <h4>Response <span class="api-status-badge" id="apiStatusBadge">200 OK</span></h4>
+                        <div class="api-code-block">
+                            <button class="api-copy-btn" data-copy-target="apiRespBody" aria-label="Copy response JSON">📋 Copy</button>
+                            <pre id="apiRespBody"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="api-explorer-note">🔑 All endpoints require a valid API key. Get yours on the <a href="#pricingSection">Pricing</a> page.</p>
+        </div>
+
         <div class="newsletter-section" id="newsletterSection">
             <div class="newsletter-icon">📬</div>
             <h2>Stay in the loop</h2>
