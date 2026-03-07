@@ -5769,3 +5769,53 @@ if (typeof document !== 'undefined') {
 if (typeof window !== 'undefined') {
   window.SocialProofToasts = SocialProofToasts;
 }
+
+/* ──────────────────────────────────────────────
+   Before/After Day Comparison Tabs
+   ────────────────────────────────────────────── */
+var BeforeAfter = (function () {
+  'use strict';
+
+  function init() {
+    if (typeof document === 'undefined') return;
+    var tabBefore = document.getElementById('baTabBefore');
+    var tabAfter  = document.getElementById('baTabAfter');
+    var panelBefore = document.getElementById('baPanelBefore');
+    var panelAfter  = document.getElementById('baPanelAfter');
+    if (!tabBefore || !tabAfter || !panelBefore || !panelAfter) return;
+
+    function switchTo(which) {
+      var isBefore = which === 'before';
+      tabBefore.classList.toggle('active', isBefore);
+      tabAfter.classList.toggle('active', !isBefore);
+      tabBefore.setAttribute('aria-selected', isBefore ? 'true' : 'false');
+      tabAfter.setAttribute('aria-selected', !isBefore ? 'true' : 'false');
+      panelBefore.classList.toggle('active', isBefore);
+      panelAfter.classList.toggle('active', !isBefore);
+      panelBefore.hidden = !isBefore;
+      panelAfter.hidden = isBefore;
+    }
+
+    tabBefore.addEventListener('click', function () { switchTo('before'); });
+    tabAfter.addEventListener('click', function () { switchTo('after'); });
+
+    tabBefore.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { tabAfter.focus(); switchTo('after'); }
+    });
+    tabAfter.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') { tabBefore.focus(); switchTo('before'); }
+    });
+  }
+
+  return { init: init };
+})();
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function () {
+    BeforeAfter.init();
+  });
+}
+
+if (typeof window !== 'undefined') {
+  window.BeforeAfter = BeforeAfter;
+}

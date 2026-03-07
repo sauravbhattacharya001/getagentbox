@@ -32,6 +32,7 @@
                 <li role="none"><a href="#playgroundSection" role="menuitem">Playground</a></li>
                 <li role="none"><a href="#personalitySection" role="menuitem">Personality</a></li>
                 <li role="none"><a href="#promptGallerySection" role="menuitem">Prompts</a></li>
+                <li role="none"><a href="#beforeAfterSection" role="menuitem">Before/After</a></li>
                 <li role="none"><a href="#usecasesSection" role="menuitem">Use Cases</a></li>
                 <li role="none"><a href="#integrationsSection" role="menuitem">Integrations</a></li>
                 <li role="none"><a href="#comparisonSection" role="menuitem">Compare</a></li>
@@ -322,6 +323,97 @@
             </div>
         </div>
 
+
+        <div class="before-after-section" id="beforeAfterSection">
+            <h2>Your day, transformed</h2>
+            <p class="before-after-subtitle">See how AgentBox changes everyday tasks</p>
+            <div class="before-after-toggle" role="tablist" aria-label="Before and after comparison">
+                <button class="ba-tab active" id="baTabBefore" role="tab" aria-selected="true" aria-controls="baPanelBefore">😩 Without AgentBox</button>
+                <button class="ba-tab" id="baTabAfter" role="tab" aria-selected="false" aria-controls="baPanelAfter">✨ With AgentBox</button>
+            </div>
+            <div class="ba-panel active" id="baPanelBefore" role="tabpanel" aria-labelledby="baTabBefore">
+                <div class="ba-timeline">
+                    <div class="ba-item ba-pain">
+                        <span class="ba-time">8:00 AM</span>
+                        <span class="ba-icon">📱</span>
+                        <span class="ba-text">Open 5 different apps to check weather, calendar, and news</span>
+                        <span class="ba-duration">15 min</span>
+                    </div>
+                    <div class="ba-item ba-pain">
+                        <span class="ba-time">9:30 AM</span>
+                        <span class="ba-icon">🔍</span>
+                        <span class="ba-text">Google "best Italian restaurant near me," read 8 review sites</span>
+                        <span class="ba-duration">20 min</span>
+                    </div>
+                    <div class="ba-item ba-pain">
+                        <span class="ba-time">12:00 PM</span>
+                        <span class="ba-icon">📧</span>
+                        <span class="ba-text">Manually draft a follow-up email, check grammar twice</span>
+                        <span class="ba-duration">10 min</span>
+                    </div>
+                    <div class="ba-item ba-pain">
+                        <span class="ba-time">3:00 PM</span>
+                        <span class="ba-icon">📝</span>
+                        <span class="ba-text">Forget to pick up groceries — no reminder set</span>
+                        <span class="ba-duration">—</span>
+                    </div>
+                    <div class="ba-item ba-pain">
+                        <span class="ba-time">6:00 PM</span>
+                        <span class="ba-icon">🧮</span>
+                        <span class="ba-text">Manually convert recipe from 4 servings to 7</span>
+                        <span class="ba-duration">5 min</span>
+                    </div>
+                    <div class="ba-item ba-pain">
+                        <span class="ba-time">9:00 PM</span>
+                        <span class="ba-icon">📸</span>
+                        <span class="ba-text">Screenshot an error message, search forums for help</span>
+                        <span class="ba-duration">25 min</span>
+                    </div>
+                </div>
+                <div class="ba-total">⏱️ ~75 minutes lost on tasks that could be instant</div>
+            </div>
+            <div class="ba-panel" id="baPanelAfter" role="tabpanel" aria-labelledby="baTabAfter" hidden>
+                <div class="ba-timeline">
+                    <div class="ba-item ba-win">
+                        <span class="ba-time">8:00 AM</span>
+                        <span class="ba-icon">💬</span>
+                        <span class="ba-text">"Good morning!" → AgentBox sends weather, calendar, and headlines</span>
+                        <span class="ba-duration">10 sec</span>
+                    </div>
+                    <div class="ba-item ba-win">
+                        <span class="ba-time">9:30 AM</span>
+                        <span class="ba-icon">💬</span>
+                        <span class="ba-text">"Find a good Italian place nearby" → top 3 picks with ratings</span>
+                        <span class="ba-duration">15 sec</span>
+                    </div>
+                    <div class="ba-item ba-win">
+                        <span class="ba-time">12:00 PM</span>
+                        <span class="ba-icon">💬</span>
+                        <span class="ba-text">"Draft a follow-up to Sarah about the proposal" → done, polished</span>
+                        <span class="ba-duration">20 sec</span>
+                    </div>
+                    <div class="ba-item ba-win">
+                        <span class="ba-time">3:00 PM</span>
+                        <span class="ba-icon">🔔</span>
+                        <span class="ba-text">AgentBox reminds you: "Pick up groceries on the way home"</span>
+                        <span class="ba-duration">auto</span>
+                    </div>
+                    <div class="ba-item ba-win">
+                        <span class="ba-time">6:00 PM</span>
+                        <span class="ba-icon">💬</span>
+                        <span class="ba-text">"Scale this recipe to 7 servings" → instant conversion</span>
+                        <span class="ba-duration">5 sec</span>
+                    </div>
+                    <div class="ba-item ba-win">
+                        <span class="ba-time">9:00 PM</span>
+                        <span class="ba-icon">📸</span>
+                        <span class="ba-text">Send screenshot → "That's error 0x80070005, here's the fix…"</span>
+                        <span class="ba-duration">30 sec</span>
+                    </div>
+                </div>
+                <div class="ba-total">⚡ ~2 minutes total — your agent handles the rest</div>
+            </div>
+        </div>
 
         <div class="activity-section" id="activitySection">
             <h2>Agents at work right now</h2>
