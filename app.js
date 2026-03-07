@@ -4797,6 +4797,7 @@ var ApiExplorer = (function () {
   var grid, detailPanel, filterContainer;
   var activeCard = null;
   var currentFilter = 'all';
+  var cardPool = [];
 
   function init() {
     grid = document.getElementById('apiExplorerGrid');
@@ -4826,7 +4827,7 @@ var ApiExplorer = (function () {
         b.classList.toggle('active', isActive);
         b.setAttribute('aria-selected', isActive ? 'true' : 'false');
       });
-      renderGrid();
+      filterGrid();
       closeDetail();
     });
 
@@ -4851,20 +4852,14 @@ var ApiExplorer = (function () {
       });
     });
 
-    renderGrid();
-  }
-
-  function renderGrid() {
-    grid.innerHTML = '';
-    var filtered = currentFilter === 'all'
-      ? ENDPOINTS
-      : ENDPOINTS.filter(function (ep) { return ep.category === currentFilter; });
-
-    filtered.forEach(function (ep, idx) {
+    // Build card pool once — cards are shown/hidden on filter, not recreated
+    cardPool = [];
+    ENDPOINTS.forEach(function (ep) {
       var card = document.createElement('div');
       card.className = 'api-endpoint-card';
       card.setAttribute('role', 'listitem');
       card.setAttribute('tabindex', '0');
+      card.setAttribute('data-category', ep.category);
       card.innerHTML =
         '<span class="api-method-badge ' + ep.method.toLowerCase() + '">' + ep.method + '</span>' +
         '<span class="api-endpoint-path">' + escapeHtml(ep.path) + (ep.suffix ? ' <small style="opacity:0.5">' + escapeHtml(ep.suffix) + '</small>' : '') + '</span>' +
@@ -4875,7 +4870,16 @@ var ApiExplorer = (function () {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showDetail(ep, card); }
       });
       grid.appendChild(card);
+      cardPool.push(card);
     });
+
+    filterGrid();
+  }
+
+  function filterGrid() {
+    for (var i = 0; i < cardPool.length; i++) {
+      cardPool[i].hidden = (currentFilter !== 'all' && cardPool[i].getAttribute('data-category') !== currentFilter);
+    }
   }
 
   function showDetail(ep, card) {
@@ -4885,7 +4889,7 @@ var ApiExplorer = (function () {
 
     document.getElementById('apiDetailTitle').innerHTML =
       '<span class="api-method-badge ' + ep.method.toLowerCase() + '">' + ep.method + '</span> ' +
-      escapeHtml(ep.path) + (ep.suffix || '');
+      escapeHtml(ep.path) + (ep.suffix ? ' ' + escapeHtml(ep.suffix) : '');
 
     document.getElementById('apiDetailMeta').innerHTML =
       '<span>\uD83D\uDD12 ' + escapeHtml(ep.auth) + '</span>' +
