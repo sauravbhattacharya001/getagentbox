@@ -4684,3 +4684,120 @@ body.light-mode .nav-hamburger::after { background: #1a202c; }
   .wizard-container { padding: 1.25rem; }
   .wizard-section { padding: 2rem 1rem; }
 }
+
+/* ── Social Proof Notification Toasts ─────────────────────── */
+.sp-toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1040;
+  pointer-events: none;
+}
+
+.sp-toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card-bg, #1a1a2e);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  max-width: 340px;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(20px) translateX(-20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.sp-toast-visible {
+  opacity: 1;
+  transform: translateY(0) translateX(0);
+}
+
+.sp-toast-hiding {
+  opacity: 0;
+  transform: translateY(20px) translateX(-20px);
+}
+
+.sp-toast-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.sp-toast-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sp-toast-msg {
+  font-size: 0.88rem;
+  color: var(--text, #e0e0e0);
+  line-height: 1.4;
+}
+
+.sp-toast-time {
+  font-size: 0.75rem;
+  color: var(--text-muted, #888);
+}
+
+.sp-toast-close {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 0.2s, background 0.2s;
+  line-height: 1;
+}
+
+.sp-toast-close:hover {
+  color: var(--text, #e0e0e0);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Light mode */
+.light-mode .sp-toast {
+  background: #fff;
+  border-color: #e0e0e0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .sp-toast-msg {
+  color: #333;
+}
+
+.light-mode .sp-toast-close:hover {
+  color: #333;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 480px) {
+  .sp-toast-container {
+    left: 12px;
+    bottom: 12px;
+    right: 12px;
+  }
+  .sp-toast {
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-toast {
+    transition: opacity 0.1s;
+    transform: none;
+  }
+  .sp-toast-visible {
+    transform: none;
+  }
+  .sp-toast-hiding {
+    transform: none;
+  }
+}

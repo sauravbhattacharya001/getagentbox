@@ -5545,3 +5545,227 @@ if (typeof document !== 'undefined') {
 if (typeof window !== 'undefined') {
   window.QuickStartWizard = QuickStartWizard;
 }
+
+/* ──────────────────────────────────────────────
+   Social Proof Notification Toasts
+   Periodic toast popups showing simulated user
+   activity to build trust and social proof.
+   ────────────────────────────────────────────── */
+var SocialProofToasts = (function () {
+  'use strict';
+
+  var _container = null;
+  var _timer = null;
+  var _dismissed = false;
+  var _prefersReducedMotion = false;
+  var _toastQueue = [];
+  var _activeToast = null;
+
+  var DISPLAY_MS = 5000;
+  var INTERVAL_MS = 25000;
+  var INITIAL_DELAY_MS = 12000;
+  var MAX_TOASTS_PER_SESSION = 15;
+  var _toastsShown = 0;
+
+  var cities = [
+    'Seattle', 'San Francisco', 'New York', 'London', 'Berlin',
+    'Tokyo', 'Toronto', 'Sydney', 'Amsterdam', 'Singapore',
+    'Austin', 'Portland', 'Denver', 'Chicago', 'Los Angeles',
+    'Stockholm', 'Dublin', 'Bangalore', 'Seoul', 'Paris'
+  ];
+
+  var actions = [
+    { icon: '🚀', text: 'just started using AgentBox' },
+    { icon: '⭐', text: 'upgraded to Pro' },
+    { icon: '🎉', text: 'sent their 100th message' },
+    { icon: '🔔', text: 'set up their first reminder' },
+    { icon: '🧠', text: 'enabled long-term memory' },
+    { icon: '📷', text: 'analyzed their first image' },
+    { icon: '🔍', text: 'ran their first web search' },
+    { icon: '💬', text: 'created a custom persona' },
+    { icon: '📊', text: 'connected a new integration' },
+    { icon: '🎯', text: 'completed the onboarding quiz' }
+  ];
+
+  var timeLabels = [
+    'just now', '2 minutes ago', '5 minutes ago',
+    '8 minutes ago', '12 minutes ago'
+  ];
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function generateToast() {
+    var city = pick(cities);
+    var action = pick(actions);
+    var time = pick(timeLabels);
+    return {
+      icon: action.icon,
+      city: city,
+      text: action.text,
+      time: time
+    };
+  }
+
+  function createToastEl(data) {
+    var toast = document.createElement('div');
+    toast.className = 'sp-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+
+    var icon = document.createElement('span');
+    icon.className = 'sp-toast-icon';
+    icon.textContent = data.icon;
+
+    var body = document.createElement('div');
+    body.className = 'sp-toast-body';
+
+    var msg = document.createElement('span');
+    msg.className = 'sp-toast-msg';
+    msg.textContent = 'Someone in ' + data.city + ' ' + data.text;
+
+    var time = document.createElement('span');
+    time.className = 'sp-toast-time';
+    time.textContent = data.time;
+
+    body.appendChild(msg);
+    body.appendChild(time);
+
+    var close = document.createElement('button');
+    close.className = 'sp-toast-close';
+    close.setAttribute('aria-label', 'Dismiss notification');
+    close.textContent = '\u00D7';
+    close.addEventListener('click', function (e) {
+      e.stopPropagation();
+      hideToast(toast);
+    });
+
+    toast.appendChild(icon);
+    toast.appendChild(body);
+    toast.appendChild(close);
+
+    return toast;
+  }
+
+  function showToast() {
+    if (_dismissed || _toastsShown >= MAX_TOASTS_PER_SESSION) {
+      stop();
+      return;
+    }
+    if (_activeToast) return;
+
+    var data = generateToast();
+    var el = createToastEl(data);
+    _activeToast = el;
+    _container.appendChild(el);
+    _toastsShown++;
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        el.classList.add('sp-toast-visible');
+      });
+    });
+
+    setTimeout(function () {
+      hideToast(el);
+    }, DISPLAY_MS);
+  }
+
+  function hideToast(el) {
+    if (!el || !el.parentNode) {
+      _activeToast = null;
+      return;
+    }
+    el.classList.remove('sp-toast-visible');
+    el.classList.add('sp-toast-hiding');
+    var onEnd = function () {
+      el.removeEventListener('transitionend', onEnd);
+      if (el.parentNode) el.parentNode.removeChild(el);
+      if (_activeToast === el) _activeToast = null;
+    };
+    el.addEventListener('transitionend', onEnd);
+    // Fallback in case transitionend doesn't fire
+    setTimeout(onEnd, 500);
+  }
+
+  function start() {
+    if (_prefersReducedMotion || _dismissed) return;
+    _timer = setInterval(showToast, INTERVAL_MS);
+  }
+
+  function stop() {
+    if (_timer) {
+      clearInterval(_timer);
+      _timer = null;
+    }
+  }
+
+  function dismiss() {
+    _dismissed = true;
+    stop();
+    if (_activeToast) hideToast(_activeToast);
+    try {
+      sessionStorage.setItem('sp-toasts-dismissed', '1');
+    } catch (e) { /* noop */ }
+  }
+
+  function init() {
+    if (typeof document === 'undefined') return;
+
+    try {
+      if (sessionStorage.getItem('sp-toasts-dismissed') === '1') {
+        _dismissed = true;
+        return;
+      }
+    } catch (e) { /* noop */ }
+
+    var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq) {
+      _prefersReducedMotion = mq.matches;
+      mq.addEventListener('change', function (e) {
+        _prefersReducedMotion = e.matches;
+        if (_prefersReducedMotion) stop();
+      });
+    }
+    if (_prefersReducedMotion) return;
+
+    _container = document.createElement('div');
+    _container.className = 'sp-toast-container';
+    _container.setAttribute('aria-label', 'Activity notifications');
+    document.body.appendChild(_container);
+
+    setTimeout(function () {
+      showToast();
+      start();
+    }, INITIAL_DELAY_MS);
+  }
+
+  function destroy() {
+    stop();
+    if (_activeToast) hideToast(_activeToast);
+    if (_container && _container.parentNode) {
+      _container.parentNode.removeChild(_container);
+    }
+    _container = null;
+    _toastsShown = 0;
+    _dismissed = false;
+  }
+
+  return {
+    init: init,
+    dismiss: dismiss,
+    destroy: destroy,
+    _showToast: showToast
+  };
+})();
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function () {
+    SocialProofToasts.init();
+  });
+}
+
+if (typeof window !== 'undefined') {
+  window.SocialProofToasts = SocialProofToasts;
+}
