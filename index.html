@@ -1233,6 +1233,34 @@
             <p class="api-explorer-note">🔑 All endpoints require a valid API key. Get yours on the <a href="#pricingSection">Pricing</a> page.</p>
         </div>
 
+        <div class="workflow-section" id="workflowSection">
+            <h2>Workflow Templates</h2>
+            <p class="workflow-subtitle">Ready-to-use automation recipes. Pick a template, copy the setup, and start automating in seconds.</p>
+            <div class="workflow-filter" role="tablist" aria-label="Workflow categories">
+                <button class="workflow-filter-btn active" role="tab" aria-selected="true" data-wf-cat="all">All</button>
+            </div>
+            <div class="workflow-grid" id="workflowGrid" role="list"></div>
+            <div class="workflow-detail" id="workflowDetail" hidden>
+                <div class="workflow-detail-header">
+                    <h3 id="workflowDetailTitle"></h3>
+                    <button class="workflow-detail-close" id="workflowDetailClose" aria-label="Close workflow detail">&times;</button>
+                </div>
+                <div class="workflow-detail-body">
+                    <p class="workflow-detail-desc" id="workflowDetailDesc"></p>
+                    <div class="workflow-steps" id="workflowSteps"></div>
+                    <div class="workflow-setup">
+                        <h4>Setup Command</h4>
+                        <div class="workflow-code-block">
+                            <button class="workflow-copy-btn" id="workflowCopyBtn" aria-label="Copy setup command">📋 Copy</button>
+                            <pre id="workflowSetupCode"></pre>
+                        </div>
+                    </div>
+                    <div class="workflow-tags" id="workflowTags"></div>
+                </div>
+            </div>
+            <p class="workflow-note">💡 All templates work with the free tier. <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer">Try them on Telegram →</a></p>
+        </div>
+
         <div class="newsletter-section" id="newsletterSection">
             <div class="newsletter-icon">📬</div>
             <h2>Stay in the loop</h2>
