@@ -27,6 +27,7 @@
             <ul class="nav-links" id="navLinks" role="menubar">
                 <li role="none"><a href="#featuresSection" role="menuitem">Features</a></li>
                 <li role="none"><a href="#howItWorks" role="menuitem">How It Works</a></li>
+                <li role="none"><a href="#wizardSection" role="menuitem">Wizard</a></li>
                 <li role="none"><a href="#demoSection" role="menuitem">Demo</a></li>
                 <li role="none"><a href="#playgroundSection" role="menuitem">Playground</a></li>
                 <li role="none"><a href="#personalitySection" role="menuitem">Personality</a></li>
@@ -123,6 +124,70 @@
                         <h3>It gets smarter</h3>
                         <p>The more you chat, the better it knows you. Your preferences, context, and history — all remembered.</p>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wizard-section" id="wizardSection">
+            <h2>Quick Start Wizard</h2>
+            <p class="wizard-subtitle">Answer a few questions and get a personalized setup plan</p>
+            <div class="wizard-container" id="wizardContainer">
+                <div class="wizard-progress">
+                    <div class="wizard-progress-bar" id="wizardProgressBar" style="width:33%"></div>
+                </div>
+                <div class="wizard-step active" data-wizard-step="1">
+                    <h3>What will you use AgentBox for?</h3>
+                    <div class="wizard-options" role="radiogroup" aria-label="Use case selection">
+                        <button class="wizard-option" data-value="productivity" role="radio" aria-checked="false">
+                            <span class="wizard-option-icon">📋</span>
+                            <span class="wizard-option-label">Productivity</span>
+                            <span class="wizard-option-desc">Reminders, scheduling, task management</span>
+                        </button>
+                        <button class="wizard-option" data-value="research" role="radio" aria-checked="false">
+                            <span class="wizard-option-icon">🔬</span>
+                            <span class="wizard-option-label">Research</span>
+                            <span class="wizard-option-desc">Web search, summaries, fact-checking</span>
+                        </button>
+                        <button class="wizard-option" data-value="creative" role="radio" aria-checked="false">
+                            <span class="wizard-option-icon">🎨</span>
+                            <span class="wizard-option-label">Creative</span>
+                            <span class="wizard-option-desc">Writing, brainstorming, image analysis</span>
+                        </button>
+                        <button class="wizard-option" data-value="coding" role="radio" aria-checked="false">
+                            <span class="wizard-option-icon">💻</span>
+                            <span class="wizard-option-label">Coding</span>
+                            <span class="wizard-option-desc">Code help, debugging, explanations</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="wizard-step" data-wizard-step="2">
+                    <h3>How often will you chat?</h3>
+                    <div class="wizard-options" role="radiogroup" aria-label="Frequency selection">
+                        <button class="wizard-option" data-value="casual" role="radio" aria-checked="false">
+                            <span class="wizard-option-icon">☕</span>
+                            <span class="wizard-option-label">A few times a week</span>
+                            <span class="wizard-option-desc">Occasional questions and tasks</span>
+                        </button>
+                        <button class="wizard-option" data-value="daily" role="radio" aria-checked="false">
+                            <span class="wizard-option-icon">📅</span>
+                            <span class="wizard-option-label">Daily</span>
+                            <span class="wizard-option-desc">Part of my daily workflow</span>
+                        </button>
+                        <button class="wizard-option" data-value="power" role="radio" aria-checked="false">
+                            <span class="wizard-option-icon">⚡</span>
+                            <span class="wizard-option-label">Power user</span>
+                            <span class="wizard-option-desc">Multiple conversations per day</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="wizard-step" data-wizard-step="3">
+                    <h3>Your personalized setup</h3>
+                    <div class="wizard-result" id="wizardResult"></div>
+                </div>
+                <div class="wizard-nav">
+                    <button class="wizard-btn wizard-btn-back" id="wizardBack" disabled>← Back</button>
+                    <span class="wizard-step-indicator" id="wizardIndicator">Step 1 of 3</span>
+                    <button class="wizard-btn wizard-btn-next" id="wizardNext" disabled>Next →</button>
                 </div>
             </div>
         </div>
