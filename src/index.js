@@ -311,12 +311,21 @@
          * @returns {{count: number, avg: number|null, nps: number|null, promoters: number, passives: number, detractors: number}}
          */
         compute: function (entries) {
-            var count = entries.length;
+            // Filter out entries with invalid scores (NaN, non-finite, out of 0-10 range)
+            // to prevent corrupted localStorage data from poisoning calculations.
+            var valid = [];
+            for (var i = 0; i < entries.length; i++) {
+                var score = entries[i].score;
+                if (typeof score === 'number' && isFinite(score) && score >= 0 && score <= 10) {
+                    valid.push(entries[i]);
+                }
+            }
+            var count = valid.length;
             if (count === 0) return { count: 0, avg: null, nps: null, promoters: 0, passives: 0, detractors: 0 };
 
             var sum = 0, promoters = 0, passives = 0, detractors = 0;
             for (var i = 0; i < count; i++) {
-                var s = entries[i].score;
+                var s = valid[i].score;
                 sum += s;
                 if (s >= 9) promoters++;
                 else if (s >= 7) passives++;
@@ -363,7 +372,7 @@
                     if (!btn) return;
 
                     var score = parseInt(btn.getAttribute('data-score'), 10);
-                    if (isNaN(score)) return;
+                    if (isNaN(score) || score < 0 || score > 10) return;
 
                     Feedback._selectedScore = score;
 
