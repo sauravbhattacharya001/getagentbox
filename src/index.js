@@ -271,12 +271,210 @@
         }
     };
 
+    // ── Feedback (NPS) Component ────────────────────────────────────
+
+    /**
+     * Net Promoter Score feedback widget.
+     * Persists responses in localStorage. Shows score distribution summary.
+     *
+     * @example
+     * AgentBoxComponents.Feedback.init('#feedbackWidget');
+     */
+    var Feedback = {
+        _STORAGE_KEY: 'agentbox_nps_feedback',
+        _selectedScore: null,
+
+        /**
+         * Load all feedback entries from localStorage.
+         * @returns {Array<{score: number, comment: string, timestamp: number}>}
+         */
+        _load: function () {
+            if (typeof localStorage === 'undefined') return [];
+            try {
+                var raw = localStorage.getItem(Feedback._STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) { return []; }
+        },
+
+        /**
+         * Save feedback entries to localStorage.
+         * @param {Array} entries
+         */
+        _save: function (entries) {
+            if (typeof localStorage === 'undefined') return;
+            try { localStorage.setItem(Feedback._STORAGE_KEY, JSON.stringify(entries)); } catch (e) { /* quota */ }
+        },
+
+        /**
+         * Compute NPS from entries: % promoters (9-10) minus % detractors (0-6).
+         * @param {Array<{score: number}>} entries
+         * @returns {{count: number, avg: number|null, nps: number|null, promoters: number, passives: number, detractors: number}}
+         */
+        compute: function (entries) {
+            var count = entries.length;
+            if (count === 0) return { count: 0, avg: null, nps: null, promoters: 0, passives: 0, detractors: 0 };
+
+            var sum = 0, promoters = 0, passives = 0, detractors = 0;
+            for (var i = 0; i < count; i++) {
+                var s = entries[i].score;
+                sum += s;
+                if (s >= 9) promoters++;
+                else if (s >= 7) passives++;
+                else detractors++;
+            }
+
+            var avg = Math.round((sum / count) * 10) / 10;
+            var nps = Math.round(((promoters - detractors) / count) * 100);
+            return { count: count, avg: avg, nps: nps, promoters: promoters, passives: passives, detractors: detractors };
+        },
+
+        /**
+         * Get the category label for a score.
+         * @param {number} score
+         * @returns {string} 'detractor' | 'passive' | 'promoter'
+         */
+        classify: function (score) {
+            if (score >= 9) return 'promoter';
+            if (score >= 7) return 'passive';
+            return 'detractor';
+        },
+
+        /**
+         * Initialize the feedback widget.
+         * @param {string|Element} container - CSS selector or DOM element
+         */
+        init: function (container) {
+            var el = typeof container === 'string' ? qs(container) : container;
+            if (!el) return;
+
+            var scale = el.querySelector('#npsScale') || el.querySelector('.nps-scale');
+            var commentArea = el.querySelector('#feedbackCommentArea') || el.querySelector('.feedback-comment-area');
+            var submitBtn = el.querySelector('#feedbackSubmit') || el.querySelector('.feedback-submit-btn');
+            var thanksEl = el.querySelector('#feedbackThanks') || el.querySelector('.feedback-thanks');
+            var resetBtn = el.querySelector('#feedbackReset') || el.querySelector('.feedback-reset-btn');
+            var detailEl = el.querySelector('#feedbackThanksDetail') || el.querySelector('.feedback-thanks-detail');
+
+            Feedback._selectedScore = null;
+            Feedback._updateSummary(el);
+
+            if (scale) {
+                scale.addEventListener('click', function (e) {
+                    var btn = e.target.closest('.nps-btn');
+                    if (!btn) return;
+
+                    var score = parseInt(btn.getAttribute('data-score'), 10);
+                    if (isNaN(score)) return;
+
+                    Feedback._selectedScore = score;
+
+                    // Highlight selected
+                    var btns = scale.querySelectorAll('.nps-btn');
+                    for (var i = 0; i < btns.length; i++) {
+                        btns[i].classList.remove('selected');
+                        var s = parseInt(btns[i].getAttribute('data-score'), 10);
+                        btns[i].classList.toggle('in-range', s <= score);
+                    }
+                    btn.classList.add('selected');
+
+                    // Show comment area
+                    if (commentArea) commentArea.hidden = false;
+                });
+            }
+
+            if (submitBtn) {
+                submitBtn.addEventListener('click', function () {
+                    if (Feedback._selectedScore === null) return;
+
+                    var commentEl = el.querySelector('#feedbackComment') || el.querySelector('.feedback-textarea');
+                    var comment = commentEl ? commentEl.value.trim() : '';
+
+                    var entry = { score: Feedback._selectedScore, comment: comment, timestamp: Date.now() };
+                    var entries = Feedback._load();
+                    entries.push(entry);
+                    Feedback._save(entries);
+
+                    // Show thanks
+                    if (scale) scale.hidden = true;
+                    var labelsEl = el.querySelector('.nps-labels');
+                    if (labelsEl) labelsEl.hidden = true;
+                    if (commentArea) commentArea.hidden = true;
+                    if (thanksEl) thanksEl.hidden = false;
+
+                    var cat = Feedback.classify(entry.score);
+                    var messages = {
+                        promoter: "We're thrilled you love AgentBox! 🚀",
+                        passive: "Thanks! We'll keep improving to earn that 9 or 10.",
+                        detractor: "We appreciate your honesty. We'll work to do better."
+                    };
+                    if (detailEl) detailEl.textContent = messages[cat] || '';
+
+                    Feedback._updateSummary(el);
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function () {
+                    Feedback._selectedScore = null;
+
+                    if (scale) {
+                        scale.hidden = false;
+                        var btns = scale.querySelectorAll('.nps-btn');
+                        for (var i = 0; i < btns.length; i++) {
+                            btns[i].classList.remove('selected', 'in-range');
+                        }
+                    }
+                    var labelsEl = el.querySelector('.nps-labels');
+                    if (labelsEl) labelsEl.hidden = false;
+                    if (commentArea) {
+                        commentArea.hidden = true;
+                        var commentEl = el.querySelector('#feedbackComment') || el.querySelector('.feedback-textarea');
+                        if (commentEl) commentEl.value = '';
+                    }
+                    if (thanksEl) thanksEl.hidden = true;
+                });
+            }
+        },
+
+        /**
+         * Update the summary stats display.
+         * @param {Element} container
+         */
+        _updateSummary: function (container) {
+            var entries = Feedback._load();
+            var stats = Feedback.compute(entries);
+
+            var countEl = container.querySelector('#feedbackCount') || container.querySelector('.feedback-stat-number');
+            var avgEl = container.querySelector('#feedbackAvg');
+            var npsEl = container.querySelector('#feedbackNps');
+
+            if (countEl) countEl.textContent = stats.count;
+            if (avgEl) avgEl.textContent = stats.avg !== null ? stats.avg.toFixed(1) : '—';
+            if (npsEl) npsEl.textContent = stats.nps !== null ? (stats.nps > 0 ? '+' : '') + stats.nps : '—';
+        },
+
+        /**
+         * Export all feedback entries.
+         * @returns {Array<{score: number, comment: string, timestamp: number}>}
+         */
+        export: function () {
+            return Feedback._load();
+        },
+
+        /**
+         * Clear all feedback data.
+         */
+        clear: function () {
+            Feedback._save([]);
+        }
+    };
+
     // ── Public API ────────────────────────────────────────────────────
 
     return {
         FAQ: FAQ,
         Pricing: Pricing,
         Stats: Stats,
+        Feedback: Feedback,
         VERSION: '1.0.0'
     };
 }));
