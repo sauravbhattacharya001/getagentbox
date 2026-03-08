@@ -4934,6 +4934,50 @@ body.light-mode .nav-hamburger::after { background: #1a202c; }
   .ba-tab { padding: 0.6rem 1rem; font-size: 0.85rem; }
 }
 
+/* ── Growth Timeline ─────────────────────────────────────────── */
+.growth-timeline-section { text-align: center; padding: 3rem 1rem; }
+.growth-timeline-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.growth-timeline-subtitle { color: rgba(255,255,255,0.7); margin-bottom: 2rem; }
+.growth-timeline-controls { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.growth-tab { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: all 0.3s; }
+.growth-tab:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.growth-tab.active { background: linear-gradient(135deg, #4ade80, #22d3ee); color: #111; border-color: transparent; font-weight: 600; }
+.growth-progress-bar { position: relative; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; max-width: 500px; margin: 0 auto 2rem; }
+.growth-progress-fill { height: 100%; background: linear-gradient(90deg, #4ade80, #22d3ee); border-radius: 3px; transition: width 0.5s ease; width: 12.5%; }
+.growth-progress-markers { position: absolute; top: 50%; left: 0; right: 0; display: flex; justify-content: space-between; transform: translateY(-50%); padding: 0 0; }
+.growth-marker { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); transition: all 0.3s; }
+.growth-marker.active { background: #4ade80; border-color: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.5); }
+.growth-marker.passed { background: #22d3ee; border-color: #22d3ee; }
+.growth-content { max-width: 550px; margin: 0 auto; min-height: 280px; }
+.growth-card { display: none; text-align: left; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 1.5rem; animation: growthFadeIn 0.4s ease; }
+.growth-card.visible { display: block; }
+@keyframes growthFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.growth-card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.growth-card-emoji { font-size: 2rem; }
+.growth-card-header h3 { font-size: 1.3rem; color: #fff; }
+.growth-features { list-style: none; padding: 0; margin-bottom: 1.2rem; }
+.growth-features li { padding: 0.4rem 0; color: rgba(255,255,255,0.85); display: flex; align-items: center; gap: 0.5rem; }
+.growth-check { font-size: 0.9rem; }
+.growth-stat-row { display: flex; justify-content: space-around; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 0.8rem; }
+.growth-stat { text-align: center; }
+.growth-stat-num { display: block; font-size: 1.2rem; font-weight: 700; color: #4ade80; }
+.growth-stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+.growth-timeline-note { color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-top: 1.5rem; }
+
+[data-theme="light"] .growth-timeline-subtitle { color: rgba(0,0,0,0.6); }
+[data-theme="light"] .growth-tab { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); color: rgba(0,0,0,0.6); }
+[data-theme="light"] .growth-tab:hover { background: rgba(0,0,0,0.08); color: #111; }
+[data-theme="light"] .growth-tab.active { color: #fff; }
+[data-theme="light"] .growth-progress-bar { background: rgba(0,0,0,0.08); }
+[data-theme="light"] .growth-marker { background: rgba(0,0,0,0.1); border-color: rgba(0,0,0,0.2); }
+[data-theme="light"] .growth-card { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.1); }
+[data-theme="light"] .growth-card-header h3 { color: #111; }
+[data-theme="light"] .growth-features li { color: rgba(0,0,0,0.75); }
+[data-theme="light"] .growth-stat-row { background: rgba(0,0,0,0.04); }
+[data-theme="light"] .growth-stat-num { color: #059669; }
+[data-theme="light"] .growth-stat-label { color: rgba(0,0,0,0.45); }
+[data-theme="light"] .growth-timeline-note { color: rgba(0,0,0,0.4); }
+
 /* ── Feedback / NPS Widget ─────────────────────────────────────── */
 .feedback-section { text-align: center; padding: 3rem 1rem; }
 .feedback-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
