@@ -5017,3 +5017,57 @@ body.light-mode .nav-hamburger::after { background: #1a202c; }
   .nps-scale { gap: 4px; }
   .feedback-summary { gap: 1rem; }
 }
+
+/* ── Accessibility Preferences Panel ──────────────────────── */
+.a11y-trigger { position: fixed; bottom: 24px; right: 24px; z-index: 1050; width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); background: var(--card-bg,#1a1a2e); color: var(--text,#e0e0e0); cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: transform 0.2s, box-shadow 0.2s, background 0.2s; }
+.a11y-trigger:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
+.a11y-trigger:focus-visible { outline: 3px solid #667eea; outline-offset: 2px; }
+.a11y-trigger-icon { font-size: 1.4rem; line-height: 1; }
+.a11y-trigger.a11y-active { background: linear-gradient(135deg,#667eea,#764ba2); border-color: transparent; color: #fff; }
+.a11y-panel { position: fixed; bottom: 84px; right: 24px; z-index: 1051; width: 320px; max-height: 70vh; overflow-y: auto; background: var(--card-bg,#1a1a2e); border: 1px solid var(--border,rgba(255,255,255,0.1)); border-radius: 16px; box-shadow: 0 12px 48px rgba(0,0,0,0.4); padding: 0; opacity: 0; transform: translateY(12px) scale(0.95); pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease; }
+.a11y-panel.a11y-panel-open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.a11y-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 1px solid var(--border,rgba(255,255,255,0.08)); }
+.a11y-panel-title { font-size: 1rem; font-weight: 700; color: var(--text,#e0e0e0); display: flex; align-items: center; gap: 8px; }
+.a11y-panel-close { background: none; border: none; color: var(--text-muted,#888); font-size: 1.3rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; line-height: 1; transition: color 0.2s, background 0.2s; }
+.a11y-panel-close:hover { color: var(--text,#e0e0e0); background: rgba(255,255,255,0.08); }
+.a11y-panel-body { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 16px; }
+.a11y-group { display: flex; flex-direction: column; gap: 6px; }
+.a11y-group-label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted,#888); }
+.a11y-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(255,255,255,0.04); border-radius: 10px; cursor: pointer; transition: background 0.2s; border: none; width: 100%; color: inherit; font-family: inherit; font-size: 0.9rem; }
+.a11y-toggle:hover { background: rgba(255,255,255,0.08); }
+.a11y-toggle-text { display: flex; align-items: center; gap: 8px; }
+.a11y-toggle-icon { font-size: 1.1rem; }
+.a11y-switch { position: relative; width: 40px; height: 22px; background: rgba(255,255,255,0.15); border-radius: 11px; flex-shrink: 0; transition: background 0.2s; }
+.a11y-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+.a11y-toggle[aria-checked="true"] .a11y-switch { background: #667eea; }
+.a11y-toggle[aria-checked="true"] .a11y-switch::after { transform: translateX(18px); }
+.a11y-segmented { display: flex; gap: 4px; background: rgba(255,255,255,0.04); padding: 4px; border-radius: 10px; }
+.a11y-seg-btn { flex: 1; padding: 6px 0; border: none; background: transparent; color: var(--text-muted,#888); font-size: 0.82rem; font-weight: 500; border-radius: 7px; cursor: pointer; transition: all 0.2s; }
+.a11y-seg-btn:hover { color: var(--text,#e0e0e0); background: rgba(255,255,255,0.06); }
+.a11y-seg-btn.a11y-seg-active { background: #667eea; color: #fff; font-weight: 600; }
+.a11y-reset { background: transparent; border: 1px solid var(--border,#333); color: var(--text-muted,#888); padding: 8px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; width: 100%; font-family: inherit; }
+.a11y-reset:hover { border-color: #e74c3c; color: #e74c3c; }
+html.a11y-font-large { font-size: 112.5%; }
+html.a11y-font-xlarge { font-size: 125%; }
+html.a11y-high-contrast { --text: #ffffff !important; --text-muted: #cccccc !important; --bg: #000000 !important; }
+html.a11y-high-contrast body { background: #000 !important; color: #fff !important; }
+html.a11y-high-contrast .a11y-panel, html.a11y-high-contrast .a11y-trigger { border-width: 2px; border-color: #fff; }
+html.a11y-reduce-motion, html.a11y-reduce-motion * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+html.a11y-dyslexia-font { font-family: 'Comic Sans MS', 'OpenDyslexic', 'Arial', sans-serif !important; }
+html.a11y-dyslexia-font * { font-family: inherit !important; }
+html.a11y-focus-indicators *:focus { outline: 3px solid #667eea !important; outline-offset: 2px !important; }
+html.a11y-focus-indicators *:focus:not(:focus-visible) { outline: 3px solid #667eea !important; }
+html.a11y-spacing-wide { line-height: 1.8 !important; letter-spacing: 0.02em; word-spacing: 0.08em; }
+html.a11y-spacing-wide * { line-height: inherit !important; }
+html.a11y-spacing-extra { line-height: 2.2 !important; letter-spacing: 0.04em; word-spacing: 0.12em; }
+html.a11y-spacing-extra * { line-height: inherit !important; }
+[data-theme="light"] .a11y-trigger { background: #fff; border-color: #d1d5db; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+[data-theme="light"] .a11y-panel { background: #fff; border-color: #e5e7eb; box-shadow: 0 12px 48px rgba(0,0,0,0.15); }
+[data-theme="light"] .a11y-toggle { background: rgba(0,0,0,0.04); }
+[data-theme="light"] .a11y-toggle:hover { background: rgba(0,0,0,0.08); }
+[data-theme="light"] .a11y-switch { background: rgba(0,0,0,0.15); }
+[data-theme="light"] .a11y-segmented { background: rgba(0,0,0,0.04); }
+[data-theme="light"] .a11y-seg-btn:hover { background: rgba(0,0,0,0.06); }
+[data-theme="light"] .a11y-panel-close:hover { color: #333; background: rgba(0,0,0,0.06); }
+@media (max-width: 480px) { .a11y-trigger { bottom: 16px; right: 16px; width: 42px; height: 42px; } .a11y-panel { bottom: 70px; right: 12px; left: 12px; width: auto; } }
+@media (prefers-reduced-motion: reduce) { .a11y-panel { transition: opacity 0.05s; transform: none; } .a11y-panel.a11y-panel-open { transform: none; } }
