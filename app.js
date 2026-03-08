@@ -5956,3 +5956,232 @@ if (typeof window !== 'undefined') {
   window.GrowthTimeline = GrowthTimeline;
 }
 
+// Competitive Comparison Table
+// ---------------------------------------------------------------------------
+// Interactive feature comparison matrix showing AgentBox vs alternatives.
+// Users can filter by category, hover for details, and see at-a-glance
+// where AgentBox wins.
+
+var ComparisonTable = (function () {
+  var _section = null;
+
+  var COMPETITORS = [
+    { id: 'agentbox', name: 'AgentBox', highlight: true },
+    { id: 'chatgpt', name: 'ChatGPT' },
+    { id: 'zapier', name: 'Zapier' },
+    { id: 'custom', name: 'Custom Bot' },
+    { id: 'manual', name: 'Manual' }
+  ];
+
+  var CATEGORIES = [
+    { id: 'automation', label: 'Automation' },
+    { id: 'integration', label: 'Integration' },
+    { id: 'intelligence', label: 'Intelligence' },
+    { id: 'ops', label: 'Operations' },
+    { id: 'pricing', label: 'Pricing' }
+  ];
+
+  // Rating: 3 = full, 2 = partial, 1 = limited, 0 = none
+  var FEATURES = [
+    { name: 'Multi-step workflows',       cat: 'automation',   ratings: { agentbox: 3, chatgpt: 1, zapier: 3, custom: 2, manual: 0 } },
+    { name: 'Natural language triggers',   cat: 'automation',   ratings: { agentbox: 3, chatgpt: 3, zapier: 1, custom: 1, manual: 0 } },
+    { name: 'Scheduled tasks',             cat: 'automation',   ratings: { agentbox: 3, chatgpt: 0, zapier: 3, custom: 2, manual: 1 } },
+    { name: 'Error recovery',              cat: 'automation',   ratings: { agentbox: 3, chatgpt: 0, zapier: 2, custom: 1, manual: 0 } },
+    { name: 'API connections',             cat: 'integration',  ratings: { agentbox: 3, chatgpt: 2, zapier: 3, custom: 3, manual: 0 } },
+    { name: 'Browser automation',          cat: 'integration',  ratings: { agentbox: 3, chatgpt: 0, zapier: 1, custom: 2, manual: 3 } },
+    { name: 'Database access',             cat: 'integration',  ratings: { agentbox: 3, chatgpt: 0, zapier: 2, custom: 3, manual: 1 } },
+    { name: 'File management',             cat: 'integration',  ratings: { agentbox: 3, chatgpt: 1, zapier: 2, custom: 2, manual: 3 } },
+    { name: 'Context awareness',           cat: 'intelligence', ratings: { agentbox: 3, chatgpt: 2, zapier: 0, custom: 1, manual: 3 } },
+    { name: 'Learning from feedback',      cat: 'intelligence', ratings: { agentbox: 3, chatgpt: 1, zapier: 0, custom: 1, manual: 2 } },
+    { name: 'Decision reasoning',          cat: 'intelligence', ratings: { agentbox: 3, chatgpt: 2, zapier: 0, custom: 0, manual: 3 } },
+    { name: 'Multi-model support',         cat: 'intelligence', ratings: { agentbox: 3, chatgpt: 0, zapier: 0, custom: 2, manual: 0 } },
+    { name: 'Real-time monitoring',        cat: 'ops',          ratings: { agentbox: 3, chatgpt: 0, zapier: 2, custom: 1, manual: 0 } },
+    { name: 'Audit logs',                  cat: 'ops',          ratings: { agentbox: 3, chatgpt: 1, zapier: 2, custom: 1, manual: 0 } },
+    { name: 'Team collaboration',          cat: 'ops',          ratings: { agentbox: 3, chatgpt: 1, zapier: 3, custom: 1, manual: 2 } },
+    { name: 'Usage analytics',             cat: 'ops',          ratings: { agentbox: 3, chatgpt: 1, zapier: 2, custom: 0, manual: 0 } },
+    { name: 'Free tier available',         cat: 'pricing',      ratings: { agentbox: 3, chatgpt: 2, zapier: 2, custom: 0, manual: 3 } },
+    { name: 'Pay-per-use pricing',         cat: 'pricing',      ratings: { agentbox: 3, chatgpt: 1, zapier: 1, custom: 0, manual: 0 } },
+    { name: 'No per-seat fees',            cat: 'pricing',      ratings: { agentbox: 3, chatgpt: 0, zapier: 0, custom: 3, manual: 3 } },
+    { name: 'Transparent cost tracking',   cat: 'pricing',      ratings: { agentbox: 3, chatgpt: 1, zapier: 2, custom: 1, manual: 0 } }
+  ];
+
+  var RATING_LABELS = ['None', 'Limited', 'Partial', 'Full'];
+  var RATING_ICONS = ['\u2014', '\u25CB', '\u25D1', '\u25CF'];
+
+  var _activeCategory = 'all';
+  var _filterBtns = [];
+  var _tbody = null;
+  var _scoreEls = {};
+  var _summaryEl = null;
+
+  function section() {
+    if (!_section) _section = document.getElementById('comparisonSection');
+    return _section;
+  }
+
+  function init() {
+    _section = document.getElementById('comparisonSection');
+    if (!section()) return;
+
+    _filterBtns = section().querySelectorAll('.cmp-filter-btn');
+    _tbody = section().querySelector('.cmp-tbody');
+    _summaryEl = section().querySelector('.cmp-summary');
+
+    for (var i = 0; i < COMPETITORS.length; i++) {
+      var el = document.getElementById('cmpScore_' + COMPETITORS[i].id);
+      if (el) _scoreEls[COMPETITORS[i].id] = el;
+    }
+
+    for (var j = 0; j < _filterBtns.length; j++) {
+      _filterBtns[j].addEventListener('click', _onFilterClick);
+    }
+
+    _render();
+  }
+
+  function _onFilterClick(e) {
+    var btn = e.currentTarget;
+    var cat = btn.getAttribute('data-category');
+    if (!cat) return;
+    _activeCategory = cat;
+
+    for (var i = 0; i < _filterBtns.length; i++) {
+      var active = _filterBtns[i].getAttribute('data-category') === cat;
+      _filterBtns[i].classList.toggle('active', active);
+      _filterBtns[i].setAttribute('aria-pressed', active ? 'true' : 'false');
+    }
+
+    _render();
+  }
+
+  function _render() {
+    if (!_tbody) return;
+
+    // Clear tbody
+    while (_tbody.firstChild) _tbody.removeChild(_tbody.firstChild);
+
+    var filtered = _activeCategory === 'all'
+      ? FEATURES
+      : FEATURES.filter(function (f) { return f.cat === _activeCategory; });
+
+    // Scores accumulator
+    var scores = {};
+    for (var c = 0; c < COMPETITORS.length; c++) {
+      scores[COMPETITORS[c].id] = 0;
+    }
+
+    for (var i = 0; i < filtered.length; i++) {
+      var feature = filtered[i];
+      var row = document.createElement('tr');
+      row.className = 'cmp-row';
+
+      // Feature name cell
+      var nameCell = document.createElement('td');
+      nameCell.className = 'cmp-feature-name';
+      nameCell.textContent = feature.name;
+      row.appendChild(nameCell);
+
+      // Rating cells
+      for (var j = 0; j < COMPETITORS.length; j++) {
+        var comp = COMPETITORS[j];
+        var rating = feature.ratings[comp.id] || 0;
+        scores[comp.id] += rating;
+
+        var cell = document.createElement('td');
+        cell.className = 'cmp-rating cmp-rating-' + rating;
+        if (comp.highlight) cell.classList.add('cmp-highlight');
+        cell.setAttribute('title', comp.name + ': ' + RATING_LABELS[rating]);
+        cell.setAttribute('aria-label', feature.name + ' - ' + comp.name + ': ' + RATING_LABELS[rating]);
+        cell.textContent = RATING_ICONS[rating];
+        row.appendChild(cell);
+      }
+
+      _tbody.appendChild(row);
+    }
+
+    // Update score displays
+    var maxPossible = filtered.length * 3;
+    for (var k = 0; k < COMPETITORS.length; k++) {
+      var id = COMPETITORS[k].id;
+      if (_scoreEls[id]) {
+        var pct = maxPossible > 0 ? Math.round(scores[id] / maxPossible * 100) : 0;
+        _scoreEls[id].textContent = pct + '%';
+      }
+    }
+
+    // Update summary
+    if (_summaryEl) {
+      var agentboxScore = maxPossible > 0 ? Math.round(scores.agentbox / maxPossible * 100) : 0;
+      var bestAlt = 0;
+      var bestAltName = '';
+      for (var m = 1; m < COMPETITORS.length; m++) {
+        var s = maxPossible > 0 ? Math.round(scores[COMPETITORS[m].id] / maxPossible * 100) : 0;
+        if (s > bestAlt) {
+          bestAlt = s;
+          bestAltName = COMPETITORS[m].name;
+        }
+      }
+      var diff = agentboxScore - bestAlt;
+      if (diff > 0) {
+        _summaryEl.textContent = 'AgentBox scores ' + diff + '% higher than the nearest alternative (' + bestAltName + ')';
+      } else {
+        _summaryEl.textContent = 'See how AgentBox compares across ' + filtered.length + ' features';
+      }
+    }
+  }
+
+  function setFilter(category) {
+    _activeCategory = category || 'all';
+    for (var i = 0; i < _filterBtns.length; i++) {
+      var active = _filterBtns[i].getAttribute('data-category') === _activeCategory;
+      _filterBtns[i].classList.toggle('active', active);
+      _filterBtns[i].setAttribute('aria-pressed', active ? 'true' : 'false');
+    }
+    _render();
+  }
+
+  function getScores() {
+    var filtered = _activeCategory === 'all'
+      ? FEATURES
+      : FEATURES.filter(function (f) { return f.cat === _activeCategory; });
+
+    var maxPossible = filtered.length * 3;
+    var result = {};
+    for (var i = 0; i < COMPETITORS.length; i++) {
+      var id = COMPETITORS[i].id;
+      var total = 0;
+      for (var j = 0; j < filtered.length; j++) {
+        total += filtered[j].ratings[id] || 0;
+      }
+      result[id] = maxPossible > 0 ? Math.round(total / maxPossible * 100) : 0;
+    }
+    return result;
+  }
+
+  function getActiveCategory() {
+    return _activeCategory;
+  }
+
+  return {
+    init: init,
+    setFilter: setFilter,
+    getScores: getScores,
+    getActiveCategory: getActiveCategory,
+    COMPETITORS: COMPETITORS,
+    CATEGORIES: CATEGORIES,
+    FEATURES: FEATURES,
+    RATING_LABELS: RATING_LABELS,
+    RATING_ICONS: RATING_ICONS
+  };
+})();
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function () {
+    ComparisonTable.init();
+  });
+}
+
+if (typeof window !== 'undefined') {
+  window.ComparisonTable = ComparisonTable;
+}
+

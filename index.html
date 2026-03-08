@@ -1512,6 +1512,69 @@
             <p class="growth-timeline-note">⏱️ Auto-advances every 4 seconds · Click any milestone to explore</p>
         </div>
 
+        <!-- Competitive Comparison Table -->
+        <div class="comparison-section" id="comparisonSection">
+            <h2>How AgentBox Compares</h2>
+            <p class="cmp-subtitle">See how AgentBox stacks up against alternatives across 20 features</p>
+
+            <div class="cmp-filters" role="tablist" aria-label="Filter by category">
+                <button class="cmp-filter-btn active" data-category="all" role="tab" aria-pressed="true">All</button>
+                <button class="cmp-filter-btn" data-category="automation" role="tab" aria-pressed="false">Automation</button>
+                <button class="cmp-filter-btn" data-category="integration" role="tab" aria-pressed="false">Integration</button>
+                <button class="cmp-filter-btn" data-category="intelligence" role="tab" aria-pressed="false">Intelligence</button>
+                <button class="cmp-filter-btn" data-category="ops" role="tab" aria-pressed="false">Operations</button>
+                <button class="cmp-filter-btn" data-category="pricing" role="tab" aria-pressed="false">Pricing</button>
+            </div>
+
+            <div class="cmp-scores">
+                <div class="cmp-score-card cmp-score-highlight">
+                    <div class="cmp-score-name">AgentBox</div>
+                    <div class="cmp-score-value" id="cmpScore_agentbox">—</div>
+                </div>
+                <div class="cmp-score-card">
+                    <div class="cmp-score-name">ChatGPT</div>
+                    <div class="cmp-score-value" id="cmpScore_chatgpt">—</div>
+                </div>
+                <div class="cmp-score-card">
+                    <div class="cmp-score-name">Zapier</div>
+                    <div class="cmp-score-value" id="cmpScore_zapier">—</div>
+                </div>
+                <div class="cmp-score-card">
+                    <div class="cmp-score-name">Custom Bot</div>
+                    <div class="cmp-score-value" id="cmpScore_custom">—</div>
+                </div>
+                <div class="cmp-score-card">
+                    <div class="cmp-score-name">Manual</div>
+                    <div class="cmp-score-value" id="cmpScore_manual">—</div>
+                </div>
+            </div>
+
+            <div class="cmp-table-wrapper">
+                <table class="cmp-table" role="grid" aria-label="Feature comparison">
+                    <thead>
+                        <tr>
+                            <th class="cmp-th-feature">Feature</th>
+                            <th class="cmp-th-competitor cmp-th-highlight">AgentBox</th>
+                            <th class="cmp-th-competitor">ChatGPT</th>
+                            <th class="cmp-th-competitor">Zapier</th>
+                            <th class="cmp-th-competitor">Custom Bot</th>
+                            <th class="cmp-th-competitor">Manual</th>
+                        </tr>
+                    </thead>
+                    <tbody class="cmp-tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="cmp-legend">
+                <span class="cmp-legend-item"><span class="cmp-legend-icon">●</span> Full</span>
+                <span class="cmp-legend-item"><span class="cmp-legend-icon">◑</span> Partial</span>
+                <span class="cmp-legend-item"><span class="cmp-legend-icon">○</span> Limited</span>
+                <span class="cmp-legend-item"><span class="cmp-legend-icon">—</span> None</span>
+            </div>
+
+            <p class="cmp-summary" aria-live="polite"></p>
+        </div>
+
         <div class="feedback-section" id="feedbackSection">
             <div class="feedback-icon">💬</div>
             <h2>How likely are you to recommend AgentBox?</h2>
