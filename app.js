@@ -1147,6 +1147,32 @@ var NotificationPreview = (function () {
   function init() {
     if (!_cacheDOM()) return;
     _render();
+
+    // Bind event delegation (previously in the main DOMContentLoaded block)
+    var section = document.getElementById('notificationSection');
+    if (!section) return;
+    var notifScenarios = section.querySelector('.notification-scenarios');
+    if (notifScenarios) {
+      notifScenarios.addEventListener('click', function (e) {
+        var btn = e.target.closest('.notif-scenario-btn');
+        if (btn && btn.dataset.scenario !== undefined) {
+          switchScenario(parseInt(btn.dataset.scenario, 10));
+        }
+      });
+      arrowKeyNav(notifScenarios, '.notif-scenario-btn', function (btn) {
+        switchScenario(parseInt(btn.dataset.scenario, 10));
+        btn.focus();
+      });
+    }
+    var notifViewToggle = section.querySelector('.notification-view-toggle');
+    if (notifViewToggle) {
+      notifViewToggle.addEventListener('click', function (e) {
+        var btn = e.target.closest('.notif-view-btn');
+        if (btn && btn.dataset.view) {
+          setView(btn.dataset.view);
+        }
+      });
+    }
   }
 
   function getCurrent() { return _currentIndex; }
@@ -1270,7 +1296,89 @@ function activateOnKeyboard(container, selector, onActivate) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Lazy Initialization — defer below-fold module setup via IntersectionObserver
+// ---------------------------------------------------------------------------
+//
+// Modules whose sections start far below the viewport don't need to query the
+// DOM, attach listeners, or run animations at page load.  `lazyInit` observes
+// each section and runs its init callback only once the section is within
+// `rootMargin` pixels of the viewport.  Modules that are essential for above-
+// the-fold content (SiteNav, ChatDemo, ThemeToggle, ScrollProgress) are still
+// initialized immediately.
+
+var _lazyInitQueue = [];
+var _lazyObserver = null;
+
+/**
+ * Register a module for deferred initialization.
+ * @param {string}   sectionId  DOM id of the section container.
+ * @param {Function} initFn     Callback invoked once when section is near viewport.
+ */
+function lazyInit(sectionId, initFn) {
+  var el = document.getElementById(sectionId);
+  if (!el) {
+    // Section not in DOM — init immediately in case it was removed/renamed
+    initFn();
+    return;
+  }
+  _lazyInitQueue.push({ el: el, fn: initFn, done: false });
+}
+
+/**
+ * Start observing all queued sections.  Called once after all lazyInit()
+ * registrations are complete.
+ */
+function startLazyObserver() {
+  if (!('IntersectionObserver' in window)) {
+    // Fallback: init everything immediately on older browsers
+    _lazyInitQueue.forEach(function (item) { if (!item.done) { item.done = true; item.fn(); } });
+    _lazyInitQueue = [];
+    return;
+  }
+
+  _lazyObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      for (var i = 0; i < _lazyInitQueue.length; i++) {
+        var item = _lazyInitQueue[i];
+        // Match by target, or if target is missing (mock observers) init all
+        if (!item.done && (!entry.target || item.el === entry.target)) {
+          item.done = true;
+          item.fn();
+          if (entry.target) _lazyObserver.unobserve(entry.target);
+        }
+      }
+    });
+  }, { rootMargin: '200px 0px' }); // init 200px before section scrolls into view
+
+  _lazyInitQueue.forEach(function (item) {
+    if (!item.done) _lazyObserver.observe(item.el);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // IMMEDIATE — above-the-fold & globally essential modules
+  // ═══════════════════════════════════════════════════════════════════════
+
+  // Sticky navigation bar (always visible).
+  SiteNav.init();
+
+  // Theme + scroll progress (global chrome).
+  ThemeToggle.init();
+  ScrollProgress.init();
+
+  // Command palette (Ctrl+K — must respond instantly).
+  CommandPalette.init();
+
+  // Keyboard shortcuts help (global).
+  ShortcutsHelp.init();
+
+  // Share FAB (floating, always visible).
+  ShareFab.init();
+
   // Scenario buttons - event delegation on the container.
   const scenarioContainer = document.querySelector('.demo-scenarios');
   if (scenarioContainer) {
@@ -1282,30 +1390,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Testimonials carousel - init and event delegation.
-  Testimonials.init();
+  // Auto-play the default scenario.
+  ChatDemo.play('memory');
 
-  const testimonialsNav = document.querySelector('.testimonials-nav');
-  if (testimonialsNav) {
-    testimonialsNav.addEventListener('click', function (e) {
-      const arrow = e.target.closest('.testimonial-arrow');
-      if (arrow) {
-        if (arrow.classList.contains('testimonial-prev')) {
-          Testimonials.prev();
-        } else if (arrow.classList.contains('testimonial-next')) {
-          Testimonials.next();
-        }
-        return;
-      }
-      const dot = e.target.closest('.testimonial-dot');
-      if (dot && dot.dataset.index !== undefined) {
-        Testimonials.goTo(parseInt(dot.dataset.index, 10));
-        // Reset autoplay timer so next auto-advance waits a full interval
-        Testimonials.stopAutoPlay();
-        Testimonials.startAutoPlay();
-      }
-    });
-  }
+  // How It Works — near top of page.
+  HowItWorks.init();
 
   // Billing toggle - click + keyboard.
   const billingToggle = document.getElementById('billingToggle');
@@ -1316,124 +1405,149 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // FAQ accordion - event delegation on the section (click + keyboard).
-  const faqSection = document.querySelector('.faq-section');
-  if (faqSection) {
-    faqSection.addEventListener('click', function (e) {
-      const question = e.target.closest('.faq-question');
-      if (question) FAQ.toggle(question);
-    });
-    activateOnKeyboard(faqSection, '.faq-question', function (question) {
-      FAQ.toggle(question);
-    });
-  }
+  // ═══════════════════════════════════════════════════════════════════════
+  // DEFERRED — below-fold modules initialized when section nears viewport
+  // ═══════════════════════════════════════════════════════════════════════
 
-  // How It Works - scroll animation.
-  HowItWorks.init();
-
-  // Trust & Privacy - expandable cards (click + keyboard).
-  const trustSection = document.querySelector('.trust-section');
-
-  // System status dashboard.
-  StatusDashboard.init();
-  CommandsCheatSheet.init();
-  if (trustSection) {
-    trustSection.addEventListener('click', function (e) {
-      const card = e.target.closest('.trust-card');
-      if (card) Trust.toggle(card);
-    });
-    activateOnKeyboard(trustSection, '.trust-card', function (card) {
-      Trust.toggle(card);
-    });
-  }
-
-  // Notification Preview - scenario cycling + view toggle.
-  NotificationPreview.init();
-  const notifSection = document.getElementById('notificationSection');
-  if (notifSection) {
-    const notifScenarios = notifSection.querySelector('.notification-scenarios');
-    if (notifScenarios) {
-      notifScenarios.addEventListener('click', function (e) {
-        let btn = e.target.closest('.notif-scenario-btn');
-        if (btn && btn.dataset.scenario !== undefined) {
-          NotificationPreview.switchScenario(parseInt(btn.dataset.scenario, 10));
+  lazyInit('testimonialsSection', function () {
+    Testimonials.init();
+    const testimonialsNav = document.querySelector('.testimonials-nav');
+    if (testimonialsNav) {
+      testimonialsNav.addEventListener('click', function (e) {
+        const arrow = e.target.closest('.testimonial-arrow');
+        if (arrow) {
+          if (arrow.classList.contains('testimonial-prev')) {
+            Testimonials.prev();
+          } else if (arrow.classList.contains('testimonial-next')) {
+            Testimonials.next();
+          }
+          return;
         }
-      });
-      arrowKeyNav(notifScenarios, '.notif-scenario-btn', function (btn) {
-        NotificationPreview.switchScenario(parseInt(btn.dataset.scenario, 10));
-        btn.focus();
-      });
-    }
-    const notifViewToggle = notifSection.querySelector('.notification-view-toggle');
-    if (notifViewToggle) {
-      notifViewToggle.addEventListener('click', function (e) {
-        let btn = e.target.closest('.notif-view-btn');
-        if (btn && btn.dataset.view) {
-          NotificationPreview.setView(btn.dataset.view);
+        const dot = e.target.closest('.testimonial-dot');
+        if (dot && dot.dataset.index !== undefined) {
+          Testimonials.goTo(parseInt(dot.dataset.index, 10));
+          Testimonials.stopAutoPlay();
+          Testimonials.startAutoPlay();
         }
       });
     }
-  }
+  });
 
-  // Use Cases - tabbed section (init + delegation).
-  UseCases.init();
+  lazyInit('faqSection', function () {
+    const faqSection = document.querySelector('.faq-section');
+    if (faqSection) {
+      faqSection.addEventListener('click', function (e) {
+        const question = e.target.closest('.faq-question');
+        if (question) FAQ.toggle(question);
+      });
+      activateOnKeyboard(faqSection, '.faq-question', function (question) {
+        FAQ.toggle(question);
+      });
+    }
+  });
 
-  const usecasesSection = document.getElementById('usecasesSection');
-  if (usecasesSection) {
-    const usecasesTablist = usecasesSection.querySelector('[role="tablist"]');
-    if (usecasesTablist && !usecasesTablist.dataset.bound) {
-      usecasesTablist.dataset.bound = '1';
-      // Click delegation.
-      usecasesTablist.addEventListener('click', function (e) {
-        const tab = e.target.closest('.usecase-tab');
-        if (tab && tab.dataset.usecase) {
+  lazyInit('trustSection', function () {
+    const trustSection = document.querySelector('.trust-section');
+    if (trustSection) {
+      trustSection.addEventListener('click', function (e) {
+        const card = e.target.closest('.trust-card');
+        if (card) Trust.toggle(card);
+      });
+      activateOnKeyboard(trustSection, '.trust-card', function (card) {
+        Trust.toggle(card);
+      });
+    }
+  });
+
+  lazyInit('statusSection', function () {
+    StatusDashboard.init();
+  });
+
+  lazyInit('commandsSection', function () {
+    CommandsCheatSheet.init();
+  });
+
+  lazyInit('notificationSection', function () {
+    NotificationPreview.init();
+  });
+
+  lazyInit('usecasesSection', function () {
+    UseCases.init();
+    const usecasesSection = document.getElementById('usecasesSection');
+    if (usecasesSection) {
+      const usecasesTablist = usecasesSection.querySelector('[role="tablist"]');
+      if (usecasesTablist && !usecasesTablist.dataset.bound) {
+        usecasesTablist.dataset.bound = '1';
+        usecasesTablist.addEventListener('click', function (e) {
+          const tab = e.target.closest('.usecase-tab');
+          if (tab && tab.dataset.usecase) {
+            window.UseCases.switchTo(tab.dataset.usecase);
+          }
+        });
+        arrowKeyNav(usecasesTablist, '.usecase-tab', function (tab) {
           window.UseCases.switchTo(tab.dataset.usecase);
-        }
-      });
-
-      // Keyboard navigation (arrow keys, Home, End).
-      arrowKeyNav(usecasesTablist, '.usecase-tab', function (tab) {
-        window.UseCases.switchTo(tab.dataset.usecase);
-        tab.focus();
-      });
+          tab.focus();
+        });
+      }
     }
-  }
+  });
 
-  // Stats - animated counters on scroll.
-  Stats.init();
+  lazyInit('statsSection', function () {
+    Stats.init();
+  });
 
-  // Integrations - category filter.
-  Integrations.init();
+  lazyInit('integrationsSection', function () {
+    Integrations.init();
+  });
 
-  // Changelog - tag filter.
-  Changelog.init();
+  lazyInit('changelogSection', function () {
+    Changelog.init();
+  });
 
-  // Product roadmap with voting and filters.
-  Roadmap.init();
+  lazyInit('roadmapSection', function () {
+    Roadmap.init();
+  });
 
-  // Sticky navigation bar.
-  SiteNav.init();
+  lazyInit('calculatorSection', function () {
+    Calculator.init();
+  });
 
-  // Newsletter signup form.
-  Newsletter.init();
+  lazyInit('playgroundSection', function () {
+    Playground.init();
+  });
 
-  // Auto-play the default scenario.
-  ChatDemo.play('memory');
+  lazyInit('activitySection', function () {
+    ActivityFeed.init();
+  });
 
-  // Additional component initialization
-  ThemeToggle.init();
-  ScrollProgress.init();
-  ShortcutsHelp.init();
-  Calculator.init();
-  Playground.init();
-  ActivityFeed.init();
-  CommandPalette.init();
-  ShareFab.init();
-  PromptGallery.init();
-  PersonalityConfigurator.init();
-  OnboardingQuiz.init();
-  ApiExplorer.init();
-  WorkflowTemplates.init();
+  lazyInit('promptGallerySection', function () {
+    PromptGallery.init();
+  });
+
+  lazyInit('personalitySection', function () {
+    PersonalityConfigurator.init();
+  });
+
+  lazyInit('quizSection', function () {
+    OnboardingQuiz.init();
+  });
+
+  lazyInit('apiExplorerSection', function () {
+    ApiExplorer.init();
+  });
+
+  lazyInit('wizardSection', function () {
+    // WorkflowTemplates + QuickStartWizard share this section area
+    WorkflowTemplates.init();
+  });
+
+  // Newsletter is in the footer area.
+  lazyInit('pricingSection', function () {
+    Newsletter.init();
+  });
+
+  // Start the IntersectionObserver for all queued lazy modules.
+  startLazyObserver();
 });
 
 // ---------------------------------------------------------------------------

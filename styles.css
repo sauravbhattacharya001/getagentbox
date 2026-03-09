@@ -1,4 +1,30 @@
 /* ── Design Tokens ──────────────────────────────────────────────── */
+
+/* ── Content-Visibility: skip layout/paint for off-screen sections ── */
+.stats-section,
+.before-after-section,
+.activity-section,
+.usecases-section,
+.integrations-section,
+.comparison-section,
+.calculator-section,
+.notification-section,
+.trust-section,
+.testimonials-section,
+.stories-section,
+.pricing-section,
+.quiz-section,
+.changelog-section,
+.roadmap-section,
+.status-section,
+.faq-section,
+.feature-board-section,
+.commands-section,
+.api-explorer-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 600px;
+}
+
 :root {
     /* Brand palette */
     --color-primary: #00d4ff;
