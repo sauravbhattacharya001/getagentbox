@@ -1392,6 +1392,45 @@
             </div>
         </div>
 
+        <div class="feature-board-section" id="featureBoardSection">
+            <h2>Feature Request Board</h2>
+            <p class="feature-board-subtitle">Vote on what we build next — your voice shapes the product</p>
+
+            <div class="feature-board-controls">
+                <div class="fb-filter-row">
+                    <button class="fb-filter active" data-filter="all" aria-pressed="true">All</button>
+                    <button class="fb-filter" data-filter="popular" aria-pressed="false">🔥 Popular</button>
+                    <button class="fb-filter" data-filter="new" aria-pressed="false">✨ New</button>
+                    <button class="fb-filter" data-filter="planned" aria-pressed="false">📋 Planned</button>
+                </div>
+                <button class="fb-suggest-btn" id="fbSuggestBtn" aria-label="Suggest a feature">💡 Suggest Feature</button>
+            </div>
+
+            <div class="feature-board-list" id="featureBoardList" role="list" aria-label="Feature requests"></div>
+
+            <div class="fb-suggest-form" id="fbSuggestForm" hidden>
+                <div class="fb-form-backdrop" id="fbFormBackdrop"></div>
+                <div class="fb-form-panel" role="dialog" aria-label="Suggest a feature" aria-modal="true">
+                    <button class="fb-form-close" id="fbFormClose" aria-label="Close">&times;</button>
+                    <h3>Suggest a Feature</h3>
+                    <label for="fbFormTitle">Feature title</label>
+                    <input type="text" id="fbFormTitle" class="fb-input" placeholder="e.g. Calendar integration" maxlength="80" required>
+                    <label for="fbFormDesc">Description (optional)</label>
+                    <textarea id="fbFormDesc" class="fb-textarea" placeholder="Describe the feature briefly..." maxlength="200" rows="3"></textarea>
+                    <label for="fbFormCategory">Category</label>
+                    <select id="fbFormCategory" class="fb-select">
+                        <option value="integration">🔗 Integration</option>
+                        <option value="feature">⚡ Feature</option>
+                        <option value="ux">🎨 UX / Design</option>
+                        <option value="platform">📱 Platform</option>
+                    </select>
+                    <button class="fb-submit-btn" id="fbFormSubmit">Submit Idea</button>
+                </div>
+            </div>
+
+            <div class="fb-toast" id="fbToast" hidden></div>
+        </div>
+
                 <div class="commands-section" id="commandsSection">
             <h2>Commands cheat sheet</h2>
             <p class="commands-subtitle">Quick reference for everything your agent can do. Tap any command to copy it.</p>
