@@ -260,6 +260,22 @@ var Testimonials = (function () {
       section.addEventListener('mouseleave', function () {
         if (!prefersReducedMotion) startAutoPlay();
       });
+
+      // Keyboard navigation for the carousel.
+      section.setAttribute('tabindex', '0');
+      section.setAttribute('role', 'region');
+      section.setAttribute('aria-roledescription', 'carousel');
+      section.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          goTo(currentIndex + 1);
+          if (autoPlayTimer) startAutoPlay();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          goTo(currentIndex - 1);
+          if (autoPlayTimer) startAutoPlay();
+        }
+      });
     }
   }
 
@@ -275,6 +291,12 @@ var Testimonials = (function () {
       dot.className = 'testimonial-dot';
       dot.setAttribute('aria-label', 'Go to testimonial ' + (i + 1));
       dot.dataset.index = String(i);
+      (function (idx) {
+        dot.addEventListener('click', function () {
+          goTo(idx);
+          if (autoPlayTimer) startAutoPlay();
+        });
+      })(i);
       dotsContainer.appendChild(dot);
       _dots.push(dot);
     }
@@ -295,16 +317,14 @@ var Testimonials = (function () {
     }
   }
 
-  /** Go to the next slide. Restarts autoplay to avoid premature advances. */
+  /** Go to the next slide. */
   function next() {
     goTo(currentIndex + 1);
-    if (autoPlayTimer) startAutoPlay();
   }
 
-  /** Go to the previous slide. Restarts autoplay to avoid premature advances. */
+  /** Go to the previous slide. */
   function prev() {
     goTo(currentIndex - 1);
-    if (autoPlayTimer) startAutoPlay();
   }
 
   /** Start the auto-play timer. */
