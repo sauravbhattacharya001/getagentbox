@@ -7051,7 +7051,11 @@ var FeatureBoard = (function () {
   function getFiltered() {
     if (activeFilter === "all") return allFeatures.slice();
     if (activeFilter === "popular") {
-      return allFeatures.slice().sort(function (a, b) { return b.votes - a.votes; }).slice(0, 6);
+      return allFeatures.slice().sort(function (a, b) {
+        var va = a.votes + (userVotes[a.id] ? 1 : 0);
+        var vb = b.votes + (userVotes[b.id] ? 1 : 0);
+        return vb - va;
+      }).slice(0, 6);
     }
     if (activeFilter === "new") {
       return allFeatures.filter(function (f) { return f.status === "new"; });
