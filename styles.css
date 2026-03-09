@@ -1052,6 +1052,226 @@ h1 {
     .calculator-grid { grid-template-columns: 1fr; }
 }
 
+/* Notification Preview Section */
+.notification-section {
+    background: rgba(255,255,255,0.03);
+    border-radius: var(--radius-lg);
+    padding: 30px;
+    margin-bottom: 40px;
+    contain: content;
+    text-align: center;
+}
+
+.notification-section h2 {
+    font-size: 1.4rem;
+    margin-bottom: 5px;
+}
+
+.notification-subtitle {
+    color: var(--color-text-dim);
+    font-size: 0.95rem;
+    margin-bottom: 25px;
+}
+
+.notification-phone-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-lg);
+}
+
+.notification-phone {
+    width: 280px;
+    min-height: 380px;
+    background: #0a0a1a;
+    border-radius: 28px;
+    border: 3px solid rgba(255,255,255,0.15);
+    padding: 0;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg), 0 0 60px rgba(0,212,255,0.08);
+    position: relative;
+}
+
+.phone-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px 8px;
+    background: rgba(255,255,255,0.05);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.phone-time { letter-spacing: 0.5px; }
+
+.phone-icons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+}
+
+.phone-notification-area {
+    padding: 16px 14px;
+}
+
+.phone-notification {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    text-align: left;
+    transform: translateX(0);
+    opacity: 1;
+    transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.phone-notification.notif-slide-in {
+    animation: notifSlideIn 0.35s ease forwards;
+}
+
+@keyframes notifSlideIn {
+    0% { transform: translateX(100%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+.phone-notif-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 0.7rem;
+}
+
+.phone-notif-icon { font-size: 0.9rem; }
+
+.phone-notif-app {
+    color: var(--color-primary);
+    font-weight: 600;
+    flex: 1;
+}
+
+.phone-notif-time {
+    color: var(--color-text-dim);
+    font-size: 0.65rem;
+}
+
+.phone-notif-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: var(--color-text);
+}
+
+.phone-notif-body {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+}
+
+.phone-notif-detail {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.72rem;
+    color: var(--color-text-dim);
+    line-height: 1.5;
+}
+
+.notification-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.notification-scenarios {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-sm);
+}
+
+.notif-scenario-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-pill);
+    padding: 8px 16px;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.notif-scenario-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--color-text);
+}
+
+.notif-scenario-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.notif-scenario-btn.active {
+    background: rgba(0,212,255,0.15);
+    border-color: rgba(0,212,255,0.4);
+    color: var(--color-primary);
+}
+
+.notification-view-toggle {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.04);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+}
+
+.notif-view-btn {
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+    color: var(--color-text-dim);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.notif-view-btn:hover { color: var(--color-text); }
+
+.notif-view-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.notif-view-btn.active {
+    background: rgba(0,212,255,0.15);
+    color: var(--color-primary);
+}
+
+/* Notification Preview — Light theme */
+[data-theme="light"] .notification-section { background: rgba(0,0,0,0.03); }
+[data-theme="light"] .notification-phone { background: #f8f9fa; border-color: rgba(0,0,0,0.15); box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+[data-theme="light"] .phone-status-bar { background: rgba(0,0,0,0.05); color: #555; }
+[data-theme="light"] .phone-notification { background: #fff; border-color: rgba(0,0,0,0.1); }
+[data-theme="light"] .phone-notif-title { color: var(--color-text-dark); }
+[data-theme="light"] .phone-notif-body { color: #666; }
+[data-theme="light"] .phone-notif-detail { color: #888; border-top-color: rgba(0,0,0,0.08); }
+[data-theme="light"] .notif-scenario-btn { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.1); color: #555; }
+[data-theme="light"] .notif-scenario-btn:hover { background: rgba(0,0,0,0.08); color: #333; }
+[data-theme="light"] .notif-scenario-btn.active { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3); color: #0088aa; }
+[data-theme="light"] .notification-view-toggle { background: rgba(0,0,0,0.04); }
+[data-theme="light"] .notif-view-btn { color: #888; }
+[data-theme="light"] .notif-view-btn.active { background: rgba(0,212,255,0.1); color: #0088aa; }
+
+/* Notification Preview — Responsive */
+@media (max-width: 480px) {
+    .notification-phone { width: 240px; min-height: 320px; }
+    .notification-scenarios { gap: var(--space-xs); }
+    .notif-scenario-btn { padding: 6px 10px; font-size: 0.75rem; }
+}
+
 /* Trust & Privacy Section */
 .trust-section {
     background: rgba(255,255,255,0.03);

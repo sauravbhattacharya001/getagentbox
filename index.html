@@ -37,6 +37,7 @@
                 <li role="none"><a href="#integrationsSection" role="menuitem">Integrations</a></li>
                 <li role="none"><a href="#comparisonSection" role="menuitem">Compare</a></li>
                 <li role="none"><a href="#calculatorSection" role="menuitem">Calculator</a></li>
+                <li role="none"><a href="#notificationSection" role="menuitem">Preview</a></li>
                 <li role="none"><a href="#trustSection" role="menuitem">Trust</a></li>
                 <li role="none"><a href="#storiesSection" role="menuitem">Stories</a></li>
                 <li role="none"><a href="#pricingSection" role="menuitem">Pricing</a></li>
@@ -702,6 +703,49 @@
                         That's like getting <strong>3.5 extra workdays</strong> back every year ✨
                     </div>
                     <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer" class="calc-cta">Start saving time →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="notification-section" id="notificationSection" aria-label="Notification Preview">
+            <h2>See It In Action</h2>
+            <p class="notification-subtitle">Preview what AgentBox notifications look like on your phone</p>
+
+            <div class="notification-phone-wrap">
+                <div class="notification-phone" aria-label="Phone mockup showing AgentBox notifications">
+                    <div class="phone-status-bar" aria-hidden="true">
+                        <span class="phone-time">9:41</span>
+                        <span class="phone-icons">
+                            <span class="phone-wifi">⏐⏐⏐</span>
+                            <span class="phone-battery">🔋</span>
+                        </span>
+                    </div>
+                    <div class="phone-notification-area">
+                        <div class="phone-notification" role="status" aria-live="polite">
+                            <div class="phone-notif-header">
+                                <span class="phone-notif-icon" aria-hidden="true">🤖</span>
+                                <span class="phone-notif-app">AgentBox</span>
+                                <span class="phone-notif-time">now</span>
+                            </div>
+                            <div class="phone-notif-title"></div>
+                            <div class="phone-notif-body"></div>
+                            <div class="phone-notif-detail" hidden></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="notification-controls">
+                <div class="notification-scenarios" role="tablist" aria-label="Notification scenarios">
+                    <button class="notif-scenario-btn active" role="tab" aria-selected="true" data-scenario="0" tabindex="0">Reminder</button>
+                    <button class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="1" tabindex="-1">Search</button>
+                    <button class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="2" tabindex="-1">Digest</button>
+                    <button class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="3" tabindex="-1">Alert</button>
+                    <button class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="4" tabindex="-1">Message</button>
+                </div>
+                <div class="notification-view-toggle">
+                    <button class="notif-view-btn active" data-view="compact" aria-pressed="true">Compact</button>
+                    <button class="notif-view-btn" data-view="detailed" aria-pressed="false">Detailed</button>
                 </div>
             </div>
         </div>
