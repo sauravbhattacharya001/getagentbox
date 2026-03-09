@@ -3116,6 +3116,7 @@ var ActivityFeed = (function () {
     active += Math.floor(Math.random() * 5) - 2;
     if (active < 1000) active = 1000;
     today += Math.floor(Math.random() * 3) + 1;
+    if (today > 25000) today = 18000 + Math.floor(Math.random() * 2000);
 
     activeCountEl.textContent = active.toLocaleString();
     todayCountEl.textContent = today.toLocaleString();

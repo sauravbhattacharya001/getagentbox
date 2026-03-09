@@ -250,6 +250,18 @@ describe('ActivityFeed', () => {
       const updated = parseInt(el.textContent.replace(/,/g, ''), 10);
       expect(updated).toBeGreaterThanOrEqual(initial);
     });
+
+    test('today count stays bounded below 25001', () => {
+      const el = document.getElementById('activityTodayCount');
+      // Set to a high value close to the cap
+      el.textContent = '24,999';
+
+      // Run many cycles to push past the cap
+      jest.advanceTimersByTime(60000);
+
+      const val = parseInt(el.textContent.replace(/,/g, ''), 10);
+      expect(val).toBeLessThanOrEqual(25000);
+    });
   });
 
   describe('CSS', () => {
