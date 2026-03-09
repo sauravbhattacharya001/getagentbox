@@ -149,6 +149,7 @@
             var toggle = qs('.billing-toggle');
             if (toggle) {
                 toggle.classList.toggle('yearly', Pricing._isYearly);
+                toggle.setAttribute('aria-pressed', String(Pricing._isYearly));
             }
         },
 
@@ -207,7 +208,7 @@
             if (isNaN(target)) return;
 
             // Cancel any existing animation to prevent stacking
-            if (el._statsRafId) {
+            if (el._statsRafId != null) {
                 cancelAnimationFrame(el._statsRafId);
                 el._statsRafId = null;
             }
