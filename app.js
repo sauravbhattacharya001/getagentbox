@@ -96,7 +96,7 @@ var SCENARIOS = Object.freeze({
  * Shared between ChatDemo and Playground — clone with cloneNode(true).
  */
 var _typingIndicatorTemplate = (function () {
-  var el = document.createElement('div');
+  let el = document.createElement('div');
   el.className = 'typing-indicator';
   for (var i = 0; i < 3; i++) el.appendChild(document.createElement('span'));
   return el;
@@ -107,11 +107,11 @@ var _typingIndicatorTemplate = (function () {
 // ---------------------------------------------------------------------------
 
 var ChatDemo = (function () {
-  var animationTimer = null;
-  var animationGeneration = 0;
-  var scrollRafId = 0;
+  let animationTimer = null;
+  let animationGeneration = 0;
+  let scrollRafId = 0;
   /** Cached scenario buttons — avoids querySelectorAll on every switch. */
-  var _scenarioBtns = null;
+  let _scenarioBtns = null;
 
   /**
    * Batched scroll-to-bottom via requestAnimationFrame to avoid forced
@@ -128,19 +128,19 @@ var ChatDemo = (function () {
 
   /** Build a chat bubble DOM node from a message object. */
   function createBubble(msg) {
-    var bubble = document.createElement('div');
+    const bubble = document.createElement('div');
     bubble.className = 'chat-bubble ' + msg.role;
 
-    var frag = document.createDocumentFragment();
-    var lines = msg.text.split('\n');
+    const frag = document.createDocumentFragment();
+    const lines = msg.text.split('\n');
 
     for (var i = 0; i < lines.length; i++) {
       if (i > 0) frag.appendChild(document.createElement('br'));
       // Split on backtick-delimited code spans (odd indices are code).
-      var segments = lines[i].split(/`([^`]+)`/);
+      const segments = lines[i].split(/`([^`]+)`/);
       for (var s = 0; s < segments.length; s++) {
         if (s % 2 === 1) {
-          var code = document.createElement('code');
+          const code = document.createElement('code');
           code.textContent = segments[s];
           frag.appendChild(code);
         } else if (segments[s]) {
@@ -155,16 +155,16 @@ var ChatDemo = (function () {
 
   /** Play a named scenario in the chat window. */
   function play(name) {
-    var chatWindow = document.getElementById('chatWindow');
+    const chatWindow = document.getElementById('chatWindow');
     if (!chatWindow) return;
 
     chatWindow.innerHTML = '';
     if (!Object.prototype.hasOwnProperty.call(SCENARIOS, name)) return;
-    var messages = SCENARIOS[name];
+    const messages = SCENARIOS[name];
     if (!messages) return;
 
-    var idx = 0;
-    var gen = animationGeneration;
+    let idx = 0;
+    const gen = animationGeneration;
 
     function isStale() {
       return gen !== animationGeneration;
@@ -172,10 +172,10 @@ var ChatDemo = (function () {
 
     function showNext() {
       if (idx >= messages.length || isStale()) return;
-      var msg = messages[idx];
+      const msg = messages[idx];
 
       if (msg.role === 'bot') {
-        var typing = _typingIndicatorTemplate.cloneNode(true);
+        const typing = _typingIndicatorTemplate.cloneNode(true);
         chatWindow.appendChild(typing);
         scheduleScroll(chatWindow);
 
@@ -226,16 +226,16 @@ var ChatDemo = (function () {
 // ---------------------------------------------------------------------------
 
 var Testimonials = (function () {
-  var currentIndex = 0;
-  var totalSlides = 0;
-  var autoPlayTimer = null;
-  var AUTO_PLAY_INTERVAL = 5000;
+  let currentIndex = 0;
+  let totalSlides = 0;
+  let autoPlayTimer = null;
+  const AUTO_PLAY_INTERVAL = 5000;
 
   // Cached DOM references — avoid re-querying on every goTo() call.
   // goTo() runs every 5s via autoplay; caching eliminates ~12
   // getElementById + querySelectorAll calls per minute.
-  var _track = null;
-  var _dots = [];
+  let _track = null;
+  let _dots = [];
 
   /** Initialise the carousel: count slides, build dots, start auto-play. */
   function init() {
@@ -254,7 +254,7 @@ var Testimonials = (function () {
     }
 
     // Pause auto-play on hover, resume on leave.
-    var section = document.getElementById('testimonialsSection');
+    const section = document.getElementById('testimonialsSection');
     if (section) {
       section.addEventListener('mouseenter', stopAutoPlay);
       section.addEventListener('mouseleave', function () {
@@ -281,13 +281,13 @@ var Testimonials = (function () {
 
   /** Create navigation dots matching the number of slides. */
   function buildDots() {
-    var dotsContainer = document.getElementById('testimonialsDots');
+    const dotsContainer = document.getElementById('testimonialsDots');
     if (!dotsContainer) return;
 
     dotsContainer.innerHTML = '';
     _dots = [];
     for (var i = 0; i < totalSlides; i++) {
-      var dot = document.createElement('button');
+      const dot = document.createElement('button');
       dot.className = 'testimonial-dot';
       dot.setAttribute('aria-label', 'Go to testimonial ' + (i + 1));
       dot.dataset.index = String(i);
@@ -376,15 +376,15 @@ var Testimonials = (function () {
 // ---------------------------------------------------------------------------
 
 var Pricing = (function () {
-  var isYearly = false;
+  let isYearly = false;
 
   // Cached DOM references — resolved once, reused on each toggle.
-  var _toggleEl = null;
-  var _monthlyLabel = null;
-  var _yearlyLabel = null;
-  var _priceAmounts = null;
-  var _pricePeriods = null;
-  var _resolved = false;
+  let _toggleEl = null;
+  let _monthlyLabel = null;
+  let _yearlyLabel = null;
+  let _priceAmounts = null;
+  let _pricePeriods = null;
+  let _resolved = false;
 
   function _resolve() {
     if (_resolved) return;
@@ -408,7 +408,7 @@ var Pricing = (function () {
     if (_yearlyLabel) _yearlyLabel.classList.toggle('active-label', isYearly);
 
     for (var pi = 0; pi < _priceAmounts.length; pi++) {
-      var priceEl = _priceAmounts[pi].parentElement;
+      const priceEl = _priceAmounts[pi].parentElement;
       _priceAmounts[pi].textContent = isYearly ? priceEl.dataset.yearly : priceEl.dataset.monthly;
     }
     for (var pj = 0; pj < _pricePeriods.length; pj++) {
@@ -425,17 +425,17 @@ var Pricing = (function () {
 
 var FAQ = (function () {
   function toggle(questionEl) {
-    var item = questionEl.closest('.faq-item');
+    const item = questionEl.closest('.faq-item');
     if (!item) return;
 
-    var wasOpen = item.classList.contains('open');
+    const wasOpen = item.classList.contains('open');
 
     // Close sibling items (accordion behaviour).
     // Scoped to parent container instead of full document scan.
-    var siblings = item.parentElement ? item.parentElement.querySelectorAll('.faq-item.open') : [];
+    const siblings = item.parentElement ? item.parentElement.querySelectorAll('.faq-item.open') : [];
     for (var si = 0; si < siblings.length; si++) {
       siblings[si].classList.remove('open');
-      var q = siblings[si].querySelector('.faq-question');
+      const q = siblings[si].querySelector('.faq-question');
       if (q) q.setAttribute('aria-expanded', 'false');
     }
 
@@ -454,19 +454,19 @@ var FAQ = (function () {
 // ---------------------------------------------------------------------------
 
 var HowItWorks = (function () {
-  var observed = false;
+  let observed = false;
 
   /** Reveal step cards with staggered animation when section scrolls into view. */
   function init() {
-    var section = document.getElementById('howItWorks');
+    const section = document.getElementById('howItWorks');
     if (!section) return;
 
-    var steps = section.querySelectorAll('.step');
+    const steps = section.querySelectorAll('.step');
     if (steps.length === 0) return;
 
     // Use IntersectionObserver if available, otherwise reveal immediately.
     if ('IntersectionObserver' in window) {
-      var observer = new IntersectionObserver(
+      const observer = new IntersectionObserver(
         function (entries) {
           entries.forEach(function (entry) {
             if (entry.isIntersecting && !observed) {
@@ -500,9 +500,9 @@ var HowItWorks = (function () {
   /** Reset state (useful for testing). */
   function reset() {
     observed = false;
-    var section = document.getElementById('howItWorks');
+    const section = document.getElementById('howItWorks');
     if (section) {
-      var steps = section.querySelectorAll('.step');
+      const steps = section.querySelectorAll('.step');
       for (var i = 0; i < steps.length; i++) {
         steps[i].classList.remove('visible');
       }
@@ -517,8 +517,8 @@ var HowItWorks = (function () {
 // ---------------------------------------------------------------------------
 
 var Stats = (function () {
-  var animated = false;
-  var DURATION = 2000; // animation duration in ms
+  let animated = false;
+  const DURATION = 2000; // animation duration in ms
 
   /**
    * Easing function - ease-out cubic for a satisfying deceleration.
@@ -545,13 +545,13 @@ var Stats = (function () {
    * @param {Element} card - The .stat-card element
    */
   function animateCard(card) {
-    var numberEl = card.querySelector('.stat-number');
+    const numberEl = card.querySelector('.stat-number');
     if (!numberEl) return;
 
-    var target = parseInt(card.dataset.target, 10);
-    var suffix = card.dataset.suffix || '';
-    var decimal = card.dataset.decimal || '';
-    var prefix = '';
+    let target = parseInt(card.dataset.target, 10);
+    const suffix = card.dataset.suffix || '';
+    const decimal = card.dataset.decimal || '';
+    let prefix = '';
 
     // Check if the display starts with < (e.g., "<2s")
     if (numberEl.textContent.indexOf('<') === 0) {
@@ -566,15 +566,15 @@ var Stats = (function () {
       card._statsRafId = null;
     }
 
-    var startTime = null;
-    var prev = -1;
+    let startTime = null;
+    let prev = -1;
 
     function tick(timestamp) {
       if (!startTime) startTime = timestamp;
-      var elapsed = timestamp - startTime;
-      var progress = Math.min(elapsed / DURATION, 1);
-      var easedProgress = easeOutCubic(progress);
-      var current = Math.round(easedProgress * target);
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / DURATION, 1);
+      const easedProgress = easeOutCubic(progress);
+      let current = Math.round(easedProgress * target);
 
       // Ensure monotonic progression - never go backwards
       if (current < prev) current = prev;
@@ -584,7 +584,7 @@ var Stats = (function () {
       if (current === target || progress >= 1) {
         card._statsRafId = null;
 
-        var finalDisplay = prefix + formatNumber(target);
+        let finalDisplay = prefix + formatNumber(target);
         if (decimal) {
           finalDisplay = prefix + formatNumber(target) + '.' + decimal;
         }
@@ -594,7 +594,7 @@ var Stats = (function () {
         return;
       }
 
-      var display = prefix + formatNumber(current);
+      let display = prefix + formatNumber(current);
       if (decimal) display += '.' + decimal;
       display += suffix;
       numberEl.textContent = display;
@@ -629,13 +629,13 @@ var Stats = (function () {
    * @param {Element} card - A .stat-card element
    */
   function showFinalValue(card) {
-    var numberEl = card.querySelector('.stat-number');
+    const numberEl = card.querySelector('.stat-number');
     if (!numberEl) return;
 
-    var target = parseInt(card.dataset.target, 10);
-    var suffix = card.dataset.suffix || '';
-    var decimal = card.dataset.decimal || '';
-    var prefix = '';
+    let target = parseInt(card.dataset.target, 10);
+    const suffix = card.dataset.suffix || '';
+    const decimal = card.dataset.decimal || '';
+    let prefix = '';
 
     if (numberEl.textContent.indexOf('<') === 0) {
       prefix = '<';
@@ -643,7 +643,7 @@ var Stats = (function () {
 
     if (isNaN(target)) return;
 
-    var display = prefix + formatNumber(target);
+    let display = prefix + formatNumber(target);
     if (decimal) display += '.' + decimal;
     display += suffix;
     numberEl.textContent = display;
@@ -652,14 +652,14 @@ var Stats = (function () {
 
   /** Initialize - observe the stats section for scroll-triggered animation. */
   function init() {
-    var section = document.getElementById('statsSection');
+    const section = document.getElementById('statsSection');
     if (!section) return;
 
-    var cards = section.querySelectorAll('.stat-card');
+    const cards = section.querySelectorAll('.stat-card');
     if (cards.length === 0) return;
 
     if ('IntersectionObserver' in window) {
-      var observer = new IntersectionObserver(
+      const observer = new IntersectionObserver(
         function (entries) {
           entries.forEach(function (entry) {
             if (entry.isIntersecting && !animated) {
@@ -685,16 +685,16 @@ var Stats = (function () {
   /** Reset state for testing. */
   function reset() {
     animated = false;
-    var section = document.getElementById('statsSection');
+    const section = document.getElementById('statsSection');
     if (section) {
-      var cards = section.querySelectorAll('.stat-card');
+      const cards = section.querySelectorAll('.stat-card');
       for (var i = 0; i < cards.length; i++) {
         if (cards[i]._statsRafId) {
           cancelAnimationFrame(cards[i]._statsRafId);
           cards[i]._statsRafId = null;
         }
         cards[i].classList.remove('animated');
-        var numEl = cards[i].querySelector('.stat-number');
+        const numEl = cards[i].querySelector('.stat-number');
         if (numEl) numEl.textContent = '0';
       }
     }
@@ -717,8 +717,8 @@ var Stats = (function () {
 // ---------------------------------------------------------------------------
 
 var UseCases = (function () {
-  var currentTab = 'dev';
-  var _section = null;
+  let currentTab = 'dev';
+  let _section = null;
 
   /** Lazily resolve the section element (cache on first use). */
   function section() {
@@ -737,10 +737,10 @@ var UseCases = (function () {
     if (!section()) return;
 
     // Deactivate current tab button.
-    var tabs = section().querySelectorAll('.usecase-tab');
-    var panels = section().querySelectorAll('.usecase-panel');
+    const tabs = section().querySelectorAll('.usecase-tab');
+    const panels = section().querySelectorAll('.usecase-panel');
 
-    var found = false;
+    let found = false;
     for (var i = 0; i < tabs.length; i++) {
       if (tabs[i].dataset.usecase === tabId) {
         found = true;
@@ -750,15 +750,15 @@ var UseCases = (function () {
     if (!found) return;
 
     for (var j = 0; j < tabs.length; j++) {
-      var isTarget = tabs[j].dataset.usecase === tabId;
+      const isTarget = tabs[j].dataset.usecase === tabId;
       tabs[j].classList.toggle('active', isTarget);
       tabs[j].setAttribute('aria-selected', isTarget ? 'true' : 'false');
       tabs[j].setAttribute('tabindex', isTarget ? '0' : '-1');
     }
 
     for (var k = 0; k < panels.length; k++) {
-      var panelId = panels[k].id;
-      var isActive = panelId === 'usecase-' + tabId;
+      const panelId = panels[k].id;
+      let isActive = panelId === 'usecase-' + tabId;
       panels[k].classList.toggle('active', isActive);
       if (isActive) {
         panels[k].removeAttribute('hidden');
@@ -778,8 +778,8 @@ var UseCases = (function () {
   /** Get list of all available tab ids. */
   function getTabs() {
     if (!section()) return [];
-    var tabs = section().querySelectorAll('.usecase-tab');
-    var ids = [];
+    const tabs = section().querySelectorAll('.usecase-tab');
+    const ids = [];
     for (var i = 0; i < tabs.length; i++) {
       if (tabs[i].dataset.usecase) ids.push(tabs[i].dataset.usecase);
     }
@@ -795,11 +795,11 @@ var UseCases = (function () {
     _section = document.getElementById('usecasesSection');
     if (!section()) return;
 
-    var tablist = section().querySelector('[role="tablist"]');
+    const tablist = section().querySelector('[role="tablist"]');
     if (!tablist) return;
 
     // Set initial tabindex values.
-    var tabs = tablist.querySelectorAll('.usecase-tab');
+    const tabs = tablist.querySelectorAll('.usecase-tab');
     for (var i = 0; i < tabs.length; i++) {
       tabs[i].setAttribute('tabindex', tabs[i].classList.contains('active') ? '0' : '-1');
     }
@@ -818,8 +818,8 @@ var UseCases = (function () {
 // ---------------------------------------------------------------------------
 
 var Integrations = (function () {
-  var currentCategory = 'all';
-  var _section = null;
+  let currentCategory = 'all';
+  let _section = null;
 
   /** Lazily resolve the section element (cache on first use). */
   function section() {
@@ -836,20 +836,20 @@ var Integrations = (function () {
 
     if (!section()) return;
 
-    var cards = section().querySelectorAll('.integration-card');
-    var buttons = section().querySelectorAll('.integration-filter-btn');
+    const cards = section().querySelectorAll('.integration-card');
+    const buttons = section().querySelectorAll('.integration-filter-btn');
 
     // Update filter buttons
     for (var i = 0; i < buttons.length; i++) {
-      var isActive = buttons[i].dataset.category === category;
+      let isActive = buttons[i].dataset.category === category;
       buttons[i].classList.toggle('active', isActive);
       buttons[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
     }
 
     // Show/hide cards
-    var visibleCount = 0;
+    let visibleCount = 0;
     for (var j = 0; j < cards.length; j++) {
-      var match = category === 'all' || cards[j].dataset.category === category;
+      const match = category === 'all' || cards[j].dataset.category === category;
       cards[j].classList.toggle('hidden', !match);
       if (match) visibleCount++;
     }
@@ -866,8 +866,8 @@ var Integrations = (function () {
   /** Get all available categories. */
   function getCategories() {
     if (!section()) return [];
-    var buttons = section().querySelectorAll('.integration-filter-btn');
-    var cats = [];
+    const buttons = section().querySelectorAll('.integration-filter-btn');
+    const cats = [];
     for (var i = 0; i < buttons.length; i++) {
       if (buttons[i].dataset.category) cats.push(buttons[i].dataset.category);
     }
@@ -877,10 +877,10 @@ var Integrations = (function () {
   /** Get integration cards data. */
   function getIntegrations(category) {
     if (!section()) return [];
-    var cards = section().querySelectorAll('.integration-card');
-    var result = [];
+    const cards = section().querySelectorAll('.integration-card');
+    let result = [];
     for (var i = 0; i < cards.length; i++) {
-      var card = cards[i];
+      const card = cards[i];
       if (category && category !== 'all' && card.dataset.category !== category) continue;
       result.push({
         name: card.querySelector('h3') ? card.querySelector('h3').textContent : '',
@@ -894,8 +894,8 @@ var Integrations = (function () {
 
   /** Get count by status (live/coming). */
   function getStatusCounts() {
-    var integrations = getIntegrations();
-    var counts = { live: 0, coming: 0 };
+    const integrations = getIntegrations();
+    const counts = { live: 0, coming: 0 };
     for (var i = 0; i < integrations.length; i++) {
       if (integrations[i].status === 'live') counts.live++;
       else if (integrations[i].status === 'coming') counts.coming++;
@@ -908,11 +908,11 @@ var Integrations = (function () {
     _section = document.getElementById('integrationsSection');
     if (!section()) return;
 
-    var filterContainer = section().querySelector('.integrations-filter');
+    let filterContainer = section().querySelector('.integrations-filter');
     if (!filterContainer) return;
 
     filterContainer.addEventListener('click', function (e) {
-      var btn = e.target.closest('.integration-filter-btn');
+      let btn = e.target.closest('.integration-filter-btn');
       if (!btn || !btn.dataset.category) return;
       filterBy(btn.dataset.category);
     });
@@ -933,8 +933,8 @@ var Integrations = (function () {
 // ---------------------------------------------------------------------------
 
 var Changelog = (function () {
-  var currentTag = 'all';
-  var _section = null;
+  let currentTag = 'all';
+  let _section = null;
 
   /** Lazily resolve the section element (cache on first use). */
   function section() {
@@ -965,14 +965,14 @@ var Changelog = (function () {
     }
 
     for (var i = 0; i < _filterBtns.length; i++) {
-      var isActive = _filterBtns[i].dataset.tag === tag;
+      let isActive = _filterBtns[i].dataset.tag === tag;
       _filterBtns[i].classList.toggle('active', isActive);
       _filterBtns[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
     }
 
-    var visibleCount = 0;
+    let visibleCount = 0;
     for (var j = 0; j < _entries.length; j++) {
-      var match = tag === 'all' || _entries[j].dataset.tag === tag;
+      const match = tag === 'all' || _entries[j].dataset.tag === tag;
       _entries[j].classList.toggle('hidden', !match);
       if (match) visibleCount++;
     }
@@ -989,8 +989,8 @@ var Changelog = (function () {
   /** Get all available filter tags. */
   function getTags() {
     if (!section()) return [];
-    var buttons = section().querySelectorAll('.changelog-filter-btn');
-    var tags = [];
+    const buttons = section().querySelectorAll('.changelog-filter-btn');
+    const tags = [];
     for (var i = 0; i < buttons.length; i++) {
       if (buttons[i].dataset.tag) tags.push(buttons[i].dataset.tag);
     }
@@ -1000,12 +1000,12 @@ var Changelog = (function () {
   /** Get changelog entries data, optionally filtered by tag. */
   function getEntries(tag) {
     if (!section()) return [];
-    var entries = section().querySelectorAll('.changelog-entry');
-    var result = [];
+    const entries = section().querySelectorAll('.changelog-entry');
+    let result = [];
     for (var i = 0; i < entries.length; i++) {
-      var entry = entries[i];
+      const entry = entries[i];
       if (tag && tag !== 'all' && entry.dataset.tag !== tag) continue;
-      var content = entry.querySelector('.changelog-content');
+      const content = entry.querySelector('.changelog-content');
       result.push({
         tag: entry.dataset.tag || '',
         date: entry.querySelector('.changelog-date') ? entry.querySelector('.changelog-date').textContent : '',
@@ -1018,8 +1018,8 @@ var Changelog = (function () {
 
   /** Get count of entries by tag. */
   function getTagCounts() {
-    var entries = getEntries();
-    var counts = { feature: 0, improvement: 0, fix: 0 };
+    const entries = getEntries();
+    const counts = { feature: 0, improvement: 0, fix: 0 };
     for (var i = 0; i < entries.length; i++) {
       if (counts[entries[i].tag] !== undefined) counts[entries[i].tag]++;
     }
@@ -1027,8 +1027,8 @@ var Changelog = (function () {
   }
 
   /** Cached DOM collections — resolved once on init. */
-  var _filterBtns = [];
-  var _entries = [];
+  let _filterBtns = [];
+  let _entries = [];
 
   /** Initialize click handlers on filter buttons. */
   function init() {
@@ -1042,11 +1042,11 @@ var Changelog = (function () {
       section().querySelectorAll('.changelog-entry')
     );
 
-    var filterContainer = section().querySelector('.changelog-filter');
+    let filterContainer = section().querySelector('.changelog-filter');
     if (!filterContainer) return;
 
     filterContainer.addEventListener('click', function (e) {
-      var btn = e.target.closest('.changelog-filter-btn');
+      let btn = e.target.closest('.changelog-filter-btn');
       if (!btn || !btn.dataset.tag) return;
       filterBy(btn.dataset.tag);
     });
@@ -1067,7 +1067,7 @@ var Changelog = (function () {
 // ---------------------------------------------------------------------------
 
 var NotificationPreview = (function () {
-  var SCENARIOS = [
+  let SCENARIOS = [
     { title: 'Reminder', body: 'Your meeting with Sarah starts in 15 minutes', detail: 'Meeting: Q1 Planning Review\nLocation: Conference Room B\nAttendees: Sarah, Mike, Lisa', time: '2m ago' },
     { title: 'Search Result', body: 'Found 3 flights to Tokyo under $500', detail: 'Flight 1: ANA — $487 (direct, 11h 20m)\nFlight 2: JAL — $492 (direct, 11h 45m)\nFlight 3: United — $498 (1 stop, 14h 10m)', time: '5m ago' },
     { title: 'Daily Digest', body: 'Good morning! You have 4 tasks today...', detail: '1. Review PR #342\n2. Submit expense report\n3. Call dentist at 2pm\n4. Pick up groceries', time: '8:00 AM' },
@@ -1075,15 +1075,15 @@ var NotificationPreview = (function () {
     { title: 'Scheduled Message', body: 'Message sent to Mom: Happy Birthday!', detail: 'Scheduled at 7:00 AM\nDelivered via iMessage\nRead receipt: Seen at 7:03 AM', time: '7:00 AM' }
   ];
 
-  var _currentIndex = 0;
-  var _viewMode = 'compact'; // 'compact' or 'detailed'
-  var _titleEl = null;
-  var _bodyEl = null;
-  var _detailEl = null;
-  var _notifEl = null;
+  let _currentIndex = 0;
+  let _viewMode = 'compact'; // 'compact' or 'detailed'
+  let _titleEl = null;
+  let _bodyEl = null;
+  let _detailEl = null;
+  let _notifEl = null;
 
   function _cacheDOM() {
-    var section = document.getElementById('notificationSection');
+    const section = document.getElementById('notificationSection');
     if (!section) return false;
     _notifEl = section.querySelector('.phone-notification');
     _titleEl = section.querySelector('.phone-notif-title');
@@ -1094,7 +1094,7 @@ var NotificationPreview = (function () {
 
   function _render() {
     if (!_titleEl && !_cacheDOM()) return;
-    var s = SCENARIOS[_currentIndex];
+    let s = SCENARIOS[_currentIndex];
     _titleEl.textContent = s.title;
     _bodyEl.textContent = s.body;
     _detailEl.textContent = s.detail;
@@ -1118,11 +1118,11 @@ var NotificationPreview = (function () {
     _render();
 
     // Update active states on scenario buttons
-    var section = document.getElementById('notificationSection');
+    const section = document.getElementById('notificationSection');
     if (!section) return;
-    var btns = section.querySelectorAll('.notif-scenario-btn');
+    const btns = section.querySelectorAll('.notif-scenario-btn');
     for (var i = 0; i < btns.length; i++) {
-      var isActive = i === index;
+      let isActive = i === index;
       btns[i].classList.toggle('active', isActive);
       btns[i].setAttribute('aria-selected', String(isActive));
       btns[i].setAttribute('tabindex', isActive ? '0' : '-1');
@@ -1134,11 +1134,11 @@ var NotificationPreview = (function () {
     _viewMode = mode;
     _render();
 
-    var section = document.getElementById('notificationSection');
+    const section = document.getElementById('notificationSection');
     if (!section) return;
-    var btns = section.querySelectorAll('.notif-view-btn');
+    const btns = section.querySelectorAll('.notif-view-btn');
     for (var i = 0; i < btns.length; i++) {
-      var isActive = btns[i].dataset.view === mode;
+      let isActive = btns[i].dataset.view === mode;
       btns[i].classList.toggle('active', isActive);
       btns[i].setAttribute('aria-pressed', String(isActive));
     }
@@ -1175,19 +1175,19 @@ var Trust = (function () {
   function toggle(card) {
     if (!card || !card.classList.contains('trust-card')) return;
 
-    var detail = card.querySelector('.trust-detail');
+    const detail = card.querySelector('.trust-detail');
     if (!detail) return;
 
-    var wasExpanded = card.classList.contains('expanded');
+    const wasExpanded = card.classList.contains('expanded');
 
     // Collapse sibling cards (accordion).
     // Scoped to parent instead of full document scan.
-    var parent = card.parentElement;
+    const parent = card.parentElement;
     if (parent) {
-      var expanded = parent.querySelectorAll('.trust-card.expanded');
+      const expanded = parent.querySelectorAll('.trust-card.expanded');
       for (var ei = 0; ei < expanded.length; ei++) {
         expanded[ei].classList.remove('expanded');
-        var d = expanded[ei].querySelector('.trust-detail');
+        const d = expanded[ei].querySelector('.trust-detail');
         if (d) d.hidden = true;
       }
     }
@@ -1221,16 +1221,16 @@ var Trust = (function () {
  */
 function arrowKeyNav(container, selector, onNavigate) {
   container.addEventListener('keydown', function (e) {
-    var items = Array.prototype.slice.call(
+    const items = Array.prototype.slice.call(
       container.querySelectorAll(selector)
     );
     if (items.length === 0) return;
 
-    var idx = items.indexOf(e.target);
+    let idx = items.indexOf(e.target);
     // Only handle events originating from one of the navigable items.
     if (idx === -1) return;
 
-    var next = -1;
+    let next = -1;
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       next = (idx + 1) % items.length;
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
@@ -1263,7 +1263,7 @@ function arrowKeyNav(container, selector, onNavigate) {
 function activateOnKeyboard(container, selector, onActivate) {
   container.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    var target = e.target.closest(selector);
+    let target = e.target.closest(selector);
     if (!target) return;
     e.preventDefault();
     onActivate(target);
@@ -1272,12 +1272,12 @@ function activateOnKeyboard(container, selector, onActivate) {
 
 document.addEventListener('DOMContentLoaded', function () {
   // Scenario buttons - event delegation on the container.
-  var scenarioContainer = document.querySelector('.demo-scenarios');
+  const scenarioContainer = document.querySelector('.demo-scenarios');
   if (scenarioContainer) {
     scenarioContainer.addEventListener('click', function (e) {
-      var btn = e.target.closest('.scenario-btn');
+      let btn = e.target.closest('.scenario-btn');
       if (!btn) return;
-      var scenario = btn.dataset.scenario;
+      const scenario = btn.dataset.scenario;
       if (scenario) ChatDemo.switchTo(scenario);
     });
   }
@@ -1285,10 +1285,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // Testimonials carousel - init and event delegation.
   Testimonials.init();
 
-  var testimonialsNav = document.querySelector('.testimonials-nav');
+  const testimonialsNav = document.querySelector('.testimonials-nav');
   if (testimonialsNav) {
     testimonialsNav.addEventListener('click', function (e) {
-      var arrow = e.target.closest('.testimonial-arrow');
+      const arrow = e.target.closest('.testimonial-arrow');
       if (arrow) {
         if (arrow.classList.contains('testimonial-prev')) {
           Testimonials.prev();
@@ -1297,7 +1297,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return;
       }
-      var dot = e.target.closest('.testimonial-dot');
+      const dot = e.target.closest('.testimonial-dot');
       if (dot && dot.dataset.index !== undefined) {
         Testimonials.goTo(parseInt(dot.dataset.index, 10));
         // Reset autoplay timer so next auto-advance waits a full interval
@@ -1308,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Billing toggle - click + keyboard.
-  var billingToggle = document.getElementById('billingToggle');
+  const billingToggle = document.getElementById('billingToggle');
   if (billingToggle) {
     billingToggle.addEventListener('click', Pricing.toggle);
     activateOnKeyboard(billingToggle.parentElement || billingToggle, '#billingToggle', function () {
@@ -1317,10 +1317,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // FAQ accordion - event delegation on the section (click + keyboard).
-  var faqSection = document.querySelector('.faq-section');
+  const faqSection = document.querySelector('.faq-section');
   if (faqSection) {
     faqSection.addEventListener('click', function (e) {
-      var question = e.target.closest('.faq-question');
+      const question = e.target.closest('.faq-question');
       if (question) FAQ.toggle(question);
     });
     activateOnKeyboard(faqSection, '.faq-question', function (question) {
@@ -1332,14 +1332,14 @@ document.addEventListener('DOMContentLoaded', function () {
   HowItWorks.init();
 
   // Trust & Privacy - expandable cards (click + keyboard).
-  var trustSection = document.querySelector('.trust-section');
+  const trustSection = document.querySelector('.trust-section');
 
   // System status dashboard.
   StatusDashboard.init();
   CommandsCheatSheet.init();
   if (trustSection) {
     trustSection.addEventListener('click', function (e) {
-      var card = e.target.closest('.trust-card');
+      const card = e.target.closest('.trust-card');
       if (card) Trust.toggle(card);
     });
     activateOnKeyboard(trustSection, '.trust-card', function (card) {
@@ -1349,12 +1349,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Notification Preview - scenario cycling + view toggle.
   NotificationPreview.init();
-  var notifSection = document.getElementById('notificationSection');
+  const notifSection = document.getElementById('notificationSection');
   if (notifSection) {
-    var notifScenarios = notifSection.querySelector('.notification-scenarios');
+    const notifScenarios = notifSection.querySelector('.notification-scenarios');
     if (notifScenarios) {
       notifScenarios.addEventListener('click', function (e) {
-        var btn = e.target.closest('.notif-scenario-btn');
+        let btn = e.target.closest('.notif-scenario-btn');
         if (btn && btn.dataset.scenario !== undefined) {
           NotificationPreview.switchScenario(parseInt(btn.dataset.scenario, 10));
         }
@@ -1364,10 +1364,10 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.focus();
       });
     }
-    var notifViewToggle = notifSection.querySelector('.notification-view-toggle');
+    const notifViewToggle = notifSection.querySelector('.notification-view-toggle');
     if (notifViewToggle) {
       notifViewToggle.addEventListener('click', function (e) {
-        var btn = e.target.closest('.notif-view-btn');
+        let btn = e.target.closest('.notif-view-btn');
         if (btn && btn.dataset.view) {
           NotificationPreview.setView(btn.dataset.view);
         }
@@ -1378,14 +1378,14 @@ document.addEventListener('DOMContentLoaded', function () {
   // Use Cases - tabbed section (init + delegation).
   UseCases.init();
 
-  var usecasesSection = document.getElementById('usecasesSection');
+  const usecasesSection = document.getElementById('usecasesSection');
   if (usecasesSection) {
-    var usecasesTablist = usecasesSection.querySelector('[role="tablist"]');
+    const usecasesTablist = usecasesSection.querySelector('[role="tablist"]');
     if (usecasesTablist && !usecasesTablist.dataset.bound) {
       usecasesTablist.dataset.bound = '1';
       // Click delegation.
       usecasesTablist.addEventListener('click', function (e) {
-        var tab = e.target.closest('.usecase-tab');
+        const tab = e.target.closest('.usecase-tab');
         if (tab && tab.dataset.usecase) {
           window.UseCases.switchTo(tab.dataset.usecase);
         }
@@ -1441,24 +1441,24 @@ document.addEventListener('DOMContentLoaded', function () {
 // ---------------------------------------------------------------------------
 
 var SiteNav = (function () {
-  var nav = null;
-  var links = [];
-  var sections = [];
-  var toggle = null;
-  var linksContainer = null;
-  var activeLink = null;
-  var _lastActiveIdx = -1;
-  var ticking = false;
+  let nav = null;
+  const links = [];
+  const sections = [];
+  let toggle = null;
+  let linksContainer = null;
+  let activeLink = null;
+  let _lastActiveIdx = -1;
+  let ticking = false;
 
   /**
    * Cached section offsetTop values. Reading offsetTop on every scroll
    * event forces synchronous layout recalculation. Cache and recompute
    * only on resize when layout actually changes.
    */
-  var sectionOffsets = [];
-  var _resizeHandler = null;
-  var _keydownHandler = null;
-  var _resizeTimer = null;
+  let sectionOffsets = [];
+  let _resizeHandler = null;
+  let _keydownHandler = null;
+  let _resizeTimer = null;
 
   function cacheSectionOffsets() {
     sectionOffsets = [];
@@ -1474,10 +1474,10 @@ var SiteNav = (function () {
     if (!nav || !linksContainer) return;
 
     // Collect nav links and their target sections
-    var anchors = linksContainer.querySelectorAll('a[href^="#"]');
+    const anchors = linksContainer.querySelectorAll('a[href^="#"]');
     for (var i = 0; i < anchors.length; i++) {
-      var href = anchors[i].getAttribute('href');
-      var target = document.querySelector(href);
+      let href = anchors[i].getAttribute('href');
+      let target = document.querySelector(href);
       if (target) {
         links.push(anchors[i]);
         sections.push(target);
@@ -1494,10 +1494,10 @@ var SiteNav = (function () {
 
     // Smooth scroll + close mobile menu on click
     linksContainer.addEventListener('click', function (e) {
-      var a = e.target.closest('a[href^="#"]');
+      const a = e.target.closest('a[href^="#"]');
       if (!a) return;
       e.preventDefault();
-      var target = document.querySelector(a.getAttribute('href'));
+      let target = document.querySelector(a.getAttribute('href'));
       if (target) {
         target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
       }
@@ -1505,7 +1505,7 @@ var SiteNav = (function () {
     });
 
     // Logo scroll to top
-    var logo = nav.querySelector('.nav-logo');
+    const logo = nav.querySelector('.nav-logo');
     if (logo) {
       logo.addEventListener('click', function (e) {
         e.preventDefault();
@@ -1517,7 +1517,7 @@ var SiteNav = (function () {
     // Mobile hamburger toggle
     if (toggle) {
       toggle.addEventListener('click', function () {
-        var expanded = toggle.getAttribute('aria-expanded') === 'true';
+        const expanded = toggle.getAttribute('aria-expanded') === 'true';
         toggle.setAttribute('aria-expanded', String(!expanded));
         linksContainer.classList.toggle('open');
       });
@@ -1559,19 +1559,19 @@ var SiteNav = (function () {
   }
 
   function updateActiveLink() {
-    var scrollY = window.scrollY + 100; // offset for nav height + margin
+    let scrollY = window.scrollY + 100; // offset for nav height + margin
 
     // Fast path: if scroll position is within the same section as last time,
     // skip the full scan.  This avoids redundant classList operations during
     // continuous scrolling within a long section.
     if (activeLink !== null && _lastActiveIdx >= 0 && _lastActiveIdx < sectionOffsets.length) {
-      var lo = sectionOffsets[_lastActiveIdx];
-      var hi = _lastActiveIdx + 1 < sectionOffsets.length ? sectionOffsets[_lastActiveIdx + 1] : Infinity;
+      const lo = sectionOffsets[_lastActiveIdx];
+      const hi = _lastActiveIdx + 1 < sectionOffsets.length ? sectionOffsets[_lastActiveIdx + 1] : Infinity;
       if (scrollY >= lo && scrollY < hi) return;
     }
 
-    var current = null;
-    var currentIdx = -1;
+    let current = null;
+    let currentIdx = -1;
 
     // Use cached offsets instead of reading offsetTop (avoids forced layout)
     for (var i = sectionOffsets.length - 1; i >= 0; i--) {
@@ -1632,15 +1632,15 @@ var Newsletter = (function () {
   'use strict';
 
   function init() {
-    var form = document.getElementById('newsletterForm');
+    const form = document.getElementById('newsletterForm');
     if (!form) return;
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var emailInput = document.getElementById('newsletterEmail');
-      var btn = document.getElementById('newsletterBtn');
-      var status = document.getElementById('newsletterStatus');
-      var email = emailInput.value.trim();
+      const emailInput = document.getElementById('newsletterEmail');
+      let btn = document.getElementById('newsletterBtn');
+      const status = document.getElementById('newsletterStatus');
+      const email = emailInput.value.trim();
 
       if (!email || !isValidEmail(email)) {
         showStatus(status, 'Please enter a valid email address.', 'error');
@@ -1648,7 +1648,7 @@ var Newsletter = (function () {
       }
 
       // Check for duplicate
-      var subs = getSubscribers();
+      const subs = getSubscribers();
       if (subs.indexOf(email) !== -1) {
         showStatus(status, 'You\'re already subscribed! 🎉', 'success');
         return;
@@ -1697,12 +1697,12 @@ var Newsletter = (function () {
 
   function getSubscribers() {
     try {
-      var data = localStorage.getItem('agentbox_newsletter');
+      const data = localStorage.getItem('agentbox_newsletter');
       if (!data) return [];
-      var parsed = JSON.parse(data);
+      const parsed = JSON.parse(data);
       // Validate: must be an array of strings (email addresses)
       if (!Array.isArray(parsed)) return [];
-      var safe = [];
+      const safe = [];
       for (var i = 0; i < parsed.length; i++) {
         if (typeof parsed[i] === 'string') safe.push(parsed[i]);
       }
@@ -1720,10 +1720,10 @@ var Newsletter = (function () {
 // ---------------------------------------------------------------------------
 
 var Roadmap = (function () {
-  var STORAGE_KEY = 'agentbox_roadmap_votes';
-  var currentFilter = 'all';
-  var _container = null;
-  var _grid = null;
+  const STORAGE_KEY = 'agentbox_roadmap_votes';
+  let currentFilter = 'all';
+  let _container = null;
+  let _grid = null;
 
   /** Lazily resolve the container element (cache on first use). */
   function container() {
@@ -1738,9 +1738,9 @@ var Roadmap = (function () {
   }
 
   /** Cached DOM collections — resolved once on init, reused on every filter. */
-  var _filterBtns = [];
-  var _cards = [];
-  var _summaryItems = [];
+  let _filterBtns = [];
+  let _cards = [];
+  let _summaryItems = [];
 
   function init() {
     _container = document.getElementById('roadmapSection');
@@ -1753,7 +1753,7 @@ var Roadmap = (function () {
     );
     for (var i = 0; i < _filterBtns.length; i++) {
       _filterBtns[i].addEventListener('click', function (e) {
-        var status = e.currentTarget.getAttribute('data-status');
+        const status = e.currentTarget.getAttribute('data-status');
         filterBy(status);
       });
     }
@@ -1769,7 +1769,7 @@ var Roadmap = (function () {
 
     if (grid()) {
       grid().addEventListener('click', function (e) {
-        var btn = e.target.closest('.roadmap-vote-btn');
+        let btn = e.target.closest('.roadmap-vote-btn');
         if (!btn) return;
         toggleVote(btn);
       });
@@ -1803,7 +1803,7 @@ var Roadmap = (function () {
     }
 
     for (var i = 0; i < _filterBtns.length; i++) {
-      var isActive =
+      let isActive =
         _filterBtns[i].getAttribute('data-status') === currentFilter;
       _filterBtns[i].classList.toggle('active', isActive);
       _filterBtns[i].setAttribute(
@@ -1813,31 +1813,31 @@ var Roadmap = (function () {
     }
 
     for (var j = 0; j < _cards.length; j++) {
-      var cardStatus = _cards[j].getAttribute('data-status');
-      var visible = currentFilter === 'all' || cardStatus === currentFilter;
+      const cardStatus = _cards[j].getAttribute('data-status');
+      let visible = currentFilter === 'all' || cardStatus === currentFilter;
       _cards[j].setAttribute('data-hidden', visible ? 'false' : 'true');
     }
 
     for (var k = 0; k < _summaryItems.length; k++) {
-      var itemStatus = _summaryItems[k].getAttribute('data-status');
-      var highlighted =
+      const itemStatus = _summaryItems[k].getAttribute('data-status');
+      const highlighted =
         currentFilter === 'all' || itemStatus === currentFilter;
       _summaryItems[k].style.opacity = highlighted ? '1' : '0.4';
     }
   }
 
   function toggleVote(btn) {
-    var card = btn.closest('.roadmap-card');
+    const card = btn.closest('.roadmap-card');
     if (!card) return;
 
-    var countEl = card.querySelector('.roadmap-vote-count');
+    const countEl = card.querySelector('.roadmap-vote-count');
     if (!countEl) return;
 
-    var count = parseInt(countEl.textContent, 10) || 0;
-    var wasVoted = btn.classList.contains('voted');
+    let count = parseInt(countEl.textContent, 10) || 0;
+    const wasVoted = btn.classList.contains('voted');
 
     // Cap at 999999 to match restoreVotes validation and prevent overflow
-    var MAX_VOTES = 999999;
+    const MAX_VOTES = 999999;
 
     if (wasVoted) {
       count = Math.max(0, count - 1);
@@ -1874,21 +1874,21 @@ var Roadmap = (function () {
   }
 
   function getStatusCounts() {
-    var cards = getCards();
-    var counts = { shipped: 0, progress: 0, planned: 0 };
+    const cards = getCards();
+    const counts = { shipped: 0, progress: 0, planned: 0 };
     for (var i = 0; i < cards.length; i++) {
-      var s = cards[i].getAttribute('data-status');
+      let s = cards[i].getAttribute('data-status');
       if (counts.hasOwnProperty(s)) counts[s]++;
     }
     return counts;
   }
 
   function getVotes() {
-    var cards = getCards();
-    var votes = Object.create(null);
+    const cards = getCards();
+    const votes = Object.create(null);
     for (var i = 0; i < cards.length; i++) {
-      var h3 = cards[i].querySelector('h3');
-      var countEl = cards[i].querySelector('.roadmap-vote-count');
+      const h3 = cards[i].querySelector('h3');
+      const countEl = cards[i].querySelector('.roadmap-vote-count');
       if (h3 && countEl) {
         votes[h3.textContent] = parseInt(countEl.textContent, 10) || 0;
       }
@@ -1898,12 +1898,12 @@ var Roadmap = (function () {
 
   function saveVotes() {
     try {
-      var cards = getCards();
-      var data = Object.create(null);
+      const cards = getCards();
+      const data = Object.create(null);
       for (var i = 0; i < cards.length; i++) {
-        var h3 = cards[i].querySelector('h3');
-        var btn = cards[i].querySelector('.roadmap-vote-btn');
-        var countEl = cards[i].querySelector('.roadmap-vote-count');
+        const h3 = cards[i].querySelector('h3');
+        let btn = cards[i].querySelector('.roadmap-vote-btn');
+        const countEl = cards[i].querySelector('.roadmap-vote-count');
         if (h3 && btn && countEl) {
           data[h3.textContent] = {
             count: parseInt(countEl.textContent, 10) || 0,
@@ -1919,28 +1919,28 @@ var Roadmap = (function () {
 
   function restoreVotes() {
     try {
-      var raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
-      var parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
       // Rebuild as prototype-safe map with validated entries
-      var data = Object.create(null);
+      const data = Object.create(null);
       for (var key in parsed) {
         if (!Object.prototype.hasOwnProperty.call(parsed, key)) continue;
-        var entry = parsed[key];
+        const entry = parsed[key];
         if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
           data[key] = entry;
         }
       }
-      var cards = getCards();
+      const cards = getCards();
       for (var i = 0; i < cards.length; i++) {
-        var h3 = cards[i].querySelector('h3');
+        const h3 = cards[i].querySelector('h3');
         if (!h3 || !data[h3.textContent]) continue;
-        var item = data[h3.textContent];
-        var countEl = cards[i].querySelector('.roadmap-vote-count');
-        var btn = cards[i].querySelector('.roadmap-vote-btn');
+        const item = data[h3.textContent];
+        const countEl = cards[i].querySelector('.roadmap-vote-count');
+        let btn = cards[i].querySelector('.roadmap-vote-btn');
         // Validate count is a safe integer before rendering
-        var count = parseInt(item.count, 10);
+        let count = parseInt(item.count, 10);
         if (countEl && !isNaN(count) && count >= 0 && count <= 999999) {
           countEl.textContent = String(count);
         }
@@ -1971,14 +1971,14 @@ var Roadmap = (function () {
 // ---------------------------------------------------------------------------
 
 var StatusDashboard = (function () {
-  var STATUS_LEVELS = ['operational', 'degraded', 'outage'];
-  var _grid = null;
-  var _incidents = null;
-  var _overall = null;
+  const STATUS_LEVELS = ['operational', 'degraded', 'outage'];
+  let _grid = null;
+  let _incidents = null;
+  let _overall = null;
   /** Cached service elements keyed by data-service name for O(1) lookup. */
-  var _serviceCache = null;
+  let _serviceCache = null;
   /** Cached service element array (avoids querySelectorAll on every call). */
-  var _serviceList = null;
+  let _serviceList = null;
 
   /** Lazily resolve grid element. */
   function getGrid() {
@@ -2011,10 +2011,10 @@ var StatusDashboard = (function () {
     _serviceCache = Object.create(null);
     _serviceList = [];
     if (!getGrid()) return;
-    var els = getGrid().querySelectorAll('.status-service');
+    const els = getGrid().querySelectorAll('.status-service');
     for (var i = 0; i < els.length; i++) {
       _serviceList.push(els[i]);
-      var name = els[i].getAttribute('data-service');
+      const name = els[i].getAttribute('data-service');
       if (name) _serviceCache[name] = els[i];
     }
   }
@@ -2035,24 +2035,24 @@ var StatusDashboard = (function () {
 
   function getServiceStatus(serviceName) {
     if (!_serviceCache) _buildServiceCache();
-    var el = _serviceCache[serviceName];
+    let el = _serviceCache[serviceName];
     return el ? el.getAttribute('data-status') : null;
   }
 
   function getServiceUptime(serviceName) {
     if (!_serviceCache) _buildServiceCache();
-    var el = _serviceCache[serviceName];
+    let el = _serviceCache[serviceName];
     if (!el) return null;
-    var uptimeEl = el.querySelector('.status-uptime');
+    const uptimeEl = el.querySelector('.status-uptime');
     return uptimeEl ? parseFloat(uptimeEl.textContent) : null;
   }
 
   function setServiceStatus(serviceName, status) {
     if (!_serviceCache) _buildServiceCache();
-    var el = _serviceCache[serviceName];
+    let el = _serviceCache[serviceName];
     if (el) {
       el.setAttribute('data-status', status);
-      var dot = el.querySelector('.status-dot');
+      const dot = el.querySelector('.status-dot');
       if (dot) dot.className = 'status-dot ' + status;
     }
     updateOverall();
@@ -2060,21 +2060,21 @@ var StatusDashboard = (function () {
 
   function setServiceUptime(serviceName, uptime) {
     if (!_serviceCache) _buildServiceCache();
-    var svc = _serviceCache[serviceName];
+    const svc = _serviceCache[serviceName];
     if (!svc) return;
-    var el = svc.querySelector('.status-uptime');
+    let el = svc.querySelector('.status-uptime');
     if (el) el.textContent = uptime.toFixed(2) + '%';
-    var bar = svc.querySelector('.status-bar-fill');
+    let bar = svc.querySelector('.status-bar-fill');
     if (bar) bar.style.width = Math.min(100, Math.max(0, uptime)) + '%';
-    var meter = svc.querySelector('.status-bar');
+    const meter = svc.querySelector('.status-bar');
     if (meter) meter.setAttribute('aria-valuenow', String(uptime));
   }
 
   function updateOverall() {
-    var services = getServices();
-    var worst = 'operational';
+    const services = getServices();
+    let worst = 'operational';
     for (var i = 0; i < services.length; i++) {
-      var s = services[i].getAttribute('data-status');
+      let s = services[i].getAttribute('data-status');
       if (STATUS_LEVELS.indexOf(s) > STATUS_LEVELS.indexOf(worst)) {
         worst = s;
       }
@@ -2082,11 +2082,11 @@ var StatusDashboard = (function () {
 
     if (!getOverall()) return;
 
-    var dot = getOverall().querySelector('.status-dot');
-    var text = getOverall().querySelector('.status-overall-text');
+    const dot = getOverall().querySelector('.status-dot');
+    let text = getOverall().querySelector('.status-overall-text');
     if (dot) dot.className = 'status-dot ' + worst;
 
-    var messages = {
+    const messages = {
       operational: 'All systems operational',
       degraded: 'Some systems degraded',
       outage: 'System outage detected'
@@ -2096,7 +2096,7 @@ var StatusDashboard = (function () {
 
   function getOverallStatus() {
     if (!getOverall()) return null;
-    var dot = getOverall().querySelector('.status-dot');
+    const dot = getOverall().querySelector('.status-dot');
     if (!dot) return null;
     for (var i = STATUS_LEVELS.length - 1; i >= 0; i--) {
       if (dot.classList.contains(STATUS_LEVELS[i])) return STATUS_LEVELS[i];
@@ -2111,11 +2111,11 @@ var StatusDashboard = (function () {
   }
 
   function getAverageUptime() {
-    var services = getServices();
+    const services = getServices();
     if (services.length === 0) return 0;
-    var total = 0;
+    let total = 0;
     for (var i = 0; i < services.length; i++) {
-      var el = services[i].querySelector('.status-uptime');
+      let el = services[i].querySelector('.status-uptime');
       total += el ? parseFloat(el.textContent) || 0 : 0;
     }
     return total / services.length;
@@ -2150,16 +2150,16 @@ var StatusDashboard = (function () {
 // ---------------------------------------------------------------------------
 
 var Calculator = (function () {
-  var _section = null;
+  let _section = null;
 
   // Cached DOM references — resolved once in init(), reused on every
   // slider input event.  Eliminates 5 getElementById + 1 querySelectorAll
   // calls per update (~dozens per second while dragging a slider).
-  var _weeklyEl = null;
-  var _monthlyEl = null;
-  var _yearlyEl = null;
-  var _equivEl = null;
-  var _groups = [];
+  let _weeklyEl = null;
+  let _monthlyEl = null;
+  let _yearlyEl = null;
+  let _equivEl = null;
+  let _groups = [];
 
   /** Lazily resolve the section element (cache on first use). */
   function section() {
@@ -2178,7 +2178,7 @@ var Calculator = (function () {
     _equivEl = document.getElementById('calcEquivalent');
     _groups = section().querySelectorAll('.calc-slider-group');
 
-    var sliders = section().querySelectorAll('.calc-range');
+    const sliders = section().querySelectorAll('.calc-range');
     for (var i = 0; i < sliders.length; i++) {
       sliders[i].addEventListener('input', update);
     }
@@ -2188,13 +2188,13 @@ var Calculator = (function () {
   function update() {
     if (!section()) return;
 
-    var totalMinutes = 0;
+    let totalMinutes = 0;
 
     for (var i = 0; i < _groups.length; i++) {
-      var slider = _groups[i].querySelector('.calc-range');
-      var valueEl = _groups[i].querySelector('.calc-slider-value');
-      var minutesPer = parseInt(_groups[i].dataset.minutes, 10) || 0;
-      var count = parseInt(slider.value, 10) || 0;
+      const slider = _groups[i].querySelector('.calc-range');
+      const valueEl = _groups[i].querySelector('.calc-slider-value');
+      const minutesPer = parseInt(_groups[i].dataset.minutes, 10) || 0;
+      let count = parseInt(slider.value, 10) || 0;
 
       if (valueEl) valueEl.textContent = count + ' /week';
       totalMinutes += count * minutesPer;
@@ -2202,10 +2202,10 @@ var Calculator = (function () {
 
     if (_weeklyEl) _weeklyEl.textContent = totalMinutes;
 
-    var monthlyHours = (totalMinutes * 4.33 / 60);
+    const monthlyHours = (totalMinutes * 4.33 / 60);
     if (_monthlyEl) _monthlyEl.textContent = monthlyHours < 10 ? monthlyHours.toFixed(1) : Math.round(monthlyHours);
 
-    var yearlyHours = (totalMinutes * 52 / 60);
+    const yearlyHours = (totalMinutes * 52 / 60);
     if (_yearlyEl) _yearlyEl.textContent = Math.round(yearlyHours);
 
     if (_equivEl) {
@@ -2215,7 +2215,7 @@ var Calculator = (function () {
         _setEquivText(_equivEl, 'That\u2019s ', Math.round(yearlyHours) + ' hours',
           ' back every year \u2014 time for what matters \u2728');
       } else {
-        var workdays = (yearlyHours / 8).toFixed(1);
+        const workdays = (yearlyHours / 8).toFixed(1);
         _setEquivText(_equivEl, 'That\u2019s like getting ', workdays + ' extra workdays',
           ' back every year \u2728');
       }
@@ -2232,7 +2232,7 @@ var Calculator = (function () {
   function _setEquivText(el, prefix, boldText, suffix) {
     while (el.firstChild) el.removeChild(el.firstChild);
     el.appendChild(document.createTextNode(prefix));
-    var strong = document.createElement('strong');
+    const strong = document.createElement('strong');
     strong.textContent = boldText;
     el.appendChild(strong);
     el.appendChild(document.createTextNode(suffix));
@@ -2250,7 +2250,7 @@ var Calculator = (function () {
 // Command Palette (Ctrl+K / Cmd+K)
 // ---------------------------------------------------------------------------
 var CommandPalette = (function () {
-  var SECTIONS = [
+  const SECTIONS = [
     { id: 'featuresSection', icon: '✨', label: 'Features', hint: 'What AgentBox can do' },
     { id: 'howItWorks', icon: '🚀', label: 'How It Works', hint: 'Getting started' },
     { id: 'demoSection', icon: '💬', label: 'Demo', hint: 'See it in action' },
@@ -2272,12 +2272,12 @@ var CommandPalette = (function () {
     { id: 'newsletterSection', icon: '📬', label: 'Newsletter', hint: 'Stay in the loop' }
   ];
 
-  var overlay, input, results;
-  var selectedIndex = 0;
-  var filtered = [];
-  var pool = []; // Pre-created <li> elements, one per SECTIONS entry
-  var poolIndex = Object.create(null); // section.id -> pool array index (O(1) lookup)
-  var _globalKeyHandler = null;
+  let overlay, input, results;
+  let selectedIndex = 0;
+  let filtered = [];
+  const pool = []; // Pre-created <li> elements, one per SECTIONS entry
+  const poolIndex = Object.create(null); // section.id -> pool array index (O(1) lookup)
+  let _globalKeyHandler = null;
 
   function init() {
     overlay = document.getElementById('cmdPaletteOverlay');
@@ -2330,7 +2330,7 @@ var CommandPalette = (function () {
   }
 
   function filter(q) {
-    var query = q.toLowerCase().trim();
+    const query = q.toLowerCase().trim();
     filtered = query
       ? SECTIONS.filter(function (s) {
           return s.label.toLowerCase().indexOf(query) !== -1 ||
@@ -2343,20 +2343,20 @@ var CommandPalette = (function () {
 
   function buildPool() {
     SECTIONS.forEach(function (s, idx) {
-      var li = document.createElement('li');
+      const li = document.createElement('li');
       li.className = 'cmd-palette-item';
       li.setAttribute('role', 'option');
       li.dataset.sectionId = s.id;
 
-      var iconSpan = document.createElement('span');
+      const iconSpan = document.createElement('span');
       iconSpan.className = 'cmd-palette-item-icon';
       iconSpan.textContent = s.icon;
 
-      var labelSpan = document.createElement('span');
+      const labelSpan = document.createElement('span');
       labelSpan.className = 'cmd-palette-item-label';
       labelSpan.textContent = s.label;
 
-      var hintSpan = document.createElement('span');
+      const hintSpan = document.createElement('span');
       hintSpan.className = 'cmd-palette-item-hint';
       hintSpan.textContent = s.hint;
 
@@ -2383,18 +2383,18 @@ var CommandPalette = (function () {
 
   function render() {
     // Build lookup of visible section ids
-    var visibleIds = Object.create(null);
+    const visibleIds = Object.create(null);
     for (var i = 0; i < filtered.length; i++) {
       visibleIds[filtered[i].id] = i;
     }
 
     // Show/hide pooled elements and reorder visible ones
-    var fragment = document.createDocumentFragment();
+    const fragment = document.createDocumentFragment();
     // First, append visible items in filtered order — O(n) via poolIndex
     for (var i = 0; i < filtered.length; i++) {
-      var idx = poolIndex[filtered[i].id];
+      let idx = poolIndex[filtered[i].id];
       if (idx !== undefined) {
-        var li = pool[idx].el;
+        const li = pool[idx].el;
         li.hidden = false;
         if (i === selectedIndex) {
           li.setAttribute('aria-selected', 'true');
@@ -2423,7 +2423,7 @@ var CommandPalette = (function () {
    */
   function move(dir) {
     if (!filtered.length) return;
-    var items = results.children;
+    const items = results.children;
     if (items[selectedIndex]) items[selectedIndex].removeAttribute('aria-selected');
     selectedIndex = (selectedIndex + dir + filtered.length) % filtered.length;
     if (items[selectedIndex]) {
@@ -2434,8 +2434,8 @@ var CommandPalette = (function () {
 
   function go() {
     if (!filtered.length) return;
-    var section = filtered[selectedIndex];
-    var el = document.getElementById(section.id);
+    const section = filtered[selectedIndex];
+    let el = document.getElementById(section.id);
     if (el) {
       close();
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2455,10 +2455,10 @@ var CommandPalette = (function () {
 // Floating Share Button
 // ---------------------------------------------------------------------------
 var ShareFab = (function () {
-  var btn, menu, toast, toastTimer;
-  var PAGE_URL = 'https://getagentbox.com';
-  var PAGE_TITLE = 'AgentBox - Your Personal AI Agent on Telegram';
-  var PAGE_DESC = 'Get your own AI assistant that lives in Telegram. It remembers you, searches the web, and helps you get things done.';
+  let btn, menu, toast, toastTimer;
+  const PAGE_URL = 'https://getagentbox.com';
+  const PAGE_TITLE = 'AgentBox - Your Personal AI Agent on Telegram';
+  const PAGE_DESC = 'Get your own AI assistant that lives in Telegram. It remembers you, searches the web, and helps you get things done.';
 
   function init() {
     btn = document.getElementById('shareFabBtn');
@@ -2474,14 +2474,14 @@ var ShareFab = (function () {
       if (e.key === 'Escape') close();
     });
 
-    var options = menu.querySelectorAll('.share-option');
+    const options = menu.querySelectorAll('.share-option');
     for (var i = 0; i < options.length; i++) {
       options[i].addEventListener('click', handleShare);
     }
   }
 
   function toggle() {
-    var open = btn.getAttribute('aria-expanded') === 'true';
+    const open = btn.getAttribute('aria-expanded') === 'true';
     if (open) close(); else openMenu();
   }
 
@@ -2497,8 +2497,8 @@ var ShareFab = (function () {
   }
 
   function handleShare(e) {
-    var type = e.currentTarget.getAttribute('data-share');
-    var url;
+    const type = e.currentTarget.getAttribute('data-share');
+    let url;
     if (type === 'twitter') {
       url = 'https://twitter.com/intent/tweet?text=' +
         encodeURIComponent(PAGE_TITLE + ' — ' + PAGE_DESC) +
@@ -2518,7 +2518,7 @@ var ShareFab = (function () {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(PAGE_URL).then(showToast);
     } else {
-      var ta = document.createElement('textarea');
+      const ta = document.createElement('textarea');
       ta.value = PAGE_URL;
       ta.style.position = 'fixed';
       ta.style.opacity = '0';
@@ -2543,15 +2543,15 @@ var ShareFab = (function () {
 // Theme Toggle (Light/Dark Mode)
 // ---------------------------------------------------------------------------
 var ThemeToggle = (function () {
-  var STORAGE_KEY = 'agentbox-theme';
-  var btn, icon;
+  const STORAGE_KEY = 'agentbox-theme';
+  let btn, icon;
 
   function init() {
     btn = document.getElementById('themeToggle');
     icon = document.getElementById('themeIcon');
     if (!btn) return;
 
-    var saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'light') {
       document.body.classList.add('light-mode');
       if (icon) icon.textContent = '🌙';
@@ -2561,7 +2561,7 @@ var ThemeToggle = (function () {
   }
 
   function toggle() {
-    var isLight = document.body.classList.toggle('light-mode');
+    const isLight = document.body.classList.toggle('light-mode');
     if (icon) icon.textContent = isLight ? '🌙' : '☀️';
     localStorage.setItem(STORAGE_KEY, isLight ? 'light' : 'dark');
   }
@@ -2576,7 +2576,7 @@ var ThemeToggle = (function () {
 var ScrollProgress = (function () {
   'use strict';
 
-  var bar, btn, ticking;
+  let bar, btn, ticking;
 
   function init() {
     // Guard against double-init: destroy previous listeners first
@@ -2606,9 +2606,9 @@ var ScrollProgress = (function () {
     // Guard against stale DOM references (element removed or hidden)
     if (!bar || bar.offsetParent === null) return;
 
-    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
 
     bar.style.width = progress + '%';
 
@@ -2648,7 +2648,7 @@ var ScrollProgress = (function () {
 
 /* ── Keyboard Shortcuts Help (?) ── */
 var ShortcutsHelp = (function () {
-  var overlay, closeBtn;
+  let overlay, closeBtn;
 
   function open() {
     overlay.hidden = false;
@@ -2684,7 +2684,7 @@ var ShortcutsHelp = (function () {
 
       // T for theme toggle
       if (e.key === 't' && !e.ctrlKey && !e.metaKey && !e.altKey && overlay.hidden) {
-        var themeBtn = document.getElementById('themeToggle');
+        const themeBtn = document.getElementById('themeToggle');
         if (themeBtn) themeBtn.click();
       }
     });
@@ -2695,12 +2695,12 @@ var ShortcutsHelp = (function () {
 
 /* ── Chat Playground ── */
 var Playground = (function () {
-  var messagesEl, inputEl, formEl;
+  let messagesEl, inputEl, formEl;
 
   /** Pending reply timer — cleared on new submit to prevent stacking. */
-  var pendingTimer = null;
+  let pendingTimer = null;
   /** Typing indicator currently in the DOM. */
-  var currentTyping = null;
+  let currentTyping = null;
 
   /**
    * Security limits to prevent resource exhaustion.
@@ -2709,10 +2709,10 @@ var Playground = (function () {
    * MAX_MESSAGES: caps DOM children in the messages container to prevent
    *   memory exhaustion from automated or rapid submissions.
    */
-  var MAX_INPUT_LENGTH = 500;
-  var MAX_MESSAGES = 50;
+  const MAX_INPUT_LENGTH = 500;
+  const MAX_MESSAGES = 50;
 
-  var responses = [
+  const responses = [
     { patterns: ['hi', 'hello', 'hey', 'sup', 'yo'], reply: 'Hey there! \u{1F44B} I\'m your AgentBox agent. Ask me anything \u2014 weather, recipes, coding help, reminders, or whatever\'s on your mind.' },
     { patterns: ['weather', 'temperature', 'rain', 'sunny', 'forecast'], reply: '\u{1F324}\uFE0F I can check real-time weather for any city! In the full version, I search the web and give you current conditions + forecasts. Try me on Telegram to get live data!' },
     { patterns: ['recipe', 'cook', 'food', 'dinner', 'lunch', 'pasta', 'chicken'], reply: '\u{1F373} I love helping with recipes! Tell me what ingredients you have and I\'ll suggest something. I also remember your dietary preferences across conversations \u2014 no repeating yourself.' },
@@ -2727,18 +2727,18 @@ var Playground = (function () {
     { patterns: ['who', 'what are you', 'about'], reply: 'I\'m AgentBox \u2014 your personal AI agent that lives in Telegram. I can search the web, set reminders, understand images, and most importantly: I remember you across conversations. \u{1F916}' },
     { patterns: ['help', 'can you', 'what can'], reply: 'I can help with:\n\u{1F50D} Web search & research\n\u23F0 Reminders & scheduling\n\u{1F4F7} Image analysis\n\u{1F9E0} Remembering your preferences\n\u{1F4BB} Coding help\n\u{1F373} Recipes & recommendations\n\nAnd much more on Telegram!' },
   ];
-  var fallbacks = [
+  const fallbacks = [
     'Interesting question! In the full version on Telegram, I\'d search the web and give you a detailed answer. Try me there! \u{1F680}',
     'I\'d love to help with that! This demo is limited, but the real agent on Telegram has full web search, memory, and image understanding. Give it a spin! \u2728',
     'Good one! The real AgentBox would handle this with a web search and your personal context. Head to Telegram to try the full experience \u{1F4AC}',
   ];
-  var fallbackIdx = 0;
+  let fallbackIdx = 0;
 
   /**
    * Pre-built keyword → reply index for O(1) lookup instead of
    * nested linear scan on every message.
    */
-  var patternMap = null;
+  let patternMap = null;
 
   function buildPatternMap() {
     patternMap = Object.create(null);
@@ -2751,8 +2751,8 @@ var Playground = (function () {
 
   function findResponse(text) {
     if (!patternMap) buildPatternMap();
-    var lower = text.toLowerCase().replace(/[^\w\s]/g, '');
-    var words = lower.split(/\s+/);
+    const lower = text.toLowerCase().replace(/[^\w\s]/g, '');
+    const words = lower.split(/\s+/);
 
     // Check single words first (most patterns are single keywords)
     for (var i = 0; i < words.length; i++) {
@@ -2766,7 +2766,7 @@ var Playground = (function () {
       }
     }
 
-    var fb = fallbacks[fallbackIdx % fallbacks.length];
+    const fb = fallbacks[fallbackIdx % fallbacks.length];
     fallbackIdx++;
     return fb;
   }
@@ -2776,7 +2776,7 @@ var Playground = (function () {
     while (messagesEl.children.length >= MAX_MESSAGES) {
       messagesEl.removeChild(messagesEl.firstChild);
     }
-    var bubble = document.createElement('div');
+    const bubble = document.createElement('div');
     bubble.className = 'chat-bubble ' + role;
     bubble.textContent = text;
     messagesEl.appendChild(bubble);
@@ -2784,7 +2784,7 @@ var Playground = (function () {
   }
 
   function addTyping() {
-    var el = _typingIndicatorTemplate.cloneNode(true);
+    let el = _typingIndicatorTemplate.cloneNode(true);
     el.id = 'playgroundTyping';
     messagesEl.appendChild(el);
     messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -2801,7 +2801,7 @@ var Playground = (function () {
 
   function handleSubmit(e) {
     e.preventDefault();
-    var text = inputEl.value.trim();
+    let text = inputEl.value.trim();
     if (!text) return;
 
     // Truncate to prevent unbounded regex/split in findResponse().
@@ -2819,9 +2819,9 @@ var Playground = (function () {
     addBubble('user', text);
     inputEl.value = '';
 
-    var reply = findResponse(text);
+    const reply = findResponse(text);
     currentTyping = addTyping();
-    var delay = prefersReducedMotion ? 200 : 800 + Math.min(reply.length * 5, 1200);
+    const delay = prefersReducedMotion ? 200 : 800 + Math.min(reply.length * 5, 1200);
 
     pendingTimer = setTimeout(function () {
       pendingTimer = null;
@@ -2850,19 +2850,19 @@ var Playground = (function () {
 var ActivityFeed = (function () {
   'use strict';
 
-  var feedEl;
-  var activeCountEl, todayCountEl;
-  var cycleTimer = null;
-  var counterTimer = null;
+  let feedEl;
+  let activeCountEl, todayCountEl;
+  let cycleTimer = null;
+  let counterTimer = null;
 
   /** Maximum visible items in the feed. */
-  var MAX_VISIBLE = 5;
+  const MAX_VISIBLE = 5;
 
   /** Interval between new activity items (ms). */
-  var CYCLE_INTERVAL = 4000;
+  const CYCLE_INTERVAL = 4000;
 
   /** Pool of simulated agent activities. */
-  var ACTIVITIES = [
+  const ACTIVITIES = [
     { icon: '\u{1F50D}', text: 'searched the web for "best budget laptops 2026"' },
     { icon: '\u23F0', text: 'set a reminder: "Call dentist at 3 PM"' },
     { icon: '\u{1F4E7}', text: 'summarized 5 unread emails into key action items' },
@@ -2886,15 +2886,15 @@ var ActivityFeed = (function () {
   ];
 
   /** Shuffled index to avoid repeats until pool exhausted. */
-  var shuffled = [];
-  var shuffleIdx = 0;
+  let shuffled = [];
+  let shuffleIdx = 0;
 
   function shuffle() {
     shuffled = [];
     for (var i = 0; i < ACTIVITIES.length; i++) shuffled.push(i);
     for (var j = shuffled.length - 1; j > 0; j--) {
-      var k = Math.floor(Math.random() * (j + 1));
-      var tmp = shuffled[j];
+      let k = Math.floor(Math.random() * (j + 1));
+      const tmp = shuffled[j];
       shuffled[j] = shuffled[k];
       shuffled[k] = tmp;
     }
@@ -2912,21 +2912,21 @@ var ActivityFeed = (function () {
 
   /** Create an activity item DOM node. */
   function createItem(activity) {
-    var item = document.createElement('div');
+    const item = document.createElement('div');
     item.className = 'activity-item entering';
 
-    var icon = document.createElement('span');
+    let icon = document.createElement('span');
     icon.className = 'activity-icon';
     icon.textContent = activity.icon;
 
-    var text = document.createElement('span');
+    let text = document.createElement('span');
     text.className = 'activity-text';
-    var strong = document.createElement('strong');
+    const strong = document.createElement('strong');
     strong.textContent = 'Agent';
     text.appendChild(strong);
     text.appendChild(document.createTextNode(' ' + activity.text));
 
-    var time = document.createElement('span');
+    const time = document.createElement('span');
     time.className = 'activity-time';
     time.textContent = timeLabel();
 
@@ -2941,15 +2941,15 @@ var ActivityFeed = (function () {
   function cycle() {
     if (!feedEl) return;
 
-    var act = nextActivity();
-    var newItem = createItem(act);
+    const act = nextActivity();
+    const newItem = createItem(act);
 
     // Age existing time labels
-    var items = feedEl.querySelectorAll('.activity-item');
+    const items = feedEl.querySelectorAll('.activity-item');
     for (var i = 0; i < items.length; i++) {
-      var timeEl = items[i].querySelector('.activity-time');
+      const timeEl = items[i].querySelector('.activity-time');
       if (timeEl) {
-        var age = (i + 1) * (CYCLE_INTERVAL / 1000);
+        const age = (i + 1) * (CYCLE_INTERVAL / 1000);
         if (age < 60) {
           timeEl.textContent = Math.round(age) + 's ago';
         } else {
@@ -2960,11 +2960,11 @@ var ActivityFeed = (function () {
 
     // Remove oldest if over limit
     if (items.length >= MAX_VISIBLE) {
-      var last = items[items.length - 1];
+      const last = items[items.length - 1];
       last.classList.add('exiting');
 
       // Guard: prevent double-removal if animationend races with fallback
-      var removed = false;
+      let removed = false;
       function removeOnce() {
         if (removed) return;
         removed = true;
@@ -2995,8 +2995,8 @@ var ActivityFeed = (function () {
   /** Slowly increment the counters for visual effect. */
   function tickCounters() {
     if (!activeCountEl || !todayCountEl) return;
-    var active = parseInt(activeCountEl.textContent.replace(/,/g, ''), 10) || 1247;
-    var today = parseInt(todayCountEl.textContent.replace(/,/g, ''), 10) || 18392;
+    let active = parseInt(activeCountEl.textContent.replace(/,/g, ''), 10) || 1247;
+    let today = parseInt(todayCountEl.textContent.replace(/,/g, ''), 10) || 18392;
 
     // Random small fluctuation
     active += Math.floor(Math.random() * 5) - 2;
@@ -3039,8 +3039,8 @@ var ActivityFeed = (function () {
 
     // Use IntersectionObserver if available, otherwise just start
     if (typeof IntersectionObserver !== 'undefined') {
-      var observer = new IntersectionObserver(onVisible, { threshold: 0.2 });
-      var section = document.getElementById('activitySection');
+      const observer = new IntersectionObserver(onVisible, { threshold: 0.2 });
+      const section = document.getElementById('activitySection');
       if (section) observer.observe(section);
     } else {
       startCycling();
@@ -3058,7 +3058,7 @@ var ActivityFeed = (function () {
 // Prompt Gallery — searchable/filterable example prompts with response modal
 // ---------------------------------------------------------------------------
 var PromptGallery = (function () {
-  var PROMPTS = [
+  const PROMPTS = [
     {
       category: "productivity",
       icon: "\u26a1",
@@ -3151,25 +3151,25 @@ var PromptGallery = (function () {
     }
   ];
 
-  var grid = null;
-  var searchInput = null;
-  var emptyState = null;
-  var modal = null;
-  var modalBackdrop = null;
-  var modalCloseBtn = null;
-  var modalQuestion = null;
-  var modalAnswer = null;
-  var filterBtns = null;
-  var activeCategory = 'all';
+  let grid = null;
+  let searchInput = null;
+  let emptyState = null;
+  let modal = null;
+  let modalBackdrop = null;
+  let modalCloseBtn = null;
+  let modalQuestion = null;
+  let modalAnswer = null;
+  let filterBtns = null;
+  let activeCategory = 'all';
 
   /** Pre-created card elements — one per PROMPTS entry, created once in init. */
-  var cardPool = [];
+  let cardPool = [];
   /** Pre-lowercased search text for each prompt (prompt + response), avoids
    *  repeated toLowerCase() on every keystroke. */
-  var searchIndex = [];
+  const searchIndex = [];
 
   function escapeHtml(str) {
-    var d = document.createElement('div');
+    const d = document.createElement('div');
     d.textContent = str;
     return d.innerHTML;
   }
@@ -3178,8 +3178,8 @@ var PromptGallery = (function () {
   function buildCardPool() {
     if (cardPool.length > 0) return; // already built
     for (var i = 0; i < PROMPTS.length; i++) {
-      var p = PROMPTS[i];
-      var card = document.createElement('div');
+      const p = PROMPTS[i];
+      const card = document.createElement('div');
       card.className = 'prompt-card';
       card.setAttribute('role', 'listitem');
       card.setAttribute('tabindex', '0');
@@ -3207,11 +3207,11 @@ var PromptGallery = (function () {
    * O(n) visibility toggles instead of O(n) DOM create+destroy per keystroke.
    */
   function renderCards() {
-    var search = (searchInput.value || '').toLowerCase().trim();
-    var count = 0;
+    const search = (searchInput.value || '').toLowerCase().trim();
+    let count = 0;
     for (var i = 0; i < PROMPTS.length; i++) {
-      var p = PROMPTS[i];
-      var visible = true;
+      const p = PROMPTS[i];
+      let visible = true;
       if (activeCategory !== 'all' && p.category !== activeCategory) visible = false;
       if (visible && search && searchIndex[i].indexOf(search) === -1) visible = false;
       cardPool[i].hidden = !visible;
@@ -3282,9 +3282,9 @@ var PromptGallery = (function () {
 var PersonalityConfigurator = (function () {
   'use strict';
 
-  var STORAGE_KEY_PERSONALITY = 'agentbox_personality';
+  const STORAGE_KEY_PERSONALITY = 'agentbox_personality';
 
-  var QUESTIONS = [
+  const QUESTIONS = [
     { q: 'What\'s a good recipe for dinner tonight?', key: 'recipe' },
     { q: 'Explain how DNS works.', key: 'dns' },
     { q: 'What should I do this weekend?', key: 'weekend' },
@@ -3302,7 +3302,7 @@ var PersonalityConfigurator = (function () {
     { q: 'How do I negotiate a raise?', key: 'negotiate' }
   ];
 
-  var RESPONSES = {
+  const RESPONSES = {
     recipe: {
       casualBrief: 'Garlic butter shrimp pasta. 20 min, one pan. Can\'t go wrong.',
       casualDetailed: 'Garlic butter shrimp pasta is my go-to.\n\nHere\'s the play:\n1. Cook pasta (linguine works great)\n2. Saute garlic in butter until fragrant\n3. Toss in shrimp, cook 2-3 min per side\n4. Add pasta, splash of pasta water, lemon juice\n5. Fresh parsley on top\n\nTotal time: 20 min. Leftovers reheat well too.',
@@ -3395,7 +3395,7 @@ var PersonalityConfigurator = (function () {
     }
   };
 
-  var HUMOR_ADDITIONS = {
+  const HUMOR_ADDITIONS = {
     recipe: { low: '', mid: ' Trust me on this one.', high: ' Chef\'s kiss, honestly. Gordon Ramsay would nod approvingly. Probably.' },
     dns: { low: '', mid: ' Pretty clever system, honestly.', high: ' It\'s like asking 10 people for directions and somehow getting there in 50ms. The internet is wild.' },
     weekend: { low: '', mid: ' Life\'s short, pick the fun one.', high: ' Plot twist: do ALL of them. Sleep is overrated anyway.' },
@@ -3413,7 +3413,7 @@ var PersonalityConfigurator = (function () {
     negotiate: { low: '', mid: ' You deserve fair compensation.', high: ' Channel your inner "I know what I bring to this table and I also brought dessert."' }
   };
 
-  var EMOJI_SETS = {
+  const EMOJI_SETS = {
     recipe: { none: '', some: ' \uD83C\uDF5D', lots: ' \uD83C\uDF5D\uD83E\uDD29\uD83D\uDE0B' },
     dns: { none: '', some: ' \uD83C\uDF10', lots: ' \uD83C\uDF10\uD83D\uDD0D\u26A1' },
     weekend: { none: '', some: ' \u2600\uFE0F', lots: ' \u2600\uFE0F\uD83C\uDF89\uD83C\uDF1F' },
@@ -3431,19 +3431,19 @@ var PersonalityConfigurator = (function () {
     negotiate: { none: '', some: ' \uD83D\uDCBC', lots: ' \uD83D\uDCBC\uD83D\uDCB0\uD83D\uDE0E' }
   };
 
-  var PRESETS = {
+  const PRESETS = {
     professional: { formality: 85, humor: 10, detail: 70, emoji: 5 },
     friendly: { formality: 25, humor: 60, detail: 50, emoji: 55 },
     minimal: { formality: 40, humor: 15, detail: 10, emoji: 0 },
     enthusiastic: { formality: 15, humor: 80, detail: 65, emoji: 90 }
   };
 
-  var currentQuestionIndex = 0;
-  var _debounceTimer = null;
+  let currentQuestionIndex = 0;
+  let _debounceTimer = null;
 
   // Cached slider DOM references — resolved once in init(), avoids
   // repeated getElementById calls in getSliderValues/applyPreset.
-  var _sliders = null;
+  let _sliders = null;
 
   /** Resolve & cache the four personality slider elements. */
   function _getSliders() {
@@ -3468,9 +3468,9 @@ var PersonalityConfigurator = (function () {
 
   function loadFromStorage() {
     try {
-      var raw = localStorage.getItem(STORAGE_KEY_PERSONALITY);
+      const raw = localStorage.getItem(STORAGE_KEY_PERSONALITY);
       if (raw) {
-        var parsed = JSON.parse(raw);
+        const parsed = JSON.parse(raw);
         if (typeof parsed.formality === 'number') { return parsed; }
       }
     } catch (e) {
@@ -3480,7 +3480,7 @@ var PersonalityConfigurator = (function () {
   }
 
   function getSliderValues() {
-    var s = _getSliders();
+    let s = _getSliders();
     return {
       formality: s.formality ? parseInt(s.formality.value, 10) : 50,
       humor:     s.humor     ? parseInt(s.humor.value, 10)     : 50,
@@ -3490,22 +3490,22 @@ var PersonalityConfigurator = (function () {
   }
 
   function generateResponse(questionKey, values) {
-    var responses = RESPONSES[questionKey];
+    const responses = RESPONSES[questionKey];
     if (!responses) { return ''; }
 
-    var formalKey = values.formality >= 50 ? 'formal' : 'casual';
-    var detailKey = values.detail >= 50 ? 'Detailed' : 'Brief';
-    var base = responses[formalKey + detailKey];
+    const formalKey = values.formality >= 50 ? 'formal' : 'casual';
+    const detailKey = values.detail >= 50 ? 'Detailed' : 'Brief';
+    let base = responses[formalKey + detailKey];
 
-    var humorData = HUMOR_ADDITIONS[questionKey];
+    const humorData = HUMOR_ADDITIONS[questionKey];
     if (humorData) {
-      var humorLevel = values.humor < 30 ? 'low' : (values.humor < 70 ? 'mid' : 'high');
+      const humorLevel = values.humor < 30 ? 'low' : (values.humor < 70 ? 'mid' : 'high');
       base += humorData[humorLevel];
     }
 
-    var emojiData = EMOJI_SETS[questionKey];
+    const emojiData = EMOJI_SETS[questionKey];
     if (emojiData) {
-      var emojiLevel = values.emoji < 20 ? 'none' : (values.emoji < 65 ? 'some' : 'lots');
+      const emojiLevel = values.emoji < 20 ? 'none' : (values.emoji < 65 ? 'some' : 'lots');
       base += emojiData[emojiLevel];
     }
 
@@ -3513,13 +3513,13 @@ var PersonalityConfigurator = (function () {
   }
 
   function updatePreview() {
-    var bubble = document.getElementById('personalityResponse');
+    const bubble = document.getElementById('personalityResponse');
     if (!bubble) { return; }
 
-    var values = getSliderValues();
+    const values = getSliderValues();
     saveToStorage(values);
-    var question = QUESTIONS[currentQuestionIndex];
-    var response = generateResponse(question.key, values);
+    const question = QUESTIONS[currentQuestionIndex];
+    const response = generateResponse(question.key, values);
 
     bubble.classList.add('updating');
     setTimeout(function () {
@@ -3527,12 +3527,12 @@ var PersonalityConfigurator = (function () {
       bubble.classList.remove('updating');
     }, 150);
 
-    var presetBtns = document.querySelectorAll('.preset-btn');
+    const presetBtns = document.querySelectorAll('.preset-btn');
     for (var i = 0; i < presetBtns.length; i++) {
-      var presetName = presetBtns[i].getAttribute('data-preset');
-      var preset = PRESETS[presetName];
+      const presetName = presetBtns[i].getAttribute('data-preset');
+      const preset = PRESETS[presetName];
       if (!preset) { continue; }
-      var isMatch = Math.abs(preset.formality - values.formality) <= 5 &&
+      const isMatch = Math.abs(preset.formality - values.formality) <= 5 &&
                     Math.abs(preset.humor - values.humor) <= 5 &&
                     Math.abs(preset.detail - values.detail) <= 5 &&
                     Math.abs(preset.emoji - values.emoji) <= 5;
@@ -3551,7 +3551,7 @@ var PersonalityConfigurator = (function () {
 
   function cycleQuestion() {
     currentQuestionIndex = (currentQuestionIndex + 1) % QUESTIONS.length;
-    var questionEl = document.getElementById('personalityQuestion');
+    const questionEl = document.getElementById('personalityQuestion');
     if (questionEl) {
       questionEl.textContent = '"' + QUESTIONS[currentQuestionIndex].q + '"';
     }
@@ -3559,10 +3559,10 @@ var PersonalityConfigurator = (function () {
   }
 
   function applyPreset(presetName) {
-    var preset = PRESETS[presetName];
+    const preset = PRESETS[presetName];
     if (!preset) { return; }
 
-    var s = _getSliders();
+    let s = _getSliders();
     if (s.formality) { s.formality.value = preset.formality; }
     if (s.humor)     { s.humor.value     = preset.humor; }
     if (s.detail)    { s.detail.value    = preset.detail; }
@@ -3573,10 +3573,10 @@ var PersonalityConfigurator = (function () {
 
   function init() {
     // Eagerly resolve and cache slider references
-    var s = _getSliders();
+    let s = _getSliders();
 
     // Restore saved slider values from localStorage
-    var saved = loadFromStorage();
+    const saved = loadFromStorage();
     if (saved) {
       if (s.formality) { s.formality.value = saved.formality; }
       if (s.humor)     { s.humor.value     = saved.humor; }
@@ -3584,20 +3584,20 @@ var PersonalityConfigurator = (function () {
       if (s.emoji)     { s.emoji.value     = saved.emoji; }
     }
 
-    var sliders = document.querySelectorAll('.personality-range');
+    const sliders = document.querySelectorAll('.personality-range');
     for (var i = 0; i < sliders.length; i++) {
       sliders[i].addEventListener('input', debouncedUpdate);
     }
 
-    var presetBtns = document.querySelectorAll('.preset-btn');
+    const presetBtns = document.querySelectorAll('.preset-btn');
     for (var j = 0; j < presetBtns.length; j++) {
       presetBtns[j].addEventListener('click', function () {
-        var preset = this.getAttribute('data-preset');
+        const preset = this.getAttribute('data-preset');
         applyPreset(preset);
       });
     }
 
-    var cycleBtn = document.getElementById('personalityCycleBtn');
+    const cycleBtn = document.getElementById('personalityCycleBtn');
     if (cycleBtn) {
       cycleBtn.addEventListener('click', cycleQuestion);
     }
@@ -3653,12 +3653,12 @@ if (typeof window !== 'undefined') {
 (function() {
   'use strict';
 
-  var YES = '<span class="comp-yes" aria-label="Yes">✓</span>';
-  var NO = '<span class="comp-no" aria-label="No">✗</span>';
+  const YES = '<span class="comp-yes" aria-label="Yes">✓</span>';
+  const NO = '<span class="comp-no" aria-label="No">✗</span>';
   function PARTIAL(t) { return '<span class="comp-partial">' + t + '</span>'; }
   function TEXT(t) { return '<span class="comp-text">' + t + '</span>'; }
 
-  var features = [
+  const features = [
     {
       name: 'Personal AI assistant',
       agentbox: YES, chatgpt: YES, google: YES, alexa: YES, siri: YES
@@ -3727,12 +3727,12 @@ if (typeof window !== 'undefined') {
   ];
 
   function render() {
-    var tbody = document.getElementById('comparisonBody');
+    const tbody = document.getElementById('comparisonBody');
     if (!tbody) return;
 
-    var html = '';
+    let html = '';
     for (var i = 0; i < features.length; i++) {
-      var f = features[i];
+      const f = features[i];
       html += '<tr>' +
         '<td>' + f.name + '</td>' +
         '<td class="highlight-cell">' + f.agentbox + '</td>' +
@@ -3754,29 +3754,29 @@ if (typeof window !== 'undefined') {
 
 // ── Onboarding Wizard ──────────────────────────────────────
 (function initOnboardingWizard() {
-  var STORAGE_KEY = 'agentbox_onboarding_done';
+  const STORAGE_KEY = 'agentbox_onboarding_done';
   if (localStorage.getItem(STORAGE_KEY)) return;
 
-  var widget = document.getElementById('onboardingWidget');
-  var trigger = document.getElementById('onboardingTrigger');
-  var panel = document.getElementById('onboardingPanel');
-  var closeBtn = document.getElementById('onboardingClose');
-  var backBtn = document.getElementById('onboardingBack');
-  var nextBtn = document.getElementById('onboardingNext');
-  var progressBar = document.getElementById('onboardingProgressBar');
-  var titleEl = document.getElementById('onboardingTitle');
-  var step1 = document.getElementById('onboardingStep1');
-  var step2 = document.getElementById('onboardingStep2');
-  var step3 = document.getElementById('onboardingStep3');
-  var resultEl = document.getElementById('onboardingResult');
+  const widget = document.getElementById('onboardingWidget');
+  const trigger = document.getElementById('onboardingTrigger');
+  const panel = document.getElementById('onboardingPanel');
+  let closeBtn = document.getElementById('onboardingClose');
+  const backBtn = document.getElementById('onboardingBack');
+  const nextBtn = document.getElementById('onboardingNext');
+  let progressBar = document.getElementById('onboardingProgressBar');
+  const titleEl = document.getElementById('onboardingTitle');
+  const step1 = document.getElementById('onboardingStep1');
+  const step2 = document.getElementById('onboardingStep2');
+  const step3 = document.getElementById('onboardingStep3');
+  let resultEl = document.getElementById('onboardingResult');
 
   if (!widget || !trigger || !panel) return;
 
-  var currentStep = 1;
-  var selectedRole = null;
-  var selectedGoals = [];
+  let currentStep = 1;
+  let selectedRole = null;
+  let selectedGoals = [];
 
-  var GOAL_MAP = {
+  const GOAL_MAP = {
     developer: [
       { key: 'code', icon: '🛠', label: 'Code generation & debugging' },
       { key: 'automate', icon: '⚡', label: 'Task automation' },
@@ -3803,7 +3803,7 @@ if (typeof window !== 'undefined') {
     ]
   };
 
-  var RECOMMENDATIONS = {
+  const RECOMMENDATIONS = {
     developer: {
       badge: '💻',
       title: 'The Developer\'s Sidekick',
@@ -3890,12 +3890,12 @@ if (typeof window !== 'undefined') {
     progressBar.style.width = (currentStep * 33.33) + '%';
     backBtn.hidden = currentStep === 1;
 
-    var dots = widget.querySelectorAll('.onboarding-dot');
+    const dots = widget.querySelectorAll('.onboarding-dot');
     dots.forEach(function(d) {
       d.classList.toggle('active', parseInt(d.getAttribute('data-dot')) === currentStep);
     });
 
-    var titles = ['Let\'s find your fit', 'What are your goals?', 'Your personalized plan'];
+    const titles = ['Let\'s find your fit', 'What are your goals?', 'Your personalized plan'];
     titleEl.textContent = titles[currentStep - 1];
 
     if (currentStep === 1) {
@@ -3911,11 +3911,11 @@ if (typeof window !== 'undefined') {
   }
 
   function populateGoals() {
-    var goalsContainer = step2.querySelector('.onboarding-goals');
+    const goalsContainer = step2.querySelector('.onboarding-goals');
     goalsContainer.innerHTML = '';
-    var goals = GOAL_MAP[selectedRole] || [];
+    const goals = GOAL_MAP[selectedRole] || [];
     goals.forEach(function(g) {
-      var btn = document.createElement('button');
+      let btn = document.createElement('button');
       btn.className = 'onboarding-option';
       btn.setAttribute('data-goal', g.key);
       btn.setAttribute('aria-pressed', 'false');
@@ -3929,7 +3929,7 @@ if (typeof window !== 'undefined') {
   }
 
   function toggleGoal(key, btn) {
-    var idx = selectedGoals.indexOf(key);
+    let idx = selectedGoals.indexOf(key);
     if (idx > -1) {
       selectedGoals.splice(idx, 1);
       btn.setAttribute('aria-pressed', 'false');
@@ -3943,17 +3943,17 @@ if (typeof window !== 'undefined') {
   }
 
   function buildResult() {
-    var rec = RECOMMENDATIONS[selectedRole] || RECOMMENDATIONS.casual;
-    var tips = [];
+    const rec = RECOMMENDATIONS[selectedRole] || RECOMMENDATIONS.casual;
+    const tips = [];
     selectedGoals.forEach(function(g) {
       if (rec.goalTips[g]) tips.push(rec.goalTips[g]);
     });
 
-    var featuresHTML = rec.features.map(function(f) {
+    const featuresHTML = rec.features.map(function(f) {
       return '<li>' + f + '</li>';
     }).join('');
 
-    var tipsHTML = tips.length > 0
+    const tipsHTML = tips.length > 0
       ? tips.map(function(t) { return '<li>💡 ' + t + '</li>'; }).join('')
       : '';
 
@@ -3968,7 +3968,7 @@ if (typeof window !== 'undefined') {
 
   // Event: trigger button
   trigger.addEventListener('click', function() {
-    var isOpen = !panel.hidden;
+    const isOpen = !panel.hidden;
     panel.hidden = isOpen;
     if (!isOpen) trigger.querySelector('.onboarding-trigger-pulse').style.display = 'none';
   });
@@ -4051,7 +4051,7 @@ var FeatureTour = (function () {
   'use strict';
 
   // ── Tour stop definitions ────────────────────────────────────────
-  var STOPS = [
+  const STOPS = [
     {
       target: '#chatWindow',
       title: 'Interactive Chat Demo',
@@ -4102,22 +4102,22 @@ var FeatureTour = (function () {
     }
   ];
 
-  var STORAGE_KEY = 'agentbox_tour_completed';
+  const STORAGE_KEY = 'agentbox_tour_completed';
 
   // ── State ────────────────────────────────────────────────────────
-  var currentStep = -1;
-  var isActive = false;
-  var overlay = null;
-  var tooltip = null;
-  var spotlight = null;
+  let currentStep = -1;
+  let isActive = false;
+  let overlay = null;
+  let tooltip = null;
+  let spotlight = null;
 
   // ── Helpers ──────────────────────────────────────────────────────
 
   /** Resolve the first matching element for a comma-separated selector. */
   function resolveTarget(selectorList) {
-    var selectors = selectorList.split(',');
+    const selectors = selectorList.split(',');
     for (var i = 0; i < selectors.length; i++) {
-      var el = document.querySelector(selectors[i].trim());
+      let el = document.querySelector(selectors[i].trim());
       if (el) return el;
     }
     return null;
@@ -4125,8 +4125,8 @@ var FeatureTour = (function () {
 
   /** Smoothly scroll element into view, respecting reduced motion. */
   function scrollIntoView(el, cb) {
-    var rect = el.getBoundingClientRect();
-    var inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
+    const rect = el.getBoundingClientRect();
+    const inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
     if (inView) {
       if (cb) cb();
       return;
@@ -4143,8 +4143,8 @@ var FeatureTour = (function () {
 
   /** Position the spotlight overlay to frame the target element. */
   function positionSpotlight(el) {
-    var rect = el.getBoundingClientRect();
-    var pad = 8;
+    const rect = el.getBoundingClientRect();
+    const pad = 8;
     spotlight.style.top = (window.scrollY + rect.top - pad) + 'px';
     spotlight.style.left = (rect.left - pad) + 'px';
     spotlight.style.width = (rect.width + pad * 2) + 'px';
@@ -4153,8 +4153,8 @@ var FeatureTour = (function () {
 
   /** Position tooltip relative to spotlight. */
   function positionTooltip(el, position) {
-    var rect = el.getBoundingClientRect();
-    var tw = Math.min(340, window.innerWidth - 32);
+    const rect = el.getBoundingClientRect();
+    const tw = Math.min(340, window.innerWidth - 32);
     tooltip.style.width = tw + 'px';
 
     if (position === 'bottom') {
@@ -4165,7 +4165,7 @@ var FeatureTour = (function () {
     }
 
     // Horizontally center on target, clamp to viewport
-    var left = rect.left + rect.width / 2 - tw / 2;
+    let left = rect.left + rect.width / 2 - tw / 2;
     left = Math.max(16, Math.min(left, window.innerWidth - tw - 16));
     tooltip.style.left = left + 'px';
   }
@@ -4250,8 +4250,8 @@ var FeatureTour = (function () {
   function showStep(idx) {
     if (idx < 0 || idx >= STOPS.length) return;
     currentStep = idx;
-    var stop = STOPS[idx];
-    var target = resolveTarget(stop.target);
+    const stop = STOPS[idx];
+    let target = resolveTarget(stop.target);
 
     if (!target) {
       // Skip missing sections
@@ -4267,9 +4267,9 @@ var FeatureTour = (function () {
       tooltip.querySelector('#tourBody').textContent = stop.body;
 
       // Progress dots
-      var dotsHtml = '';
+      let dotsHtml = '';
       for (var i = 0; i < STOPS.length; i++) {
-        var active = i === idx;
+        let active = i === idx;
         dotsHtml += '<span style="display:inline-block;width:8px;height:8px;'
           + 'border-radius:50%;margin:0 3px;background:'
           + (active ? '#6c5ce7' : '#ddd') + ';" aria-label="Step ' + (i + 1)
@@ -4281,7 +4281,7 @@ var FeatureTour = (function () {
       tooltip.querySelector('#tourPrev').style.display = idx === 0 ? 'none' : 'inline-block';
 
       // Last step: change Next to "Done"
-      var nextBtn = tooltip.querySelector('#tourNext');
+      const nextBtn = tooltip.querySelector('#tourNext');
       if (idx === STOPS.length - 1) {
         nextBtn.textContent = 'Done ✓';
       } else {
@@ -4357,7 +4357,7 @@ var FeatureTour = (function () {
 
   // ── Init: bind trigger button ────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
-    var trigger = document.getElementById('tourTrigger');
+    const trigger = document.getElementById('tourTrigger');
     if (trigger) {
       trigger.addEventListener('click', function () { start(); });
     }
@@ -4378,7 +4378,7 @@ var FeatureTour = (function () {
 
 /* ── Commands Cheat Sheet ── */
 var CommandsCheatSheet = (function () {
-  var COMMANDS = [
+  const COMMANDS = [
     { category: "memory", icon: "\uD83E\uDDE0", name: "Remember this", command: "Remember that I prefer dark roast coffee", desc: "Tell your agent something to remember for future conversations.", example: "Remember my anniversary is March 15" },
     { category: "memory", icon: "\uD83E\uDDE0", name: "What do you know?", command: "What do you remember about me?", desc: "See everything your agent has stored about your preferences and context.", example: "What do you know about my work?" },
     { category: "memory", icon: "\uD83E\uDDE0", name: "Forget something", command: "Forget my dietary preferences", desc: "Ask your agent to clear specific memories.", example: "Forget what I told you about my schedule" },
@@ -4399,16 +4399,16 @@ var CommandsCheatSheet = (function () {
     { category: "settings", icon: "\u2699\uFE0F", name: "Clear history", command: "Clear your memory and start fresh", desc: "Wipe your agent's memory completely for a fresh start.", example: "Reset everything you know about me" }
   ];
 
-  var currentCategory = 'all';
-  var currentSearch = '';
-  var toastTimer = null;
+  let currentCategory = 'all';
+  let currentSearch = '';
+  let toastTimer = null;
 
   function getFiltered() {
     return COMMANDS.filter(function (cmd) {
-      var matchCat = currentCategory === 'all' || cmd.category === currentCategory;
+      const matchCat = currentCategory === 'all' || cmd.category === currentCategory;
       if (!matchCat) return false;
       if (!currentSearch) return true;
-      var q = currentSearch.toLowerCase();
+      const q = currentSearch.toLowerCase();
       return cmd.name.toLowerCase().indexOf(q) !== -1 ||
              cmd.desc.toLowerCase().indexOf(q) !== -1 ||
              cmd.command.toLowerCase().indexOf(q) !== -1;
@@ -4416,10 +4416,10 @@ var CommandsCheatSheet = (function () {
   }
 
   function render() {
-    var grid = document.getElementById('commandsGrid');
-    var empty = document.getElementById('commandsEmpty');
+    let grid = document.getElementById('commandsGrid');
+    const empty = document.getElementById('commandsEmpty');
     if (!grid) return;
-    var filtered = getFiltered();
+    let filtered = getFiltered();
     if (filtered.length === 0) {
       grid.innerHTML = '';
       if (empty) empty.hidden = false;
@@ -4440,14 +4440,14 @@ var CommandsCheatSheet = (function () {
   }
 
   function copyCommand(card) {
-    var text = card.getAttribute('data-command');
+    let text = card.getAttribute('data-command');
     if (!text) return;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text);
     }
     card.classList.add('copied');
     setTimeout(function () { card.classList.remove('copied'); }, 1200);
-    var toast = document.getElementById('commandsCopiedToast');
+    let toast = document.getElementById('commandsCopiedToast');
     if (toast) {
       toast.hidden = false;
       clearTimeout(toastTimer);
@@ -4458,10 +4458,10 @@ var CommandsCheatSheet = (function () {
   function init() {
     render();
 
-    var filterContainer = document.querySelector('.commands-filter');
+    let filterContainer = document.querySelector('.commands-filter');
     if (filterContainer) {
       filterContainer.addEventListener('click', function (e) {
-        var btn = e.target.closest('.commands-filter-btn');
+        let btn = e.target.closest('.commands-filter-btn');
         if (!btn) return;
         currentCategory = btn.getAttribute('data-cmd-category') || 'all';
         filterContainer.querySelectorAll('.commands-filter-btn').forEach(function (b) {
@@ -4474,7 +4474,7 @@ var CommandsCheatSheet = (function () {
       });
     }
 
-    var searchInput = document.getElementById('commandsSearchInput');
+    let searchInput = document.getElementById('commandsSearchInput');
     if (searchInput) {
       searchInput.addEventListener('input', function () {
         currentSearch = searchInput.value.trim();
@@ -4482,15 +4482,15 @@ var CommandsCheatSheet = (function () {
       });
     }
 
-    var grid = document.getElementById('commandsGrid');
+    let grid = document.getElementById('commandsGrid');
     if (grid) {
       grid.addEventListener('click', function (e) {
-        var card = e.target.closest('.command-card');
+        const card = e.target.closest('.command-card');
         if (card) copyCommand(card);
       });
       grid.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') {
-          var card = e.target.closest('.command-card');
+          const card = e.target.closest('.command-card');
           if (card) { e.preventDefault(); copyCommand(card); }
         }
       });
@@ -4505,7 +4505,7 @@ var CommandsCheatSheet = (function () {
 // ---------------------------------------------------------------------------
 
 var OnboardingQuiz = (function () {
-  var QUESTIONS = [
+  const QUESTIONS = [
     {
       id: 'usage',
       text: 'How often will you use AgentBox?',
@@ -4553,7 +4553,7 @@ var OnboardingQuiz = (function () {
     }
   ];
 
-  var PLANS = {
+  const PLANS = {
     free: {
       name: 'Free',
       icon: '🎉',
@@ -4577,10 +4577,10 @@ var OnboardingQuiz = (function () {
     }
   };
 
-  var currentStep = -1;
-  var answers = {};
-  var questionArea, progressBar, progressText, resultEl;
-  var startEl, startBtn, retakeBtn;
+  let currentStep = -1;
+  let answers = {};
+  let questionArea, progressBar, progressText, resultEl;
+  let startEl, startBtn, retakeBtn;
 
   function init() {
     questionArea = document.getElementById('quizQuestionArea');
@@ -4612,15 +4612,15 @@ var OnboardingQuiz = (function () {
     if (resultEl) resultEl.hidden = true;
     if (startEl) startEl.style.display = '';
     updateProgress(0);
-    var existing = questionArea.querySelector('.quiz-q');
+    const existing = questionArea.querySelector('.quiz-q');
     if (existing) existing.remove();
   }
 
   function updateProgress(step) {
-    var pct = Math.round((step / QUESTIONS.length) * 100);
+    const pct = Math.round((step / QUESTIONS.length) * 100);
     if (progressBar) progressBar.style.width = pct + '%';
     if (progressText) progressText.textContent = step + ' / ' + QUESTIONS.length;
-    var pb = progressBar && progressBar.parentElement;
+    const pb = progressBar && progressBar.parentElement;
     if (pb) {
       pb.setAttribute('aria-valuenow', String(step));
     }
@@ -4631,31 +4631,31 @@ var OnboardingQuiz = (function () {
     if (resultEl) resultEl.hidden = true;
     updateProgress(idx);
 
-    var q = QUESTIONS[idx];
-    var prev = questionArea.querySelector('.quiz-q');
+    const q = QUESTIONS[idx];
+    let prev = questionArea.querySelector('.quiz-q');
     if (prev) prev.remove();
 
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'quiz-q';
     wrap.setAttribute('role', 'radiogroup');
     wrap.setAttribute('aria-label', q.text);
 
-    var title = document.createElement('h3');
+    const title = document.createElement('h3');
     title.className = 'quiz-q-title';
     title.textContent = q.text;
     wrap.appendChild(title);
 
-    var stepLabel = document.createElement('span');
+    const stepLabel = document.createElement('span');
     stepLabel.className = 'quiz-step-label';
     stepLabel.textContent = 'Question ' + (idx + 1) + ' of ' + QUESTIONS.length;
     wrap.appendChild(stepLabel);
 
-    var optionsWrap = document.createElement('div');
+    const optionsWrap = document.createElement('div');
     optionsWrap.className = 'quiz-options';
 
     for (var i = 0; i < q.options.length; i++) {
       (function (opt, oi) {
-        var btn = document.createElement('button');
+        let btn = document.createElement('button');
         btn.className = 'quiz-option';
         btn.setAttribute('role', 'radio');
         btn.setAttribute('aria-checked', 'false');
@@ -4668,9 +4668,9 @@ var OnboardingQuiz = (function () {
         });
 
         btn.addEventListener('keydown', function (e) {
-          var opts = Array.prototype.slice.call(optionsWrap.querySelectorAll('.quiz-option'));
-          var ki = opts.indexOf(e.target);
-          var next = -1;
+          const opts = Array.prototype.slice.call(optionsWrap.querySelectorAll('.quiz-option'));
+          const ki = opts.indexOf(e.target);
+          let next = -1;
           if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
             next = (ki + 1) % opts.length;
           } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
@@ -4695,7 +4695,7 @@ var OnboardingQuiz = (function () {
     wrap.appendChild(optionsWrap);
 
     if (idx > 0) {
-      var backBtn = document.createElement('button');
+      const backBtn = document.createElement('button');
       backBtn.className = 'quiz-back-btn';
       backBtn.textContent = '\u2190 Back';
       backBtn.addEventListener('click', function () {
@@ -4711,7 +4711,7 @@ var OnboardingQuiz = (function () {
   function selectAnswer(questionId, value, btn, idx) {
     answers[questionId] = value;
 
-    var siblings = btn.parentElement.querySelectorAll('.quiz-option');
+    const siblings = btn.parentElement.querySelectorAll('.quiz-option');
     for (var i = 0; i < siblings.length; i++) {
       siblings[i].classList.remove('selected');
       siblings[i].setAttribute('aria-checked', 'false');
@@ -4730,8 +4730,8 @@ var OnboardingQuiz = (function () {
   }
 
   function scorePlan() {
-    var scores = { free: 0, pro: 0, team: 0 };
-    var reasons = [];
+    const scores = { free: 0, pro: 0, team: 0 };
+    const reasons = [];
 
     if (answers.usage === 'light') {
       scores.free += 3;
@@ -4790,11 +4790,11 @@ var OnboardingQuiz = (function () {
       reasons.push({ plan: 'team', text: 'Team features are built for collaboration' });
     }
 
-    var best = 'free';
+    let best = 'free';
     if (scores.pro > scores[best]) best = 'pro';
     if (scores.team > scores[best]) best = 'team';
 
-    var planReasons = [];
+    const planReasons = [];
     for (var i = 0; i < reasons.length; i++) {
       if (reasons[i].plan === best) planReasons.push(reasons[i].text);
     }
@@ -4807,18 +4807,18 @@ var OnboardingQuiz = (function () {
 
   function showResult() {
     updateProgress(QUESTIONS.length);
-    var prev = questionArea.querySelector('.quiz-q');
+    let prev = questionArea.querySelector('.quiz-q');
     if (prev) prev.remove();
     if (startEl) startEl.style.display = 'none';
 
-    var result = scorePlan();
-    var plan = PLANS[result.plan];
+    let result = scorePlan();
+    const plan = PLANS[result.plan];
 
-    var iconEl = document.getElementById('quizResultIcon');
-    var titleEl = document.getElementById('quizResultTitle');
-    var descEl = document.getElementById('quizResultDesc');
-    var reasonsEl = document.getElementById('quizResultReasons');
-    var ctaEl = document.getElementById('quizResultCta');
+    const iconEl = document.getElementById('quizResultIcon');
+    const titleEl = document.getElementById('quizResultTitle');
+    const descEl = document.getElementById('quizResultDesc');
+    const reasonsEl = document.getElementById('quizResultReasons');
+    const ctaEl = document.getElementById('quizResultCta');
 
     if (iconEl) iconEl.textContent = plan.icon;
     if (titleEl) titleEl.textContent = 'We recommend: ' + plan.name;
@@ -4831,7 +4831,7 @@ var OnboardingQuiz = (function () {
     if (reasonsEl) {
       reasonsEl.innerHTML = '';
       for (var i = 0; i < result.reasons.length; i++) {
-        var li = document.createElement('li');
+        const li = document.createElement('li');
         li.textContent = '\u2713 ' + result.reasons[i];
         reasonsEl.appendChild(li);
       }
@@ -4856,7 +4856,7 @@ var OnboardingQuiz = (function () {
 var ApiExplorer = (function () {
   'use strict';
 
-  var ENDPOINTS = [
+  const ENDPOINTS = [
     {
       method: 'POST', path: '/v1/chat/completions', category: 'chat',
       desc: 'Send a message and get an AI response',
@@ -4936,7 +4936,7 @@ var ApiExplorer = (function () {
     }
   ];
 
-  var CATEGORIES = [
+  const CATEGORIES = [
     { key: 'chat', label: '\uD83D\uDCAC Chat', name: 'Chat' },
     { key: 'memory', label: '\uD83E\uDDE0 Memory', name: 'Memory' },
     { key: 'tools', label: '\uD83D\uDD27 Tools', name: 'Tools' },
@@ -4944,10 +4944,10 @@ var ApiExplorer = (function () {
     { key: 'account', label: '\uD83D\uDC64 Account', name: 'Account' }
   ];
 
-  var grid, detailPanel, filterContainer;
-  var activeCard = null;
-  var currentFilter = 'all';
-  var cardPool = [];
+  let grid, detailPanel, filterContainer;
+  let activeCard = null;
+  let currentFilter = 'all';
+  let cardPool = [];
 
   function init() {
     grid = document.getElementById('apiExplorerGrid');
@@ -4957,7 +4957,7 @@ var ApiExplorer = (function () {
 
     // Build filter buttons
     CATEGORIES.forEach(function (cat) {
-      var btn = document.createElement('button');
+      let btn = document.createElement('button');
       btn.className = 'api-filter-btn';
       btn.setAttribute('role', 'tab');
       btn.setAttribute('aria-selected', 'false');
@@ -4968,12 +4968,12 @@ var ApiExplorer = (function () {
 
     // Wire filter clicks
     filterContainer.addEventListener('click', function (e) {
-      var btn = e.target.closest('.api-filter-btn');
+      let btn = e.target.closest('.api-filter-btn');
       if (!btn) return;
-      var cat = btn.getAttribute('data-api-cat');
+      let cat = btn.getAttribute('data-api-cat');
       currentFilter = cat;
       filterContainer.querySelectorAll('.api-filter-btn').forEach(function (b) {
-        var isActive = b.getAttribute('data-api-cat') === cat;
+        let isActive = b.getAttribute('data-api-cat') === cat;
         b.classList.toggle('active', isActive);
         b.setAttribute('aria-selected', isActive ? 'true' : 'false');
       });
@@ -4982,16 +4982,16 @@ var ApiExplorer = (function () {
     });
 
     // Close button
-    var closeBtn = document.getElementById('apiDetailClose');
+    let closeBtn = document.getElementById('apiDetailClose');
     if (closeBtn) closeBtn.addEventListener('click', closeDetail);
 
     // Copy buttons
     document.querySelectorAll('.api-copy-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var targetId = btn.getAttribute('data-copy-target');
-        var target = document.getElementById(targetId);
+        const targetId = btn.getAttribute('data-copy-target');
+        let target = document.getElementById(targetId);
         if (!target) return;
-        var text = target.textContent;
+        let text = target.textContent;
         if (navigator.clipboard) {
           navigator.clipboard.writeText(text).then(function () {
             btn.textContent = '\u2705 Copied!';
@@ -5005,7 +5005,7 @@ var ApiExplorer = (function () {
     // Build card pool once — cards are shown/hidden on filter, not recreated
     cardPool = [];
     ENDPOINTS.forEach(function (ep) {
-      var card = document.createElement('div');
+      const card = document.createElement('div');
       card.className = 'api-endpoint-card';
       card.setAttribute('role', 'listitem');
       card.setAttribute('tabindex', '0');
@@ -5047,7 +5047,7 @@ var ApiExplorer = (function () {
       '<span>\uD83C\uDFF7\uFE0F ' + escapeHtml(getCategoryName(ep.category)) + '</span>';
 
     // Curl command
-    var curl = 'curl';
+    let curl = 'curl';
     if (ep.method !== 'GET') curl += ' -X ' + ep.method;
     curl += " 'https://api.agentbox.ai" + ep.path + "'";
     curl += " \\\n  -H 'Authorization: Bearer YOUR_API_KEY'";
@@ -5056,7 +5056,7 @@ var ApiExplorer = (function () {
     document.getElementById('apiCurlCode').textContent = curl;
 
     // Request body
-    var reqSection = document.getElementById('apiReqBodySection');
+    const reqSection = document.getElementById('apiReqBodySection');
     if (ep.reqBody) {
       reqSection.hidden = false;
       document.getElementById('apiReqBody').textContent = ep.reqBody;
@@ -5068,7 +5068,7 @@ var ApiExplorer = (function () {
     document.getElementById('apiRespBody').textContent = ep.respBody;
 
     // Status badge
-    var badge = document.getElementById('apiStatusBadge');
+    const badge = document.getElementById('apiStatusBadge');
     if (ep.method === 'DELETE') { badge.textContent = '200 OK'; }
     else { badge.textContent = '200 OK'; }
 
@@ -5089,7 +5089,7 @@ var ApiExplorer = (function () {
   }
 
   function escapeHtml(s) {
-    var d = document.createElement('div');
+    const d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
   }
@@ -5103,7 +5103,7 @@ var ApiExplorer = (function () {
 var WorkflowTemplates = (function () {
   'use strict';
 
-  var TEMPLATES = [
+  const TEMPLATES = [
     {
       id: 'daily-briefing',
       title: 'Daily Briefing',
@@ -5298,7 +5298,7 @@ var WorkflowTemplates = (function () {
     }
   ];
 
-  var CATEGORIES = [
+  const CATEGORIES = [
     { id: 'all', label: 'All' },
     { id: 'productivity', label: '\uD83D\uDCBC Productivity' },
     { id: 'development', label: '\uD83D\uDCBB Development' },
@@ -5307,10 +5307,10 @@ var WorkflowTemplates = (function () {
     { id: 'learning', label: '\uD83C\uDF0D Learning' }
   ];
 
-  var _currentCategory = 'all';
-  var _gridEl = null;
-  var _detailEl = null;
-  var _filterContainer = null;
+  let _currentCategory = 'all';
+  let _gridEl = null;
+  let _detailEl = null;
+  let _filterContainer = null;
 
   function init() {
     _gridEl = document.getElementById('workflowGrid');
@@ -5331,8 +5331,8 @@ var WorkflowTemplates = (function () {
       _filterContainer.removeChild(_filterContainer.firstChild);
     }
     for (var i = 0; i < CATEGORIES.length; i++) {
-      var cat = CATEGORIES[i];
-      var btn = document.createElement('button');
+      let cat = CATEGORIES[i];
+      let btn = document.createElement('button');
       btn.className = 'workflow-filter-btn' + (cat.id === 'all' ? ' active' : '');
       btn.setAttribute('role', 'tab');
       btn.setAttribute('aria-selected', cat.id === 'all' ? 'true' : 'false');
@@ -5344,7 +5344,7 @@ var WorkflowTemplates = (function () {
   }
 
   function _onFilterClick(e) {
-    var cat = e.target.dataset.wfCat;
+    let cat = e.target.dataset.wfCat;
     if (!cat || cat === _currentCategory) return;
     filterBy(cat);
   }
@@ -5352,9 +5352,9 @@ var WorkflowTemplates = (function () {
   function filterBy(category) {
     _currentCategory = category;
     // Update button states
-    var btns = _filterContainer.querySelectorAll('.workflow-filter-btn');
+    const btns = _filterContainer.querySelectorAll('.workflow-filter-btn');
     for (var i = 0; i < btns.length; i++) {
-      var isActive = btns[i].dataset.wfCat === category;
+      let isActive = btns[i].dataset.wfCat === category;
       btns[i].classList.toggle('active', isActive);
       btns[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
     }
@@ -5367,7 +5367,7 @@ var WorkflowTemplates = (function () {
     if (!_gridEl) return;
     while (_gridEl.firstChild) _gridEl.removeChild(_gridEl.firstChild);
 
-    var filtered = _currentCategory === 'all'
+    let filtered = _currentCategory === 'all'
       ? TEMPLATES
       : TEMPLATES.filter(function (t) { return t.category === _currentCategory; });
 
@@ -5377,36 +5377,36 @@ var WorkflowTemplates = (function () {
   }
 
   function _createCard(template) {
-    var card = document.createElement('div');
+    const card = document.createElement('div');
     card.className = 'workflow-card';
     card.setAttribute('role', 'listitem');
     card.dataset.wfId = template.id;
     card.tabIndex = 0;
 
-    var icon = document.createElement('div');
+    let icon = document.createElement('div');
     icon.className = 'workflow-card-icon';
     icon.textContent = template.icon;
     card.appendChild(icon);
 
-    var title = document.createElement('h4');
+    const title = document.createElement('h4');
     title.className = 'workflow-card-title';
     title.textContent = template.title;
     card.appendChild(title);
 
-    var desc = document.createElement('p');
+    const desc = document.createElement('p');
     desc.className = 'workflow-card-desc';
     desc.textContent = template.description;
     card.appendChild(desc);
 
-    var meta = document.createElement('div');
+    const meta = document.createElement('div');
     meta.className = 'workflow-card-meta';
 
-    var diffBadge = document.createElement('span');
+    const diffBadge = document.createElement('span');
     diffBadge.className = 'workflow-difficulty workflow-difficulty-' + template.difficulty;
     diffBadge.textContent = template.difficulty;
     meta.appendChild(diffBadge);
 
-    var catBadge = document.createElement('span');
+    const catBadge = document.createElement('span');
     catBadge.className = 'workflow-category-badge';
     catBadge.textContent = template.category;
     meta.appendChild(catBadge);
@@ -5429,21 +5429,21 @@ var WorkflowTemplates = (function () {
   function _showDetail(template) {
     if (!_detailEl) return;
 
-    var titleEl = document.getElementById('workflowDetailTitle');
-    var descEl = document.getElementById('workflowDetailDesc');
-    var stepsEl = document.getElementById('workflowSteps');
-    var codeEl = document.getElementById('workflowSetupCode');
-    var tagsEl = document.getElementById('workflowTags');
+    const titleEl = document.getElementById('workflowDetailTitle');
+    const descEl = document.getElementById('workflowDetailDesc');
+    const stepsEl = document.getElementById('workflowSteps');
+    const codeEl = document.getElementById('workflowSetupCode');
+    const tagsEl = document.getElementById('workflowTags');
 
     if (titleEl) titleEl.textContent = template.icon + ' ' + template.title;
     if (descEl) descEl.textContent = template.description;
 
     if (stepsEl) {
       while (stepsEl.firstChild) stepsEl.removeChild(stepsEl.firstChild);
-      var ol = document.createElement('ol');
+      const ol = document.createElement('ol');
       ol.className = 'workflow-steps-list';
       for (var i = 0; i < template.steps.length; i++) {
-        var li = document.createElement('li');
+        const li = document.createElement('li');
         li.textContent = template.steps[i];
         ol.appendChild(li);
       }
@@ -5455,7 +5455,7 @@ var WorkflowTemplates = (function () {
     if (tagsEl) {
       while (tagsEl.firstChild) tagsEl.removeChild(tagsEl.firstChild);
       for (var j = 0; j < template.tags.length; j++) {
-        var tag = document.createElement('span');
+        const tag = document.createElement('span');
         tag.className = 'workflow-tag';
         tag.textContent = '#' + template.tags[j];
         tagsEl.appendChild(tag);
@@ -5467,7 +5467,7 @@ var WorkflowTemplates = (function () {
   }
 
   function _bindDetailClose() {
-    var closeBtn = document.getElementById('workflowDetailClose');
+    let closeBtn = document.getElementById('workflowDetailClose');
     if (closeBtn) {
       closeBtn.addEventListener('click', function () {
         if (_detailEl) _detailEl.hidden = true;
@@ -5476,12 +5476,12 @@ var WorkflowTemplates = (function () {
   }
 
   function _bindCopy() {
-    var copyBtn = document.getElementById('workflowCopyBtn');
+    const copyBtn = document.getElementById('workflowCopyBtn');
     if (copyBtn) {
       copyBtn.addEventListener('click', function () {
-        var codeEl = document.getElementById('workflowSetupCode');
+        const codeEl = document.getElementById('workflowSetupCode');
         if (!codeEl) return;
-        var text = codeEl.textContent;
+        let text = codeEl.textContent;
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text);
         }
@@ -5532,9 +5532,9 @@ if (typeof window !== 'undefined') {
 var QuickStartWizard = (function () {
   'use strict';
 
-  var state = { step: 1, useCase: null, frequency: null };
+  const state = { step: 1, useCase: null, frequency: null };
 
-  var plans = {
+  const plans = {
     productivity: {
       steps: [
         { title: 'Open AgentBox in Telegram', desc: 'Tap the link and press Start' },
@@ -5577,24 +5577,24 @@ var QuickStartWizard = (function () {
     }
   };
 
-  var freqRecs = {
+  const freqRecs = {
     casual: { plan: 'Free', reason: '20 messages/day is plenty for occasional use.' },
     daily: { plan: 'Free or Pro', reason: 'Free works for light daily use. Upgrade to Pro if you hit the limit.' },
     power: { plan: 'Pro', reason: 'Unlimited messages for heavy daily usage. Totally worth it.' }
   };
 
   function init() {
-    var container = document.getElementById('wizardContainer');
+    const container = document.getElementById('wizardContainer');
     if (!container) return;
 
-    var nextBtn = document.getElementById('wizardNext');
-    var backBtn = document.getElementById('wizardBack');
+    const nextBtn = document.getElementById('wizardNext');
+    const backBtn = document.getElementById('wizardBack');
 
     container.addEventListener('click', function (e) {
-      var opt = e.target.closest('.wizard-option');
+      const opt = e.target.closest('.wizard-option');
       if (!opt) return;
 
-      var group = opt.parentElement;
+      const group = opt.parentElement;
       group.querySelectorAll('.wizard-option').forEach(function (o) {
         o.classList.remove('selected');
         o.setAttribute('aria-checked', 'false');
@@ -5624,19 +5624,19 @@ var QuickStartWizard = (function () {
   }
 
   function render() {
-    var steps = document.querySelectorAll('.wizard-step');
+    const steps = document.querySelectorAll('.wizard-step');
     steps.forEach(function (s) { s.classList.remove('active'); });
-    var active = document.querySelector('[data-wizard-step="' + state.step + '"]');
+    let active = document.querySelector('[data-wizard-step="' + state.step + '"]');
     if (active) active.classList.add('active');
 
-    var bar = document.getElementById('wizardProgressBar');
+    let bar = document.getElementById('wizardProgressBar');
     if (bar) bar.style.width = (state.step / 3 * 100) + '%';
 
-    var indicator = document.getElementById('wizardIndicator');
+    const indicator = document.getElementById('wizardIndicator');
     if (indicator) indicator.textContent = 'Step ' + state.step + ' of 3';
 
-    var backBtn = document.getElementById('wizardBack');
-    var nextBtn = document.getElementById('wizardNext');
+    const backBtn = document.getElementById('wizardBack');
+    const nextBtn = document.getElementById('wizardNext');
     backBtn.disabled = state.step === 1;
 
     if (state.step === 3) {
@@ -5645,20 +5645,20 @@ var QuickStartWizard = (function () {
     } else {
       nextBtn.style.display = '';
       // Check if current step has a selection
-      var currentStep = document.querySelector('.wizard-step.active');
-      var hasSelection = currentStep && currentStep.querySelector('.wizard-option.selected');
+      let currentStep = document.querySelector('.wizard-step.active');
+      const hasSelection = currentStep && currentStep.querySelector('.wizard-option.selected');
       nextBtn.disabled = !hasSelection;
     }
   }
 
   function renderResult() {
-    var result = document.getElementById('wizardResult');
+    let result = document.getElementById('wizardResult');
     if (!result || !state.useCase) return;
 
-    var plan = plans[state.useCase];
-    var freq = freqRecs[state.frequency] || freqRecs.casual;
+    const plan = plans[state.useCase];
+    const freq = freqRecs[state.frequency] || freqRecs.casual;
 
-    var html = '<ul class="wizard-result-plan">';
+    let html = '<ul class="wizard-result-plan">';
     plan.steps.forEach(function (s, i) {
       html += '<li><span class="plan-step-num">' + (i + 1) + '</span>';
       html += '<span class="plan-step-text"><strong>' + s.title + '</strong>';
@@ -5703,27 +5703,27 @@ if (typeof window !== 'undefined') {
 var SocialProofToasts = (function () {
   'use strict';
 
-  var _container = null;
-  var _timer = null;
-  var _dismissed = false;
-  var _prefersReducedMotion = false;
-  var _toastQueue = [];
-  var _activeToast = null;
+  let _container = null;
+  let _timer = null;
+  let _dismissed = false;
+  let _prefersReducedMotion = false;
+  const _toastQueue = [];
+  let _activeToast = null;
 
-  var DISPLAY_MS = 5000;
-  var INTERVAL_MS = 25000;
-  var INITIAL_DELAY_MS = 12000;
-  var MAX_TOASTS_PER_SESSION = 15;
-  var _toastsShown = 0;
+  const DISPLAY_MS = 5000;
+  const INTERVAL_MS = 25000;
+  const INITIAL_DELAY_MS = 12000;
+  const MAX_TOASTS_PER_SESSION = 15;
+  let _toastsShown = 0;
 
-  var cities = [
+  const cities = [
     'Seattle', 'San Francisco', 'New York', 'London', 'Berlin',
     'Tokyo', 'Toronto', 'Sydney', 'Amsterdam', 'Singapore',
     'Austin', 'Portland', 'Denver', 'Chicago', 'Los Angeles',
     'Stockholm', 'Dublin', 'Bangalore', 'Seoul', 'Paris'
   ];
 
-  var actions = [
+  const actions = [
     { icon: '🚀', text: 'just started using AgentBox' },
     { icon: '⭐', text: 'upgraded to Pro' },
     { icon: '🎉', text: 'sent their 100th message' },
@@ -5736,7 +5736,7 @@ var SocialProofToasts = (function () {
     { icon: '🎯', text: 'completed the onboarding quiz' }
   ];
 
-  var timeLabels = [
+  const timeLabels = [
     'just now', '2 minutes ago', '5 minutes ago',
     '8 minutes ago', '12 minutes ago'
   ];
@@ -5746,9 +5746,9 @@ var SocialProofToasts = (function () {
   }
 
   function generateToast() {
-    var city = pick(cities);
-    var action = pick(actions);
-    var time = pick(timeLabels);
+    const city = pick(cities);
+    const action = pick(actions);
+    const time = pick(timeLabels);
     return {
       icon: action.icon,
       city: city,
@@ -5758,30 +5758,30 @@ var SocialProofToasts = (function () {
   }
 
   function createToastEl(data) {
-    var toast = document.createElement('div');
+    let toast = document.createElement('div');
     toast.className = 'sp-toast';
     toast.setAttribute('role', 'status');
     toast.setAttribute('aria-live', 'polite');
 
-    var icon = document.createElement('span');
+    let icon = document.createElement('span');
     icon.className = 'sp-toast-icon';
     icon.textContent = data.icon;
 
-    var body = document.createElement('div');
+    const body = document.createElement('div');
     body.className = 'sp-toast-body';
 
-    var msg = document.createElement('span');
+    const msg = document.createElement('span');
     msg.className = 'sp-toast-msg';
     msg.textContent = 'Someone in ' + data.city + ' ' + data.text;
 
-    var time = document.createElement('span');
+    const time = document.createElement('span');
     time.className = 'sp-toast-time';
     time.textContent = data.time;
 
     body.appendChild(msg);
     body.appendChild(time);
 
-    var close = document.createElement('button');
+    const close = document.createElement('button');
     close.className = 'sp-toast-close';
     close.setAttribute('aria-label', 'Dismiss notification');
     close.textContent = '\u00D7';
@@ -5804,8 +5804,8 @@ var SocialProofToasts = (function () {
     }
     if (_activeToast) return;
 
-    var data = generateToast();
-    var el = createToastEl(data);
+    const data = generateToast();
+    let el = createToastEl(data);
     _activeToast = el;
     _container.appendChild(el);
     _toastsShown++;
@@ -5828,7 +5828,7 @@ var SocialProofToasts = (function () {
     }
     el.classList.remove('sp-toast-visible');
     el.classList.add('sp-toast-hiding');
-    var onEnd = function () {
+    const onEnd = function () {
       el.removeEventListener('transitionend', onEnd);
       if (el.parentNode) el.parentNode.removeChild(el);
       if (_activeToast === el) _activeToast = null;
@@ -5869,7 +5869,7 @@ var SocialProofToasts = (function () {
       }
     } catch (e) { /* noop */ }
 
-    var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mq) {
       _prefersReducedMotion = mq.matches;
       mq.addEventListener('change', function (e) {
@@ -5927,14 +5927,14 @@ var BeforeAfter = (function () {
 
   function init() {
     if (typeof document === 'undefined') return;
-    var tabBefore = document.getElementById('baTabBefore');
-    var tabAfter  = document.getElementById('baTabAfter');
-    var panelBefore = document.getElementById('baPanelBefore');
-    var panelAfter  = document.getElementById('baPanelAfter');
+    const tabBefore = document.getElementById('baTabBefore');
+    const tabAfter  = document.getElementById('baTabAfter');
+    const panelBefore = document.getElementById('baPanelBefore');
+    const panelAfter  = document.getElementById('baPanelAfter');
     if (!tabBefore || !tabAfter || !panelBefore || !panelAfter) return;
 
     function switchTo(which) {
-      var isBefore = which === 'before';
+      const isBefore = which === 'before';
       tabBefore.classList.toggle('active', isBefore);
       tabAfter.classList.toggle('active', !isBefore);
       tabBefore.setAttribute('aria-selected', isBefore ? 'true' : 'false');
@@ -5975,22 +5975,22 @@ if (typeof window !== 'undefined') {
 var GrowthTimeline = (function () {
   'use strict';
 
-  var MILESTONES = ['week1', 'month1', 'month3', 'month6'];
-  var PROGRESS = { week1: 12.5, month1: 37.5, month3: 62.5, month6: 87.5 };
-  var AUTO_INTERVAL = 4000;
-  var _current = 0;
-  var _timer = null;
-  var _paused = false;
+  const MILESTONES = ['week1', 'month1', 'month3', 'month6'];
+  const PROGRESS = { week1: 12.5, month1: 37.5, month3: 62.5, month6: 87.5 };
+  const AUTO_INTERVAL = 4000;
+  let _current = 0;
+  let _timer = null;
+  let _paused = false;
 
   function select(index) {
     if (index < 0 || index >= MILESTONES.length) return;
     _current = index;
-    var milestone = MILESTONES[index];
+    const milestone = MILESTONES[index];
 
     // Tabs
-    var tabs = document.querySelectorAll('.growth-tab');
+    const tabs = document.querySelectorAll('.growth-tab');
     tabs.forEach(function (t) {
-      var active = t.getAttribute('data-milestone') === milestone;
+      let active = t.getAttribute('data-milestone') === milestone;
       t.classList.toggle('active', active);
       t.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
@@ -6001,7 +6001,7 @@ var GrowthTimeline = (function () {
     });
 
     // Progress bar
-    var fill = document.getElementById('growthProgressFill');
+    const fill = document.getElementById('growthProgressFill');
     if (fill) fill.style.width = PROGRESS[milestone] + '%';
 
     // Markers
@@ -6031,14 +6031,14 @@ var GrowthTimeline = (function () {
   function resumeAutoPlay() { _paused = false; }
 
   function init() {
-    var section = document.getElementById('growthTimelineSection');
+    const section = document.getElementById('growthTimelineSection');
     if (!section) return;
 
     // Tab click handlers
     section.querySelectorAll('.growth-tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
-        var ms = tab.getAttribute('data-milestone');
-        var idx = MILESTONES.indexOf(ms);
+        const ms = tab.getAttribute('data-milestone');
+        let idx = MILESTONES.indexOf(ms);
         if (idx !== -1) {
           select(idx);
           // Reset autoplay timer on manual interaction
@@ -6051,8 +6051,8 @@ var GrowthTimeline = (function () {
     section.querySelectorAll('.growth-marker').forEach(function (marker) {
       marker.style.cursor = 'pointer';
       marker.addEventListener('click', function () {
-        var ms = marker.getAttribute('data-milestone');
-        var idx = MILESTONES.indexOf(ms);
+        const ms = marker.getAttribute('data-milestone');
+        let idx = MILESTONES.indexOf(ms);
         if (idx !== -1) {
           select(idx);
           startAutoPlay();
@@ -6112,9 +6112,9 @@ if (typeof window !== 'undefined') {
 // where AgentBox wins.
 
 var ComparisonTable = (function () {
-  var _section = null;
+  let _section = null;
 
-  var COMPETITORS = [
+  const COMPETITORS = [
     { id: 'agentbox', name: 'AgentBox', highlight: true },
     { id: 'chatgpt', name: 'ChatGPT' },
     { id: 'zapier', name: 'Zapier' },
@@ -6122,7 +6122,7 @@ var ComparisonTable = (function () {
     { id: 'manual', name: 'Manual' }
   ];
 
-  var CATEGORIES = [
+  const CATEGORIES = [
     { id: 'automation', label: 'Automation' },
     { id: 'integration', label: 'Integration' },
     { id: 'intelligence', label: 'Intelligence' },
@@ -6131,7 +6131,7 @@ var ComparisonTable = (function () {
   ];
 
   // Rating: 3 = full, 2 = partial, 1 = limited, 0 = none
-  var FEATURES = [
+  const FEATURES = [
     { name: 'Multi-step workflows',       cat: 'automation',   ratings: { agentbox: 3, chatgpt: 1, zapier: 3, custom: 2, manual: 0 } },
     { name: 'Natural language triggers',   cat: 'automation',   ratings: { agentbox: 3, chatgpt: 3, zapier: 1, custom: 1, manual: 0 } },
     { name: 'Scheduled tasks',             cat: 'automation',   ratings: { agentbox: 3, chatgpt: 0, zapier: 3, custom: 2, manual: 1 } },
@@ -6154,14 +6154,14 @@ var ComparisonTable = (function () {
     { name: 'Transparent cost tracking',   cat: 'pricing',      ratings: { agentbox: 3, chatgpt: 1, zapier: 2, custom: 1, manual: 0 } }
   ];
 
-  var RATING_LABELS = ['None', 'Limited', 'Partial', 'Full'];
-  var RATING_ICONS = ['\u2014', '\u25CB', '\u25D1', '\u25CF'];
+  const RATING_LABELS = ['None', 'Limited', 'Partial', 'Full'];
+  const RATING_ICONS = ['\u2014', '\u25CB', '\u25D1', '\u25CF'];
 
-  var _activeCategory = 'all';
-  var _filterBtns = [];
-  var _tbody = null;
-  var _scoreEls = {};
-  var _summaryEl = null;
+  let _activeCategory = 'all';
+  let _filterBtns = [];
+  let _tbody = null;
+  const _scoreEls = {};
+  let _summaryEl = null;
 
   function section() {
     if (!_section) _section = document.getElementById('comparisonSection');
@@ -6177,7 +6177,7 @@ var ComparisonTable = (function () {
     _summaryEl = section().querySelector('.cmp-summary');
 
     for (var i = 0; i < COMPETITORS.length; i++) {
-      var el = document.getElementById('cmpScore_' + COMPETITORS[i].id);
+      let el = document.getElementById('cmpScore_' + COMPETITORS[i].id);
       if (el) _scoreEls[COMPETITORS[i].id] = el;
     }
 
@@ -6189,13 +6189,13 @@ var ComparisonTable = (function () {
   }
 
   function _onFilterClick(e) {
-    var btn = e.currentTarget;
-    var cat = btn.getAttribute('data-category');
+    let btn = e.currentTarget;
+    let cat = btn.getAttribute('data-category');
     if (!cat) return;
     _activeCategory = cat;
 
     for (var i = 0; i < _filterBtns.length; i++) {
-      var active = _filterBtns[i].getAttribute('data-category') === cat;
+      let active = _filterBtns[i].getAttribute('data-category') === cat;
       _filterBtns[i].classList.toggle('active', active);
       _filterBtns[i].setAttribute('aria-pressed', active ? 'true' : 'false');
     }
@@ -6209,34 +6209,34 @@ var ComparisonTable = (function () {
     // Clear tbody
     while (_tbody.firstChild) _tbody.removeChild(_tbody.firstChild);
 
-    var filtered = _activeCategory === 'all'
+    let filtered = _activeCategory === 'all'
       ? FEATURES
       : FEATURES.filter(function (f) { return f.cat === _activeCategory; });
 
     // Scores accumulator
-    var scores = {};
+    const scores = {};
     for (var c = 0; c < COMPETITORS.length; c++) {
       scores[COMPETITORS[c].id] = 0;
     }
 
     for (var i = 0; i < filtered.length; i++) {
-      var feature = filtered[i];
-      var row = document.createElement('tr');
+      const feature = filtered[i];
+      const row = document.createElement('tr');
       row.className = 'cmp-row';
 
       // Feature name cell
-      var nameCell = document.createElement('td');
+      const nameCell = document.createElement('td');
       nameCell.className = 'cmp-feature-name';
       nameCell.textContent = feature.name;
       row.appendChild(nameCell);
 
       // Rating cells
       for (var j = 0; j < COMPETITORS.length; j++) {
-        var comp = COMPETITORS[j];
-        var rating = feature.ratings[comp.id] || 0;
+        const comp = COMPETITORS[j];
+        const rating = feature.ratings[comp.id] || 0;
         scores[comp.id] += rating;
 
-        var cell = document.createElement('td');
+        const cell = document.createElement('td');
         cell.className = 'cmp-rating cmp-rating-' + rating;
         if (comp.highlight) cell.classList.add('cmp-highlight');
         cell.setAttribute('title', comp.name + ': ' + RATING_LABELS[rating]);
@@ -6249,28 +6249,28 @@ var ComparisonTable = (function () {
     }
 
     // Update score displays
-    var maxPossible = filtered.length * 3;
+    const maxPossible = filtered.length * 3;
     for (var k = 0; k < COMPETITORS.length; k++) {
-      var id = COMPETITORS[k].id;
+      let id = COMPETITORS[k].id;
       if (_scoreEls[id]) {
-        var pct = maxPossible > 0 ? Math.round(scores[id] / maxPossible * 100) : 0;
+        const pct = maxPossible > 0 ? Math.round(scores[id] / maxPossible * 100) : 0;
         _scoreEls[id].textContent = pct + '%';
       }
     }
 
     // Update summary
     if (_summaryEl) {
-      var agentboxScore = maxPossible > 0 ? Math.round(scores.agentbox / maxPossible * 100) : 0;
-      var bestAlt = 0;
-      var bestAltName = '';
+      const agentboxScore = maxPossible > 0 ? Math.round(scores.agentbox / maxPossible * 100) : 0;
+      let bestAlt = 0;
+      let bestAltName = '';
       for (var m = 1; m < COMPETITORS.length; m++) {
-        var s = maxPossible > 0 ? Math.round(scores[COMPETITORS[m].id] / maxPossible * 100) : 0;
+        let s = maxPossible > 0 ? Math.round(scores[COMPETITORS[m].id] / maxPossible * 100) : 0;
         if (s > bestAlt) {
           bestAlt = s;
           bestAltName = COMPETITORS[m].name;
         }
       }
-      var diff = agentboxScore - bestAlt;
+      const diff = agentboxScore - bestAlt;
       if (diff > 0) {
         _summaryEl.textContent = 'AgentBox scores ' + diff + '% higher than the nearest alternative (' + bestAltName + ')';
       } else {
@@ -6282,7 +6282,7 @@ var ComparisonTable = (function () {
   function setFilter(category) {
     _activeCategory = category || 'all';
     for (var i = 0; i < _filterBtns.length; i++) {
-      var active = _filterBtns[i].getAttribute('data-category') === _activeCategory;
+      let active = _filterBtns[i].getAttribute('data-category') === _activeCategory;
       _filterBtns[i].classList.toggle('active', active);
       _filterBtns[i].setAttribute('aria-pressed', active ? 'true' : 'false');
     }
@@ -6290,15 +6290,15 @@ var ComparisonTable = (function () {
   }
 
   function getScores() {
-    var filtered = _activeCategory === 'all'
+    let filtered = _activeCategory === 'all'
       ? FEATURES
       : FEATURES.filter(function (f) { return f.cat === _activeCategory; });
 
-    var maxPossible = filtered.length * 3;
-    var result = {};
+    const maxPossible = filtered.length * 3;
+    let result = {};
     for (var i = 0; i < COMPETITORS.length; i++) {
-      var id = COMPETITORS[i].id;
-      var total = 0;
+      let id = COMPETITORS[i].id;
+      let total = 0;
       for (var j = 0; j < filtered.length; j++) {
         total += filtered[j].ratings[id] || 0;
       }
@@ -6338,18 +6338,18 @@ if (typeof window !== 'undefined') {
 /* Accessibility Preferences Panel */
 var AccessibilityPanel = (function () {
   'use strict';
-  var STORAGE_KEY = 'agentbox-a11y-prefs';
-  var DEFAULTS = { fontSize: 'medium', highContrast: false, reduceMotion: false, dyslexiaFont: false, focusIndicators: false, lineSpacing: 'normal' };
-  var _prefs = {};
-  var _panel = null;
-  var _trigger = null;
-  var _isOpen = false;
+  const STORAGE_KEY = 'agentbox-a11y-prefs';
+  const DEFAULTS = { fontSize: 'medium', highContrast: false, reduceMotion: false, dyslexiaFont: false, focusIndicators: false, lineSpacing: 'normal' };
+  let _prefs = {};
+  let _panel = null;
+  let _trigger = null;
+  let _isOpen = false;
 
   function load() {
     try {
-      var stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        var parsed = JSON.parse(stored);
+        const parsed = JSON.parse(stored);
         _prefs = {};
         for (var key in DEFAULTS) { if (DEFAULTS.hasOwnProperty(key)) { _prefs[key] = parsed.hasOwnProperty(key) ? parsed[key] : DEFAULTS[key]; } }
         return;
@@ -6362,7 +6362,7 @@ var AccessibilityPanel = (function () {
   function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(_prefs)); } catch (e) { /* noop */ } }
 
   function applyAll() {
-    var html = document.documentElement;
+    let html = document.documentElement;
     html.classList.remove('a11y-font-large', 'a11y-font-xlarge');
     if (_prefs.fontSize === 'large') html.classList.add('a11y-font-large');
     else if (_prefs.fontSize === 'xlarge') html.classList.add('a11y-font-xlarge');
@@ -6374,7 +6374,7 @@ var AccessibilityPanel = (function () {
     if (_prefs.lineSpacing === 'wide') html.classList.add('a11y-spacing-wide');
     else if (_prefs.lineSpacing === 'extra') html.classList.add('a11y-spacing-extra');
     if (_trigger) {
-      var hasChanges = false;
+      let hasChanges = false;
       for (var key in DEFAULTS) { if (DEFAULTS.hasOwnProperty(key) && _prefs[key] !== DEFAULTS[key]) { hasChanges = true; break; } }
       _trigger.classList.toggle('a11y-active', hasChanges);
     }
@@ -6401,13 +6401,13 @@ var AccessibilityPanel = (function () {
       '<button class="a11y-reset" id="a11yReset" aria-label="Reset all accessibility preferences">\u21A9 Reset to defaults</button></div>';
     document.body.appendChild(_panel);
     _panel.querySelector('#a11yClose').addEventListener('click', close);
-    var fontBtns = _panel.querySelectorAll('#a11yFontSize .a11y-seg-btn');
+    const fontBtns = _panel.querySelectorAll('#a11yFontSize .a11y-seg-btn');
     for (var i = 0; i < fontBtns.length; i++) { fontBtns[i].addEventListener('click', function (e) { _prefs.fontSize = e.currentTarget.getAttribute('data-value'); save(); applyAll(); }); }
     _panel.querySelector('#a11yContrast').addEventListener('click', function () { _prefs.highContrast = !_prefs.highContrast; save(); applyAll(); });
     _panel.querySelector('#a11yMotion').addEventListener('click', function () { _prefs.reduceMotion = !_prefs.reduceMotion; save(); applyAll(); });
     _panel.querySelector('#a11yDyslexia').addEventListener('click', function () { _prefs.dyslexiaFont = !_prefs.dyslexiaFont; save(); applyAll(); });
     _panel.querySelector('#a11yFocus').addEventListener('click', function () { _prefs.focusIndicators = !_prefs.focusIndicators; save(); applyAll(); });
-    var spaceBtns = _panel.querySelectorAll('#a11ySpacing .a11y-seg-btn');
+    const spaceBtns = _panel.querySelectorAll('#a11ySpacing .a11y-seg-btn');
     for (var j = 0; j < spaceBtns.length; j++) { spaceBtns[j].addEventListener('click', function (e) { _prefs.lineSpacing = e.currentTarget.getAttribute('data-value'); save(); applyAll(); }); }
     _panel.querySelector('#a11yReset').addEventListener('click', function () { for (var key in DEFAULTS) { if (DEFAULTS.hasOwnProperty(key)) _prefs[key] = DEFAULTS[key]; } save(); applyAll(); });
     _panel.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); close(); _trigger.focus(); } });
@@ -6415,11 +6415,11 @@ var AccessibilityPanel = (function () {
 
   function updatePanelUI() {
     if (!_panel) return;
-    var fontBtns = _panel.querySelectorAll('#a11yFontSize .a11y-seg-btn');
+    const fontBtns = _panel.querySelectorAll('#a11yFontSize .a11y-seg-btn');
     for (var i = 0; i < fontBtns.length; i++) { var active = fontBtns[i].getAttribute('data-value') === _prefs.fontSize; fontBtns[i].classList.toggle('a11y-seg-active', active); fontBtns[i].setAttribute('aria-checked', active ? 'true' : 'false'); }
-    var toggles = [{ id: 'a11yContrast', key: 'highContrast' }, { id: 'a11yMotion', key: 'reduceMotion' }, { id: 'a11yDyslexia', key: 'dyslexiaFont' }, { id: 'a11yFocus', key: 'focusIndicators' }];
+    const toggles = [{ id: 'a11yContrast', key: 'highContrast' }, { id: 'a11yMotion', key: 'reduceMotion' }, { id: 'a11yDyslexia', key: 'dyslexiaFont' }, { id: 'a11yFocus', key: 'focusIndicators' }];
     for (var j = 0; j < toggles.length; j++) { var el = _panel.querySelector('#' + toggles[j].id); if (el) el.setAttribute('aria-checked', _prefs[toggles[j].key] ? 'true' : 'false'); }
-    var spaceBtns = _panel.querySelectorAll('#a11ySpacing .a11y-seg-btn');
+    const spaceBtns = _panel.querySelectorAll('#a11ySpacing .a11y-seg-btn');
     for (var k = 0; k < spaceBtns.length; k++) { var spActive = spaceBtns[k].getAttribute('data-value') === _prefs.lineSpacing; spaceBtns[k].classList.toggle('a11y-seg-active', spActive); spaceBtns[k].setAttribute('aria-checked', spActive ? 'true' : 'false'); }
   }
 
@@ -6455,7 +6455,7 @@ if (typeof window !== 'undefined') { window.AccessibilityPanel = AccessibilityPa
 var SuccessStories = (function () {
   'use strict';
 
-  var STORIES = [
+  const STORIES = [
     {
       id: 'story-freelancer',
       category: 'productivity',
@@ -6566,10 +6566,10 @@ var SuccessStories = (function () {
     }
   ];
 
-  var _activeFilter = 'all';
+  let _activeFilter = 'all';
 
   function init() {
-    var grid = document.getElementById('storiesGrid');
+    let grid = document.getElementById('storiesGrid');
     if (!grid) return;
 
     renderCards(grid);
@@ -6579,7 +6579,7 @@ var SuccessStories = (function () {
   function renderCards(grid) {
     grid.innerHTML = '';
     STORIES.forEach(function (story) {
-      var card = document.createElement('div');
+      const card = document.createElement('div');
       card.className = 'story-card';
       card.setAttribute('role', 'listitem');
       card.setAttribute('data-category', story.category);
@@ -6621,11 +6621,11 @@ var SuccessStories = (function () {
   }
 
   function renderFlow(steps) {
-    var html = '<div class="story-flow">';
-    var icons = { problem: '❌', action: '🤖', result: '✅' };
-    var dotClass = { problem: 'step-problem', action: 'step-action', result: 'step-result' };
-    var labelClass = { problem: 'label-problem', action: 'label-action', result: 'label-result' };
-    var labels = { problem: 'The Problem', action: 'AgentBox Steps In', result: 'The Result' };
+    let html = '<div class="story-flow">';
+    const icons = { problem: '❌', action: '🤖', result: '✅' };
+    const dotClass = { problem: 'step-problem', action: 'step-action', result: 'step-result' };
+    const labelClass = { problem: 'label-problem', action: 'label-action', result: 'label-result' };
+    const labels = { problem: 'The Problem', action: 'AgentBox Steps In', result: 'The Result' };
 
     steps.forEach(function (step) {
       html +=
@@ -6643,7 +6643,7 @@ var SuccessStories = (function () {
   }
 
   function renderOutcomeStats(metrics) {
-    var html = '<div class="story-outcome-stats">';
+    let html = '<div class="story-outcome-stats">';
     metrics.forEach(function (m) {
       html +=
         '<div class="story-outcome-stat">' +
@@ -6656,9 +6656,9 @@ var SuccessStories = (function () {
   }
 
   function toggleCard(card) {
-    var expanded = card.classList.contains('story-expanded');
+    const expanded = card.classList.contains('story-expanded');
     // Close all others
-    var cards = document.querySelectorAll('.story-card.story-expanded');
+    const cards = document.querySelectorAll('.story-card.story-expanded');
     for (var i = 0; i < cards.length; i++) {
       cards[i].classList.remove('story-expanded');
       cards[i].setAttribute('aria-expanded', 'false');
@@ -6670,14 +6670,14 @@ var SuccessStories = (function () {
   }
 
   function bindFilters() {
-    var buttons = document.querySelectorAll('.stories-filter');
+    const buttons = document.querySelectorAll('.stories-filter');
     for (var i = 0; i < buttons.length; i++) {
       buttons[i].addEventListener('click', function () {
-        var cat = this.getAttribute('data-category');
+        let cat = this.getAttribute('data-category');
         _activeFilter = cat;
 
         // Update active state
-        var all = document.querySelectorAll('.stories-filter');
+        const all = document.querySelectorAll('.stories-filter');
         for (var j = 0; j < all.length; j++) {
           all[j].classList.remove('active');
           all[j].setAttribute('aria-selected', 'false');
@@ -6691,9 +6691,9 @@ var SuccessStories = (function () {
   }
 
   function filterCards(category) {
-    var cards = document.querySelectorAll('.story-card');
+    const cards = document.querySelectorAll('.story-card');
     for (var i = 0; i < cards.length; i++) {
-      var cardCat = cards[i].getAttribute('data-category');
+      const cardCat = cards[i].getAttribute('data-category');
       if (category === 'all' || cardCat === category) {
         cards[i].classList.remove('story-hidden');
       } else {
@@ -6705,7 +6705,7 @@ var SuccessStories = (function () {
   }
 
   function escapeHtml(str) {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
   }
@@ -6726,11 +6726,11 @@ if (typeof window !== 'undefined') { window.SuccessStories = SuccessStories; }
 var FeatureBoard = (function () {
   "use strict";
 
-  var STORAGE_KEY = "agentbox_feature_votes";
-  var CUSTOM_KEY  = "agentbox_feature_custom";
+  const STORAGE_KEY = "agentbox_feature_votes";
+  const CUSTOM_KEY  = "agentbox_feature_custom";
 
   // ── Seed features ──────────────────────────────────────────────
-  var SEED_FEATURES = [
+  const SEED_FEATURES = [
     {
       id: "calendar-sync",
       title: "Google Calendar integration",
@@ -6841,14 +6841,14 @@ var FeatureBoard = (function () {
     }
   ];
 
-  var allFeatures = [];
-  var userVotes = {};
-  var activeFilter = "all";
+  let allFeatures = [];
+  let userVotes = {};
+  let activeFilter = "all";
 
   // ── Persistence ────────────────────────────────────────────────
   function loadVotes() {
     try {
-      var raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : {};
     } catch (e) { return {}; }
   }
@@ -6857,7 +6857,7 @@ var FeatureBoard = (function () {
   }
   function loadCustom() {
     try {
-      var raw = localStorage.getItem(CUSTOM_KEY);
+      const raw = localStorage.getItem(CUSTOM_KEY);
       return raw ? JSON.parse(raw) : [];
     } catch (e) { return []; }
   }
@@ -6866,14 +6866,14 @@ var FeatureBoard = (function () {
   }
 
   // ── Status helpers ─────────────────────────────────────────────
-  var STATUS_BADGES = {
+  const STATUS_BADGES = {
     planned:  { label: "Planned",  cls: "fb-badge-planned"  },
     building: { label: "Building", cls: "fb-badge-building" },
     shipped:  { label: "Shipped",  cls: "fb-badge-shipped"  },
     "new":    { label: "New",      cls: "fb-badge-new"      }
   };
 
-  var CATEGORY_ICONS = {
+  const CATEGORY_ICONS = {
     integration: "🔗",
     feature:     "⚡",
     ux:          "🎨",
@@ -6882,16 +6882,16 @@ var FeatureBoard = (function () {
 
   // ── Rendering ──────────────────────────────────────────────────
   function buildCard(feat) {
-    var card = document.createElement("div");
+    const card = document.createElement("div");
     card.className = "fb-card";
     card.setAttribute("role", "listitem");
     card.setAttribute("data-id", feat.id);
 
-    var voteCount = feat.votes + (userVotes[feat.id] ? 1 : 0);
-    var votedClass = userVotes[feat.id] ? " voted" : "";
+    const voteCount = feat.votes + (userVotes[feat.id] ? 1 : 0);
+    const votedClass = userVotes[feat.id] ? " voted" : "";
 
-    var badge = STATUS_BADGES[feat.status] || STATUS_BADGES["new"];
-    var catIcon = CATEGORY_ICONS[feat.category] || "⚡";
+    const badge = STATUS_BADGES[feat.status] || STATUS_BADGES["new"];
+    const catIcon = CATEGORY_ICONS[feat.category] || "⚡";
 
     card.innerHTML =
       '<button class="fb-vote-btn' + votedClass + '" aria-label="Vote for ' + escapeHtml(feat.title) + '" data-id="' + feat.id + '">' +
@@ -6910,21 +6910,21 @@ var FeatureBoard = (function () {
         '</div>' +
       '</div>';
 
-    var voteBtn = card.querySelector(".fb-vote-btn");
+    const voteBtn = card.querySelector(".fb-vote-btn");
     voteBtn.addEventListener("click", function () { toggleVote(feat.id); });
     return card;
   }
 
   function render() {
-    var list = document.getElementById("featureBoardList");
+    const list = document.getElementById("featureBoardList");
     if (!list) return;
     list.innerHTML = "";
 
-    var filtered = getFiltered();
+    let filtered = getFiltered();
     // Sort: most votes first
     filtered.sort(function (a, b) {
-      var va = a.votes + (userVotes[a.id] ? 1 : 0);
-      var vb = b.votes + (userVotes[b.id] ? 1 : 0);
+      const va = a.votes + (userVotes[a.id] ? 1 : 0);
+      const vb = b.votes + (userVotes[b.id] ? 1 : 0);
       return vb - va;
     });
 
@@ -6960,26 +6960,26 @@ var FeatureBoard = (function () {
 
   // ── Suggest form ───────────────────────────────────────────────
   function openSuggestForm() {
-    var form = document.getElementById("fbSuggestForm");
+    const form = document.getElementById("fbSuggestForm");
     if (form) form.hidden = false;
   }
   function closeSuggestForm() {
-    var form = document.getElementById("fbSuggestForm");
+    const form = document.getElementById("fbSuggestForm");
     if (form) form.hidden = true;
   }
   function submitSuggestion() {
-    var titleEl = document.getElementById("fbFormTitle");
-    var descEl  = document.getElementById("fbFormDesc");
-    var catEl   = document.getElementById("fbFormCategory");
+    const titleEl = document.getElementById("fbFormTitle");
+    const descEl  = document.getElementById("fbFormDesc");
+    const catEl   = document.getElementById("fbFormCategory");
     if (!titleEl) return;
 
-    var title = titleEl.value.trim();
+    const title = titleEl.value.trim();
     if (!title) {
       titleEl.focus();
       return;
     }
 
-    var newFeat = {
+    const newFeat = {
       id: "custom-" + Date.now(),
       title: title,
       description: descEl ? descEl.value.trim() : "",
@@ -6994,7 +6994,7 @@ var FeatureBoard = (function () {
     saveVotes();
 
     // Persist custom features
-    var customs = loadCustom();
+    const customs = loadCustom();
     customs.push(newFeat);
     saveCustom(customs);
 
@@ -7010,10 +7010,10 @@ var FeatureBoard = (function () {
 
   // ── Filters ────────────────────────────────────────────────────
   function updateFilterButtons() {
-    var buttons = document.querySelectorAll(".fb-filter");
+    const buttons = document.querySelectorAll(".fb-filter");
     for (var i = 0; i < buttons.length; i++) {
-      var b = buttons[i];
-      var isActive = b.getAttribute("data-filter") === activeFilter;
+      const b = buttons[i];
+      let isActive = b.getAttribute("data-filter") === activeFilter;
       b.classList.toggle("active", isActive);
       b.setAttribute("aria-pressed", isActive ? "true" : "false");
     }
@@ -7021,7 +7021,7 @@ var FeatureBoard = (function () {
 
   // ── Toast ──────────────────────────────────────────────────────
   function showToast(msg) {
-    var toast = document.getElementById("fbToast");
+    let toast = document.getElementById("fbToast");
     if (!toast) return;
     toast.textContent = msg;
     toast.hidden = false;
@@ -7031,14 +7031,14 @@ var FeatureBoard = (function () {
 
   // ── Helpers ────────────────────────────────────────────────────
   function escapeHtml(str) {
-    var d = document.createElement("div");
+    const d = document.createElement("div");
     d.textContent = str;
     return d.innerHTML;
   }
 
   function formatDate(dateStr) {
     try {
-      var d = new Date(dateStr + "T00:00:00");
+      const d = new Date(dateStr + "T00:00:00");
       return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     } catch (e) { return dateStr; }
   }
@@ -7049,10 +7049,10 @@ var FeatureBoard = (function () {
 
     // Merge seed + custom features
     allFeatures = SEED_FEATURES.slice();
-    var customs = loadCustom();
+    const customs = loadCustom();
     for (var i = 0; i < customs.length; i++) {
       // Avoid duplicates
-      var exists = false;
+      let exists = false;
       for (var j = 0; j < allFeatures.length; j++) {
         if (allFeatures[j].id === customs[i].id) { exists = true; break; }
       }
@@ -7060,7 +7060,7 @@ var FeatureBoard = (function () {
     }
 
     // Filter buttons
-    var filterBtns = document.querySelectorAll(".fb-filter");
+    let filterBtns = document.querySelectorAll(".fb-filter");
     for (var fi = 0; fi < filterBtns.length; fi++) {
       filterBtns[fi].addEventListener("click", function () {
         activeFilter = this.getAttribute("data-filter");
@@ -7070,19 +7070,19 @@ var FeatureBoard = (function () {
     }
 
     // Suggest button
-    var suggestBtn = document.getElementById("fbSuggestBtn");
+    const suggestBtn = document.getElementById("fbSuggestBtn");
     if (suggestBtn) suggestBtn.addEventListener("click", openSuggestForm);
 
     // Form controls
-    var closeBtn  = document.getElementById("fbFormClose");
-    var backdrop  = document.getElementById("fbFormBackdrop");
-    var submitBtn = document.getElementById("fbFormSubmit");
+    let closeBtn  = document.getElementById("fbFormClose");
+    const backdrop  = document.getElementById("fbFormBackdrop");
+    const submitBtn = document.getElementById("fbFormSubmit");
     if (closeBtn) closeBtn.addEventListener("click", closeSuggestForm);
     if (backdrop) backdrop.addEventListener("click", closeSuggestForm);
     if (submitBtn) submitBtn.addEventListener("click", submitSuggestion);
 
     // Enter key submits
-    var titleInput = document.getElementById("fbFormTitle");
+    const titleInput = document.getElementById("fbFormTitle");
     if (titleInput) {
       titleInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") { e.preventDefault(); submitSuggestion(); }

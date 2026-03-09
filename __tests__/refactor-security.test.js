@@ -181,17 +181,17 @@ describe('Single DOMContentLoaded block', () => {
 
   test('_typingIndicatorTemplate defined exactly once', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf-8');
-    expect(src.match(/var\s+_typingIndicatorTemplate\s*=/g).length).toBe(1);
+    expect(src.match(/(?:var|let|const)\s+_typingIndicatorTemplate\s*=/g).length).toBe(1);
   });
 
   test('MAX_INPUT_LENGTH constant exists', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf-8');
-    expect(src).toContain('var MAX_INPUT_LENGTH = 500;');
+    expect(src).toContain('const MAX_INPUT_LENGTH = 500;');
   });
 
   test('MAX_MESSAGES constant exists', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf-8');
-    expect(src).toContain('var MAX_MESSAGES = 50;');
+    expect(src).toContain('const MAX_MESSAGES = 50;');
   });
 
   test('input truncation guard exists', () => {
