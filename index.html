@@ -707,6 +707,40 @@
             </div>
         </div>
 
+        <div class="role-picker-section" id="rolePickerSection" aria-label="Role Demo Picker">
+            <h2>See AgentBox in Your Role</h2>
+            <p class="role-picker-subtitle">Pick your role to see a personalized demo conversation</p>
+            <div class="role-picker-grid" role="group" aria-label="Select your role">
+                <button class="role-picker-btn" data-role="marketing" aria-pressed="false">
+                    <span class="role-picker-icon">📣</span>
+                    <span class="role-picker-label">Marketing</span>
+                </button>
+                <button class="role-picker-btn" data-role="engineering" aria-pressed="false">
+                    <span class="role-picker-icon">⚙️</span>
+                    <span class="role-picker-label">Engineering</span>
+                </button>
+                <button class="role-picker-btn" data-role="sales" aria-pressed="false">
+                    <span class="role-picker-icon">💼</span>
+                    <span class="role-picker-label">Sales</span>
+                </button>
+                <button class="role-picker-btn" data-role="support" aria-pressed="false">
+                    <span class="role-picker-icon">🎧</span>
+                    <span class="role-picker-label">Support</span>
+                </button>
+                <button class="role-picker-btn" data-role="executive" aria-pressed="false">
+                    <span class="role-picker-icon">📈</span>
+                    <span class="role-picker-label">Executive</span>
+                </button>
+                <button class="role-picker-btn" data-role="hr" aria-pressed="false">
+                    <span class="role-picker-icon">👥</span>
+                    <span class="role-picker-label">HR & People</span>
+                </button>
+            </div>
+            <div class="role-picker-chat">
+                <div class="role-chat-messages" role="list" aria-live="polite"></div>
+            </div>
+        </div>
+
         <div class="notification-section" id="notificationSection" aria-label="Notification Preview">
             <h2>See It In Action</h2>
             <p class="notification-subtitle">Preview what AgentBox notifications look like on your phone</p>
@@ -1892,6 +1926,7 @@
 
     <!-- Interactive Chat Demo -->
         <script src="app.js" defer></script>
+        <script src="src/role-demo-picker.js" defer></script>
 
     <!-- GoatCounter Analytics (free, privacy-friendly) -->
     <script data-goatcounter="https://agentbox.goatcounter.com/count" async src="vendor/count.js" integrity="sha384-YfTrUFhZmCP15/JcRSSEKBXKmBDJNyJ2NwaO5P4K98YEWtQjpg5DKXrk2lnl68CC" crossorigin="anonymous"></script>
