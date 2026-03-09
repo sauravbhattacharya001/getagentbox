@@ -4365,21 +4365,23 @@ var FeatureTour = (function () {
   function showStep(idx) {
     if (idx < 0 || idx >= STOPS.length) return;
     currentStep = idx;
-    const stop = STOPS[idx];
-    let target = resolveTarget(stop.target);
+    const stopDef = STOPS[idx];
+    let target = resolveTarget(stopDef.target);
 
     if (!target) {
-      // Skip missing sections
+      // Skip missing sections; if this is the last stop, end the tour.
+      // Note: we must NOT call the outer `stop` function via the shadowed
+      // `stop` variable (which was previously `STOPS[idx]`, an object).
       if (idx < STOPS.length - 1) { showStep(idx + 1); }
-      else { stop(); }
+      else { endTour(); }
       return;
     }
 
     scrollIntoView(target, function () {
       positionSpotlight(target);
       // Render content
-      tooltip.querySelector('#tourTitle').textContent = stop.title;
-      tooltip.querySelector('#tourBody').textContent = stop.body;
+      tooltip.querySelector('#tourTitle').textContent = stopDef.title;
+      tooltip.querySelector('#tourBody').textContent = stopDef.body;
 
       // Progress dots
       let dotsHtml = '';
@@ -4405,9 +4407,9 @@ var FeatureTour = (function () {
 
       // Step counter in title
       tooltip.querySelector('#tourTitle').textContent =
-        '(' + (idx + 1) + '/' + STOPS.length + ') ' + stop.title;
+        '(' + (idx + 1) + '/' + STOPS.length + ') ' + stopDef.title;
 
-      positionTooltip(target, stop.position);
+      positionTooltip(target, stopDef.position);
       nextBtn.focus();
     });
   }
@@ -4444,6 +4446,9 @@ var FeatureTour = (function () {
     // Mark as completed
     try { localStorage.setItem(STORAGE_KEY, 'true'); } catch (e) { /* private browsing */ }
   }
+
+  // Alias used inside showStep to avoid shadowing by the local `stopDef` variable.
+  var endTour = stop;
 
   function onKeyDown(e) {
     if (!isActive) return;
