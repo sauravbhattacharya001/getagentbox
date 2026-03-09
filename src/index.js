@@ -367,8 +367,11 @@
             Feedback._updateSummary(el);
 
             if (scale) {
-                scale.addEventListener('click', function (e) {
-                    var btn = e.target.closest('.nps-btn');
+                /**
+                 * Handle NPS button selection from either click or keyboard.
+                 * @param {Element} btn - The .nps-btn element that was activated
+                 */
+                function selectNpsButton(btn) {
                     if (!btn) return;
 
                     var score = parseInt(btn.getAttribute('data-score'), 10);
@@ -387,6 +390,30 @@
 
                     // Show comment area
                     if (commentArea) commentArea.hidden = false;
+                }
+
+                scale.addEventListener('click', function (e) {
+                    selectNpsButton(e.target.closest('.nps-btn'));
+                });
+
+                // Keyboard accessibility: allow Enter/Space to select NPS buttons,
+                // and arrow keys to navigate between them (consistent with FAQ component)
+                scale.addEventListener('keydown', function (e) {
+                    var btn = e.target.closest('.nps-btn');
+                    if (!btn) return;
+
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        selectNpsButton(btn);
+                    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        var next = btn.nextElementSibling;
+                        if (next && next.classList.contains('nps-btn')) next.focus();
+                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        var prev = btn.previousElementSibling;
+                        if (prev && prev.classList.contains('nps-btn')) prev.focus();
+                    }
                 });
             }
 
