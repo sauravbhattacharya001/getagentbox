@@ -2669,6 +2669,15 @@ var ThemeToggle = (function () {
     if (saved === 'light') {
       document.body.classList.add('light-mode');
       if (icon) icon.textContent = '🌙';
+    } else if (saved === null) {
+      // No saved preference — respect OS-level prefers-color-scheme.
+      // Without this, users with system light-mode see the dark theme
+      // until they manually toggle, which is jarring.
+      var preferLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      if (preferLight) {
+        document.body.classList.add('light-mode');
+        if (icon) icon.textContent = '🌙';
+      }
     }
 
     btn.addEventListener('click', toggle);

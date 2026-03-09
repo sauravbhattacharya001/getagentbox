@@ -120,6 +120,44 @@ describe('ThemeToggle null-safety', () => {
       expect(icon.textContent).toBe('🌙');
     }
   });
+
+  test('init respects prefers-color-scheme: light when no saved theme', () => {
+    // No saved theme
+    localStorage.removeItem('agentbox-theme');
+
+    // Mock matchMedia to report light preference
+    const original = window.matchMedia;
+    window.matchMedia = jest.fn((query) => {
+      if (query === '(prefers-color-scheme: light)') {
+        return { matches: true, addEventListener: jest.fn() };
+      }
+      return original ? original(query) : { matches: false, addEventListener: jest.fn() };
+    });
+
+    loadPage();
+
+    expect(document.body.classList.contains('light-mode')).toBe(true);
+
+    window.matchMedia = original;
+  });
+
+  test('init stays dark when system prefers dark and no saved theme', () => {
+    localStorage.removeItem('agentbox-theme');
+
+    const original = window.matchMedia;
+    window.matchMedia = jest.fn((query) => {
+      if (query === '(prefers-color-scheme: light)') {
+        return { matches: false, addEventListener: jest.fn() };
+      }
+      return original ? original(query) : { matches: false, addEventListener: jest.fn() };
+    });
+
+    loadPage();
+
+    expect(document.body.classList.contains('light-mode')).toBe(false);
+
+    window.matchMedia = original;
+  });
 });
 
 // ── Testimonials autoplay reset ─────────────────────────────────────────
