@@ -84,6 +84,10 @@ RUN sed -i 's/listen       80;/listen       8080;/' /etc/nginx/conf.d/default.co
     sed -i '/^user /d' /etc/nginx/nginx.conf
 
 COPY --from=validate /app/index.html /usr/share/nginx/html/index.html
+COPY app.js /usr/share/nginx/html/app.js
+COPY styles.css /usr/share/nginx/html/styles.css
+COPY src/ /usr/share/nginx/html/src/
+COPY vendor/ /usr/share/nginx/html/vendor/
 
 # Remove default nginx files we don't need
 RUN rm -f /usr/share/nginx/html/50x.html
