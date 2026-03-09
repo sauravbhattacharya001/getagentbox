@@ -4365,8 +4365,8 @@ var FeatureTour = (function () {
   function showStep(idx) {
     if (idx < 0 || idx >= STOPS.length) return;
     currentStep = idx;
-    const stop = STOPS[idx];
-    let target = resolveTarget(stop.target);
+    const stepDef = STOPS[idx];
+    let target = resolveTarget(stepDef.target);
 
     if (!target) {
       // Skip missing sections
@@ -4378,8 +4378,8 @@ var FeatureTour = (function () {
     scrollIntoView(target, function () {
       positionSpotlight(target);
       // Render content
-      tooltip.querySelector('#tourTitle').textContent = stop.title;
-      tooltip.querySelector('#tourBody').textContent = stop.body;
+      tooltip.querySelector('#tourTitle').textContent = stepDef.title;
+      tooltip.querySelector('#tourBody').textContent = stepDef.body;
 
       // Progress dots
       let dotsHtml = '';
@@ -4405,9 +4405,9 @@ var FeatureTour = (function () {
 
       // Step counter in title
       tooltip.querySelector('#tourTitle').textContent =
-        '(' + (idx + 1) + '/' + STOPS.length + ') ' + stop.title;
+        '(' + (idx + 1) + '/' + STOPS.length + ') ' + stepDef.title;
 
-      positionTooltip(target, stop.position);
+      positionTooltip(target, stepDef.position);
       nextBtn.focus();
     });
   }
