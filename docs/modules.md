@@ -1,6 +1,6 @@
 # AgentBox Landing Page — Module Reference
 
-Complete reference for all 27 interactive modules in `app.js`.
+Complete reference for all 38 interactive modules in `app.js`.
 
 Each module is an ES5 IIFE (Immediately Invoked Function Expression) exported
 to `window`. They are initialized via `DOMContentLoaded` and use no external
@@ -48,6 +48,23 @@ dependencies beyond the DOM.
 - [ThemeToggle](#themetoggle) — Dark/light theme switcher
 - [ScrollProgress](#scrollprogress) — Reading progress indicator bar
 - [ShortcutsHelp](#shortcutshelp) — Keyboard shortcuts overlay
+
+### Engagement & Social Proof
+- [SuccessStories](#successstories) — Interactive case study cards with problem→action→result flow
+- [SocialProofToasts](#socialprooftoasts) — Periodic user activity toast notifications
+- [GrowthTimeline](#growthtimeline) — Interactive user journey milestone viewer
+- [ComparisonTable](#comparisontable) — Feature comparison matrix vs alternatives
+- [BeforeAfter](#beforeafter) — Before/after day comparison tabs
+- [FeatureBoard](#featureboard) — Feature request board with voting
+- [AIGlossary](#aiglossary) — Searchable AI/agent terminology reference (35 terms)
+
+### Onboarding
+- [QuickStartWizard](#quickstartwizard) — Step-by-step setup wizard per use-case
+- [WorkflowTemplates](#workflowtemplates) — Pre-built workflow template browser
+- [RoleDemoPicker](#roledemopicker) — Personalized role-based demo conversations
+
+### Accessibility
+- [AccessibilityPanel](#accessibilitypanel) — Floating preferences panel (font, contrast, motion)
 
 ---
 
@@ -515,3 +532,224 @@ typing delays, and response content.
 *27 modules, ~4,950 lines of vanilla JavaScript. Zero external dependencies.*
 
 *Auto-generated from source. Last updated: 2026-03-06.*
+
+
+---
+
+## Engagement & Social Proof
+
+### SuccessStories
+
+Interactive case study cards showcasing real-world AgentBox success stories.
+
+**What it does:** Displays expandable story cards with a problem → action → result
+flow. Each story includes a persona, quantified outcome metrics, and category filter.
+Stories auto-cycle with manual override.
+
+**Public API:**
+- `SuccessStories.init()` — Renders stories into `#success-stories` section
+- `SuccessStories.getStories()` — Returns the full story dataset
+- `SuccessStories.getActiveFilter()` — Returns the currently active category filter
+
+**DOM target:** `#success-stories`
+
+**Data:** 4 story categories (productivity, research, business, communication), each
+with persona info, 3-step flow, and 3 outcome metrics.
+
+---
+
+### SocialProofToasts
+
+Periodic toast notifications showing simulated user activity to build trust.
+
+**What it does:** Displays timed popup toasts at the bottom of the page showing
+messages like "Sarah from London just automated her email workflow." Respects
+`prefers-reduced-motion`, caps at 15 toasts per session, and includes dismiss controls.
+
+**Public API:**
+- `SocialProofToasts.init()` — Starts the toast cycle after a 12-second initial delay
+
+**Behavior:**
+- Toast display: 5 seconds
+- Interval between toasts: 25 seconds
+- Session cap: 15 toasts maximum
+- Randomized city names and action messages
+
+---
+
+### GrowthTimeline
+
+Interactive milestone viewer showing a user's journey over time.
+
+**What it does:** Displays a horizontal timeline with 4 milestones (Week 1, Month 1,
+Month 3, Month 6). Each milestone reveals features unlocked at that stage with a
+progress bar. Auto-advances every 4 seconds with pause-on-hover.
+
+**Public API:**
+- `GrowthTimeline.init()` — Renders timeline into `#growth-timeline` section
+- `GrowthTimeline.getCurrent()` — Returns the current milestone index (0-3)
+- `GrowthTimeline.getMilestones()` — Returns milestone IDs array
+
+**DOM target:** `#growth-timeline`
+
+---
+
+### ComparisonTable
+
+Feature comparison matrix showing AgentBox vs. alternatives.
+
+**What it does:** Renders an interactive table comparing AgentBox against ChatGPT,
+Zapier, Custom Bot, and Manual approaches across 4 categories (Automation,
+Integration, Intelligence, Operations). Users can filter by category and hover for
+feature details. AgentBox column is visually highlighted.
+
+**Public API:**
+- `ComparisonTable.init()` — Renders table into `#comparison-table` section
+- `ComparisonTable.setFilter(category)` — Filter features by category ID
+- `ComparisonTable.getScores()` — Returns aggregate scores per competitor
+- `ComparisonTable.getActiveCategory()` — Returns the currently active filter
+
+**DOM target:** `#comparison-table`
+
+---
+
+### BeforeAfter
+
+Before/after daily workflow comparison with tabbed switching.
+
+**What it does:** Two-panel tabbed view showing a user's day "Without AgentBox" vs.
+"With AgentBox." Includes ARIA tab semantics (`aria-selected`, `role="tabpanel"`).
+Keyboard-accessible via Enter and Space keys.
+
+**Public API:**
+- `BeforeAfter.init()` — Binds tab switching to `#baTabBefore` / `#baTabAfter`
+
+**DOM targets:** `#baTabBefore`, `#baTabAfter`, `#baPanelBefore`, `#baPanelAfter`
+
+---
+
+### FeatureBoard
+
+Feature request board with user voting and custom feature submission.
+
+**What it does:** Displays a board of planned/in-progress/released features that
+users can vote on. Supports custom feature submission, category filtering
+(all/integration/intelligence/automation/ux), sorting (popular/newest/trending),
+and persistent vote/submission storage via `localStorage`.
+
+**Public API:**
+- `FeatureBoard.init()` — Renders the board into `#feature-board` section
+- `FeatureBoard.getFeatures()` — Returns all features (seed + custom)
+- `FeatureBoard.getVotes()` — Returns the current vote counts
+- `FeatureBoard.getFilter()` — Returns the active filter/sort state
+
+**DOM target:** `#feature-board`
+
+**Storage keys:** `agentbox_feature_votes`, `agentbox_feature_custom`
+
+---
+
+### AIGlossary
+
+Searchable AI and agent terminology reference.
+
+**What it does:** Displays a glossary of 35 AI/agent terms organized by category
+(Core, Techniques, Architecture, Safety, Operations). Features live search,
+category chip filters, expandable definitions with examples and related terms,
+and a "word of the day" highlight.
+
+**Public API:**
+- `AIGlossary.init()` — Renders glossary into `#ai-glossary` section
+- `AIGlossary.getTerms()` — Returns the full terms dataset (35 entries)
+- `AIGlossary.getCategory()` — Returns the currently active category filter
+- `AIGlossary.getQuery()` — Returns the current search query string
+
+**DOM target:** `#ai-glossary`
+
+---
+
+## Onboarding
+
+### QuickStartWizard
+
+Multi-step setup wizard tailored to the user's use-case.
+
+**What it does:** A 3-step wizard: (1) choose your use-case (productivity, research,
+creative, business), (2) choose frequency (daily/weekly/occasional), (3) get
+personalized step-by-step setup instructions. Each use-case has 5 setup steps and
+a pro tip. Includes back/next navigation and progress dots.
+
+**Public API:**
+- `QuickStartWizard.init()` — Renders wizard into `#quick-start-wizard` section
+
+**DOM target:** `#quick-start-wizard`
+
+---
+
+### WorkflowTemplates
+
+Pre-built workflow template browser organized by category.
+
+**What it does:** A filterable gallery of workflow templates (e.g., "Morning Briefing",
+"Meeting Prep", "Weekly Report"). Users browse by category, preview step-by-step
+workflows, and copy the trigger command. Each template shows estimated time saved
+and complexity level.
+
+**Public API:**
+- `WorkflowTemplates.init()` — Renders template browser
+- `WorkflowTemplates.filterBy(category)` — Filter templates by category
+- `WorkflowTemplates.getTemplates()` — Returns all templates
+- `WorkflowTemplates.getCategories()` — Returns available categories
+- `WorkflowTemplates.getCurrent()` — Returns the currently selected template
+- `WorkflowTemplates.getByCategory(cat)` — Returns templates in a category
+- `WorkflowTemplates.getById(id)` — Returns a specific template by ID
+
+**DOM target:** `#workflow-templates`
+
+---
+
+### RoleDemoPicker
+
+Personalized role-based demo conversations.
+
+**What it does:** Users select their job role (Marketing, Engineering, Executive,
+Support, Sales, Freelancer) and see a simulated Telegram-style chat conversation
+showing how AgentBox helps in that specific role. Each role has 3 example
+user↔agent exchanges with role-specific scenarios.
+
+**Location:** `src/role-demo-picker.js` (separate file, not in app.js IIFE)
+
+**Public API:**
+- `RoleDemoPicker.init()` — Renders role picker into `#role-demo` section
+
+**DOM target:** `#role-demo`
+
+---
+
+## Accessibility
+
+### AccessibilityPanel
+
+Floating accessibility preferences panel.
+
+**What it does:** A slide-out panel (triggered by a floating ♿ button) that lets users
+customize their browsing experience. Settings persist in `localStorage` and apply
+immediately via CSS classes on `<body>`.
+
+**Settings:**
+- **Font Size:** Small / Medium / Large / Extra Large
+- **High Contrast:** Enhanced color contrast mode
+- **Reduce Motion:** Disables animations and transitions
+- **Dyslexia Font:** Switches to OpenDyslexic typeface
+- **Focus Indicators:** Enhanced keyboard focus outlines
+- **Line Spacing:** Normal / Relaxed / Loose
+
+**Public API:**
+- `AccessibilityPanel.init()` — Creates and injects the panel + trigger button
+- `AccessibilityPanel.open()` — Opens the preferences panel
+- `AccessibilityPanel.close()` — Closes the panel
+- `AccessibilityPanel.toggle()` — Toggles panel visibility
+- `AccessibilityPanel.destroy()` — Removes panel from DOM
+- `AccessibilityPanel.getPrefs()` — Returns current preferences object
+
+**Storage key:** `agentbox-a11y-prefs`
