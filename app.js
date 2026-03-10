@@ -2665,11 +2665,13 @@ var ThemeToggle = (function () {
     icon = document.getElementById('themeIcon');
     if (!btn) return;
 
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === 'light') {
-      document.body.classList.add('light-mode');
-      if (icon) icon.textContent = '🌙';
-    }
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === 'light') {
+        document.body.classList.add('light-mode');
+        if (icon) icon.textContent = '🌙';
+      }
+    } catch (e) { /* localStorage unavailable (private browsing) */ }
 
     btn.addEventListener('click', toggle);
   }
@@ -2677,7 +2679,7 @@ var ThemeToggle = (function () {
   function toggle() {
     const isLight = document.body.classList.toggle('light-mode');
     if (icon) icon.textContent = isLight ? '🌙' : '☀️';
-    localStorage.setItem(STORAGE_KEY, isLight ? 'light' : 'dark');
+    try { localStorage.setItem(STORAGE_KEY, isLight ? 'light' : 'dark'); } catch (e) { /* private browsing */ }
   }
 
   return { init: init };
@@ -3870,7 +3872,7 @@ if (typeof window !== 'undefined') {
 // ── Onboarding Wizard ──────────────────────────────────────
 (function initOnboardingWizard() {
   const STORAGE_KEY = 'agentbox_onboarding_done';
-  if (localStorage.getItem(STORAGE_KEY)) return;
+  try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) { /* private browsing – show wizard anyway */ }
 
   const widget = document.getElementById('onboardingWidget');
   const trigger = document.getElementById('onboardingTrigger');
@@ -4091,7 +4093,7 @@ if (typeof window !== 'undefined') {
   // Event: close
   closeBtn.addEventListener('click', function() {
     panel.hidden = true;
-    localStorage.setItem(STORAGE_KEY, '1');
+    try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) { /* private browsing */ }
     widget.hidden = true;
   });
 
@@ -4105,7 +4107,7 @@ if (typeof window !== 'undefined') {
       currentStep = 3;
       buildResult();
     } else if (currentStep === 3) {
-      localStorage.setItem(STORAGE_KEY, '1');
+      try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) { /* private browsing */ }
       widget.hidden = true;
       return;
     }
