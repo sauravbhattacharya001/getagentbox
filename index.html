@@ -1932,6 +1932,34 @@
         </div>
     </div>
 
+
+    <!-- Community Showcase -->
+    <section class="section showcase-section" id="showcaseSection" aria-labelledby="showcaseTitle">
+        <h2 class="section-title" id="showcaseTitle">Community Showcase</h2>
+        <p class="section-subtitle">See what others are building with AgentBox</p>
+
+        <div class="showcase-controls">
+            <div class="showcase-filter-row" role="tablist" aria-label="Filter by category">
+                <button class="showcase-filter active" role="tab" aria-selected="true" data-category="All">All</button>
+                <button class="showcase-filter" role="tab" aria-selected="false" data-category="Productivity">Productivity</button>
+                <button class="showcase-filter" role="tab" aria-selected="false" data-category="Developer">Developer</button>
+                <button class="showcase-filter" role="tab" aria-selected="false" data-category="Creative">Creative</button>
+                <button class="showcase-filter" role="tab" aria-selected="false" data-category="Business">Business</button>
+                <button class="showcase-filter" role="tab" aria-selected="false" data-category="Research">Research</button>
+            </div>
+            <div class="showcase-actions">
+                <div class="showcase-sort-group" role="group" aria-label="Sort order">
+                    <button class="showcase-sort-btn active" data-sort="popular" aria-pressed="true">Popular</button>
+                    <button class="showcase-sort-btn" data-sort="newest" aria-pressed="false">Newest</button>
+                </div>
+                <span class="showcase-count" id="showcaseCount" aria-live="polite">10 projects</span>
+                <button class="showcase-submit-trigger" id="showcaseSubmitBtn">Share Your Project</button>
+            </div>
+        </div>
+
+        <div class="showcase-grid" id="showcaseGrid" role="list" aria-label="Community projects"></div>
+    </section>
+
     <!-- Integration Pipeline Builder -->
     <section class="section pipeline-section" id="pipelineSection" aria-labelledby="pipelineTitle">
         <h2 class="section-title" id="pipelineTitle">Build Your Agent Pipeline</h2>
