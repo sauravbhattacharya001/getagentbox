@@ -8636,3 +8636,137 @@ if (typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', function () { ShareCardGenerator.init(); });
 }
 if (typeof window !== 'undefined') { window.ShareCardGenerator = ShareCardGenerator; }
+
+// Memory Timeline
+(function() {
+  var SCENARIOS = {
+    daily: {
+      events: [
+        { type: 'user', time: 'Day 1 - 8:00 AM', text: 'Hey, remind me to call the dentist at 3 PM' },
+        { type: 'agent', time: 'Day 1 - 8:00 AM', text: 'Done! I will remind you at 3 PM today. By the way, what is your dentist name? I can save it for next time.' },
+        { type: 'user', time: 'Day 1 - 8:01 AM', text: 'Dr. Patel on 5th Avenue' },
+        { type: 'memory', time: '', text: 'Remembered: Dentist = Dr. Patel, 5th Avenue', fact: 'Dentist: Dr. Patel' },
+        { type: 'user', time: 'Day 3 - 7:45 AM', text: 'I always forget my morning vitamins' },
+        { type: 'agent', time: 'Day 3 - 7:46 AM', text: 'Want me to remind you every morning at 8 AM? I can add it to your daily routine.' },
+        { type: 'memory', time: '', text: 'Remembered: Takes morning vitamins, prefers 8 AM reminders', fact: 'Morning vitamins @ 8 AM' },
+        { type: 'user', time: 'Day 7 - 9:00 AM', text: 'Book me a dentist appointment next week' },
+        { type: 'agent', time: 'Day 7 - 9:00 AM', text: 'Sure! Should I call Dr. Patel on 5th Avenue again, or try somewhere new?' },
+        { type: 'memory', time: '', text: 'Used memory: Knew the dentist without being told again', fact: 'Recalls past preferences' }
+      ]
+    },
+    project: {
+      events: [
+        { type: 'user', time: 'Mon - 10:00 AM', text: 'I am working on a React dashboard. We use TypeScript and Tailwind.' },
+        { type: 'memory', time: '', text: 'Remembered: Current project = React dashboard, TypeScript + Tailwind', fact: 'Project: React + TS + Tailwind' },
+        { type: 'user', time: 'Mon - 2:30 PM', text: 'How do I make a reusable chart component?' },
+        { type: 'agent', time: 'Mon - 2:31 PM', text: 'Since you are using TypeScript and Tailwind, here is a typed Chart component with Tailwind classes...' },
+        { type: 'user', time: 'Wed - 9:15 AM', text: 'The API returns dates as Unix timestamps' },
+        { type: 'memory', time: '', text: 'Remembered: API uses Unix timestamps for dates', fact: 'API: Unix timestamps' },
+        { type: 'user', time: 'Thu - 11:00 AM', text: 'Format the chart X-axis with dates' },
+        { type: 'agent', time: 'Thu - 11:01 AM', text: 'Since your API returns Unix timestamps, I will convert them with new Date(ts * 1000) and format with Intl.DateTimeFormat...' },
+        { type: 'memory', time: '', text: 'Used memory: Combined project stack + API format knowledge', fact: 'Connects context across days' }
+      ]
+    },
+    health: {
+      events: [
+        { type: 'user', time: 'Week 1 - Mon', text: 'I want to start running. I have never run before.' },
+        { type: 'agent', time: 'Week 1 - Mon', text: 'Great goal! Let us start with a Couch-to-5K plan. What days work best for you?' },
+        { type: 'user', time: 'Week 1 - Mon', text: 'Tuesday, Thursday, Saturday mornings' },
+        { type: 'memory', time: '', text: 'Remembered: Beginner runner, runs Tue/Thu/Sat mornings', fact: 'Runs: Tue/Thu/Sat AM' },
+        { type: 'user', time: 'Week 1 - Tue', text: 'Did my first run! 1.5 miles, felt hard' },
+        { type: 'memory', time: '', text: 'Remembered: First run = 1.5 mi, difficulty: hard', fact: 'Baseline: 1.5 mi' },
+        { type: 'agent', time: 'Week 1 - Tue', text: '1.5 miles on day one is solid! How did your knees feel? Tomorrow is rest day.' },
+        { type: 'user', time: 'Week 3 - Sat', text: 'Just did 2.5 miles!' },
+        { type: 'agent', time: 'Week 3 - Sat', text: 'You went from 1.5 to 2.5 miles in 3 weeks - that is a 67% improvement! Your consistency is paying off.' },
+        { type: 'memory', time: '', text: 'Used memory: Tracked progress from 1.5 to 2.5 mi over 3 weeks', fact: 'Tracks progress over time' }
+      ]
+    }
+  };
+
+  var currentScenario = 'daily';
+  var playIndex = 0;
+  var playing = false;
+  var playTimer = null;
+
+  var track = document.getElementById('memoryTimelineTrack');
+  var factsEl = document.getElementById('memoryBrainFacts');
+  var countEl = document.getElementById('memoryBrainCount');
+  var playBtn = document.getElementById('memoryPlayBtn');
+  var resetBtn = document.getElementById('memoryResetBtn');
+
+  if (!track || !playBtn) return;
+
+  function reset() {
+    playing = false;
+    playIndex = 0;
+    if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+    track.innerHTML = '';
+    factsEl.innerHTML = '';
+    countEl.textContent = '0 facts';
+    playBtn.textContent = '\u25b6 Watch it learn';
+    playBtn.disabled = false;
+  }
+
+  function addEvent(evt) {
+    var div = document.createElement('div');
+    var cls = evt.type === 'user' ? 'user-msg' : evt.type === 'agent' ? 'agent-msg' : 'memory-save';
+    div.className = 'memory-event ' + cls;
+    div.setAttribute('role', 'listitem');
+
+    var label = evt.type === 'user' ? 'You' : evt.type === 'agent' ? 'AgentBox' : '\ud83d\udca1 Memory saved';
+    var html = '<div class="memory-event-label">' + label + '</div>';
+    if (evt.time) html = '<div class="memory-event-time">' + evt.time + '</div>' + html;
+    html += '<div class="memory-event-bubble">' + evt.text + '</div>';
+    div.innerHTML = html;
+    track.appendChild(div);
+    track.scrollTop = track.scrollHeight;
+
+    if (evt.fact) {
+      var tag = document.createElement('span');
+      tag.className = 'memory-fact-tag new';
+      tag.setAttribute('role', 'listitem');
+      tag.textContent = evt.fact;
+      factsEl.appendChild(tag);
+      var count = factsEl.children.length;
+      countEl.textContent = count + ' fact' + (count !== 1 ? 's' : '');
+      setTimeout(function() { tag.classList.remove('new'); }, 2000);
+    }
+  }
+
+  function playNext() {
+    var events = SCENARIOS[currentScenario].events;
+    if (playIndex >= events.length) {
+      playing = false;
+      playBtn.textContent = '\u2714 Done!';
+      playBtn.disabled = true;
+      return;
+    }
+    addEvent(events[playIndex]);
+    playIndex++;
+    var delay = events[playIndex - 1].type === 'memory' ? 800 : 1200;
+    playTimer = setTimeout(playNext, delay);
+  }
+
+  playBtn.addEventListener('click', function() {
+    if (playing) return;
+    playing = true;
+    playBtn.textContent = 'Playing...';
+    playBtn.disabled = true;
+    playNext();
+  });
+
+  resetBtn.addEventListener('click', reset);
+
+  document.querySelectorAll('.memory-timeline-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.memory-timeline-btn').forEach(function(b) {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      currentScenario = btn.dataset.scenario;
+      reset();
+    });
+  });
+})();
