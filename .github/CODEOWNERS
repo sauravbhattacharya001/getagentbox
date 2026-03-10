@@ -1,0 +1,23 @@
+# CODEOWNERS - Automatic code review assignments
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default: owner reviews all changes
+* @sauravbhattacharya001
+
+# Security-sensitive files require owner review
+SECURITY.md @sauravbhattacharya001
+.github/workflows/ @sauravbhattacharya001
+Dockerfile @sauravbhattacharya001
+.dockerignore @sauravbhattacharya001
+
+# Core application logic
+app.js @sauravbhattacharya001
+index.html @sauravbhattacharya001
+styles.css @sauravbhattacharya001
+
+# Package configuration
+package.json @sauravbhattacharya001
+package-lock.json @sauravbhattacharya001
+
+# Documentation
+docs/ @sauravbhattacharya001

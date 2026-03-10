@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog — AgentBox Documentation</title>
+    <meta name="description" content="AgentBox release history and changelog — features, fixes, and improvements across all versions.">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --bg-card: #1a1d28;
+            --bg-code: #252830;
+            --text: #e0e0e8;
+            --text-dim: #8b8fa0;
+            --accent: #4a9eff;
+            --accent-hover: #70b4ff;
+            --border: #2d3040;
+            --green: #4ade80;
+            --yellow: #facc15;
+            --red: #f87171;
+            --purple: #a78bfa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+        /* Layout */
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 2rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+        }
+        .sidebar-logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+        .sidebar-logo span { color: var(--accent); }
+        .sidebar nav { padding: 0 1rem; }
+        .sidebar nav a {
+            display: block;
+            padding: 0.45rem 0.75rem;
+            border-radius: 6px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+        .sidebar nav a:hover, .sidebar nav a.active {
+            background: rgba(74,158,255,0.1);
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .sidebar nav .section-title {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            padding: 1.2rem 0.75rem 0.4rem;
+            font-weight: 600;
+        }
+        .content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 3rem 4rem;
+            max-width: 900px;
+        }
+
+        /* Typography */
+        h1 { font-size: 2.2rem; margin-bottom: 1rem; }
+        h2 {
+            font-size: 1.5rem;
+            margin: 2.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        h3 { font-size: 1.15rem; margin: 1.8rem 0 0.7rem; color: var(--accent); }
+        p { margin-bottom: 1rem; color: var(--text-dim); }
+        ul { margin: 0 0 1.2rem 1.5rem; color: var(--text-dim); }
+        li { margin-bottom: 0.35rem; }
+
+        /* Version header */
+        .version-header {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .version-header h2 {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .version-date {
+            font-size: 0.88rem;
+            color: var(--text-dim);
+        }
+        .version-badge {
+            display: inline-block;
+            padding: 0.15rem 0.55rem;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-latest { background: rgba(74,222,128,0.15); color: var(--green); }
+        .badge-initial { background: rgba(167,139,250,0.15); color: var(--purple); }
+
+        /* Category badges */
+        .category {
+            display: inline-block;
+            padding: 0.12rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-right: 0.5rem;
+        }
+        .cat-features { background: rgba(74,222,128,0.12); color: var(--green); }
+        .cat-security { background: rgba(248,113,113,0.12); color: var(--red); }
+        .cat-perf { background: rgba(250,204,21,0.12); color: var(--yellow); }
+        .cat-fixes { background: rgba(167,139,250,0.12); color: var(--purple); }
+        .cat-docs { background: rgba(74,158,255,0.12); color: var(--accent); }
+        .cat-tests { background: rgba(74,158,255,0.12); color: var(--accent); }
+        .cat-ci { background: rgba(139,143,160,0.18); color: var(--text-dim); }
+
+        /* Stats summary */
+        .release-stats {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0 1.5rem;
+            padding: 1rem 1.3rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .content { margin-left: 0; padding: 2rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">🤖 <span>AgentBox</span> Docs</div>
+            <nav>
+                <div class="section-title">Documentation</div>
+                <a href="index.html">API Reference</a>
+                <a href="getting-started.html">Getting Started</a>
+
+                <div class="section-title">Changelog</div>
+                <a href="#v2.0.0" class="active">v2.0.0</a>
+                <a href="#v1.0.0">v1.0.0</a>
+
+                <div class="section-title">Resources</div>
+                <a href="https://github.com/sauravbhattacharya001/getagentbox">GitHub</a>
+                <a href="https://github.com/sauravbhattacharya001/getagentbox/issues">Issues</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <h1>Changelog</h1>
+            <p>Release history for the AgentBox landing page. Each release includes features, security improvements, performance optimizations, and bug fixes.</p>
+
+            <!-- v2.0.0 -->
+            <div id="v2.0.0">
+                <div class="version-header">
+                    <h2>v2.0.0</h2>
+                    <span class="version-date">March 7, 2026</span>
+                    <span class="version-badge badge-latest">Latest</span>
+                </div>
+                <p>91 commits since v1.0.0 — a complete transformation from static landing page to a fully interactive product site with 27+ interactive components.</p>
+
+                <div class="release-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">91</div>
+                        <div class="stat-label">Commits</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">27+</div>
+                        <div class="stat-label">Components</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">36</div>
+                        <div class="stat-label">Tests</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">7</div>
+                        <div class="stat-label">Categories</div>
+                    </div>
+                </div>
+
+                <h3><span class="category cat-features">Features</span></h3>
+                <ul>
+                    <li><strong>Interactive API Explorer</strong> — live endpoint browser with request/response demos</li>
+                    <li><strong>Quick Start Wizard</strong> — guided onboarding flow for new users</li>
+                    <li><strong>Workflow Templates Gallery</strong> — 12 automation recipe templates</li>
+                    <li><strong>Onboarding Quiz</strong> — "Which plan is right for you?" interactive guide</li>
+                    <li><strong>Commands Cheat Sheet</strong> — searchable command reference</li>
+                    <li><strong>Interactive Feature Tour</strong> — guided walkthrough overlay</li>
+                    <li><strong>Prompt Gallery</strong> — browsable prompt template collection</li>
+                    <li><strong>Agent Personality Configurator</strong> — 15-question slider with persistence</li>
+                    <li><strong>Interactive Chat Playground</strong> — live chat demo</li>
+                    <li><strong>Time Saved Calculator</strong> — interactive ROI estimator</li>
+                    <li><strong>Command Palette</strong> (Ctrl+K / Cmd+K) — quick section navigation</li>
+                    <li><strong>System Status Dashboard</strong> — service health monitoring</li>
+                    <li><strong>Product Roadmap</strong> — voting and status filters</li>
+                    <li><strong>Trust &amp; Privacy Section</strong> — expandable security cards</li>
+                    <li><strong>Newsletter Signup</strong> — email subscription form</li>
+                    <li><strong>Integrations Showcase</strong> — category-filtered integration browser</li>
+                    <li><strong>What's New Changelog</strong> — tag-filtered changelog section</li>
+                    <li><strong>Social Proof Stats</strong> — animated counters with scroll trigger</li>
+                    <li><strong>Use Cases Section</strong> — tabbed persona showcase with keyboard nav</li>
+                    <li><strong>Comparison Table</strong> — 5 competitors, 16 features</li>
+                    <li><strong>Live Agent Activity Feed</strong> — simulated real-time actions</li>
+                    <li><strong>Sticky Navigation</strong> with smooth scrolling</li>
+                    <li><strong>Scroll Progress Bar</strong> + back-to-top button</li>
+                    <li><strong>Light/Dark Mode Toggle</strong> in navigation</li>
+                    <li><strong>Floating Share Button</strong> (Twitter/X, LinkedIn, copy link)</li>
+                    <li><strong>Keyboard Shortcuts Modal</strong> (press ? to open)</li>
+                </ul>
+
+                <h3><span class="category cat-security">Security</span></h3>
+                <ul>
+                    <li>Hardened CSP (Content Security Policy) across nginx and HTML meta tags</li>
+                    <li>Vendored GoatCounter script, added Permissions-Policy header</li>
+                    <li>Hardened localStorage deserialization against tampering</li>
+                    <li>Fixed protocol-relative URL vulnerability, guarded prototype access</li>
+                    <li>SRI (Subresource Integrity) hashes for scripts</li>
+                    <li>Replaced innerHTML with safe DOM construction across multiple modules</li>
+                </ul>
+
+                <h3><span class="category cat-perf">Performance</span></h3>
+                <ul>
+                    <li>DOM pooling in CommandPalette, PromptGallery, ApiExplorer</li>
+                    <li>requestAnimationFrame replaces setInterval for Stats counters</li>
+                    <li>Cached DOM references across 6+ modules to eliminate redundant queries</li>
+                    <li>Eliminated forced layout recalculations in scroll spy</li>
+                    <li>Debounced resize handler for section offset caching</li>
+                    <li>Skipped redundant nav scroll updates</li>
+                </ul>
+
+                <h3><span class="category cat-fixes">Bug Fixes</span></h3>
+                <ul>
+                    <li>Fixed animation stalls and stacked timers in counter animations</li>
+                    <li>Fixed listener leaks (ScrollProgress.destroy(), Testimonials autoplay)</li>
+                    <li>Fixed ThemeToggle null crash</li>
+                    <li>Fixed light-mode styles for comparison table</li>
+                    <li>Made prefersReducedMotion reactive to OS preference changes</li>
+                    <li>Fixed activity feed item accumulation from missed animationend events</li>
+                    <li>Fixed O(n*m) nested loop in CommandPalette with O(1) poolIndex map</li>
+                </ul>
+
+                <h3><span class="category cat-docs">Documentation</span></h3>
+                <ul>
+                    <li>Module Reference for all 27 interactive components</li>
+                    <li>Updated copilot-instructions.md with architecture context</li>
+                    <li>Added CONTRIBUTING.md with development guide</li>
+                </ul>
+
+                <h3><span class="category cat-tests">Tests</span></h3>
+                <ul>
+                    <li>36 tests for Calculator, Newsletter, and CommandPalette modules</li>
+                </ul>
+
+                <h3><span class="category cat-ci">CI/CD</span></h3>
+                <ul>
+                    <li>Bumped actions: checkout v4→v6, setup-node v4→v6, labeler v5→v6, stale v9→v10, codecov v4→v5, codeql v3→v4</li>
+                </ul>
+            </div>
+
+            <!-- v1.0.0 -->
+            <div id="v1.0.0">
+                <div class="version-header">
+                    <h2>v1.0.0</h2>
+                    <span class="version-date">February 20, 2026</span>
+                    <span class="version-badge badge-initial">Initial</span>
+                </div>
+                <p>Initial release — AgentBox landing/marketing site with responsive design, dark theme, and interactive chat demos.</p>
+            </div>
+
+        </main>
+    </div>
+</body>
+</html>
