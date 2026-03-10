@@ -6974,3 +6974,97 @@ html.a11y-spacing-extra * { line-height: inherit !important; }
   .share-card-builder { flex-direction: column; align-items: center; }
   .share-card-form, .share-card-preview { max-width: 100%; }
 }
+
+/* ── Capability Roulette ────────────────────────────────────── */
+.roulette-section {
+  text-align: center;
+  padding: 60px 20px;
+}
+.roulette-subtitle {
+  color: #666;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+.roulette-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.roulette-wheel-wrapper {
+  position: relative;
+  width: 340px;
+  height: 340px;
+  flex-shrink: 0;
+}
+.roulette-wheel-wrapper canvas {
+  border-radius: 50%;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+}
+.roulette-pointer {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+  color: #ff6b6b;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  z-index: 2;
+}
+.roulette-result {
+  max-width: 320px;
+  text-align: left;
+  min-height: 140px;
+}
+.roulette-result-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.roulette-result-desc {
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+.roulette-result-example {
+  font-style: italic;
+  color: #888;
+  font-size: 0.95rem;
+}
+.roulette-spin-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  padding: 14px 36px;
+  border-radius: 30px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.roulette-spin-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+}
+.roulette-spin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.roulette-history-label {
+  margin-top: 1rem;
+  color: #888;
+  font-size: 0.9rem;
+}
+[data-theme="dark"] .roulette-subtitle { color: #9ca3af; }
+[data-theme="dark"] .roulette-result-desc { color: #9ca3af; }
+[data-theme="dark"] .roulette-result-example { color: #6b7280; }
+[data-theme="dark"] .roulette-wheel-wrapper canvas { box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+@media (max-width: 700px) {
+  .roulette-container { flex-direction: column; }
+  .roulette-result { text-align: center; }
+  .roulette-wheel-wrapper { width: 280px; height: 280px; }
+  .roulette-wheel-wrapper canvas { width: 280px; height: 280px; }
+}

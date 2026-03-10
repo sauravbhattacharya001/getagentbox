@@ -8636,3 +8636,176 @@ if (typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', function () { ShareCardGenerator.init(); });
 }
 if (typeof window !== 'undefined') { window.ShareCardGenerator = ShareCardGenerator; }
+
+// ---------------------------------------------------------------------------
+// Capability Roulette
+// ---------------------------------------------------------------------------
+var CapabilityRoulette = (function () {
+  'use strict';
+
+  var CAPABILITIES = [
+    { icon: '\u{1F9E0}', title: 'Memory Recall', desc: 'Your agent remembers past conversations and context \u2014 no need to repeat yourself.', example: '"What was that restaurant I mentioned last week?"' },
+    { icon: '\u{1F50D}', title: 'Web Search', desc: 'Search the web in real time and get summarized answers right in chat.', example: '"What are the best hiking trails near Portland?"' },
+    { icon: '\u23F0', title: 'Reminders', desc: 'Set one-time or recurring reminders with natural language.', example: '"Remind me to call mom every Sunday at 5pm"' },
+    { icon: '\u{1F4F7}', title: 'Image Analysis', desc: 'Send a photo and your agent will analyze it \u2014 OCR, objects, food, code errors.', example: '"What plant is this?" [sends photo]' },
+    { icon: '\u{1F4BB}', title: 'Code Help', desc: 'Debug errors, write snippets, explain code, or review your work.', example: '"Why is my React useEffect running twice?"' },
+    { icon: '\u{1F324}\uFE0F', title: 'Weather', desc: 'Get current conditions and forecasts for any location.', example: '"Will it rain in Seattle this weekend?"' },
+    { icon: '\u{1F373}', title: 'Recipes', desc: 'Get recipes based on ingredients you have, dietary preferences, or cuisine type.', example: '"What can I make with chicken and rice?"' },
+    { icon: '\u{1F4DD}', title: 'Summarization', desc: 'Paste long text, articles, or threads and get a concise summary.', example: '"Summarize this article for me" [pastes text]' },
+    { icon: '\u{1F30D}', title: 'Translation', desc: 'Translate text between languages naturally in conversation.', example: '"How do you say \'where is the station\' in Japanese?"' },
+    { icon: '\u{1F4CA}', title: 'Data Analysis', desc: 'Analyze numbers, create calculations, or reason through data.', example: '"If I save $400/month at 5% interest, what do I have in 10 years?"' },
+    { icon: '\u270D\uFE0F', title: 'Writing Help', desc: 'Draft emails, polish messages, brainstorm ideas, or rewrite text.', example: '"Help me write a polite follow-up email to my landlord"' },
+    { icon: '\u{1F3AF}', title: 'Decision Making', desc: 'Weigh pros and cons, compare options, or think through decisions.', example: '"Should I learn Rust or Go for backend development?"' },
+  ];
+
+  var COLORS = [
+    '#667eea', '#764ba2', '#f093fb', '#f5576c',
+    '#4facfe', '#00f2fe', '#43e97b', '#fa709a',
+    '#fee140', '#30cfd0', '#a18cd1', '#fbc2eb',
+  ];
+
+  var canvas, ctx, spinBtn, resultTitle, resultDesc, resultExample;
+  var historyLabel, historyCount, historyTotal;
+  var currentAngle = 0;
+  var spinning = false;
+  var discovered = new Set();
+
+  function drawWheel(angle) {
+    if (!canvas || !ctx) return;
+    var w = canvas.width;
+    var h = canvas.height;
+    var cx = w / 2;
+    var cy = h / 2;
+    var r = Math.min(cx, cy) - 8;
+    var sliceAngle = (2 * Math.PI) / CAPABILITIES.length;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+
+    for (var i = 0; i < CAPABILITIES.length; i++) {
+      var startA = i * sliceAngle;
+      var endA = startA + sliceAngle;
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, r, startA, endA);
+      ctx.closePath();
+      ctx.fillStyle = COLORS[i % COLORS.length];
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.rotate(startA + sliceAngle / 2);
+      ctx.translate(r * 0.65, 0);
+      ctx.rotate(Math.PI / 2);
+      ctx.font = '22px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(CAPABILITIES[i].icon, 0, 0);
+      ctx.restore();
+    }
+
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillStyle = '#333';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('\u{1F3B0}', cx, cy);
+  }
+
+  function getWinnerIndex(angle) {
+    var sliceAngle = (2 * Math.PI) / CAPABILITIES.length;
+    var pointerAngle = (3 * Math.PI / 2);
+    var normalizedAngle = ((pointerAngle - angle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+    return Math.floor(normalizedAngle / sliceAngle) % CAPABILITIES.length;
+  }
+
+  function showResult(cap) {
+    if (resultTitle) resultTitle.textContent = cap.icon + ' ' + cap.title;
+    if (resultDesc) resultDesc.textContent = cap.desc;
+    if (resultExample) resultExample.textContent = cap.example;
+    discovered.add(cap.title);
+    if (historyLabel) historyLabel.hidden = false;
+    if (historyCount) historyCount.textContent = String(discovered.size);
+  }
+
+  function spin() {
+    if (spinning) return;
+    spinning = true;
+    if (spinBtn) spinBtn.disabled = true;
+
+    var duration = 3000 + Math.random() * 2000;
+    var extraRotations = 3 + Math.floor(Math.random() * 3);
+    var targetAngle = currentAngle + extraRotations * 2 * Math.PI + Math.random() * 2 * Math.PI;
+    var startTime = null;
+    var startAngle = currentAngle;
+
+    function easeOut(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function animate(ts) {
+      if (!startTime) startTime = ts;
+      var elapsed = ts - startTime;
+      var progress = Math.min(elapsed / duration, 1);
+      var eased = easeOut(progress);
+      currentAngle = startAngle + (targetAngle - startAngle) * eased;
+      drawWheel(currentAngle);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        currentAngle = targetAngle % (2 * Math.PI);
+        spinning = false;
+        if (spinBtn) spinBtn.disabled = false;
+        var winner = getWinnerIndex(currentAngle);
+        showResult(CAPABILITIES[winner]);
+      }
+    }
+
+    if (prefersReducedMotion) {
+      currentAngle = targetAngle % (2 * Math.PI);
+      drawWheel(currentAngle);
+      spinning = false;
+      if (spinBtn) spinBtn.disabled = false;
+      var winner = getWinnerIndex(currentAngle);
+      showResult(CAPABILITIES[winner]);
+    } else {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  function init() {
+    canvas = document.getElementById('rouletteCanvas');
+    ctx = canvas ? canvas.getContext('2d') : null;
+    spinBtn = document.getElementById('rouletteSpinBtn');
+    resultTitle = document.getElementById('rouletteResultTitle');
+    resultDesc = document.getElementById('rouletteResultDesc');
+    resultExample = document.getElementById('rouletteResultExample');
+    historyLabel = document.getElementById('rouletteHistoryLabel');
+    historyCount = document.getElementById('rouletteHistoryCount');
+    historyTotal = document.getElementById('rouletteHistoryTotal');
+
+    if (historyTotal) historyTotal.textContent = String(CAPABILITIES.length);
+    drawWheel(currentAngle);
+    if (spinBtn) {
+      spinBtn.addEventListener('click', spin);
+    }
+  }
+
+  return { init: init, spin: spin, CAPABILITIES: CAPABILITIES, _getDiscovered: function () { return discovered; } };
+})();
+
+document.addEventListener('DOMContentLoaded', function () { CapabilityRoulette.init(); });
+if (typeof window !== 'undefined') { window.CapabilityRoulette = CapabilityRoulette; }
