@@ -209,6 +209,17 @@ var ChatDemo = (function () {
       cancelAnimationFrame(scrollRafId);
       scrollRafId = 0;
     }
+    // Remove any orphaned typing indicators left from the previous scenario.
+    // When switchTo() fires mid-animation, a typing indicator may already be
+    // in the DOM waiting for its setTimeout callback — which will now bail
+    // via isStale(), leaving the indicator visible.  Clean them up here.
+    var chatWindow = document.getElementById('chatWindow');
+    if (chatWindow) {
+      var orphans = chatWindow.querySelectorAll('.typing-indicator');
+      for (var oi = 0; oi < orphans.length; oi++) {
+        orphans[oi].parentNode.removeChild(orphans[oi]);
+      }
+    }
     if (!_scenarioBtns) {
       _scenarioBtns = document.querySelectorAll('.scenario-btn');
     }
