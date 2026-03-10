@@ -6957,15 +6957,23 @@ var FeatureBoard = (function () {
   ];
 
   let allFeatures = [];
-  let userVotes = {};
+  let userVotes = Object.create(null);
   let activeFilter = "all";
 
   // ── Persistence ────────────────────────────────────────────────
   function loadVotes() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) { return {}; }
+      if (!raw) return Object.create(null);
+      const parsed = JSON.parse(raw);
+      const safe = Object.create(null);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        for (var k in parsed) {
+          if (Object.prototype.hasOwnProperty.call(parsed, k)) safe[k] = !!parsed[k];
+        }
+      }
+      return safe;
+    } catch (e) { return Object.create(null); }
   }
   function saveVotes() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(userVotes)); } catch (e) { /* noop */ }
@@ -6973,7 +6981,18 @@ var FeatureBoard = (function () {
   function loadCustom() {
     try {
       const raw = localStorage.getItem(CUSTOM_KEY);
-      return raw ? JSON.parse(raw) : [];
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      var safe = [];
+      for (var i = 0; i < parsed.length; i++) {
+        var item = parsed[i];
+        if (item && typeof item === 'object' && !Array.isArray(item) &&
+            typeof item.id === 'string' && typeof item.title === 'string') {
+          safe.push(item);
+        }
+      }
+      return safe;
     } catch (e) { return []; }
   }
   function saveCustom(customs) {
@@ -7713,9 +7732,15 @@ var CommunityShowcase = (function () {
   function _loadLikes() {
     try {
       var stored = localStorage.getItem(STORAGE_KEY);
-      _likes = stored ? JSON.parse(stored) : {};
+      var parsed = stored ? JSON.parse(stored) : null;
+      _likes = Object.create(null);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        for (var k in parsed) {
+          if (Object.prototype.hasOwnProperty.call(parsed, k)) _likes[k] = !!parsed[k];
+        }
+      }
     } catch (e) {
-      _likes = {};
+      _likes = Object.create(null);
     }
   }
 
@@ -7723,6 +7748,11 @@ var CommunityShowcase = (function () {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(_likes));
     } catch (e) { /* quota */ }
+  }
+
+  function _escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   function _isLiked(id) {
@@ -7761,7 +7791,7 @@ var CommunityShowcase = (function () {
     var liked = _isLiked(item.id);
     var likeCount = _getLikeCount(item);
     var tagsHtml = item.tags.map(function (t) {
-      return '<span class="showcase-tag">' + t + '</span>';
+      return '<span class="showcase-tag">' + _escapeHtml(t) + '</span>';
     }).join("");
 
     return (
@@ -7769,17 +7799,17 @@ var CommunityShowcase = (function () {
         '<div class="showcase-card-header">' +
           '<div class="showcase-avatar" aria-hidden="true">' + item.avatar + '</div>' +
           '<div class="showcase-meta">' +
-            '<span class="showcase-author">' + item.author + '</span>' +
+            '<span class="showcase-author">' + _escapeHtml(item.author) + '</span>' +
             '<span class="showcase-date">' + _formatDate(item.date) + '</span>' +
           '</div>' +
-          '<span class="showcase-category-badge showcase-cat-' + item.category.toLowerCase() + '">' + item.category + '</span>' +
+          '<span class="showcase-category-badge showcase-cat-' + item.category.toLowerCase() + '">' + _escapeHtml(item.category) + '</span>' +
         '</div>' +
-        '<h3 class="showcase-title">' + item.title + '</h3>' +
-        '<p class="showcase-desc">' + item.description + '</p>' +
+        '<h3 class="showcase-title">' + _escapeHtml(item.title) + '</h3>' +
+        '<p class="showcase-desc">' + _escapeHtml(item.description) + '</p>' +
         '<div class="showcase-tags">' + tagsHtml + '</div>' +
         '<div class="showcase-footer">' +
           '<button class="showcase-like-btn' + (liked ? ' liked' : '') + '" ' +
-            'aria-label="' + (liked ? 'Unlike' : 'Like') + ' ' + item.title + '" ' +
+            'aria-label="' + (liked ? 'Unlike' : 'Like') + ' ' + _escapeHtml(item.title) + '" ' +
             'aria-pressed="' + liked + '" ' +
             'data-id="' + item.id + '">' +
             '<span class="showcase-heart" aria-hidden="true">' + (liked ? '\u2764\uFE0F' : '\u2661') + '</span> ' +
