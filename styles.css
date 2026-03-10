@@ -6656,3 +6656,95 @@ html.a11y-spacing-extra * { line-height: inherit !important; }
   .showcase-grid { grid-template-columns: 1fr; }
 }
 
+/* ── Section Mini-Map ── */
+.minimap {
+  position: fixed;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.minimap.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.minimap-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+[data-theme="light"] .minimap-track,
+:root:not([data-theme="dark"]) .minimap-track {
+  background: rgba(255,255,255,0.7);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+[data-theme="dark"] .minimap-track {
+  background: rgba(30,30,40,0.7);
+}
+.minimap-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+[data-theme="light"] .minimap-dot,
+:root:not([data-theme="dark"]) .minimap-dot {
+  background: rgba(0,0,0,0.15);
+}
+[data-theme="dark"] .minimap-dot {
+  background: rgba(255,255,255,0.2);
+}
+.minimap-dot:hover {
+  transform: scale(1.5);
+  background: rgba(255,255,255,0.6);
+}
+[data-theme="light"] .minimap-dot:hover,
+:root:not([data-theme="dark"]) .minimap-dot:hover {
+  background: rgba(0,0,0,0.4);
+}
+.minimap-dot.active {
+  width: 10px;
+  height: 10px;
+  background: #00C853;
+  box-shadow: 0 0 6px rgba(0,200,83,0.5);
+}
+.minimap-tooltip {
+  position: fixed;
+  right: 32px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 901;
+}
+.minimap-tooltip.show {
+  opacity: 1;
+}
+/* Hide on small screens where it would overlap content */
+@media (max-width: 768px) {
+  .minimap { display: none; }
+}
+
