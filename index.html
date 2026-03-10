@@ -33,6 +33,7 @@
                 <li role="none"><a href="#personalitySection" role="menuitem">Personality</a></li>
                 <li role="none"><a href="#promptGallerySection" role="menuitem">Prompts</a></li>
                 <li role="none"><a href="#beforeAfterSection" role="menuitem">Before/After</a></li>
+                <li role="none"><a href="#memoryTimelineSection" role="menuitem">Memory</a></li>
                 <li role="none"><a href="#usecasesSection" role="menuitem">Use Cases</a></li>
                 <li role="none"><a href="#integrationsSection" role="menuitem">Integrations</a></li>
                 <li role="none"><a href="#comparisonSection" role="menuitem">Compare</a></li>
@@ -454,6 +455,32 @@
             <div class="activity-stats-bar">
                 <span class="activity-stat"><span class="activity-pulse"></span> <span id="activityActiveCount">1,247</span> agents active</span>
                 <span class="activity-stat">📊 <span id="activityTodayCount">18,392</span> tasks completed today</span>
+            </div>
+        </div>
+
+        <div class="memory-timeline-section" id="memoryTimelineSection">
+            <h2>It actually remembers you</h2>
+            <p class="memory-timeline-subtitle">Watch how your agent builds context over time — no setup, no re-explaining</p>
+            <div class="memory-timeline-container">
+                <div class="memory-timeline-controls" role="group" aria-label="Memory timeline controls">
+                    <button class="memory-timeline-btn active" data-scenario="daily" aria-pressed="true">☀️ Daily Assistant</button>
+                    <button class="memory-timeline-btn" data-scenario="project" aria-pressed="false">💻 Project Helper</button>
+                    <button class="memory-timeline-btn" data-scenario="health" aria-pressed="false">🏃 Health Coach</button>
+                </div>
+                <div class="memory-timeline-track" id="memoryTimelineTrack" role="list" aria-label="Memory timeline events">
+                </div>
+                <div class="memory-timeline-brain" id="memoryBrain" aria-live="polite">
+                    <div class="memory-brain-header">
+                        <span class="memory-brain-icon">🧠</span>
+                        <span class="memory-brain-title">Agent Memory</span>
+                        <span class="memory-brain-count" id="memoryBrainCount">0 facts</span>
+                    </div>
+                    <div class="memory-brain-facts" id="memoryBrainFacts" role="list" aria-label="Remembered facts"></div>
+                </div>
+                <div class="memory-timeline-action">
+                    <button class="memory-timeline-play" id="memoryPlayBtn" aria-label="Play memory timeline">▶ Watch it learn</button>
+                    <button class="memory-timeline-reset" id="memoryResetBtn" aria-label="Reset timeline">↺ Reset</button>
+                </div>
             </div>
         </div>
 
