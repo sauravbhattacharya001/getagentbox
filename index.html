@@ -1931,6 +1931,18 @@
             </div>
         </div>
     </div>
+
+    <!-- Integration Pipeline Builder -->
+    <section class="section pipeline-section" id="pipelineSection" aria-labelledby="pipelineTitle">
+        <h2 class="section-title" id="pipelineTitle">Build Your Agent Pipeline</h2>
+        <p class="section-subtitle">Select your tools — see how AgentBox connects them into automated workflows.</p>
+        <div class="pipeline-counter" aria-live="polite">0 / 5 tools selected</div>
+        <div class="pipeline-tool-grid" role="group" aria-label="Available integrations"></div>
+        <button class="pipeline-clear-btn" onclick="PipelineBuilder.clear()" aria-label="Clear all selections">Clear All</button>
+        <div class="pipeline-visualization" aria-live="polite"></div>
+        <div class="pipeline-description" aria-live="polite"></div>
+    </section>
+
     <!-- Accessibility Preferences Panel -->
     <button class="a11y-trigger" id="a11yTrigger" aria-label="Accessibility preferences" title="Accessibility preferences">
         <span class="a11y-trigger-icon" aria-hidden="true">♿</span>
