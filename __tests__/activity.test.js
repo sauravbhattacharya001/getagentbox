@@ -262,6 +262,36 @@ describe('ActivityFeed', () => {
       const val = parseInt(el.textContent.replace(/,/g, ''), 10);
       expect(val).toBeLessThanOrEqual(25000);
     });
+
+    test('today count never drops (issue #40)', () => {
+      const el = document.getElementById('activityTodayCount');
+      let prev = parseInt(el.textContent.replace(/,/g, ''), 10);
+
+      // Run 50 cycles and verify counter never decreases
+      for (let i = 0; i < 50; i++) {
+        jest.advanceTimersByTime(4000);
+        const current = parseInt(el.textContent.replace(/,/g, ''), 10);
+        expect(current).toBeGreaterThanOrEqual(prev);
+        prev = current;
+      }
+    });
+
+    test('active count does not frequently drop (biased upward)', () => {
+      const el = document.getElementById('activityActiveCount');
+      let prev = parseInt(el.textContent.replace(/,/g, ''), 10);
+      let drops = 0;
+
+      // Run 100 cycles and count how many times active drops
+      for (let i = 0; i < 100; i++) {
+        jest.advanceTimersByTime(4000);
+        const current = parseInt(el.textContent.replace(/,/g, ''), 10);
+        if (current < prev) drops++;
+        prev = current;
+      }
+      // With biased-upward (-1 to +2), drops should be ~25% of ticks
+      // Previously (-2 to +2), drops were ~40%. Allow up to 35%.
+      expect(drops).toBeLessThan(35);
+    });
   });
 
   describe('CSS', () => {

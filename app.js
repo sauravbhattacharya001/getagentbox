@@ -3114,11 +3114,22 @@ var ActivityFeed = (function () {
     let active = parseInt(activeCountEl.textContent.replace(/,/g, ''), 10) || 1247;
     let today = parseInt(todayCountEl.textContent.replace(/,/g, ''), 10) || 18392;
 
-    // Random small fluctuation
-    active += Math.floor(Math.random() * 5) - 2;
+    // Active counter: biased-upward fluctuation (-1 to +2) so it
+    // doesn't visibly drop frequently.  Floor at 1000.
+    active += Math.floor(Math.random() * 4) - 1;
     if (active < 1000) active = 1000;
-    today += Math.floor(Math.random() * 3) + 1;
-    if (today > 25000) today = 18000 + Math.floor(Math.random() * 2000);
+
+    // Today counter: diminishing increments near the cap so it never
+    // visibly jumps backwards.  Slows to +0/+1 above 24,000 and
+    // stalls at 25,000 until the next page load resets it.
+    if (today < 22000) {
+      today += Math.floor(Math.random() * 3) + 1;          // +1..+3
+    } else if (today < 24000) {
+      today += Math.floor(Math.random() * 2) + 1;          // +1..+2
+    } else if (today < 25000) {
+      today += Math.random() < 0.5 ? 1 : 0;                // +0..+1
+    }
+    // At or above 25,000: no further increment (stalls gracefully)
 
     activeCountEl.textContent = active.toLocaleString();
     todayCountEl.textContent = today.toLocaleString();
