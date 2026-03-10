@@ -1982,6 +1982,26 @@
         <span class="a11y-trigger-icon" aria-hidden="true">♿</span>
     </button>
 
+    <!-- Help Chat Widget -->
+    <div class="help-chat-widget" id="helpChatWidget" aria-label="Help chat">
+        <button class="help-chat-fab" id="helpChatFab" aria-label="Open help chat" aria-expanded="false">
+            <span class="help-chat-fab-icon" id="helpChatFabIcon">💬</span>
+            <span class="help-chat-fab-badge" id="helpChatBadge" aria-hidden="true">1</span>
+        </button>
+        <div class="help-chat-panel" id="helpChatPanel" role="dialog" aria-label="Help chat" hidden>
+            <div class="help-chat-header">
+                <span class="help-chat-header-title">🤖 AgentBox Help</span>
+                <button class="help-chat-close" id="helpChatClose" aria-label="Close help chat">&times;</button>
+            </div>
+            <div class="help-chat-messages" id="helpChatMessages" role="log" aria-live="polite"></div>
+            <div class="help-chat-options" id="helpChatOptions"></div>
+            <div class="help-chat-input-row" id="helpChatInputRow">
+                <input type="text" class="help-chat-input" id="helpChatInput" placeholder="Type a question..." aria-label="Type a question" autocomplete="off">
+                <button class="help-chat-send" id="helpChatSend" aria-label="Send">➤</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Interactive Chat Demo -->
         <script src="app.js" defer></script>
         <script src="src/role-demo-picker.js" defer></script>
