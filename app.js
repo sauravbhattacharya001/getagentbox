@@ -7622,3 +7622,33 @@ var PipelineBuilder = (function () {
 
 if (typeof document !== 'undefined') { document.addEventListener('DOMContentLoaded', function () { PipelineBuilder.init(); }); }
 if (typeof window !== 'undefined') { window.PipelineBuilder = PipelineBuilder; }
+
+/* PrivacyDashboard */
+var PrivacyDashboard=(function(){'use strict';
+var C=2*Math.PI*52;
+var ITEMS=[
+{id:'chat_history',icon:'\uD83D\uDCAC',title:'Chat history',desc:'Your conversations with the agent. Stored to provide memory and context.',status:'required'},
+{id:'telegram_id',icon:'\uD83C\uDD94',title:'Telegram user ID',desc:'Used to identify your account. Never shared with third parties.',status:'required'},
+{id:'preferences',icon:'\u2699\uFE0F',title:'Preferences & settings',desc:'Theme, language, notification settings you configure.',status:'required'},
+{id:'web_searches',icon:'\uD83D\uDD0D',title:'Web search queries',desc:'Searches you ask the agent to perform. Optionally retained for context.',status:'optional',defaultOn:true},
+{id:'reminders',icon:'\u23F0',title:'Reminders & schedules',desc:'Times and descriptions of reminders you set.',status:'optional',defaultOn:true},
+{id:'image_data',icon:'\uD83D\uDCF7',title:'Uploaded images',desc:'Images you send for analysis. Optionally stored for follow-up questions.',status:'optional',defaultOn:false},
+{id:'location',icon:'\uD83D\uDCCD',title:'Location data',desc:'AgentBox never requests or stores your GPS location.',status:'none'},
+{id:'contacts',icon:'\uD83D\uDC65',title:'Contacts & address book',desc:'AgentBox has zero access to your phone contacts.',status:'none'},
+{id:'browsing',icon:'\uD83C\uDF10',title:'Browsing history',desc:'Your browser activity is never tracked or collected.',status:'none'},
+{id:'biometrics',icon:'\uD83D\uDD10',title:'Biometric data',desc:'No fingerprint, face, or voice data is ever collected.',status:'none'},
+{id:'third_party',icon:'\uD83D\uDEAB',title:'Sold to advertisers',desc:'Your data is never sold, shared with ad networks, or used for targeting.',status:'none'},
+{id:'analytics',icon:'\uD83D\uDCCA',title:'Usage analytics',desc:'Anonymous feature usage counts to improve the product. No personal data.',status:'optional',defaultOn:true}
+];
+var ts={};
+function calcScore(){var n=0,oo=0;ITEMS.forEach(function(i){if(i.status==='none')n++;if(i.status==='optional'&&!ts[i.id])oo++;});return Math.min(100,70+n*2+oo*3);}
+function grade(s){if(s>=90)return{text:'Excellent',color:'#4ecdc4'};if(s>=75)return{text:'Good',color:'#a8e6cf'};if(s>=60)return{text:'Fair',color:'#ffd166'};return{text:'Needs review',color:'#ff6b6b'};}
+function updateUI(){var s=calcScore(),g=grade(s),n=document.getElementById('privacyScoreNum'),f=document.getElementById('privacyScoreFill'),gr=document.getElementById('privacyGrade');if(n)n.textContent=s;if(f){f.setAttribute('stroke-dashoffset',C*(1-s/100));f.setAttribute('stroke',g.color);}if(gr){gr.textContent=g.text;gr.style.color=g.color;}}
+function render(){var g=document.getElementById('privacyGrid');if(!g)return;g.innerHTML='';ITEMS.forEach(function(item){var c=document.createElement('div');c.className='privacy-dash-card';c.setAttribute('data-status',item.status);c.setAttribute('role','listitem');c.setAttribute('data-testid','privacy-card-'+item.id);var bl='privacy-dash-card-badge privacy-dash-badge-'+item.status;var bt=item.status==='none'?'Never collected':item.status==='optional'?'Optional':'Required';var th='';if(item.status==='optional'){var ck=ts[item.id]?'checked':'';th='<label class="privacy-dash-toggle"><input type="checkbox" '+ck+' data-privacy-id="'+item.id+'" aria-label="Toggle '+item.title+'"><span class="privacy-dash-toggle-slider"></span></label>';}c.innerHTML='<div class="privacy-dash-card-header"><div class="privacy-dash-card-title"><span class="privacy-dash-card-icon">'+item.icon+'</span>'+item.title+'</div>'+th+'</div><div class="privacy-dash-card-desc">'+item.desc+'</div><span class="'+bl+'">'+bt+'</span>';g.appendChild(c);});g.addEventListener('change',function(e){var inp=e.target;if(inp.dataset&&inp.dataset.privacyId){ts[inp.dataset.privacyId]=inp.checked;save();updateUI();}});}
+function save(){try{localStorage.setItem('agentbox_privacy_prefs',JSON.stringify(ts));}catch(e){}}
+function load(){try{var s=localStorage.getItem('agentbox_privacy_prefs');if(s){ts=JSON.parse(s);return;}}catch(e){}ITEMS.forEach(function(i){if(i.status==='optional')ts[i.id]=!!i.defaultOn;});}
+function init(){if(!document.getElementById('privacyDashSection'))return;load();render();updateUI();}
+return{init:init,calcScore:calcScore,DATA_ITEMS:ITEMS,_getStates:function(){return ts;}};
+})();
+if(typeof document!=='undefined'){document.addEventListener('DOMContentLoaded',function(){PrivacyDashboard.init();});}
+if(typeof window!=='undefined'){window.PrivacyDashboard=PrivacyDashboard;}

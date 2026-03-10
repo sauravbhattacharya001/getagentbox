@@ -40,6 +40,7 @@
                 <li role="none"><a href="#notificationSection" role="menuitem">Preview</a></li>
                 <li role="none"><a href="#trustSection" role="menuitem">Trust</a></li>
                 <li role="none"><a href="#storiesSection" role="menuitem">Stories</a></li>
+                <li role="none"><a href="#privacyDashSection" role="menuitem">Privacy</a></li>
                 <li role="none"><a href="#pricingSection" role="menuitem">Pricing</a></li>
                 <li role="none"><a href="#quizSection" role="menuitem">Quiz</a></li>
                 <li role="none"><a href="#roadmapSection" role="menuitem">Roadmap</a></li>
@@ -990,6 +991,28 @@
             <div class="stories-grid" id="storiesGrid" role="list"></div>
         </div>
 
+        <!-- Privacy Dashboard -->
+        <div class="privacy-dash-section" id="privacyDashSection">
+            <h2>Your data, your rules</h2>
+            <p class="privacy-dash-subtitle">AgentBox is transparent about what it stores. Toggle preferences to see your privacy score.</p>
+            <div class="privacy-dash-score-ring" id="privacyScoreRing" role="img" aria-label="Privacy score">
+                <svg viewBox="0 0 120 120" class="privacy-dash-svg">
+                    <circle cx="60" cy="60" r="52" class="privacy-dash-track"/>
+                    <circle cx="60" cy="60" r="52" class="privacy-dash-fill" id="privacyScoreFill" stroke-dasharray="326.73" stroke-dashoffset="0"/>
+                </svg>
+                <div class="privacy-dash-score-label">
+                    <span class="privacy-dash-score-num" id="privacyScoreNum">92</span>
+                    <span class="privacy-dash-score-unit">/ 100</span>
+                </div>
+            </div>
+            <p class="privacy-dash-grade" id="privacyGrade">Excellent</p>
+            <div class="privacy-dash-grid" id="privacyGrid" role="list"></div>
+            <div class="privacy-dash-legend">
+                <span class="privacy-dash-legend-item">&#x1F6AB; Never collected</span>
+                <span class="privacy-dash-legend-item">&#x2699;&#xFE0F; Optional</span>
+                <span class="privacy-dash-legend-item">&#x1F512; Required</span>
+            </div>
+        </div>
         <div class="pricing-section" id="pricingSection">
             <h2>Simple, transparent pricing</h2>
             <p class="pricing-subtitle">Start free. Upgrade when you need more.</p>
