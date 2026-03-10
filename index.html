@@ -47,6 +47,7 @@
                 <li role="none"><a href="#faqSection" role="menuitem">FAQ</a></li>
                 <li role="none"><a href="#glossarySection" role="menuitem">Glossary</a></li>
                 <li role="none"><a href="#growthTimelineSection" role="menuitem">Journey</a></li>
+                <li role="none"><a href="#shareCardSection" role="menuitem">Share Card</a></li>
                 <li role="none"><a href="#feedbackSection" role="menuitem">Feedback</a></li>
                 <li role="none"><a href="#newsletterSection" role="menuitem">Newsletter</a></li>
             </ul>
@@ -1765,6 +1766,57 @@
                         <span class="feedback-stat-number" id="feedbackNps">—</span>
                         <span class="feedback-stat-label">NPS</span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="share-card-section" id="shareCardSection">
+            <h2>Create Your AgentBox Card</h2>
+            <p class="share-card-subtitle">Design a personalized card to share your AgentBox experience on social media</p>
+            <div class="share-card-builder">
+                <div class="share-card-form">
+                    <div class="share-card-field">
+                        <label for="shareCardName">Your Name</label>
+                        <input type="text" id="shareCardName" placeholder="Alex K." maxlength="30">
+                    </div>
+                    <div class="share-card-field">
+                        <label for="shareCardRole">Your Role</label>
+                        <input type="text" id="shareCardRole" placeholder="Developer, Designer, Student..." maxlength="40">
+                    </div>
+                    <div class="share-card-field">
+                        <label for="shareCardFeature">Favorite Feature</label>
+                        <select id="shareCardFeature">
+                            <option value="memory">🧠 Memory</option>
+                            <option value="search">🔍 Web Search</option>
+                            <option value="reminders">⏰ Reminders</option>
+                            <option value="vision">📸 Image Analysis</option>
+                            <option value="voice">🎤 Voice Messages</option>
+                            <option value="code">💻 Code Help</option>
+                        </select>
+                    </div>
+                    <div class="share-card-field">
+                        <label for="shareCardQuote">Your One-Liner</label>
+                        <input type="text" id="shareCardQuote" placeholder="It's like having a brain extension!" maxlength="80">
+                    </div>
+                    <div class="share-card-field">
+                        <label>Card Theme</label>
+                        <div class="share-card-themes" id="shareCardThemes">
+                            <button class="share-card-theme active" data-theme="gradient" aria-label="Gradient theme" style="background:linear-gradient(135deg,#667eea,#764ba2)"></button>
+                            <button class="share-card-theme" data-theme="ocean" aria-label="Ocean theme" style="background:linear-gradient(135deg,#2193b0,#6dd5ed)"></button>
+                            <button class="share-card-theme" data-theme="sunset" aria-label="Sunset theme" style="background:linear-gradient(135deg,#f093fb,#f5576c)"></button>
+                            <button class="share-card-theme" data-theme="forest" aria-label="Forest theme" style="background:linear-gradient(135deg,#11998e,#38ef7d)"></button>
+                            <button class="share-card-theme" data-theme="dark" aria-label="Dark theme" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"></button>
+                        </div>
+                    </div>
+                    <button class="share-card-generate" id="shareCardGenerate">✨ Generate Card</button>
+                </div>
+                <div class="share-card-preview">
+                    <canvas id="shareCardCanvas" width="600" height="340"></canvas>
+                    <div class="share-card-actions" id="shareCardActions" hidden>
+                        <button class="share-card-download" id="shareCardDownload">📥 Download PNG</button>
+                        <button class="share-card-copy" id="shareCardCopy">📋 Copy to Clipboard</button>
+                    </div>
+                    <p class="share-card-hint">Fill in the form and click Generate to preview your card</p>
                 </div>
             </div>
         </div>

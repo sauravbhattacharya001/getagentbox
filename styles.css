@@ -6932,3 +6932,45 @@ html.a11y-spacing-extra * { line-height: inherit !important; }
   .help-chat-panel { width: calc(100vw - 32px); right: -8px; max-height: 400px; }
   .help-chat-widget { bottom: 16px; right: 16px; }
 }
+
+/* ── Share Card Generator ── */
+.share-card-section { margin: 4rem 0; text-align: center; }
+.share-card-subtitle { color: #666; margin-bottom: 2rem; }
+.share-card-builder { display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+.share-card-form { flex: 1; min-width: 260px; max-width: 360px; text-align: left; }
+.share-card-field { margin-bottom: 1rem; }
+.share-card-field label { display: block; font-weight: 600; margin-bottom: 0.3rem; font-size: 0.9rem; }
+.share-card-field input, .share-card-field select {
+  width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #ddd; border-radius: 8px;
+  font-size: 0.95rem; background: var(--bg, #fff); color: var(--text, #333);
+}
+.share-card-themes { display: flex; gap: 0.5rem; margin-top: 0.3rem; }
+.share-card-theme {
+  width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+}
+.share-card-theme.active { border-color: #333; transform: scale(1.15); }
+.share-card-generate {
+  width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.share-card-generate:hover { opacity: 0.9; }
+.share-card-preview { flex: 1; min-width: 300px; max-width: 620px; text-align: center; }
+.share-card-preview canvas { max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+.share-card-actions { display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem; }
+.share-card-download, .share-card-copy {
+  padding: 0.6rem 1.2rem; border: 1px solid #ddd; border-radius: 8px; background: var(--bg, #fff);
+  color: var(--text, #333); cursor: pointer; font-size: 0.9rem; transition: background 0.2s;
+}
+.share-card-download:hover, .share-card-copy:hover { background: #f0f0f0; }
+.share-card-hint { color: #999; font-size: 0.85rem; margin-top: 1rem; }
+[data-theme="dark"] .share-card-theme.active { border-color: #eee; }
+[data-theme="dark"] .share-card-field input,
+[data-theme="dark"] .share-card-field select { background: #1e1e2e; color: #eee; border-color: #444; }
+[data-theme="dark"] .share-card-download:hover,
+[data-theme="dark"] .share-card-copy:hover { background: #2a2a3a; }
+@media (max-width: 600px) {
+  .share-card-builder { flex-direction: column; align-items: center; }
+  .share-card-form, .share-card-preview { max-width: 100%; }
+}
