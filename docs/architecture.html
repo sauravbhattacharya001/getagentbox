@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentBox Architecture Guide</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --border: #2a2d3a;
+      --text: #e4e4e7;
+      --muted: #9ca3af;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --blue: #3b82f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem; }
+    h2 {
+      font-size: 1.5rem;
+      margin: 2.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h3 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; color: var(--accent-light); }
+    p { margin-bottom: 1rem; color: var(--muted); }
+    code {
+      background: #2a2d3a;
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+    }
+    pre {
+      background: #1e2030;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    pre code { background: none; padding: 0; }
+    .stats-bar {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      text-align: center;
+    }
+    .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--accent-light); }
+    .stat-label { font-size: 0.85rem; color: var(--muted); }
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .module-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      transition: border-color 0.2s;
+    }
+    .module-card:hover { border-color: var(--accent); }
+    .module-name {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+    .module-desc { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .module-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .tag {
+      font-size: 0.7rem;
+      padding: 0.15em 0.5em;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .tag-ui { background: #1e3a5f; color: #60a5fa; }
+    .tag-data { background: #1a3a2a; color: #4ade80; }
+    .tag-nav { background: #3a2a1a; color: #fbbf24; }
+    .tag-interactive { background: #2a1a3a; color: #c084fc; }
+    .tag-util { background: #2a2a2a; color: #9ca3af; }
+    .tag-a11y { background: #3a1a2a; color: #f472b6; }
+    .toc { list-style: none; columns: 2; margin-bottom: 2rem; }
+    .toc li { margin-bottom: 0.3rem; }
+    .toc a { color: var(--accent-light); text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .principle {
+      background: var(--card);
+      border-left: 3px solid var(--accent);
+      padding: 1rem 1.5rem;
+      margin-bottom: 1rem;
+      border-radius: 0 8px 8px 0;
+    }
+    .principle strong { color: var(--text); }
+    .dep-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+    .dep-table th, .dep-table td {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      text-align: left;
+      font-size: 0.85rem;
+    }
+    .dep-table th { background: var(--card); color: var(--accent-light); }
+    .dep-table td { color: var(--muted); }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      color: var(--accent-light);
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+    .layer-diagram {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      line-height: 1.8;
+      white-space: pre;
+      overflow-x: auto;
+      color: var(--muted);
+    }
+    @media (max-width: 640px) {
+      .stats-bar { flex-direction: column; }
+      .module-grid { grid-template-columns: 1fr; }
+      .toc { columns: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link">&larr; Back to docs</a>
+    <h1>Architecture Guide</h1>
+    <p class="subtitle">How the AgentBox landing page is built &mdash; patterns, modules, and conventions</p>
+
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-value">42</div><div class="stat-label">IIFE Modules</div></div>
+      <div class="stat"><div class="stat-value">8,000+</div><div class="stat-label">Lines (app.js)</div></div>
+      <div class="stat"><div class="stat-value">0</div><div class="stat-label">External Deps</div></div>
+      <div class="stat"><div class="stat-value">2</div><div class="stat-label">Source Files</div></div>
+    </div>
+
+    <h2>Table of Contents</h2>
+    <ul class="toc">
+      <li><a href="#philosophy">Design Philosophy</a></li>
+      <li><a href="#structure">File Structure</a></li>
+      <li><a href="#iife">IIFE Module Pattern</a></li>
+      <li><a href="#layers">Architecture Layers</a></li>
+      <li><a href="#modules">Module Reference</a></li>
+      <li><a href="#lazy">Lazy Initialization</a></li>
+      <li><a href="#a11y">Accessibility</a></li>
+      <li><a href="#security">Security Patterns</a></li>
+      <li><a href="#state">State &amp; Persistence</a></li>
+      <li><a href="#testing">Testing</a></li>
+      <li><a href="#conventions">Code Conventions</a></li>
+      <li><a href="#adding">Adding a Module</a></li>
+    </ul>
+
+    <h2 id="philosophy">Design Philosophy</h2>
+    <div class="principle"><strong>Zero dependencies.</strong> No npm, no build step, no bundler. The site loads two JS files and a CSS file. That's it.</div>
+    <div class="principle"><strong>Progressive enhancement.</strong> Core content is static HTML. JavaScript adds interactivity, animations, and dynamic sections. The page is usable without JS.</div>
+    <div class="principle"><strong>Lazy everything.</strong> Modules initialize only when their section scrolls into view via IntersectionObserver. First paint is fast.</div>
+    <div class="principle"><strong>Self-contained modules.</strong> Each IIFE owns its DOM, state, and event listeners. No global variables leak. Modules communicate through the public API they return.</div>
+
+    <h2 id="structure">File Structure</h2>
+    <pre><code>getagentbox/
+├── index.html          # Landing page (static HTML structure)
+├── app.js              # All 42 IIFE modules (~8,000 lines)
+├── styles.css          # All styles (no CSS framework)
+├── src/
+│   ├── index.js        # Role-based demo picker (517 lines)
+│   └── role-demo-picker.js  # Extended role demos (196 lines)
+├── docs/
+│   ├── index.html      # Documentation hub
+│   ├── getting-started.html
+│   ├── changelog.html
+│   ├── customization.md
+│   ├── modules.md
+│   └── architecture.html  # ← you are here
+├── __tests__/          # Jest test suites
+├── vendor/             # Vendored assets
+├── .github/            # CI/CD, templates, Copilot config
+├── Dockerfile          # Multi-stage Docker build
+└── package.json        # Dev dependencies (Jest only)</code></pre>
+
+    <h2 id="iife">IIFE Module Pattern</h2>
+    <p>Every module follows the same structure:</p>
+    <pre><code>var ModuleName = (function () {
+  // ── Private state ──────────────────────────
+  var _cache = null;
+  var _isInit = false;
+
+  // ── Private functions ──────────────────────
+  function _helper() { /* ... */ }
+
+  // ── Public API ─────────────────────────────
+  function init() {
+    var section = document.getElementById('sectionId');
+    if (!section) return;
+    // Bind events, build DOM, etc.
+  }
+
+  function destroy() {
+    // Clean up event listeners, timers
+  }
+
+  // ── Expose ─────────────────────────────────
+  return {
+    init: init,
+    destroy: destroy,
+    // Test-friendly getters
+    getCurrent: function () { return _cache; }
+  };
+})();</code></pre>
+    <p>Key conventions:</p>
+    <ul style="color: var(--muted); margin-bottom: 1rem; padding-left: 1.5rem;">
+      <li>Use <code>var</code> (not <code>const</code>/<code>let</code>) for broad compatibility</li>
+      <li>Use <code>function</code> declarations (not arrow functions)</li>
+      <li>Every module has an <code>init()</code> that guards with <code>if (!section) return</code></li>
+      <li>Expose test-friendly getters (e.g. <code>getCurrent</code>, <code>getTotal</code>)</li>
+      <li>Duplicate utility functions (like <code>escapeHtml</code>) per module &mdash; each IIFE is standalone</li>
+    </ul>
+
+    <h2 id="layers">Architecture Layers</h2>
+    <div class="layer-diagram">
+┌─────────────────────────────────────────────────┐
+│                  index.html                      │
+│          Static HTML structure + sections         │
+└──────────────────────┬──────────────────────────┘
+                       │ DOMContentLoaded
+┌──────────────────────▼──────────────────────────┐
+│              Initialization Layer                 │
+│  lazyInit() → IntersectionObserver per section   │
+└──────────────────────┬──────────────────────────┘
+                       │ Section visible
+┌──────────────────────▼──────────────────────────┐
+│               Module Layer (42 IIFEs)            │
+│  Each module: init() → bind events → render()   │
+├─────────────────────────────────────────────────┤
+│  ┌─────────┐ ┌──────────┐ ┌──────────────────┐ │
+│  │ UI/View  │ │ Data/    │ │ Navigation/      │ │
+│  │ modules  │ │ State    │ │ Chrome           │ │
+│  │          │ │ modules  │ │ modules          │ │
+│  └─────────┘ └──────────┘ └──────────────────┘ │
+└──────────────────────┬──────────────────────────┘
+                       │ localStorage
+┌──────────────────────▼──────────────────────────┐
+│              Persistence Layer                    │
+│   localStorage for votes, prefs, likes, theme    │
+│   Object.create(null) for safe deserialization   │
+└─────────────────────────────────────────────────┘</div>
+
+    <h2 id="modules">Module Reference</h2>
+
+    <h3>Core UI Sections</h3>
+    <div class="module-grid">
+      <div class="module-card">
+        <div class="module-name">ChatDemo</div>
+        <div class="module-desc">Animated chat conversation demo showing AgentBox capabilities. Typewriter effect with typing indicators.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">Testimonials</div>
+        <div class="module-desc">Carousel with dot navigation, auto-play, keyboard nav, and pause on hover. IntersectionObserver for lazy load.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-nav">Navigation</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">Pricing</div>
+        <div class="module-desc">Monthly/annual toggle with cached DOM references. Swaps price display without re-querying.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">FAQ</div>
+        <div class="module-desc">Accordion with scoped queries. Closes siblings on open. Keyboard accessible.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-a11y">A11y</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">HowItWorks</div>
+        <div class="module-desc">Step-by-step reveal animation triggered by scroll intersection.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">Stats</div>
+        <div class="module-desc">Animated counter cards with ease-out-cubic easing. Number formatting with K/M suffixes.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">UseCases</div>
+        <div class="module-desc">Tabbed content switcher with arrow key navigation and ARIA roles.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-nav">Navigation</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">Trust</div>
+        <div class="module-desc">Expandable trust/security cards. Click or keyboard to toggle details.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-a11y">A11y</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">BeforeAfter</div>
+        <div class="module-desc">Before/after comparison with tab switching and keyboard support.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">GrowthTimeline</div>
+        <div class="module-desc">Interactive milestone timeline with auto-play, tab/marker navigation, and progress indicators.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">ComparisonTable</div>
+        <div class="module-desc">Feature comparison grid with category filters and score calculations.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">SuccessStories</div>
+        <div class="module-desc">Customer story cards with expandable flows, outcome stats, and category filtering. Uses escapeHtml.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-data">Data</span></div>
+      </div>
+    </div>
+
+    <h3>Interactive Tools</h3>
+    <div class="module-grid">
+      <div class="module-card">
+        <div class="module-name">Playground</div>
+        <div class="module-desc">Interactive chat playground with pattern matching, typing indicators, and conversation bubbles.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">Calculator</div>
+        <div class="module-desc">ROI/savings calculator with slider inputs and dynamic equivalency text.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">OnboardingQuiz</div>
+        <div class="module-desc">Multi-step quiz that recommends a plan. Progress bar, back navigation, weighted scoring.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span><span class="tag tag-nav">Navigation</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">PersonalityConfigurator</div>
+        <div class="module-desc">Slider-based personality tuner (formality, humor, detail). Live preview with localStorage presets.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">PipelineBuilder</div>
+        <div class="module-desc">Drag-free tool selector for building agent pipelines. Max 5 tools, visual flow diagram, known pipeline matching.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">QuickStartWizard</div>
+        <div class="module-desc">Step-by-step setup wizard with personalized plan based on selections.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span><span class="tag tag-nav">Navigation</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">ApiExplorer</div>
+        <div class="module-desc">Browsable API endpoint catalog with category filters, detail view, and copy-to-clipboard. Uses escapeHtml.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">WorkflowTemplates</div>
+        <div class="module-desc">Pre-built workflow template gallery with category filters and YAML copy.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span><span class="tag tag-data">Data</span></div>
+      </div>
+    </div>
+
+    <h3>Community &amp; Feedback</h3>
+    <div class="module-grid">
+      <div class="module-card">
+        <div class="module-name">FeatureBoard</div>
+        <div class="module-desc">User-submitted feature request board with voting, categories, and localStorage persistence. Validated deserialization.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">CommunityShowcase</div>
+        <div class="module-desc">User project showcase with likes, categories, sorting, and submit form. XSS-safe rendering.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">Roadmap</div>
+        <div class="module-desc">Public roadmap with status filters (planned/building/shipped), voting, and localStorage vote persistence.</div>
+        <div class="module-tags"><span class="tag tag-data">Data</span><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">Newsletter</div>
+        <div class="module-desc">Email signup form with validation, status feedback, and subscriber list in localStorage.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">AIGlossary</div>
+        <div class="module-desc">Searchable AI terminology glossary with category filters, expandable definitions, and related term links.</div>
+        <div class="module-tags"><span class="tag tag-data">Data</span><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+    </div>
+
+    <h3>Navigation &amp; Chrome</h3>
+    <div class="module-grid">
+      <div class="module-card">
+        <div class="module-name">SiteNav</div>
+        <div class="module-desc">Sticky header with scroll-based active section highlighting, mobile menu, and smooth scroll.</div>
+        <div class="module-tags"><span class="tag tag-nav">Navigation</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">CommandPalette</div>
+        <div class="module-desc">Cmd+K / Ctrl+K command palette. Fuzzy search across sections, keyboard navigation, smooth scroll to target.</div>
+        <div class="module-tags"><span class="tag tag-nav">Navigation</span><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">ScrollProgress</div>
+        <div class="module-desc">Scroll progress bar + back-to-top button. rAF-throttled updates.</div>
+        <div class="module-tags"><span class="tag tag-nav">Navigation</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">FeatureTour</div>
+        <div class="module-desc">Guided product tour with spotlight overlay, tooltip positioning, and step navigation.</div>
+        <div class="module-tags"><span class="tag tag-nav">Navigation</span><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">ShortcutsHelp</div>
+        <div class="module-desc">Keyboard shortcuts help overlay (Shift+?). Lists all available shortcuts.</div>
+        <div class="module-tags"><span class="tag tag-nav">Navigation</span><span class="tag tag-a11y">A11y</span></div>
+      </div>
+    </div>
+
+    <h3>Utility &amp; Polish</h3>
+    <div class="module-grid">
+      <div class="module-card">
+        <div class="module-name">ThemeToggle</div>
+        <div class="module-desc">Light/dark mode toggle with localStorage persistence.</div>
+        <div class="module-tags"><span class="tag tag-util">Utility</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">AccessibilityPanel</div>
+        <div class="module-desc">A11y preferences panel: font size, contrast, motion, dyslexia font, focus indicators, line spacing. Persisted.</div>
+        <div class="module-tags"><span class="tag tag-a11y">A11y</span><span class="tag tag-util">Utility</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">ShareFab</div>
+        <div class="module-desc">Floating share button with Twitter, LinkedIn, email, and copy-link options.</div>
+        <div class="module-tags"><span class="tag tag-util">Utility</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">SocialProofToasts</div>
+        <div class="module-desc">Periodic toast notifications showing simulated user activity. Respects prefers-reduced-motion.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-util">Utility</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">ActivityFeed</div>
+        <div class="module-desc">Live activity feed with cycling items, animated transitions, and real-time counters.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">StatusDashboard</div>
+        <div class="module-desc">Service status grid with uptime percentages, incident timeline, and overall health indicator.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span><span class="tag tag-data">Data</span></div>
+      </div>
+    </div>
+
+    <h3>Content &amp; Reference</h3>
+    <div class="module-grid">
+      <div class="module-card">
+        <div class="module-name">Integrations</div>
+        <div class="module-desc">Integration catalog with category filtering and status indicators.</div>
+        <div class="module-tags"><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">Changelog</div>
+        <div class="module-desc">Version history with tag-based filtering (feature, fix, improvement, breaking).</div>
+        <div class="module-tags"><span class="tag tag-data">Data</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">PromptGallery</div>
+        <div class="module-desc">Curated prompt examples with category filters, modal detail view, and escapeHtml rendering.</div>
+        <div class="module-tags"><span class="tag tag-data">Data</span><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">CommandsCheatSheet</div>
+        <div class="module-desc">Searchable command reference with category filters and copy-to-clipboard.</div>
+        <div class="module-tags"><span class="tag tag-data">Data</span><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">NotificationPreview</div>
+        <div class="module-desc">Notification scenario previewer with mobile/desktop view toggle.</div>
+        <div class="module-tags"><span class="tag tag-ui">UI</span></div>
+      </div>
+    </div>
+
+    <h3>Internal / Helpers</h3>
+    <div class="module-grid">
+      <div class="module-card">
+        <div class="module-name">_typingIndicatorTemplate</div>
+        <div class="module-desc">Cached typing indicator HTML template. Defined once, cloned by ChatDemo.</div>
+        <div class="module-tags"><span class="tag tag-util">Utility</span></div>
+      </div>
+      <div class="module-card">
+        <div class="module-name">initOnboardingWizard</div>
+        <div class="module-desc">Named IIFE for the 3-step onboarding wizard (role → goals → result). Self-initializing.</div>
+        <div class="module-tags"><span class="tag tag-interactive">Interactive</span></div>
+      </div>
+    </div>
+
+    <h2 id="lazy">Lazy Initialization</h2>
+    <p>Modules are registered with <code>lazyInit(sectionId, initFn)</code> which uses a shared IntersectionObserver. When a section enters the viewport, its <code>init()</code> runs once.</p>
+    <pre><code>// Registration (in the DOMContentLoaded block)
+lazyInit('statsSection', function () { Stats.init(); });
+lazyInit('integrationsSection', function () { Integrations.init(); });
+
+// Implementation
+function lazyInit(sectionId, initFn) {
+  var el = document.getElementById(sectionId);
+  if (!el) { initFn(); return; }   // fallback: init immediately
+  _lazyInitQueue.push({ el: el, fn: initFn, done: false });
+}
+
+function startLazyObserver() {
+  _lazyObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        // Find and run the matching init
+      }
+    });
+  }, { rootMargin: '200px' });   // 200px ahead of viewport
+}</code></pre>
+
+    <h2 id="a11y">Accessibility Patterns</h2>
+    <p>Two shared helper functions handle keyboard navigation across all modules:</p>
+    <pre><code>// Arrow key navigation within a container
+arrowKeyNav(container, selector, onNavigate)
+// Enter/Space activation
+activateOnKeyboard(container, selector, onActivate)</code></pre>
+    <p>All interactive elements use ARIA attributes: <code>role</code>, <code>aria-pressed</code>, <code>aria-expanded</code>, <code>aria-checked</code>, <code>tabindex</code>. The <code>AccessibilityPanel</code> module provides user-configurable preferences.</p>
+
+    <h2 id="security">Security Patterns</h2>
+    <table class="dep-table">
+      <thead><tr><th>Pattern</th><th>Where Used</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><code>escapeHtml()</code></td><td>PromptGallery, ApiExplorer, SuccessStories, FeatureBoard, CommunityShowcase</td><td>Prevent XSS when rendering user-supplied or dynamic text via innerHTML</td></tr>
+        <tr><td><code>Object.create(null)</code></td><td>Roadmap, FeatureBoard, CommunityShowcase</td><td>Prevent prototype pollution when deserializing localStorage JSON</td></tr>
+        <tr><td><code>Object.prototype.hasOwnProperty.call()</code></td><td>Roadmap, AccessibilityPanel, FeatureBoard, CommunityShowcase</td><td>Safe property enumeration on parsed objects</td></tr>
+        <tr><td>Input validation on <code>JSON.parse</code></td><td>Newsletter, Roadmap, Personality, FeatureBoard</td><td>Reject unexpected types/shapes from localStorage</td></tr>
+        <tr><td><code>MAX_INPUT_LENGTH</code></td><td>Playground</td><td>Prevent oversized input to chat</td></tr>
+        <tr><td><code>MAX_MESSAGES</code></td><td>Playground</td><td>Limit DOM growth</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="state">State &amp; Persistence</h2>
+    <p>Seven modules use <code>localStorage</code> for state persistence:</p>
+    <table class="dep-table">
+      <thead><tr><th>Module</th><th>Key</th><th>Data</th></tr></thead>
+      <tbody>
+        <tr><td>ThemeToggle</td><td><code>agentbox_theme</code></td><td>light / dark</td></tr>
+        <tr><td>Roadmap</td><td><code>agentbox_roadmap_votes</code></td><td>Vote map (item → true)</td></tr>
+        <tr><td>Newsletter</td><td><code>agentbox_newsletter</code></td><td>Email array</td></tr>
+        <tr><td>PersonalityConfigurator</td><td><code>agentbox_personality</code></td><td>Slider values</td></tr>
+        <tr><td>AccessibilityPanel</td><td><code>agentbox_a11y</code></td><td>Preference object</td></tr>
+        <tr><td>FeatureBoard</td><td><code>agentbox_fb_votes</code> / <code>agentbox_fb_custom</code></td><td>Votes + custom features</td></tr>
+        <tr><td>CommunityShowcase</td><td><code>agentbox_showcase_likes</code></td><td>Like map</td></tr>
+      </tbody>
+    </table>
+    <p>One module uses <code>sessionStorage</code>: <strong>SocialProofToasts</strong> (<code>sp-toasts-dismissed</code>) to remember dismissal within a session.</p>
+
+    <h2 id="testing">Testing</h2>
+    <p>Tests use <strong>Jest</strong> with <strong>jsdom</strong>. Each test file evaluates <code>app.js</code> in a fresh DOM context. Test categories:</p>
+    <ul style="color: var(--muted); margin-bottom: 1rem; padding-left: 1.5rem;">
+      <li><strong>Functional tests</strong> &mdash; Module behavior, event handling, state management</li>
+      <li><strong>Security tests</strong> &mdash; localStorage validation, escapeHtml, input limits</li>
+      <li><strong>Performance tests</strong> &mdash; DOM caching, scoped queries, no unnecessary re-queries</li>
+      <li><strong>Accessibility tests</strong> &mdash; ARIA attributes, keyboard navigation, focus management</li>
+    </ul>
+    <pre><code># Run all tests
+npx jest
+
+# Run a specific test file
+npx jest __tests__/security.test.js
+
+# With coverage
+npx jest --coverage</code></pre>
+
+    <h2 id="conventions">Code Conventions</h2>
+    <ul style="color: var(--muted); margin-bottom: 1rem; padding-left: 1.5rem;">
+      <li><code>var</code> over <code>const</code>/<code>let</code> &mdash; broader compatibility, consistent style</li>
+      <li><code>function</code> declarations over arrow functions</li>
+      <li>Section dividers: <code>// ── Section Name ────────────</code></li>
+      <li>JSDoc comments for complex functions</li>
+      <li>Guard clauses: <code>if (!section) return;</code> at top of <code>init()</code></li>
+      <li>DOM queries: scope to section element, not <code>document</code></li>
+      <li>Event cleanup: provide <code>destroy()</code> for modules with global listeners</li>
+      <li>No external imports &mdash; everything is vanilla JS</li>
+    </ul>
+
+    <h2 id="adding">Adding a New Module</h2>
+    <ol style="color: var(--muted); padding-left: 1.5rem;">
+      <li>Add HTML section to <code>index.html</code> with a unique <code>id</code></li>
+      <li>Add styles to <code>styles.css</code> (prefix classes with module name)</li>
+      <li>Add IIFE to <code>app.js</code> following the pattern above</li>
+      <li>Register with <code>lazyInit('sectionId', function () { Module.init(); })</code></li>
+      <li>If rendering user content, add a local <code>escapeHtml()</code></li>
+      <li>If using localStorage, use <code>Object.create(null)</code> for parsed objects</li>
+      <li>Add test file in <code>__tests__/</code></li>
+      <li>Update <code>docs/modules.md</code> with the new module</li>
+    </ol>
+
+    <hr style="border-color: var(--border); margin: 2rem 0;">
+    <p style="text-align: center; font-size: 0.85rem;">AgentBox Architecture Guide &mdash; Auto-generated from codebase analysis</p>
+  </div>
+</body>
+</html>
