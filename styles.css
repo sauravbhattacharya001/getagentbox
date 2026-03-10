@@ -6095,3 +6095,168 @@ html.a11y-spacing-extra * { line-height: inherit !important; }
   .glossary-section { padding: 2rem 1rem; }
   .glossary-card-header { padding: 0.7rem 0.75rem; }
 }
+
+/* ── Integration Pipeline Builder ── */
+.pipeline-section {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+.pipeline-counter {
+    color: var(--text-secondary, #8b8fa0);
+    font-size: 0.88rem;
+    margin-bottom: 1.5rem;
+}
+.pipeline-tool-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    max-width: 700px;
+    margin: 0 auto 1.5rem;
+}
+.pipeline-tool-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border, #2d3040);
+    border-radius: 8px;
+    background: var(--bg-card, #1a1d28);
+    color: var(--text, #e0e0e8);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.pipeline-tool-btn:hover {
+    border-color: var(--accent, #4a9eff);
+    background: rgba(74, 158, 255, 0.08);
+}
+.pipeline-tool-btn.selected {
+    border-color: var(--accent, #4a9eff);
+    background: rgba(74, 158, 255, 0.15);
+    box-shadow: 0 0 0 1px var(--accent, #4a9eff);
+}
+.pipeline-tool-icon {
+    font-size: 1.2rem;
+}
+.pipeline-tool-name {
+    font-weight: 500;
+}
+.pipeline-clear-btn {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--border, #2d3040);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary, #8b8fa0);
+    font-size: 0.82rem;
+    cursor: pointer;
+    margin-bottom: 2rem;
+    transition: all 0.15s;
+}
+.pipeline-clear-btn:hover {
+    border-color: var(--red, #f87171);
+    color: var(--red, #f87171);
+}
+.pipeline-visualization {
+    margin-bottom: 1.5rem;
+}
+.pipeline-empty {
+    color: var(--text-secondary, #8b8fa0);
+    font-style: italic;
+    padding: 2rem;
+}
+.pipeline-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+.pipeline-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.8rem 1rem;
+    background: var(--bg-card, #1a1d28);
+    border: 1px solid var(--accent, #4a9eff);
+    border-radius: 10px;
+    min-width: 80px;
+}
+.pipeline-node-icon {
+    font-size: 1.5rem;
+}
+.pipeline-node-name {
+    font-size: 0.78rem;
+    color: var(--text, #e0e0e8);
+    font-weight: 500;
+}
+.pipeline-arrow {
+    color: var(--accent, #4a9eff);
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.pipeline-hub {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    margin: 1rem auto;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, rgba(74, 158, 255, 0.12), rgba(74, 222, 128, 0.08));
+    border: 2px solid var(--accent, #4a9eff);
+    border-radius: 16px;
+    max-width: 200px;
+}
+.pipeline-hub-icon {
+    font-size: 2rem;
+}
+.pipeline-hub-label {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent, #4a9eff);
+}
+.pipeline-hub-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #8b8fa0);
+}
+.pipeline-generic {
+    color: var(--text-secondary, #8b8fa0);
+    font-size: 0.92rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+.pipeline-results-list {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: left;
+}
+.pipeline-results-title {
+    font-size: 1.05rem;
+    color: var(--accent, #4a9eff);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+.pipeline-result-card {
+    padding: 1rem 1.2rem;
+    background: var(--bg-card, #1a1d28);
+    border: 1px solid var(--border, #2d3040);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+}
+.pipeline-result-name {
+    color: var(--text, #e0e0e8);
+    font-size: 0.95rem;
+}
+.pipeline-result-flow {
+    color: var(--text-secondary, #8b8fa0);
+    font-size: 0.88rem;
+    margin: 0.4rem 0 0;
+    line-height: 1.5;
+}
+@media (max-width: 600px) {
+    .pipeline-flow { flex-direction: column; }
+    .pipeline-arrow { transform: rotate(90deg); }
+}
