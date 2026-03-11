@@ -2552,7 +2552,7 @@ var CommandPalette = (function () {
     let el = document.getElementById(section.id);
     if (el) {
       close();
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
     }
   }
 
@@ -2741,7 +2741,7 @@ var ScrollProgress = (function () {
     if (prefersReducedMotion) {
       window.scrollTo(0, 0);
     } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
     }
   }
 
@@ -4263,7 +4263,7 @@ var FeatureTour = (function () {
       el.scrollIntoView({ block: 'center' });
       if (cb) cb();
     } else {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' });
       // Wait for scroll to settle
       setTimeout(function () { if (cb) cb(); }, 400);
     }
@@ -5201,7 +5201,7 @@ var ApiExplorer = (function () {
     else { badge.textContent = '200 OK'; }
 
     detailPanel.hidden = false;
-    if (detailPanel.scrollIntoView) { detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    if (detailPanel.scrollIntoView) { detailPanel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' }); }
   }
 
   function closeDetail() {
@@ -5591,7 +5591,7 @@ var WorkflowTemplates = (function () {
     }
 
     _detailEl.hidden = false;
-    if (_detailEl.scrollIntoView) _detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (_detailEl.scrollIntoView) _detailEl.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' });
   }
 
   function _bindDetailClose() {
@@ -8116,7 +8116,7 @@ var SectionMinimap = (function () {
       if (!btn) return;
       var idx = parseInt(btn.getAttribute('data-idx'), 10);
       if (idx >= 0 && idx < sections.length) {
-        sections[idx].el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        sections[idx].el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
       }
     });
 
