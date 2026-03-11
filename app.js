@@ -8770,3 +8770,234 @@ if (typeof window !== 'undefined') { window.ShareCardGenerator = ShareCardGenera
     });
   });
 })();
+
+/* ═══════════════════════════ Agent Skill Tree ═══════════════════════════ */
+(function() {
+  'use strict';
+
+  var BRANCHES = {
+    communication: { color: '#00d4ff', label: 'Communication' },
+    research:      { color: '#10b981', label: 'Research' },
+    automation:    { color: '#f59e0b', label: 'Automation' },
+    creative:      { color: '#8b5cf6', label: 'Creative' },
+    memory:        { color: '#ef4444', label: 'Memory' }
+  };
+
+  var SKILLS = [
+    // Communication branch (left side)
+    { id: 'email',       branch: 'communication', icon: '✉️',  label: 'Email Draft',        x: 80,  y: 80,
+      desc: 'Compose, reply, and manage emails in your voice. Learns your writing style over time.',
+      example: '"Draft a follow-up to Sarah about the Q4 report"', parent: null },
+    { id: 'chat',        branch: 'communication', icon: '💬',  label: 'Chat Messages',      x: 140, y: 160,
+      desc: 'Send messages on WhatsApp, Telegram, Discord, or Slack. Knows who you talk to and how.',
+      example: '"Tell Mom I\'ll be there at 7"', parent: 'email' },
+    { id: 'summarize',   branch: 'communication', icon: '📋',  label: 'Summarize',          x: 60,  y: 240,
+      desc: 'Distill long threads, articles, or meetings into concise bullet points.',
+      example: '"Summarize my unread emails"', parent: 'chat' },
+    { id: 'translate',   branch: 'communication', icon: '🌐',  label: 'Translate',          x: 160, y: 320,
+      desc: 'Translate text between languages naturally — not robotic machine translation.',
+      example: '"How do I say \'where is the train station\' in Japanese?"', parent: 'summarize' },
+
+    // Research branch (center-left)
+    { id: 'websearch',   branch: 'research', icon: '🔍', label: 'Web Search',     x: 280, y: 60,
+      desc: 'Search the web and synthesize results into clear answers with sources.',
+      example: '"What are the best noise-cancelling headphones under $200?"', parent: null },
+    { id: 'deepdive',    branch: 'research', icon: '📚', label: 'Deep Research',   x: 320, y: 160,
+      desc: 'Multi-step research that follows leads, cross-references sources, and builds comprehensive reports.',
+      example: '"Research the pros and cons of moving to Austin vs Seattle"', parent: 'websearch' },
+    { id: 'factcheck',   branch: 'research', icon: '✅', label: 'Fact Check',      x: 260, y: 260,
+      desc: 'Verify claims against multiple sources. Flags confidence level and contradictions.',
+      example: '"Is it true that goldfish have a 3-second memory?"', parent: 'deepdive' },
+    { id: 'compare',     branch: 'research', icon: '⚖️', label: 'Compare',         x: 340, y: 340,
+      desc: 'Side-by-side comparison of products, services, or options with pros/cons tables.',
+      example: '"Compare iPhone 16 vs Pixel 9 for photography"', parent: 'factcheck' },
+
+    // Automation branch (center)
+    { id: 'reminders',   branch: 'automation', icon: '⏰', label: 'Reminders',       x: 450, y: 90,
+      desc: 'Set one-time or recurring reminders. Understands natural language times.',
+      example: '"Remind me to call the dentist tomorrow at 2pm"', parent: null },
+    { id: 'schedule',    branch: 'automation', icon: '📅', label: 'Scheduling',      x: 500, y: 190,
+      desc: 'Check calendars, find free slots, and schedule events across time zones.',
+      example: '"When am I free for a 30-min call this week?"', parent: 'reminders' },
+    { id: 'monitor',     branch: 'automation', icon: '👁️', label: 'Monitoring',      x: 430, y: 290,
+      desc: 'Watch websites, prices, or feeds and alert you when something changes.',
+      example: '"Let me know when PS5 Pro drops below $400 on Amazon"', parent: 'schedule' },
+    { id: 'workflows',   branch: 'automation', icon: '⚡', label: 'Workflows',       x: 510, y: 380,
+      desc: 'Chain multiple actions together. "When X happens, do Y then Z."',
+      example: '"Every Monday morning, check my calendar and send me a summary"', parent: 'monitor' },
+
+    // Creative branch (center-right)
+    { id: 'writing',     branch: 'creative', icon: '✍️', label: 'Writing',          x: 620, y: 70,
+      desc: 'Blog posts, stories, social media captions, cover letters — in any tone or style.',
+      example: '"Write a LinkedIn post about our new product launch"', parent: null },
+    { id: 'brainstorm',  branch: 'creative', icon: '💡', label: 'Brainstorm',       x: 680, y: 170,
+      desc: 'Generate ideas, explore angles, and think through problems creatively.',
+      example: '"Give me 10 names for a sustainable coffee brand"', parent: 'writing' },
+    { id: 'code',        branch: 'creative', icon: '💻', label: 'Code Assist',      x: 600, y: 270,
+      desc: 'Write, debug, explain, and refactor code across multiple languages.',
+      example: '"Write a Python script that renames files by date"', parent: 'brainstorm' },
+    { id: 'imageread',   branch: 'creative', icon: '🖼️', label: 'Image Analysis',   x: 700, y: 350,
+      desc: 'Analyze screenshots, photos, documents, and diagrams. Extract text or describe content.',
+      example: '"What does this error screenshot say?"', parent: 'code' },
+
+    // Memory branch (right side)
+    { id: 'remember',    branch: 'memory', icon: '🧠', label: 'Remember',         x: 800, y: 100,
+      desc: 'Remembers your preferences, context, and past conversations without being told.',
+      example: '"I prefer window seats on flights" → remembered forever', parent: null },
+    { id: 'context',     branch: 'memory', icon: '🔗', label: 'Context',          x: 840, y: 200,
+      desc: 'Maintains conversation context across sessions — pick up where you left off.',
+      example: '"Continue working on that budget spreadsheet from yesterday"', parent: 'remember' },
+    { id: 'learn',       branch: 'memory', icon: '📈', label: 'Adapt',            x: 780, y: 300,
+      desc: 'Learns your communication style, work patterns, and preferences over time.',
+      example: 'After a few weeks, drafts sound like you wrote them', parent: 'context' },
+    { id: 'privacy',     branch: 'memory', icon: '🔒', label: 'Privacy',          x: 830, y: 400,
+      desc: 'Your data stays yours. Memory is private, encrypted, and never shared.',
+      example: '"Forget my credit card number" → gone immediately', parent: 'learn' }
+  ];
+
+  var container = document.getElementById('skillTreeNodes');
+  var canvas    = document.getElementById('skillTreeCanvas');
+  var detail    = document.getElementById('skillTreeDetail');
+  if (!container || !canvas || !detail) return;
+
+  var ctx = canvas.getContext('2d');
+  var selected = null;
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Build node map
+  var nodeMap = {};
+  SKILLS.forEach(function(s) { nodeMap[s.id] = s; });
+
+  // Create DOM nodes
+  SKILLS.forEach(function(s) {
+    var node = document.createElement('button');
+    node.className = 'skill-node';
+    node.setAttribute('role', 'treeitem');
+    node.setAttribute('aria-selected', 'false');
+    node.setAttribute('aria-label', s.label + ' — ' + BRANCHES[s.branch].label + ' skill');
+    node.setAttribute('data-skill', s.id);
+    node.style.left = (s.x / 900 * 100) + '%';
+    node.style.top  = s.y + 'px';
+    node.style.color = BRANCHES[s.branch].color;
+    node.innerHTML =
+      '<span class="skill-node-icon">' + s.icon + '</span>' +
+      '<span class="skill-node-label">' + escHtml(s.label) + '</span>';
+    node.addEventListener('click', function() { selectSkill(s.id); });
+    container.appendChild(node);
+  });
+
+  function escHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function selectSkill(id) {
+    var s = nodeMap[id];
+    if (!s) return;
+    selected = id;
+
+    // Update aria
+    container.querySelectorAll('.skill-node').forEach(function(n) {
+      n.setAttribute('aria-selected', n.getAttribute('data-skill') === id ? 'true' : 'false');
+    });
+
+    // Update detail panel
+    var branch = BRANCHES[s.branch];
+    detail.style.borderColor = branch.color;
+    detail.innerHTML =
+      '<div class="skill-detail-title" style="color:' + branch.color + '">' +
+        s.icon + ' ' + escHtml(s.label) +
+      '</div>' +
+      '<div class="skill-detail-branch">' + escHtml(branch.label) + ' Branch</div>' +
+      '<div class="skill-detail-desc">' + escHtml(s.desc) + '</div>' +
+      '<div class="skill-detail-example">💬 ' + escHtml(s.example) + '</div>';
+
+    drawConnections();
+  }
+
+  function drawConnections() {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width  = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    canvas.style.width  = rect.width + 'px';
+    canvas.style.height = '500px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, rect.width, 500);
+
+    var scaleX = rect.width / 900;
+
+    SKILLS.forEach(function(s) {
+      if (!s.parent) return;
+      var parent = nodeMap[s.parent];
+      if (!parent) return;
+
+      var branch = BRANCHES[s.branch];
+      var isActive = selected && (s.id === selected || s.parent === selected ||
+        nodeMap[selected] && nodeMap[selected].parent === s.id);
+
+      ctx.beginPath();
+      ctx.strokeStyle = branch.color;
+      ctx.globalAlpha = isActive ? 0.9 : 0.15;
+      ctx.lineWidth = isActive ? 2.5 : 1;
+
+      var x1 = (parent.x + 26) * scaleX;
+      var y1 = parent.y + 26;
+      var x2 = (s.x + 26) * scaleX;
+      var y2 = s.y + 26;
+
+      ctx.moveTo(x1, y1);
+      // Curved connection
+      var midY = (y1 + y2) / 2;
+      ctx.bezierCurveTo(x1, midY, x2, midY, x2, y2);
+      ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  // Initial draw
+  drawConnections();
+
+  // Redraw on resize
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(drawConnections, 100);
+  }, { passive: true });
+
+  // Auto-select first skill after a delay for engagement
+  if (!prefersReduced) {
+    setTimeout(function() {
+      if (!selected) selectSkill('websearch');
+    }, 2000);
+  }
+
+  // Keyboard navigation
+  container.addEventListener('keydown', function(e) {
+    var nodes = Array.from(container.querySelectorAll('.skill-node'));
+    var idx = nodes.findIndex(function(n) { return n === document.activeElement; });
+    if (idx < 0) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      nodes[(idx + 1) % nodes.length].focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      nodes[(idx - 1 + nodes.length) % nodes.length].focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      var id = nodes[idx].getAttribute('data-skill');
+      if (id) selectSkill(id);
+    }
+  });
+
+  // Export for testing
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      SKILLS: SKILLS,
+      BRANCHES: BRANCHES,
+      selectSkill: selectSkill,
+      drawConnections: drawConnections
+    };
+  }
+})();

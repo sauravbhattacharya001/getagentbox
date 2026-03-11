@@ -34,6 +34,7 @@
                 <li role="none"><a href="#promptGallerySection" role="menuitem">Prompts</a></li>
                 <li role="none"><a href="#beforeAfterSection" role="menuitem">Before/After</a></li>
                 <li role="none"><a href="#memoryTimelineSection" role="menuitem">Memory</a></li>
+                <li role="none"><a href="#skillTreeSection" role="menuitem">Skills</a></li>
                 <li role="none"><a href="#usecasesSection" role="menuitem">Use Cases</a></li>
                 <li role="none"><a href="#integrationsSection" role="menuitem">Integrations</a></li>
                 <li role="none"><a href="#comparisonSection" role="menuitem">Compare</a></li>
@@ -483,6 +484,28 @@
                 </div>
             </div>
         </div>
+
+        <section class="section skill-tree-section" id="skillTreeSection" aria-labelledby="skillTreeTitle">
+            <h2 class="section-title" id="skillTreeTitle">Agent Skill Tree</h2>
+            <p class="section-subtitle">Explore what your agent can do — click any skill to learn more</p>
+            <div class="skill-tree-container">
+                <canvas id="skillTreeCanvas" width="900" height="600" aria-hidden="true"></canvas>
+                <div class="skill-tree-nodes" id="skillTreeNodes" role="tree" aria-label="Agent capabilities"></div>
+            </div>
+            <div class="skill-tree-detail" id="skillTreeDetail" role="region" aria-live="polite" aria-label="Skill details">
+                <div class="skill-detail-empty">
+                    <span class="skill-detail-icon">🎯</span>
+                    <p>Click any skill node to see what it can do</p>
+                </div>
+            </div>
+            <div class="skill-tree-legend">
+                <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span> Communication</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span> Research</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Automation</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#8b5cf6"></span> Creative</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span> Memory</span>
+            </div>
+        </section>
 
         <div class="usecases-section" id="usecasesSection">
             <h2>Built for how you work</h2>
