@@ -50,6 +50,7 @@
                 <li role="none"><a href="#glossarySection" role="menuitem">Glossary</a></li>
                 <li role="none"><a href="#growthTimelineSection" role="menuitem">Journey</a></li>
                 <li role="none"><a href="#shareCardSection" role="menuitem">Share Card</a></li>
+                <li role="none"><a href="#speedChallengeSection" role="menuitem">Speed</a></li>
                 <li role="none"><a href="#feedbackSection" role="menuitem">Feedback</a></li>
                 <li role="none"><a href="#newsletterSection" role="menuitem">Newsletter</a></li>
             </ul>
@@ -2077,6 +2078,39 @@
         </div>
 
         <div class="showcase-grid" id="showcaseGrid" role="list" aria-label="Community projects"></div>
+    </section>
+
+    <!-- Speed Challenge -->
+    <section class="section speed-challenge-section" id="speedChallengeSection" aria-labelledby="speedChallengeTitle">
+        <h2 class="section-title" id="speedChallengeTitle">⚡ Speed Challenge</h2>
+        <p class="section-subtitle">Pick a question and watch AgentBox race against traditional search</p>
+
+        <div class="speed-challenge-prompts" role="group" aria-label="Choose a question">
+            <button class="speed-prompt-btn" data-prompt="What's the capital of Bhutan?" aria-pressed="false">🌍 What's the capital of Bhutan?</button>
+            <button class="speed-prompt-btn" data-prompt="Convert 72°F to Celsius" aria-pressed="false">🌡️ Convert 72°F to Celsius</button>
+            <button class="speed-prompt-btn" data-prompt="Who painted the Mona Lisa?" aria-pressed="false">🎨 Who painted the Mona Lisa?</button>
+            <button class="speed-prompt-btn" data-prompt="How many ounces in a gallon?" aria-pressed="false">📏 How many ounces in a gallon?</button>
+            <button class="speed-prompt-btn" data-prompt="What year did the Berlin Wall fall?" aria-pressed="false">🏛️ What year did the Berlin Wall fall?</button>
+        </div>
+
+        <div class="speed-challenge-arena" id="speedArena" hidden>
+            <div class="speed-lane" id="speedLaneTraditional">
+                <h3 class="speed-lane-title">🔍 Traditional Search</h3>
+                <div class="speed-steps" id="speedStepsTraditional" role="list" aria-label="Traditional search steps"></div>
+                <div class="speed-timer" id="speedTimerTraditional">0.0s</div>
+                <div class="speed-answer" id="speedAnswerTraditional"></div>
+            </div>
+            <div class="speed-vs">VS</div>
+            <div class="speed-lane speed-lane-agent" id="speedLaneAgent">
+                <h3 class="speed-lane-title">🤖 AgentBox</h3>
+                <div class="speed-steps" id="speedStepsAgent" role="list" aria-label="AgentBox steps"></div>
+                <div class="speed-timer" id="speedTimerAgent">0.0s</div>
+                <div class="speed-answer" id="speedAnswerAgent"></div>
+            </div>
+        </div>
+
+        <div class="speed-result" id="speedResult" hidden aria-live="polite"></div>
+        <button class="speed-reset-btn" id="speedResetBtn" hidden>Try Another Question</button>
     </section>
 
     <!-- Integration Pipeline Builder -->
