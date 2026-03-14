@@ -2738,11 +2738,7 @@ var ScrollProgress = (function () {
   }
 
   function scrollToTop() {
-    if (prefersReducedMotion) {
-      window.scrollTo(0, 0);
-    } else {
-      window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-    }
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
   }
 
   /**
@@ -4020,7 +4016,7 @@ if (typeof window !== 'undefined') {
 
     const dots = widget.querySelectorAll('.onboarding-dot');
     dots.forEach(function(d) {
-      d.classList.toggle('active', parseInt(d.getAttribute('data-dot')) === currentStep);
+      d.classList.toggle('active', parseInt(d.getAttribute('data-dot'), 10) === currentStep);
     });
 
     const titles = ['Let\'s find your fit', 'What are your goals?', 'Your personalized plan'];
@@ -8059,6 +8055,15 @@ var SectionMinimap = (function () {
   var dots = [];
   var activeIdx = -1;
   var scrollTicking = false;
+  var sectionOffsets = [];
+
+  /** Cache section offsets to avoid forced reflow on every scroll frame. */
+  function cacheOffsets() {
+    sectionOffsets = [];
+    for (var i = 0; i < sections.length; i++) {
+      sectionOffsets[i] = sections[i].el.offsetTop;
+    }
+  }
 
   /** Section definitions — id to label mapping for the minimap dots. */
   var SECTION_DEFS = [
@@ -8138,6 +8143,10 @@ var SectionMinimap = (function () {
       }
     });
 
+    // Cache offsets and listen for changes
+    cacheOffsets();
+    window.addEventListener('resize', cacheOffsets);
+
     // Scroll listener
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
@@ -8163,12 +8172,12 @@ var SectionMinimap = (function () {
     }
 
     // Find active section — the one whose top is closest to viewport top
+    // Uses cached offsetTop values to avoid forced reflow per frame
     var viewMid = scrollY + window.innerHeight * 0.35;
     var bestIdx = 0;
     var bestDist = Infinity;
     for (var i = 0; i < sections.length; i++) {
-      var top = sections[i].el.getBoundingClientRect().top + scrollY;
-      var dist = Math.abs(top - viewMid);
+      var dist = Math.abs(sectionOffsets[i] - viewMid);
       if (dist < bestDist) {
         bestDist = dist;
         bestIdx = i;
@@ -9159,7 +9168,7 @@ if (typeof window !== 'undefined') { window.ShareCardGenerator = ShareCardGenera
     // Count actions (agent messages)
     totalActions = 0;
     Object.keys(visitedHours).forEach(function(k) {
-      var e = DAY_EVENTS[parseInt(k)];
+      var e = DAY_EVENTS[parseInt(k, 10)];
       if (e) totalActions += e.messages.filter(function(m) { return m.role === 'agent'; }).length;
     });
   }
