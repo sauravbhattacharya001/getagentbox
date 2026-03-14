@@ -7347,3 +7347,74 @@ body.light-mode .skill-node-icon {
 body.light-mode .skill-tree-detail {
   background: #fff;
 }
+
+/* ── Agent Day Simulator ─────────────────────────────────── */
+.day-simulator-section { padding: 4rem 2rem; }
+.day-sim-container { max-width: 900px; margin: 2rem auto; }
+.day-sim-timeline {
+  display: flex; gap: 2px; overflow-x: auto; padding: 0.5rem 0;
+  scrollbar-width: thin; scrollbar-color: var(--accent, #6366f1) transparent;
+}
+.day-sim-hour {
+  flex: 0 0 auto; width: 52px; padding: 0.5rem 0.25rem;
+  border: 2px solid var(--border, #333); border-radius: 8px;
+  text-align: center; cursor: pointer; transition: all 0.2s;
+  background: var(--bg-card, #1a1a2e); font-size: 0.75rem;
+  user-select: none;
+}
+.day-sim-hour:hover { border-color: var(--accent, #6366f1); transform: translateY(-2px); }
+.day-sim-hour.active {
+  border-color: var(--accent, #6366f1);
+  background: var(--accent, #6366f1); color: #fff;
+  transform: translateY(-3px); box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+}
+.day-sim-hour.visited { border-color: rgba(99,102,241,0.4); opacity: 0.85; }
+.day-sim-hour .hour-icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
+.day-sim-hour .hour-time { font-weight: 600; }
+.day-sim-detail {
+  margin-top: 1.5rem; padding: 1.5rem;
+  border: 1px solid var(--border, #333); border-radius: 12px;
+  background: var(--bg-card, #1a1a2e); min-height: 200px;
+}
+.day-sim-empty { color: var(--text-muted, #888); text-align: center; padding: 3rem 1rem; }
+.day-sim-event-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+.day-sim-event-channel {
+  display: inline-block; font-size: 0.7rem; padding: 2px 8px;
+  border-radius: 99px; background: rgba(99,102,241,0.15); color: var(--accent, #6366f1);
+  font-weight: 600; text-transform: uppercase;
+}
+.day-sim-chat { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.day-sim-msg {
+  padding: 0.75rem 1rem; border-radius: 12px; max-width: 85%;
+  font-size: 0.9rem; line-height: 1.4; animation: dayMsgFade 0.3s ease-out;
+}
+.day-sim-msg.agent { background: rgba(99,102,241,0.12); align-self: flex-start; border-bottom-left-radius: 4px; }
+.day-sim-msg.user { background: rgba(255,255,255,0.08); align-self: flex-end; border-bottom-right-radius: 4px; }
+.day-sim-msg .msg-label { font-size: 0.7rem; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; color: var(--accent, #6366f1); }
+.day-sim-msg.user .msg-label { color: var(--text-muted, #888); }
+.day-sim-controls { display: flex; gap: 0.75rem; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; }
+.day-sim-btn {
+  padding: 0.5rem 1.25rem; border-radius: 8px; border: none;
+  background: var(--accent, #6366f1); color: #fff; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-size: 0.85rem;
+}
+.day-sim-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.day-sim-btn-outline {
+  background: transparent; border: 1.5px solid var(--accent, #6366f1);
+  color: var(--accent, #6366f1);
+}
+.day-sim-btn-outline:hover { background: rgba(99,102,241,0.1); }
+.day-sim-stats { font-size: 0.8rem; color: var(--text-muted, #888); margin-left: auto; }
+@keyframes dayMsgFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Light mode */
+body.light-mode .day-sim-hour { background: #f8f9fa; border-color: #ddd; }
+body.light-mode .day-sim-hour.active { background: var(--accent, #6366f1); color: #fff; border-color: var(--accent, #6366f1); }
+body.light-mode .day-sim-detail { background: #fff; border-color: #e0e0e0; }
+body.light-mode .day-sim-msg.user { background: rgba(0,0,0,0.04); }
+@media (max-width: 640px) {
+  .day-sim-hour { width: 44px; font-size: 0.65rem; }
+  .day-sim-detail { padding: 1rem; }
+}
