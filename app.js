@@ -9382,12 +9382,21 @@ var SpeedChallenge = (function () {
 
     // Animate traditional steps
     TRADITIONAL_STEPS.forEach(function (step, i) {
-      var t = setTimeout(function () {
+      // Add 'active' at the START of this step's duration
+      var tStart = setTimeout(function () {
         tSteps[i].classList.add('active');
-        if (i > 0) tSteps[i - 1].classList.remove('active');
-        tSteps[i].classList.add('done');
+        if (i > 0) {
+          tSteps[i - 1].classList.remove('active');
+          tSteps[i - 1].classList.add('done');
+        }
       }, tDelay);
-      timers.push(t);
+      timers.push(tStart);
+      // Add 'done' at the END of this step's duration
+      var tEnd = setTimeout(function () {
+        tSteps[i].classList.remove('active');
+        tSteps[i].classList.add('done');
+      }, tDelay + step.duration);
+      timers.push(tEnd);
       tDelay += step.duration;
     });
 
@@ -9404,12 +9413,21 @@ var SpeedChallenge = (function () {
     // Animate agent steps
     var aDelay = 0;
     AGENT_STEPS.forEach(function (step, i) {
-      var t = setTimeout(function () {
+      // Add 'active' at the START of this step's duration
+      var aStart = setTimeout(function () {
         aSteps[i].classList.add('active');
-        if (i > 0) aSteps[i - 1].classList.remove('active');
-        aSteps[i].classList.add('done');
+        if (i > 0) {
+          aSteps[i - 1].classList.remove('active');
+          aSteps[i - 1].classList.add('done');
+        }
       }, aDelay);
-      timers.push(t);
+      timers.push(aStart);
+      // Add 'done' at the END of this step's duration
+      var aEnd = setTimeout(function () {
+        aSteps[i].classList.remove('active');
+        aSteps[i].classList.add('done');
+      }, aDelay + step.duration);
+      timers.push(aEnd);
       aDelay += step.duration;
     });
 
