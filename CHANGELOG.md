@@ -1,5 +1,52 @@
 # Changelog
 
+## [v2.1.0] — 2026-03-14
+
+38 PRs merged since v2.0.0 — major new interactive components, performance
+improvements, security hardening, and comprehensive documentation.
+
+### Features
+
+- **Agent Day Simulator** (#68) — interactive hour-by-hour timeline showing a full day with an AI agent, with conversation previews across Telegram/WhatsApp/proactive channels
+- **Agent Skill Tree** (#67) — interactive capability explorer with 5 branches (communication, research, automation, creative, memory), 20 skills, canvas-drawn connections, and click-to-explore detail panel
+- **Memory Timeline** (#62) — visual timeline of agent memory evolution
+- **Community Showcase Wall** (#56) — user-submitted use case gallery with voting
+- **Integration Pipeline Builder** (#53) — visual workflow configurator for chaining agent actions
+- **AI Glossary** (#41) — searchable terminology reference with 35 AI/agent terms
+- **Speed Challenge** (#60) — side-by-side race comparing agent vs traditional workflows
+- **Privacy Checkup** (#63) — interactive privacy concern assessment with personalized findings
+
+### Bug Fixes
+
+- **ActivityFeed counter cap** (#37, #59) — prevent visible counter drops and unbounded growth in the live activity feed
+- **FeatureBoard ranking** (#44) — popular filter was ignoring user votes
+- **Feedback NaN propagation** (#32) — validate scores before aggregation
+- **Calculator innerHTML XSS** (#29) — replace innerHTML with safe DOM construction
+- **Resize debounce** (#22) — debounce `cacheSectionOffsets` on window resize
+- **XSS in CommunityShowcase** (#57) — sanitize user-submitted content, fix prototype pollution
+
+### Performance
+
+- **Deferred module initialization** (#35) — use IntersectionObserver and `content-visibility` to defer below-fold module init, reducing initial JS execution time
+
+### Code Quality
+
+- **var → const/let** (#33) — converted 751 `var` declarations to `const`/`let` across the entire codebase
+
+### Documentation
+
+- **Architecture guide** (#58) — comprehensive 42-module reference with patterns, conventions, and code structure
+- **Changelog HTML page** (#52) — browsable changelog + CODEOWNERS file
+- **Module reference update** (#51) — added 11 missing modules (27→38 documented)
+- **Customization guide** (#34) — landing page theming and customization documentation
+
+### CI/CD
+
+- Bump actions/checkout v4→v6, actions/setup-node v4→v6, actions/labeler v5→v6, actions/stale v9→v10
+- Bump docker/login-action v3→v4, docker/setup-buildx-action v3→v4, docker/build-push-action v6→v7, docker/metadata-action v5→v6
+- Bump codecov/codecov-action v4→v5
+
+
 ## [v2.0.0] — 2026-03-07
 
 91 commits since v1.0.0 — a complete transformation from static landing page
