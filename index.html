@@ -51,6 +51,7 @@
                 <li role="none"><a href="#growthTimelineSection" role="menuitem">Journey</a></li>
                 <li role="none"><a href="#shareCardSection" role="menuitem">Share Card</a></li>
                 <li role="none"><a href="#speedChallengeSection" role="menuitem">Speed</a></li>
+                <li role="none"><a href="#privacyCheckupSection" role="menuitem">Privacy</a></li>
                 <li role="none"><a href="#feedbackSection" role="menuitem">Feedback</a></li>
                 <li role="none"><a href="#newsletterSection" role="menuitem">Newsletter</a></li>
             </ul>
@@ -2111,6 +2112,33 @@
 
         <div class="speed-result" id="speedResult" hidden aria-live="polite"></div>
         <button class="speed-reset-btn" id="speedResetBtn" hidden>Try Another Question</button>
+    </section>
+
+    <!-- Privacy Checkup -->
+    <section class="section privacy-checkup-section" id="privacyCheckupSection" aria-labelledby="privacyCheckupTitle">
+        <h2 class="section-title" id="privacyCheckupTitle">🔒 Privacy Checkup</h2>
+        <p class="section-subtitle">Worried about privacy? Answer a few questions and see how AgentBox addresses your concerns.</p>
+
+        <div class="privacy-checkup-container">
+            <div class="privacy-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                <div class="privacy-progress-fill" id="privacyProgressFill"></div>
+            </div>
+            <div class="privacy-step-counter" id="privacyStepCounter" aria-live="polite">Question 1 of 6</div>
+
+            <div class="privacy-question-card" id="privacyQuestionCard">
+                <p class="privacy-question-text" id="privacyQuestionText"></p>
+                <div class="privacy-options" id="privacyOptions" role="group" aria-label="Answer options"></div>
+            </div>
+
+            <div class="privacy-report" id="privacyReport" hidden>
+                <div class="privacy-score-ring" id="privacyScoreRing">
+                    <span class="privacy-score-value" id="privacyScoreValue">0</span>
+                    <span class="privacy-score-label">Privacy Score</span>
+                </div>
+                <div class="privacy-findings" id="privacyFindings" role="list" aria-label="Privacy findings"></div>
+                <button class="privacy-restart-btn" id="privacyRestartBtn">🔄 Retake Checkup</button>
+            </div>
+        </div>
     </section>
 
     <!-- Integration Pipeline Builder -->
