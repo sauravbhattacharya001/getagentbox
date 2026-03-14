@@ -9001,3 +9001,265 @@ if (typeof window !== 'undefined') { window.ShareCardGenerator = ShareCardGenera
     };
   }
 })();
+
+// ── Agent Day Simulator ────────────────────────────────────────────
+(function() {
+  'use strict';
+
+  var DAY_EVENTS = [
+    {
+      hour: 7, icon: '☀️', label: '7 AM',
+      title: 'Morning Briefing',
+      channel: 'Telegram',
+      messages: [
+        { role: 'agent', text: 'Good morning! Here\'s your day:\n\n📅 3 meetings (first at 9:30)\n📧 2 urgent emails from the team\n🌤️ 52°F, partly cloudy\n🏃 Reminder: gym at 6 PM' },
+        { role: 'user', text: 'Thanks! What are the urgent emails about?' },
+        { role: 'agent', text: '1. Sarah re: Q2 budget review — needs your sign-off by noon\n2. DevOps alert — staging server disk at 92%, I can run cleanup if you want' },
+        { role: 'user', text: 'Run the cleanup' },
+        { role: 'agent', text: '✅ Running disk cleanup on staging... freed 12.4 GB. Down to 67% now.' }
+      ]
+    },
+    {
+      hour: 9, icon: '💼', label: '9 AM',
+      title: 'Meeting Prep',
+      channel: 'Proactive',
+      messages: [
+        { role: 'agent', text: '📋 Your 9:30 standup is in 30 min. I pulled the latest:\n\n• Sprint velocity: 34 pts (target: 40)\n• 2 PRs awaiting your review\n• Jenkins build #847 failed on staging\n\nWant me to open the PR links?' },
+        { role: 'user', text: 'Yes, and summarize the build failure' },
+        { role: 'agent', text: '🔗 Opened both PRs in Chrome.\n\n🔴 Build #847: `NullPointerException` in `UserService.getPreferences()` — looks like the new caching layer returns null when the cache misses. PR #312 likely introduced it.' }
+      ]
+    },
+    {
+      hour: 10, icon: '📧', label: '10 AM',
+      title: 'Email Triage',
+      channel: 'WhatsApp',
+      messages: [
+        { role: 'agent', text: '📬 New important email from your manager:\n\nSubject: "Client demo moved to Thursday"\n\nSummary: Demo for Acme Corp rescheduled from Friday to Thursday 2 PM. Asks you to confirm the test environment is ready.' },
+        { role: 'user', text: 'Reply that I\'ll have it ready by Wednesday evening' },
+        { role: 'agent', text: '✅ Reply sent:\n\n"Hi, confirmed — I\'ll have the test environment fully prepped by Wednesday evening. Will ping you once it\'s verified."' }
+      ]
+    },
+    {
+      hour: 12, icon: '🍽️', label: '12 PM',
+      title: 'Lunch Break Helper',
+      channel: 'Telegram',
+      messages: [
+        { role: 'agent', text: '🕐 It\'s noon — no meetings until 2 PM.\n\n🍜 Nearby lunch spots with short waits:\n1. Pho King — 4.5★, 5 min walk\n2. Chipotle — 4.2★, 8 min walk\n3. Sweetgreen — 4.6★, 12 min walk\n\nWant me to check wait times?' },
+        { role: 'user', text: 'Order Chipotle for pickup' },
+        { role: 'agent', text: '🌯 Opening Chipotle order... Your usual? (Chicken bowl, brown rice, black beans, mild salsa, cheese, lettuce)' },
+        { role: 'user', text: 'Yes' },
+        { role: 'agent', text: '✅ Order placed! Pickup in ~15 min. I set a reminder.' }
+      ]
+    },
+    {
+      hour: 14, icon: '🔬', label: '2 PM',
+      title: 'Deep Work Guard',
+      channel: 'Proactive',
+      messages: [
+        { role: 'agent', text: '🔕 Focus mode activated (2–4 PM per your schedule).\n\nI\'ll hold notifications except:\n• Calendar alerts\n• Messages from your manager\n• P1 incidents\n\n3 Slack messages silenced so far. I\'ll send a digest at 4.' }
+      ]
+    },
+    {
+      hour: 16, icon: '📊', label: '4 PM',
+      title: 'Afternoon Digest',
+      channel: 'Telegram',
+      messages: [
+        { role: 'agent', text: '📊 Focus session ended. Here\'s what you missed:\n\n💬 5 Slack messages (2 from #engineering, 3 from #random)\n📧 1 new email — newsletter, not urgent\n✅ PR #312 fix was merged by Alex\n📈 Sprint velocity now at 38/40\n\nNothing needs immediate action.' },
+        { role: 'user', text: 'Nice. How\'s the staging server now?' },
+        { role: 'agent', text: '💚 Staging healthy — disk at 64%, all services green, build #848 passed. Test environment for Thursday demo is 80% ready (2 seed scripts left to run).' }
+      ]
+    },
+    {
+      hour: 18, icon: '🏃', label: '6 PM',
+      title: 'Gym Reminder',
+      channel: 'WhatsApp',
+      messages: [
+        { role: 'agent', text: '🏋️ Gym time! Your last 3 sessions:\n\n• Mon: Upper body (bench 185 lb PR!)\n• Wed: Cardio (5K in 24:12)\n• Today: Leg day per your rotation\n\nI queued your workout playlist on Spotify. 🎵' }
+      ]
+    },
+    {
+      hour: 20, icon: '🌙', label: '8 PM',
+      title: 'Evening Wind-Down',
+      channel: 'Telegram',
+      messages: [
+        { role: 'agent', text: '🌙 Evening summary:\n\n✅ 12 tasks completed today\n📧 All urgent emails handled\n📅 Tomorrow: 2 meetings, first at 10 AM\n⚡ Staging env 100% ready for Thursday demo\n💪 Great gym session!\n\nAnything else before I go quiet?' },
+        { role: 'user', text: 'Set a reminder to review the demo script at 9 AM' },
+        { role: 'agent', text: '⏰ Reminder set: "Review Acme Corp demo script" at 9:00 AM tomorrow. Goodnight! 🌟' }
+      ]
+    }
+  ];
+
+  var activeHour = -1;
+  var playTimer = null;
+  var visitedHours = {};
+  var totalActions = 0;
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function renderTimeline() {
+    var container = document.getElementById('dayTimeline');
+    if (!container) return;
+    container.innerHTML = '';
+    DAY_EVENTS.forEach(function(evt, idx) {
+      var btn = document.createElement('button');
+      btn.className = 'day-sim-hour';
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', 'false');
+      btn.setAttribute('aria-label', evt.label + ' — ' + evt.title);
+      btn.setAttribute('data-index', idx);
+      btn.innerHTML = '<span class="hour-icon">' + evt.icon + '</span><span class="hour-time">' + esc(evt.label) + '</span>';
+      btn.addEventListener('click', function() { selectHour(idx); });
+      container.appendChild(btn);
+    });
+  }
+
+  function selectHour(idx) {
+    if (idx < 0 || idx >= DAY_EVENTS.length) return;
+    activeHour = idx;
+    visitedHours[idx] = true;
+
+    // Update tab states
+    var buttons = document.querySelectorAll('.day-sim-hour');
+    buttons.forEach(function(b, i) {
+      b.classList.toggle('active', i === idx);
+      b.setAttribute('aria-selected', i === idx ? 'true' : 'false');
+      if (visitedHours[i] && i !== idx) b.classList.add('visited');
+    });
+
+    // Scroll active into view
+    if (buttons[idx]) buttons[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+    renderDetail(DAY_EVENTS[idx]);
+    updateStats();
+  }
+
+  function renderDetail(evt) {
+    var detail = document.getElementById('dayDetail');
+    if (!detail) return;
+
+    var html = '<div class="day-sim-event-title">' +
+      evt.icon + ' ' + esc(evt.title) +
+      ' <span class="day-sim-event-channel">' + esc(evt.channel) + '</span>' +
+      '</div>' +
+      '<div class="day-sim-chat">';
+
+    evt.messages.forEach(function(msg) {
+      var label = msg.role === 'agent' ? '🤖 AgentBox' : '👤 You';
+      html += '<div class="day-sim-msg ' + esc(msg.role) + '">' +
+        '<div class="msg-label">' + label + '</div>' +
+        esc(msg.text).replace(/\n/g, '<br>') +
+        '</div>';
+    });
+
+    html += '</div>';
+    detail.innerHTML = html;
+
+    // Count actions (agent messages)
+    totalActions = 0;
+    Object.keys(visitedHours).forEach(function(k) {
+      var e = DAY_EVENTS[parseInt(k)];
+      if (e) totalActions += e.messages.filter(function(m) { return m.role === 'agent'; }).length;
+    });
+  }
+
+  function updateStats() {
+    var statsEl = document.getElementById('dayStats');
+    if (!statsEl) return;
+    var visited = Object.keys(visitedHours).length;
+    statsEl.textContent = visited + '/' + DAY_EVENTS.length + ' events explored · ' + totalActions + ' agent actions seen';
+  }
+
+  function playDay() {
+    stopPlay();
+    // Reset
+    visitedHours = {};
+    totalActions = 0;
+    var idx = 0;
+
+    function step() {
+      if (idx >= DAY_EVENTS.length) {
+        stopPlay();
+        return;
+      }
+      selectHour(idx);
+      idx++;
+      var delay = typeof prefersReducedMotion !== 'undefined' && prefersReducedMotion ? 500 : 2500;
+      playTimer = setTimeout(step, delay);
+    }
+
+    step();
+    var btn = document.getElementById('dayPlayBtn');
+    if (btn) { btn.textContent = '⏸ Playing...'; btn.disabled = true; }
+  }
+
+  function stopPlay() {
+    if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+    var btn = document.getElementById('dayPlayBtn');
+    if (btn) { btn.textContent = '▶ Play Day'; btn.disabled = false; }
+  }
+
+  function resetDay() {
+    stopPlay();
+    activeHour = -1;
+    visitedHours = {};
+    totalActions = 0;
+    document.querySelectorAll('.day-sim-hour').forEach(function(b) {
+      b.classList.remove('active', 'visited');
+      b.setAttribute('aria-selected', 'false');
+    });
+    var detail = document.getElementById('dayDetail');
+    if (detail) detail.innerHTML = '<div class="day-sim-empty">Click an hour above to see what your agent does</div>';
+    var statsEl = document.getElementById('dayStats');
+    if (statsEl) statsEl.textContent = '';
+  }
+
+  // Keyboard navigation
+  function handleKeydown(e) {
+    if (activeHour < 0) return;
+    if (e.key === 'ArrowRight' && activeHour < DAY_EVENTS.length - 1) {
+      e.preventDefault();
+      selectHour(activeHour + 1);
+    } else if (e.key === 'ArrowLeft' && activeHour > 0) {
+      e.preventDefault();
+      selectHour(activeHour - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      selectHour(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      selectHour(DAY_EVENTS.length - 1);
+    }
+  }
+
+  // Init
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', function() {
+      renderTimeline();
+      var playBtn = document.getElementById('dayPlayBtn');
+      var resetBtn = document.getElementById('dayResetBtn');
+      if (playBtn) playBtn.addEventListener('click', playDay);
+      if (resetBtn) resetBtn.addEventListener('click', resetDay);
+      var timeline = document.getElementById('dayTimeline');
+      if (timeline) timeline.addEventListener('keydown', handleKeydown);
+    });
+  }
+
+  // Export for testing
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      DAY_EVENTS: DAY_EVENTS,
+      selectHour: selectHour,
+      renderTimeline: renderTimeline,
+      renderDetail: renderDetail,
+      playDay: playDay,
+      stopPlay: stopPlay,
+      resetDay: resetDay,
+      updateStats: updateStats,
+      _getState: function() {
+        return { activeHour: activeHour, visitedHours: visitedHours, totalActions: totalActions };
+      }
+    };
+  }
+})();
