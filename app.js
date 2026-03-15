@@ -9441,8 +9441,6 @@ var SpeedChallenge = (function () {
     });
 
     // Agent finish
-    var agentDone = false;
-    var tradDone = false;
     var aFinish = setTimeout(function () {
       clearInterval(aTimerInterval);
       timerA.textContent = (aTotal / 1000).toFixed(1) + 's';
@@ -9711,20 +9709,25 @@ var PrivacyCheckup = (function () {
     }
   }
 
+  var _scoreTimer = null;
+
   function animateScore(el, target) {
+    if (_scoreTimer) { clearInterval(_scoreTimer); _scoreTimer = null; }
     var current = 0;
     var step = Math.max(1, Math.floor(target / 30));
-    var timer = setInterval(function () {
+    _scoreTimer = setInterval(function () {
       current += step;
       if (current >= target) {
         current = target;
-        clearInterval(timer);
+        clearInterval(_scoreTimer);
+        _scoreTimer = null;
       }
       el.textContent = current;
     }, 30);
   }
 
   function restart() {
+    if (_scoreTimer) { clearInterval(_scoreTimer); _scoreTimer = null; }
     currentStep = 0;
     answers = [];
     renderQuestion();
