@@ -7874,3 +7874,52 @@ body.light-mode .day-sim-msg.user { background: rgba(0,0,0,0.04); }
     .bench-summary-number { font-size: 1.4rem; }
     .bench-bar-label { width: 50px; font-size: 0.65rem; }
 }
+
+/* Command Reference Section */
+.command-ref-section { padding: 60px 20px; text-align: center; }
+.command-ref-section .section-subtitle { color: #aaa; margin-bottom: 30px; font-size: 1.1rem; }
+.cmdref-container { max-width: 800px; margin: 0 auto; text-align: left; }
+.cmdref-search-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.cmdref-search { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid #333; background: #1a1a2e; color: #fff; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+.cmdref-search:focus { border-color: #00C853; }
+.cmdref-count { color: #888; font-size: 0.85rem; white-space: nowrap; }
+.cmdref-categories { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.cmdref-cat-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid #333; background: transparent; color: #ccc; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+.cmdref-cat-btn:hover { border-color: #00C853; color: #fff; }
+.cmdref-cat-active { background: #00C853; color: #000; border-color: #00C853; font-weight: 600; }
+.cmdref-list { display: flex; flex-direction: column; gap: 10px; }
+.cmdref-card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
+.cmdref-card:hover { border-color: #444; }
+.cmdref-card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; cursor: pointer; }
+.cmdref-card-left { display: flex; align-items: flex-start; gap: 12px; flex: 1; }
+.cmdref-cat-badge { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.cmdref-card-title { flex: 1; }
+.cmdref-syntax { background: #0d0d1a; padding: 4px 10px; border-radius: 6px; font-size: 0.9rem; color: #00C853; display: inline-block; margin-bottom: 6px; }
+.cmdref-desc { color: #aaa; font-size: 0.85rem; margin: 0; }
+.cmdref-expand-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 0.9rem; padding: 4px 8px; }
+.cmdref-card-body { padding: 0 16px 16px; border-top: 1px solid #2a2a4a; padding-top: 12px; }
+.cmdref-examples h4 { color: #fff; font-size: 0.85rem; margin: 0 0 8px; }
+.cmdref-example { display: flex; align-items: center; gap: 8px; background: #0d0d1a; padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; }
+.cmdref-example code { flex: 1; color: #e0e0e0; font-size: 0.85rem; }
+.cmdref-copy-btn { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; }
+.cmdref-copy-btn:hover { background: #2a2a4a; }
+.cmdref-tips { margin-top: 10px; padding: 10px 14px; background: #1e1e3a; border-radius: 8px; color: #ccc; font-size: 0.85rem; }
+.cmdref-empty { text-align: center; color: #888; padding: 40px; font-size: 0.95rem; }
+
+/* Command Reference Light Theme */
+[data-theme="light"] .cmdref-search { background: #f5f5f5; color: #222; border-color: #ddd; }
+[data-theme="light"] .cmdref-card { background: #fff; border-color: #e0e0e0; }
+[data-theme="light"] .cmdref-card:hover { border-color: #bbb; }
+[data-theme="light"] .cmdref-syntax { background: #f0f0f0; color: #2e7d32; }
+[data-theme="light"] .cmdref-desc { color: #666; }
+[data-theme="light"] .cmdref-example { background: #f5f5f5; }
+[data-theme="light"] .cmdref-example code { color: #333; }
+[data-theme="light"] .cmdref-tips { background: #f0f8e8; color: #555; }
+[data-theme="light"] .cmdref-cat-btn { border-color: #ddd; color: #555; }
+[data-theme="light"] .cmdref-card-body { border-top-color: #e0e0e0; }
+
+@media (max-width: 600px) {
+  .cmdref-categories { gap: 6px; }
+  .cmdref-cat-btn { padding: 5px 10px; font-size: 0.8rem; }
+  .cmdref-card-header { padding: 12px; }
+}

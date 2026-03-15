@@ -30,6 +30,7 @@
                 <li role="none"><a href="#wizardSection" role="menuitem">Wizard</a></li>
                 <li role="none"><a href="#demoSection" role="menuitem">Demo</a></li>
                 <li role="none"><a href="#playgroundSection" role="menuitem">Playground</a></li>
+                <li role="none"><a href="#commandRefSection" role="menuitem">Commands</a></li>
                 <li role="none"><a href="#personalitySection" role="menuitem">Personality</a></li>
                 <li role="none"><a href="#promptGallerySection" role="menuitem">Prompts</a></li>
                 <li role="none"><a href="#beforeAfterSection" role="menuitem">Before/After</a></li>
@@ -230,6 +231,12 @@
             </div>
             <p class="playground-note">💡 This is a simulated demo. <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer">Try the real thing on Telegram →</a></p>
         </div>
+
+        <section class="section command-ref-section" id="commandRefSection" aria-labelledby="commandRefTitle">
+            <h2 class="section-title" id="commandRefTitle">📖 Command Reference</h2>
+            <p class="section-subtitle">Everything your agent can do — searchable, with examples you can copy.</p>
+            <div id="commandRefContent" class="cmdref-container"></div>
+        </section>
 
         <div class="personality-section" id="personalitySection">
             <h2>Make it yours</h2>
@@ -2202,7 +2209,8 @@
     <!-- Interactive Chat Demo -->
         <script src="app.js" defer></script>
         <script src="src/benchmarks.js" defer></script>
-        <script src="src/role-demo-picker.js" defer></script>
+        <script src="src/command-reference.js" defer></script>
+    <script src="src/role-demo-picker.js" defer></script>
 
     <!-- GoatCounter Analytics (free, privacy-friendly) -->
     <script data-goatcounter="https://agentbox.goatcounter.com/count" async src="vendor/count.js" integrity="sha384-YfTrUFhZmCP15/JcRSSEKBXKmBDJNyJ2NwaO5P4K98YEWtQjpg5DKXrk2lnl68CC" crossorigin="anonymous"></script>
