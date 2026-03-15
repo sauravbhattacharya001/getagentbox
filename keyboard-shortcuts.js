@@ -115,12 +115,6 @@ var KeyboardShortcuts = (function () {
   var _searchQuery = '';
   var _previousFocus = null;
 
-  function _escapeHtml(str) {
-    if (typeof str !== 'string') return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
-
   function _matchesSearch(group) {
     if (!_searchQuery) return true;
     var q = _searchQuery.toLowerCase();
@@ -164,56 +158,96 @@ var KeyboardShortcuts = (function () {
     return results;
   }
 
-  function _renderKey(key) {
-    return '<kbd class="shortcut-key">' + _escapeHtml(key) + '</kbd>';
+  function _createKey(key) {
+    var kbd = document.createElement('kbd');
+    kbd.className = 'shortcut-key';
+    kbd.textContent = key;
+    return kbd;
   }
 
-  function _renderShortcut(shortcut) {
-    var keysHtml = '';
+  function _createShortcutRow(shortcut) {
+    var row = document.createElement('div');
+    row.className = 'shortcut-row';
+    row.setAttribute('role', 'listitem');
+
+    var keysSpan = document.createElement('span');
+    keysSpan.className = 'shortcut-keys';
     for (var i = 0; i < shortcut.keys.length; i++) {
-      if (i > 0) keysHtml += '<span class="shortcut-plus">+</span>';
-      keysHtml += _renderKey(shortcut.keys[i]);
+      if (i > 0) {
+        var plus = document.createElement('span');
+        plus.className = 'shortcut-plus';
+        plus.textContent = '+';
+        keysSpan.appendChild(plus);
+      }
+      keysSpan.appendChild(_createKey(shortcut.keys[i]));
     }
-    return '<div class="shortcut-row" role="listitem">' +
-      '<span class="shortcut-keys">' + keysHtml + '</span>' +
-      '<span class="shortcut-desc">' + _escapeHtml(shortcut.desc) + '</span>' +
-    '</div>';
+
+    var descSpan = document.createElement('span');
+    descSpan.className = 'shortcut-desc';
+    descSpan.textContent = shortcut.desc;
+
+    row.appendChild(keysSpan);
+    row.appendChild(descSpan);
+    return row;
   }
 
-  function _renderGroup(group) {
-    var html = '<div class="shortcut-group">';
-    html += '<h3 class="shortcut-group-title">';
-    html += '<span class="shortcut-group-icon" aria-hidden="true">' + group.icon + '</span> ';
-    html += _escapeHtml(group.module);
-    html += '</h3>';
-    html += '<div class="shortcut-list" role="list">';
+  function _createGroup(group) {
+    var div = document.createElement('div');
+    div.className = 'shortcut-group';
+
+    var h3 = document.createElement('h3');
+    h3.className = 'shortcut-group-title';
+    var icon = document.createElement('span');
+    icon.className = 'shortcut-group-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = group.icon;
+    h3.appendChild(icon);
+    h3.appendChild(document.createTextNode(' ' + group.module));
+    div.appendChild(h3);
+
+    var list = document.createElement('div');
+    list.className = 'shortcut-list';
+    list.setAttribute('role', 'list');
     for (var i = 0; i < group.shortcuts.length; i++) {
-      html += _renderShortcut(group.shortcuts[i]);
+      list.appendChild(_createShortcutRow(group.shortcuts[i]));
     }
-    html += '</div></div>';
-    return html;
+    div.appendChild(list);
+    return div;
   }
 
   function _renderContent() {
     var groups = _filteredGroups();
+    var frag = document.createDocumentFragment();
+
     if (groups.length === 0) {
-      return '<div class="shortcut-empty">No shortcuts match your search.</div>';
+      var empty = document.createElement('div');
+      empty.className = 'shortcut-empty';
+      empty.textContent = 'No shortcuts match your search.';
+      frag.appendChild(empty);
+      return frag;
     }
+
     var total = 0;
     for (var g = 0; g < groups.length; g++) {
       total += groups[g].shortcuts.length;
     }
-    var html = '<div class="shortcut-count">' + total + ' shortcut' + (total !== 1 ? 's' : '');
+    var countDiv = document.createElement('div');
+    countDiv.className = 'shortcut-count';
+    var countText = total + ' shortcut' + (total !== 1 ? 's' : '');
     if (_searchQuery) {
-      html += ' matching "' + _escapeHtml(_searchQuery) + '"';
+      countText += ' matching \u201c' + _searchQuery + '\u201d';
     }
-    html += ' across ' + groups.length + ' module' + (groups.length !== 1 ? 's' : '') + '</div>';
-    html += '<div class="shortcut-groups">';
+    countText += ' across ' + groups.length + ' module' + (groups.length !== 1 ? 's' : '');
+    countDiv.textContent = countText;
+    frag.appendChild(countDiv);
+
+    var container = document.createElement('div');
+    container.className = 'shortcut-groups';
     for (var i = 0; i < groups.length; i++) {
-      html += _renderGroup(groups[i]);
+      container.appendChild(_createGroup(groups[i]));
     }
-    html += '</div>';
-    return html;
+    frag.appendChild(container);
+    return frag;
   }
 
   function _createPanel() {
@@ -234,18 +268,26 @@ var KeyboardShortcuts = (function () {
     // Header
     var header = document.createElement('div');
     header.className = 'shortcuts-header';
-    header.innerHTML =
-      '<h2 class="shortcuts-title">⌨️ Keyboard Shortcuts</h2>' +
-      '<button class="shortcuts-close" aria-label="Close keyboard shortcuts">&times;</button>';
+    var title = document.createElement('h2');
+    title.className = 'shortcuts-title';
+    title.textContent = '\u2328\uFE0F Keyboard Shortcuts';
+    header.appendChild(title);
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'shortcuts-close';
+    closeBtn.setAttribute('aria-label', 'Close keyboard shortcuts');
+    closeBtn.textContent = '\u00D7';
+    header.appendChild(closeBtn);
     container.appendChild(header);
 
     // Search
     var searchBox = document.createElement('div');
     searchBox.className = 'shortcuts-search';
-    searchBox.innerHTML =
-      '<input type="search" class="shortcuts-search-input" ' +
-      'placeholder="Search shortcuts..." ' +
-      'aria-label="Search keyboard shortcuts">';
+    var searchInput = document.createElement('input');
+    searchInput.type = 'search';
+    searchInput.className = 'shortcuts-search-input';
+    searchInput.placeholder = 'Search shortcuts...';
+    searchInput.setAttribute('aria-label', 'Search keyboard shortcuts');
+    searchBox.appendChild(searchInput);
     container.appendChild(searchBox);
 
     // Body
@@ -257,7 +299,14 @@ var KeyboardShortcuts = (function () {
     // Footer
     var footer = document.createElement('div');
     footer.className = 'shortcuts-footer';
-    footer.innerHTML = '<span class="shortcuts-hint">Press <kbd>?</kbd> anytime to toggle this panel</span>';
+    var hint = document.createElement('span');
+    hint.className = 'shortcuts-hint';
+    hint.appendChild(document.createTextNode('Press '));
+    var kbd = document.createElement('kbd');
+    kbd.textContent = '?';
+    hint.appendChild(kbd);
+    hint.appendChild(document.createTextNode(' anytime to toggle this panel'));
+    footer.appendChild(hint);
     container.appendChild(footer);
 
     _panel.appendChild(container);
@@ -290,7 +339,9 @@ var KeyboardShortcuts = (function () {
 
   function _updateBody() {
     var body = document.getElementById('shortcutsBody');
-    if (body) body.innerHTML = _renderContent();
+    if (!body) return;
+    while (body.firstChild) body.removeChild(body.firstChild);
+    body.appendChild(_renderContent());
   }
 
   function _trapFocus(e) {
