@@ -38,6 +38,7 @@
                 <li role="none"><a href="#usecasesSection" role="menuitem">Use Cases</a></li>
                 <li role="none"><a href="#integrationsSection" role="menuitem">Integrations</a></li>
                 <li role="none"><a href="#comparisonSection" role="menuitem">Compare</a></li>
+                <li role="none"><a href="#benchmarkSection" role="menuitem">Benchmarks</a></li>
                 <li role="none"><a href="#calculatorSection" role="menuitem">Calculator</a></li>
                 <li role="none"><a href="#notificationSection" role="menuitem">Preview</a></li>
                 <li role="none"><a href="#trustSection" role="menuitem">Trust</a></li>
@@ -685,6 +686,21 @@
             </div>
             <p class="comparison-note">✦ Data based on publicly available feature sets as of 2026.</p>
         </div>
+
+        <section class="section benchmark-section" id="benchmarkSection" aria-labelledby="benchmarkTitle">
+            <h2 class="section-title" id="benchmarkTitle">Performance Benchmarks</h2>
+            <p class="section-subtitle">Real-world task comparisons — see where a persistent agent outperforms raw AI chat</p>
+            <div class="benchmark-filters" role="tablist" aria-label="Benchmark categories">
+                <button class="benchmark-filter active" role="tab" aria-selected="true" data-bench-cat="all">All Tasks</button>
+                <button class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="memory">🧠 Memory</button>
+                <button class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="integration">🔌 Integrations</button>
+                <button class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="efficiency">⚡ Efficiency</button>
+                <button class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="context">🎯 Context</button>
+            </div>
+            <div class="benchmark-chart-area" id="benchmarkChart" role="img" aria-label="Benchmark comparison chart"></div>
+            <div class="benchmark-summary" id="benchmarkSummary" aria-live="polite"></div>
+            <p class="benchmark-note">Benchmarks based on internal testing across 500+ task evaluations. "Raw AI" = same base model without memory, integrations, or user context.</p>
+        </section>
 
         <div class="calculator-section" id="calculatorSection">
             <h2>How much time could you save?</h2>
@@ -2185,6 +2201,7 @@
 
     <!-- Interactive Chat Demo -->
         <script src="app.js" defer></script>
+        <script src="src/benchmarks.js" defer></script>
         <script src="src/role-demo-picker.js" defer></script>
 
     <!-- GoatCounter Analytics (free, privacy-friendly) -->
