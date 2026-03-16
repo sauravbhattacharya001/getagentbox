@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Uptime History</title>
+    <meta name="description" content="90-day uptime history for all AgentBox services. View historical availability, incidents, and service reliability.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --green: #00b894;
+            --yellow: #fdcb6e;
+            --orange: #e17055;
+            --red: #d63031;
+            --green-bg: #00b89433;
+            --yellow-bg: #fdcb6e33;
+            --orange-bg: #e1705533;
+            --red-bg: #d6303133;
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --border: #e0e0e0;
+            --text: #1a1a1a;
+            --text-muted: #666;
+            --green-bg: #00b89422;
+            --yellow-bg: #fdcb6e22;
+            --orange-bg: #e1705522;
+            --red-bg: #d6303122;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-link {
+            color: var(--accent-light);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover { text-decoration: underline; }
+
+        .theme-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .overall-banner {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        .overall-banner.operational {
+            background: var(--green-bg);
+            border: 1px solid var(--green);
+            color: var(--green);
+        }
+
+        .overall-banner.degraded {
+            background: var(--yellow-bg);
+            border: 1px solid var(--yellow);
+            color: var(--yellow);
+        }
+
+        .overall-banner.outage {
+            background: var(--red-bg);
+            border: 1px solid var(--red);
+            color: var(--red);
+        }
+
+        .service-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .service-name {
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .service-name .icon { font-size: 1.1rem; }
+
+        .uptime-pct {
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .uptime-pct.good { color: var(--green); }
+        .uptime-pct.warn { color: var(--yellow); }
+        .uptime-pct.bad { color: var(--red); }
+
+        .day-grid {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            position: relative;
+        }
+
+        .day-bar {
+            flex: 1;
+            min-width: 4px;
+            height: 32px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            position: relative;
+        }
+
+        .day-bar:hover { opacity: 0.8; }
+        .day-bar.operational { background: var(--green); }
+        .day-bar.degraded { background: var(--yellow); }
+        .day-bar.partial { background: var(--orange); }
+        .day-bar.outage { background: var(--red); }
+        .day-bar.no-data { background: var(--border); }
+
+        .day-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.4rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .tooltip {
+            position: fixed;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            z-index: 1000;
+            pointer-events: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            max-width: 280px;
+            display: none;
+        }
+
+        .tooltip .date { font-weight: 600; margin-bottom: 0.25rem; }
+
+        .tooltip .status {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .tooltip .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .tooltip .incident-note {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            padding-top: 0.3rem;
+            margin-top: 0.3rem;
+        }
+
+        .legend {
+            display: flex;
+            gap: 1.25rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .incidents-section {
+            margin-top: 2rem;
+        }
+
+        .incidents-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .incident-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .incident-card .incident-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .incident-card .incident-title {
+            font-weight: 600;
+            margin: 0.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .incident-card .incident-body {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .incident-card .incident-duration {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .severity-badge.minor { background: var(--yellow-bg); color: var(--yellow); }
+        .severity-badge.major { background: var(--orange-bg); color: var(--orange); }
+        .severity-badge.critical { background: var(--red-bg); color: var(--red); }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .summary-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .summary-card .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 0.9rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.15s;
+        }
+
+        .filter-btn:hover { border-color: var(--accent); }
+        .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+        @media (max-width: 600px) {
+            .container { padding: 1rem; }
+            h1 { font-size: 1.4rem; }
+            .day-bar { height: 24px; }
+            .summary-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-top">
+            <a href="index.html" class="back-link">← Back to AgentBox</a>
+            <button class="theme-btn" id="themeBtn">☀️ Light</button>
+        </div>
+        <div class="header">
+            <h1>🟢 Uptime History</h1>
+            <p class="subtitle">90-day availability for all AgentBox services</p>
+        </div>
+        <div id="overallBanner" class="overall-banner operational"></div>
+        <div id="summaryGrid" class="summary-grid"></div>
+        <div class="filter-bar" id="filterBar"></div>
+        <div id="servicesContainer"></div>
+        <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Operational</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Degraded</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div> Partial Outage</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Major Outage</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div> No Data</div>
+        </div>
+        <div class="incidents-section">
+            <h2>Recent Incidents</h2>
+            <div id="incidentsList"></div>
+        </div>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+    <script>
+    (function () {
+        'use strict';
+
+        // --- Services ---
+        var SERVICES = [
+            { id: 'api', name: 'Core API', icon: '⚡' },
+            { id: 'telegram', name: 'Telegram Bot', icon: '💬' },
+            { id: 'memory', name: 'Memory Store', icon: '🧠' },
+            { id: 'search', name: 'Web Search', icon: '🔍' },
+            { id: 'scheduler', name: 'Scheduler', icon: '⏰' },
+            { id: 'media', name: 'Media Processing', icon: '🖼️' },
+            { id: 'auth', name: 'Authentication', icon: '🔐' },
+            { id: 'webhooks', name: 'Webhooks', icon: '🔗' }
+        ];
+
+        // --- Simulated incident data ---
+        var INCIDENTS = [
+            { date: daysAgo(2), service: 'search', severity: 'minor', title: 'Elevated search latency', body: 'Search queries experienced 2-3x normal latency due to upstream provider throttling.', durationMin: 45 },
+            { date: daysAgo(8), service: 'media', severity: 'major', title: 'Image processing failures', body: 'Media pipeline returned errors for ~30% of image analysis requests. Root cause: memory pressure on processing workers.', durationMin: 120 },
+            { date: daysAgo(15), service: 'telegram', severity: 'minor', title: 'Delayed message delivery', body: 'Some messages experienced 10-30 second delays. Telegram API rate limiting was more aggressive than usual.', durationMin: 90 },
+            { date: daysAgo(22), service: 'scheduler', severity: 'minor', title: 'Missed reminder deliveries', body: '~5% of scheduled reminders were delivered 1-3 minutes late due to queue backlog.', durationMin: 35 },
+            { date: daysAgo(31), service: 'api', severity: 'critical', title: 'Core API outage', body: 'Complete service disruption caused by database connection pool exhaustion. All endpoints returned 503 for 18 minutes.', durationMin: 18 },
+            { date: daysAgo(45), service: 'auth', severity: 'major', title: 'Authentication delays', body: 'Login and token refresh operations timed out intermittently. Caused by certificate renewal race condition.', durationMin: 60 },
+            { date: daysAgo(52), service: 'memory', severity: 'minor', title: 'Slow memory retrieval', body: 'Context lookups took 5-8x longer than normal during index rebuild.', durationMin: 180 },
+            { date: daysAgo(67), service: 'webhooks', severity: 'minor', title: 'Webhook delivery retries', body: 'First-attempt delivery rate dropped to 85%. All webhooks delivered within retry window.', durationMin: 60 },
+            { date: daysAgo(78), service: 'api', severity: 'minor', title: 'Intermittent 502 errors', body: 'Load balancer health checks false-positived, rotating some healthy instances out.', durationMin: 25 }
+        ];
+
+        var DAYS = 90;
+        var tooltip = document.getElementById('tooltip');
+        var activeFilter = 'all';
+
+        function daysAgo(n) {
+            var d = new Date();
+            d.setDate(d.getDate() - n);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        function formatDate(d) {
+            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+        }
+
+        function sameDay(a, b) {
+            return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+        }
+
+        // Generate 90-day status for a service using seeded randomness
+        function generateHistory(serviceId) {
+            var history = [];
+            var incidentDays = {};
+            INCIDENTS.forEach(function (inc) {
+                if (inc.service === serviceId) {
+                    var key = inc.date.toISOString().slice(0, 10);
+                    incidentDays[key] = inc;
+                }
+            });
+
+            for (var i = DAYS - 1; i >= 0; i--) {
+                var day = daysAgo(i);
+                var key = day.toISOString().slice(0, 10);
+                var inc = incidentDays[key];
+                var status = 'operational';
+                var incident = null;
+
+                if (inc) {
+                    incident = inc;
+                    if (inc.severity === 'critical') status = 'outage';
+                    else if (inc.severity === 'major') status = 'partial';
+                    else status = 'degraded';
+                } else {
+                    // Small random chance of minor blips for realism
+                    var hash = simpleHash(serviceId + key);
+                    if (hash % 100 < 2) status = 'degraded';
+                }
+
+                history.push({ date: day, status: status, incident: incident });
+            }
+            return history;
+        }
+
+        function simpleHash(str) {
+            var h = 0;
+            for (var i = 0; i < str.length; i++) {
+                h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+            }
+            return Math.abs(h);
+        }
+
+        function calcUptime(history) {
+            var ok = 0;
+            history.forEach(function (d) { if (d.status === 'operational') ok++; });
+            return (ok / history.length * 100).toFixed(2);
+        }
+
+        function uptimeClass(pct) {
+            if (pct >= 99.5) return 'good';
+            if (pct >= 98) return 'warn';
+            return 'bad';
+        }
+
+        // --- Render ---
+        function renderServices() {
+            var container = document.getElementById('servicesContainer');
+            container.innerHTML = '';
+
+            var filtered = activeFilter === 'all' ? SERVICES : SERVICES.filter(function (s) { return s.id === activeFilter; });
+
+            filtered.forEach(function (svc) {
+                var history = generateHistory(svc.id);
+                var uptime = calcUptime(history);
+
+                var section = document.createElement('div');
+                section.className = 'service-section';
+
+                var header = document.createElement('div');
+                header.className = 'service-header';
+
+                var name = document.createElement('div');
+                name.className = 'service-name';
+                name.innerHTML = '<span class="icon">' + svc.icon + '</span> ' + svc.name;
+
+                var pct = document.createElement('div');
+                pct.className = 'uptime-pct ' + uptimeClass(parseFloat(uptime));
+                pct.textContent = uptime + '% uptime';
+
+                header.appendChild(name);
+                header.appendChild(pct);
+                section.appendChild(header);
+
+                var grid = document.createElement('div');
+                grid.className = 'day-grid';
+
+                history.forEach(function (day) {
+                    var bar = document.createElement('div');
+                    bar.className = 'day-bar ' + day.status;
+                    bar.setAttribute('data-date', formatDate(day.date));
+                    bar.setAttribute('data-status', day.status);
+                    if (day.incident) {
+                        bar.setAttribute('data-incident', day.incident.title);
+                        bar.setAttribute('data-duration', day.incident.durationMin);
+                    }
+
+                    bar.addEventListener('mouseenter', function (e) { showTooltip(e, bar); });
+                    bar.addEventListener('mouseleave', hideTooltip);
+                    grid.appendChild(bar);
+                });
+
+                section.appendChild(grid);
+
+                var labels = document.createElement('div');
+                labels.className = 'day-labels';
+                labels.innerHTML = '<span>' + formatDate(daysAgo(DAYS - 1)) + '</span><span>Today</span>';
+                section.appendChild(labels);
+
+                container.appendChild(section);
+            });
+        }
+
+        function renderSummary() {
+            var totalIncidents = INCIDENTS.length;
+            var totalDowntime = 0;
+            INCIDENTS.forEach(function (i) { totalDowntime += i.durationMin; });
+
+            // Overall uptime across all services
+            var allHistories = SERVICES.map(function (s) { return generateHistory(s.id); });
+            var totalDays = 0;
+            var okDays = 0;
+            allHistories.forEach(function (h) {
+                h.forEach(function (d) {
+                    totalDays++;
+                    if (d.status === 'operational') okDays++;
+                });
+            });
+            var overallUptime = (okDays / totalDays * 100).toFixed(2);
+
+            var grid = document.getElementById('summaryGrid');
+            grid.innerHTML = '';
+
+            var cards = [
+                { value: overallUptime + '%', label: 'Overall Uptime (90d)' },
+                { value: totalIncidents, label: 'Total Incidents' },
+                { value: Math.floor(totalDowntime / 60) + 'h ' + (totalDowntime % 60) + 'm', label: 'Total Downtime' },
+                { value: SERVICES.length, label: 'Services Monitored' }
+            ];
+
+            cards.forEach(function (c) {
+                var card = document.createElement('div');
+                card.className = 'summary-card';
+                card.innerHTML = '<div class="value">' + c.value + '</div><div class="label">' + c.label + '</div>';
+                grid.appendChild(card);
+            });
+
+            // Overall banner
+            var banner = document.getElementById('overallBanner');
+            var hasActiveIncident = INCIDENTS.some(function (i) {
+                return daysAgo(0).getTime() === i.date.getTime();
+            });
+            if (hasActiveIncident) {
+                banner.className = 'overall-banner degraded';
+                banner.textContent = '⚠️ Some services experiencing issues';
+            } else {
+                banner.className = 'overall-banner operational';
+                banner.textContent = '✅ All systems operational';
+            }
+        }
+
+        function renderIncidents() {
+            var list = document.getElementById('incidentsList');
+            list.innerHTML = '';
+
+            var sorted = INCIDENTS.slice().sort(function (a, b) { return b.date - a.date; });
+            sorted.forEach(function (inc) {
+                var card = document.createElement('div');
+                card.className = 'incident-card';
+
+                var svc = SERVICES.find(function (s) { return s.id === inc.service; });
+                var svcName = svc ? svc.icon + ' ' + svc.name : inc.service;
+
+                card.innerHTML =
+                    '<div class="incident-date">' + formatDate(inc.date) + ' · ' + svcName + '</div>' +
+                    '<div class="incident-title">' + inc.title + ' <span class="severity-badge ' + inc.severity + '">' + inc.severity + '</span></div>' +
+                    '<div class="incident-body">' + inc.body + '</div>' +
+                    '<div class="incident-duration">Duration: ' + inc.durationMin + ' minutes</div>';
+
+                list.appendChild(card);
+            });
+        }
+
+        function renderFilters() {
+            var bar = document.getElementById('filterBar');
+            bar.innerHTML = '';
+
+            var allBtn = document.createElement('button');
+            allBtn.className = 'filter-btn' + (activeFilter === 'all' ? ' active' : '');
+            allBtn.textContent = 'All Services';
+            allBtn.addEventListener('click', function () { activeFilter = 'all'; render(); });
+            bar.appendChild(allBtn);
+
+            SERVICES.forEach(function (svc) {
+                var btn = document.createElement('button');
+                btn.className = 'filter-btn' + (activeFilter === svc.id ? ' active' : '');
+                btn.textContent = svc.icon + ' ' + svc.name;
+                btn.addEventListener('click', function () { activeFilter = svc.id; render(); });
+                bar.appendChild(btn);
+            });
+        }
+
+        function showTooltip(e, bar) {
+            var date = bar.getAttribute('data-date');
+            var status = bar.getAttribute('data-status');
+            var incident = bar.getAttribute('data-incident');
+            var duration = bar.getAttribute('data-duration');
+
+            var statusColors = {
+                operational: 'var(--green)',
+                degraded: 'var(--yellow)',
+                partial: 'var(--orange)',
+                outage: 'var(--red)'
+            };
+
+            var statusLabels = {
+                operational: 'Operational',
+                degraded: 'Degraded Performance',
+                partial: 'Partial Outage',
+                outage: 'Major Outage'
+            };
+
+            var html = '<div class="date">' + date + '</div>' +
+                '<div class="status"><div class="status-dot" style="background:' + (statusColors[status] || 'var(--border)') + '"></div> ' +
+                (statusLabels[status] || status) + '</div>';
+
+            if (incident) {
+                html += '<div class="incident-note">🔸 ' + incident + ' (' + duration + ' min)</div>';
+            }
+
+            tooltip.innerHTML = html;
+            tooltip.style.display = 'block';
+
+            var rect = bar.getBoundingClientRect();
+            var ttRect = tooltip.getBoundingClientRect();
+            var left = rect.left + rect.width / 2 - ttRect.width / 2;
+            var top = rect.top - ttRect.height - 8;
+
+            if (left < 8) left = 8;
+            if (left + ttRect.width > window.innerWidth - 8) left = window.innerWidth - ttRect.width - 8;
+            if (top < 8) top = rect.bottom + 8;
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+        }
+
+        function render() {
+            renderSummary();
+            renderFilters();
+            renderServices();
+            renderIncidents();
+        }
+
+        // Theme toggle
+        var themeBtn = document.getElementById('themeBtn');
+        var isDark = true;
+        themeBtn.addEventListener('click', function () {
+            isDark = !isDark;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeBtn.textContent = isDark ? '☀️ Light' : '🌙 Dark';
+        });
+
+        render();
+    })();
+    </script>
+</body>
+</html>
