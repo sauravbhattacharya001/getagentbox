@@ -7923,3 +7923,121 @@ body.light-mode .day-sim-msg.user { background: rgba(0,0,0,0.04); }
   .cmdref-cat-btn { padding: 5px 10px; font-size: 0.8rem; }
   .cmdref-card-header { padding: 12px; }
 }
+
+/* ── Workflow Builder ─────────────────────────────────────────── */
+.workflow-builder-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 700px;
+}
+.wb-presets {
+    display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+    margin-bottom: 1.5rem; padding: 1rem; border-radius: 12px;
+    background: var(--color-surface);
+}
+.wb-presets-label { font-weight: 600; color: var(--color-text-muted); font-size: 0.9rem; }
+.wb-preset-btn {
+    padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+    background: var(--color-surface); color: var(--color-text); cursor: pointer;
+    font-size: 0.85rem; transition: all 0.2s;
+}
+.wb-preset-btn:hover { background: var(--color-surface-hover); border-color: var(--color-primary); }
+.wb-layout {
+    display: grid; grid-template-columns: 140px 1fr 280px; gap: 1.25rem;
+    min-height: 400px;
+}
+@media (max-width: 900px) {
+    .wb-layout { grid-template-columns: 1fr; }
+    .wb-palette { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+}
+.wb-palette {
+    display: flex; flex-direction: column; gap: 0.5rem;
+}
+.wb-palette-title { font-size: 0.85rem; color: var(--color-text-muted); margin: 0 0 0.5rem; }
+.wb-action-btn {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem;
+    border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: var(--color-surface);
+    color: var(--color-text); cursor: pointer; font-size: 0.85rem; transition: all 0.2s; width: 100%;
+}
+.wb-action-btn:hover { border-color: var(--action-color); background: var(--color-surface-hover); }
+.wb-action-icon { font-size: 1.1rem; }
+.wb-canvas {
+    background: var(--color-surface); border-radius: 12px; padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.06); min-height: 300px;
+    display: flex; align-items: flex-start; justify-content: center;
+}
+.wb-empty { text-align: center; color: var(--color-text-muted); padding: 3rem 1rem; align-self: center; }
+.wb-empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+.wb-empty-text { font-size: 1rem; }
+.wb-flow { display: flex; flex-direction: column; align-items: center; gap: 0; width: 100%; }
+.wb-node {
+    background: var(--color-bg-mid); border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 0.75rem 1rem; width: 100%; max-width: 380px;
+    cursor: pointer; transition: all 0.2s; position: relative;
+}
+.wb-node:hover { border-color: var(--node-color); }
+.wb-node-selected { border-color: var(--node-color); box-shadow: 0 0 12px rgba(255,255,255,0.05); }
+.wb-node-header { display: flex; align-items: center; gap: 0.5rem; }
+.wb-node-num {
+    background: var(--node-color); color: #000; font-weight: 700; font-size: 0.75rem;
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+}
+.wb-node-icon { font-size: 1.1rem; }
+.wb-node-label { font-weight: 600; font-size: 0.9rem; flex: 1; }
+.wb-node-remove {
+    background: none; border: none; color: var(--color-text-muted); cursor: pointer;
+    font-size: 1rem; padding: 0 0.25rem; opacity: 0.5; transition: opacity 0.2s;
+}
+.wb-node-remove:hover { opacity: 1; color: var(--color-danger); }
+.wb-node-summary {
+    font-size: 0.8rem; color: var(--color-text-muted); margin-top: 0.35rem;
+    padding-left: 2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wb-connector { display: flex; justify-content: center; padding: 0.15rem 0; }
+.wb-dragging { opacity: 0.5; }
+.wb-config {
+    background: var(--color-surface); border-radius: 12px; padding: 1.25rem;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.wb-config-title { font-size: 1rem; margin: 0 0 0.25rem; }
+.wb-config-desc { font-size: 0.82rem; color: var(--color-text-muted); margin: 0 0 1rem; }
+.wb-config-empty { color: var(--color-text-muted); font-size: 0.9rem; padding: 2rem 0; text-align: center; }
+.wb-field-label { display: block; font-size: 0.8rem; color: var(--color-text-muted); margin: 0.75rem 0 0.25rem; }
+.wb-field-input {
+    width: 100%; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12);
+    background: var(--color-bg-deep); color: var(--color-text); font-size: 0.85rem; box-sizing: border-box;
+}
+.wb-field-input:focus { outline: none; border-color: var(--color-primary); }
+select.wb-field-input { cursor: pointer; }
+.wb-move-btns { display: flex; gap: 0.5rem; margin-top: 1rem; }
+.wb-move-btn {
+    flex: 1; padding: 0.4rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+    background: var(--color-surface); color: var(--color-text); cursor: pointer; font-size: 0.8rem;
+}
+.wb-move-btn:hover:not([disabled]) { background: var(--color-surface-hover); }
+.wb-move-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
+.wb-toolbar {
+    display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+    margin-top: 1.25rem; padding: 0.75rem 1rem; border-radius: 10px;
+    background: var(--color-surface);
+}
+.wb-step-count { font-size: 0.85rem; color: var(--color-text-muted); margin-right: auto; }
+.wb-toolbar-btn {
+    padding: 0.45rem 0.9rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+    background: var(--color-surface); color: var(--color-text); cursor: pointer; font-size: 0.8rem;
+    transition: all 0.2s;
+}
+.wb-toolbar-btn:hover:not([disabled]) { background: var(--color-surface-hover); border-color: var(--color-primary); }
+.wb-toolbar-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
+.wb-import-area {
+    width: 100%; min-height: 80px; margin-top: 0.75rem; padding: 0.75rem;
+    border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);
+    background: var(--color-bg-deep); color: var(--color-text); font-family: monospace;
+    font-size: 0.85rem; resize: vertical; box-sizing: border-box;
+}
+
+/* Light theme overrides */
+[data-theme="light"] .wb-node { background: #f8f9fa; }
+[data-theme="light"] .wb-node-num { color: #fff; }
+[data-theme="light"] .wb-field-input { background: #fff; border-color: #ddd; color: #333; }
+[data-theme="light"] .wb-import-area { background: #fff; border-color: #ddd; color: #333; }

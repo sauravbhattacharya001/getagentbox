@@ -9741,3 +9741,12 @@ var PrivacyCheckup = (function () {
     _QUESTIONS: QUESTIONS
   };
 })();
+
+
+// Workflow Builder init
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof WorkflowBuilder !== 'undefined') { WorkflowBuilder.init('workflowBuilderRoot'); }
+  });
+}
+
