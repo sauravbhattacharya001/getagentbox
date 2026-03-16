@@ -8041,3 +8041,23 @@ select.wb-field-input { cursor: pointer; }
 [data-theme="light"] .wb-node-num { color: #fff; }
 [data-theme="light"] .wb-field-input { background: #fff; border-color: #ddd; color: #333; }
 [data-theme="light"] .wb-import-area { background: #fff; border-color: #ddd; color: #333; }
+
+/* ===== Capability Radar ===== */
+.capability-radar-section { text-align: center; }
+.radar-legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
+.radar-legend-btn { background: rgba(255,255,255,0.06); border: 2px solid; border-radius: 20px; padding: 6px 14px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: opacity .2s; color: inherit; }
+.radar-legend-btn:not(.active) { opacity: 0.35; }
+.radar-legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.radar-canvas-wrap { position: relative; display: inline-block; max-width: 500px; width: 100%; }
+.radar-canvas-wrap canvas { display: block; margin: 0 auto; }
+.radar-tooltip { position: absolute; background: rgba(20,20,30,0.92); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; pointer-events: none; transform: translate(-50%, -100%); z-index: 10; white-space: nowrap; line-height: 1.6; }
+.radar-detail { max-width: 420px; margin: 16px auto 0; text-align: left; }
+.radar-detail h4 { margin: 0 0 10px; font-size: 15px; }
+.radar-bars { display: flex; flex-direction: column; gap: 6px; }
+.radar-bar-row { display: flex; align-items: center; gap: 8px; }
+.radar-bar-name { width: 100px; font-size: 13px; font-weight: 600; text-align: right; }
+.radar-bar-track { flex: 1; height: 14px; background: rgba(150,150,150,0.15); border-radius: 7px; overflow: hidden; }
+.radar-bar-fill { height: 100%; border-radius: 7px; transition: width .4s; }
+.radar-bar-val { width: 30px; font-size: 12px; font-weight: 700; }
+[data-theme="light"] .radar-legend-btn { background: rgba(0,0,0,0.04); }
+[data-theme="light"] .radar-tooltip { background: rgba(255,255,255,0.95); color: #222; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
