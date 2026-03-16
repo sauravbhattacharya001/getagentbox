@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Onboarding Checklist</title>
+    <meta name="description" content="Interactive onboarding checklist for new AgentBox users. Complete setup steps, earn badges, and get the most out of your AI agent.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --gold: #f9ca24;
+            --gold-bg: #f9ca2422;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 2px 12px rgba(0,0,0,.3);
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --surface-3: #e8e8e8;
+            --border: #e0e0e0;
+            --text: #1a1a1a;
+            --text-muted: #666;
+            --accent-bg: #00d4ff10;
+            --green-bg: #00b89415;
+            --yellow-bg: #fdcb6e15;
+            --purple-bg: #6c5ce715;
+            --gold-bg: #f9ca2415;
+            --shadow: 0 2px 12px rgba(0,0,0,.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-left { display: flex; align-items: center; gap: .75rem; }
+        .header-left a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .header-left span { color: var(--text-muted); }
+        .header-right { display: flex; gap: .5rem; }
+        .btn-icon {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            width: 36px; height: 36px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            transition: background .2s;
+        }
+        .btn-icon:hover { background: var(--surface-3); }
+
+        /* ── Layout ── */
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* ── Progress Overview ── */
+        .progress-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+        .progress-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .progress-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .progress-fraction {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+        .progress-fraction strong { color: var(--accent); }
+        .progress-bar-track {
+            background: var(--surface-2);
+            border-radius: 999px;
+            height: 12px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        .progress-bar-fill {
+            background: linear-gradient(90deg, var(--accent), var(--green));
+            height: 100%;
+            border-radius: 999px;
+            transition: width .6s ease;
+            width: 0%;
+        }
+        .progress-stats {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .stat-chip {
+            display: flex; align-items: center; gap: .4rem;
+            font-size: .85rem;
+            color: var(--text-muted);
+        }
+        .stat-chip .emoji { font-size: 1rem; }
+
+        /* ── Badges ── */
+        .badges-row {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .3rem .7rem;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            color: var(--text-muted);
+            transition: all .3s;
+        }
+        .badge.earned {
+            border-color: var(--gold);
+            background: var(--gold-bg);
+            color: var(--gold);
+        }
+        .badge .badge-icon { font-size: .9rem; }
+
+        /* ── Category ── */
+        .category {
+            margin-bottom: 2rem;
+        }
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: .75rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .category-header:hover .category-title { color: var(--accent); }
+        .category-icon { font-size: 1.3rem; }
+        .category-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            transition: color .2s;
+        }
+        .category-count {
+            margin-left: auto;
+            font-size: .8rem;
+            color: var(--text-muted);
+            background: var(--surface-2);
+            padding: .15rem .5rem;
+            border-radius: 999px;
+        }
+        .category-chevron {
+            color: var(--text-muted);
+            transition: transform .3s;
+            font-size: .8rem;
+        }
+        .category.collapsed .category-chevron { transform: rotate(-90deg); }
+        .category.collapsed .step-list { display: none; }
+
+        /* ── Steps ── */
+        .step-list { display: flex; flex-direction: column; gap: .5rem; }
+
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            cursor: pointer;
+            transition: border-color .2s, background .2s;
+        }
+        .step:hover { border-color: var(--accent); }
+        .step.completed {
+            border-color: var(--green);
+            background: var(--green-bg);
+        }
+
+        .step-check {
+            width: 24px; height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .3s;
+            margin-top: 2px;
+            font-size: .8rem;
+        }
+        .step.completed .step-check {
+            border-color: var(--green);
+            background: var(--green);
+            color: #fff;
+        }
+
+        .step-content { flex: 1; min-width: 0; }
+        .step-title {
+            font-weight: 600;
+            font-size: .95rem;
+            margin-bottom: .25rem;
+        }
+        .step.completed .step-title { text-decoration: line-through; color: var(--text-muted); }
+        .step-desc {
+            font-size: .85rem;
+            color: var(--text-muted);
+            margin-bottom: .5rem;
+        }
+        .step-tip {
+            font-size: .8rem;
+            background: var(--accent-bg);
+            color: var(--accent-light);
+            padding: .4rem .7rem;
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--accent);
+            display: none;
+        }
+        .step:not(.completed) .step-tip { display: block; }
+
+        .step-time {
+            font-size: .75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            margin-top: 4px;
+        }
+
+        /* ── Completion Celebration ── */
+        .celebration {
+            display: none;
+            text-align: center;
+            padding: 3rem 1.5rem;
+            background: var(--surface);
+            border: 2px solid var(--gold);
+            border-radius: var(--radius);
+            margin-top: 2rem;
+            box-shadow: var(--shadow);
+        }
+        .celebration.visible { display: block; }
+        .celebration-emoji { font-size: 3rem; margin-bottom: .75rem; }
+        .celebration-title { font-size: 1.5rem; font-weight: 700; margin-bottom: .5rem; }
+        .celebration-desc { color: var(--text-muted); max-width: 400px; margin: 0 auto; }
+
+        /* ── Reset Button ── */
+        .reset-area {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        .btn-reset {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: .5rem 1.2rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: .85rem;
+            transition: all .2s;
+        }
+        .btn-reset:hover { border-color: var(--orange); color: var(--orange); }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .container { padding: 1rem; }
+            .progress-top { flex-direction: column; align-items: flex-start; gap: .5rem; }
+            .progress-stats { gap: .75rem; }
+            .step { padding: .75rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <a href="index.html">🤖 AgentBox</a>
+            <span>›</span>
+            <span>Onboarding</span>
+        </div>
+        <div class="header-right">
+            <button class="btn-icon" id="themeToggle" aria-label="Toggle theme" title="Toggle light/dark theme">☀️</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="progress-card" id="progressCard">
+            <div class="progress-top">
+                <div class="progress-title">🚀 Get Started with AgentBox</div>
+                <div class="progress-fraction"><strong id="doneCount">0</strong> / <span id="totalCount">0</span> completed</div>
+            </div>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <div class="progress-stats">
+                <div class="stat-chip"><span class="emoji">⏱️</span> <span id="timeLeft">~25 min left</span></div>
+                <div class="stat-chip"><span class="emoji">🔥</span> <span id="streakText">0 streak</span></div>
+            </div>
+            <div class="badges-row" id="badgesRow"></div>
+        </div>
+
+        <div id="categoriesContainer"></div>
+
+        <div class="celebration" id="celebration">
+            <div class="celebration-emoji">🎉🏆🎉</div>
+            <div class="celebration-title">You're an AgentBox Pro!</div>
+            <div class="celebration-desc">You've completed all onboarding steps. Your AI agent is fully configured and ready to go. Enjoy!</div>
+        </div>
+
+        <div class="reset-area">
+            <button class="btn-reset" id="resetBtn">Reset Progress</button>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <a href="index.html">← Back to AgentBox</a> · <a href="docs/index.html">Docs</a>
+    </footer>
+
+    <script>
+    'use strict';
+
+    /* ── Data ── */
+    const CHECKLIST_DATA = [
+        {
+            id: 'getting-started',
+            icon: '🏁',
+            title: 'Getting Started',
+            steps: [
+                {
+                    id: 'open-telegram',
+                    title: 'Open Telegram',
+                    desc: 'Download Telegram on your phone or desktop if you don\'t have it yet.',
+                    tip: '💡 Telegram is free and works on iOS, Android, Windows, Mac, and Linux.',
+                    time: '1 min'
+                },
+                {
+                    id: 'find-bot',
+                    title: 'Find @AgentBox11Bot',
+                    desc: 'Search for @AgentBox11Bot in Telegram and tap "Start" to begin.',
+                    tip: '💡 You can also click the "Try on Telegram" button on our homepage.',
+                    time: '30 sec'
+                },
+                {
+                    id: 'send-first',
+                    title: 'Send Your First Message',
+                    desc: 'Say hello! Try asking a question or telling it about yourself.',
+                    tip: '💡 Try: "Hi! I\'m a developer who loves building cool projects."',
+                    time: '1 min'
+                }
+            ]
+        },
+        {
+            id: 'personalize',
+            icon: '🎨',
+            title: 'Personalize Your Agent',
+            steps: [
+                {
+                    id: 'set-name',
+                    title: 'Tell It Your Name',
+                    desc: 'AgentBox remembers your name across conversations.',
+                    tip: '💡 Try: "My name is Alex, please remember that."',
+                    time: '30 sec'
+                },
+                {
+                    id: 'set-preferences',
+                    title: 'Share Your Preferences',
+                    desc: 'Tell it what you like — languages, topics, communication style.',
+                    tip: '💡 Try: "I prefer concise answers and I work in Python."',
+                    time: '1 min'
+                },
+                {
+                    id: 'try-personality',
+                    title: 'Adjust Personality',
+                    desc: 'Use /personality to tweak how your agent talks — formal, casual, playful.',
+                    tip: '💡 You can always change this later. Experiment!',
+                    time: '1 min'
+                }
+            ]
+        },
+        {
+            id: 'core-features',
+            icon: '⚡',
+            title: 'Try Core Features',
+            steps: [
+                {
+                    id: 'try-search',
+                    title: 'Web Search',
+                    desc: 'Ask something that needs current info — it searches the web for you.',
+                    tip: '💡 Try: "What\'s the weather in Tokyo right now?"',
+                    time: '1 min'
+                },
+                {
+                    id: 'try-image',
+                    title: 'Image Understanding',
+                    desc: 'Send a photo and ask about it. AgentBox can describe, analyze, or extract text.',
+                    tip: '💡 Try sending a screenshot and asking "What\'s in this image?"',
+                    time: '2 min'
+                },
+                {
+                    id: 'try-reminder',
+                    title: 'Set a Reminder',
+                    desc: 'Ask AgentBox to remind you of something later.',
+                    tip: '💡 Try: "Remind me to check email in 30 minutes."',
+                    time: '30 sec'
+                },
+                {
+                    id: 'try-code',
+                    title: 'Code Assistance',
+                    desc: 'Ask for help with code — writing, debugging, or explaining.',
+                    tip: '💡 Try: "Write a Python function to merge two sorted lists."',
+                    time: '2 min'
+                }
+            ]
+        },
+        {
+            id: 'power-user',
+            icon: '🔥',
+            title: 'Power User Tips',
+            steps: [
+                {
+                    id: 'try-commands',
+                    title: 'Explore Commands',
+                    desc: 'Type /help to see all available commands.',
+                    tip: '💡 Key commands: /memory, /personality, /clear, /export.',
+                    time: '2 min'
+                },
+                {
+                    id: 'try-memory',
+                    title: 'Check Your Memory',
+                    desc: 'Use /memory to see what AgentBox remembers about you.',
+                    tip: '💡 You can ask it to forget specific things too.',
+                    time: '1 min'
+                },
+                {
+                    id: 'try-export',
+                    title: 'Export a Conversation',
+                    desc: 'Use /export to save your chat history.',
+                    tip: '💡 Great for keeping records of research or brainstorming sessions.',
+                    time: '1 min'
+                },
+                {
+                    id: 'try-long-context',
+                    title: 'Have a Long Conversation',
+                    desc: 'AgentBox maintains context across messages. Try a multi-turn discussion.',
+                    tip: '💡 Try planning a project step by step — it remembers the whole thread.',
+                    time: '5 min'
+                }
+            ]
+        },
+        {
+            id: 'advanced',
+            icon: '🧪',
+            title: 'Advanced Features',
+            steps: [
+                {
+                    id: 'try-multi-image',
+                    title: 'Multi-Image Analysis',
+                    desc: 'Send multiple images and ask AgentBox to compare or analyze them together.',
+                    tip: '💡 Try: Send two product screenshots and ask "Which has better UX?"',
+                    time: '2 min'
+                },
+                {
+                    id: 'try-workflow',
+                    title: 'Build a Workflow',
+                    desc: 'Chain multiple tasks: research → summarize → draft email — in one conversation.',
+                    tip: '💡 Try: "Research X, summarize the top 3 findings, then draft an email about it."',
+                    time: '5 min'
+                },
+                {
+                    id: 'invite-friend',
+                    title: 'Invite a Friend',
+                    desc: 'Share AgentBox with someone who\'d find it useful!',
+                    tip: '💡 Send them this link: t.me/AgentBox11Bot',
+                    time: '1 min'
+                }
+            ]
+        }
+    ];
+
+    const BADGES = [
+        { id: 'first-steps', icon: '🌱', label: 'First Steps', category: 'getting-started', need: 3 },
+        { id: 'personal-touch', icon: '🎨', label: 'Personal Touch', category: 'personalize', need: 3 },
+        { id: 'feature-explorer', icon: '⚡', label: 'Feature Explorer', category: 'core-features', need: 4 },
+        { id: 'power-user', icon: '🔥', label: 'Power User', category: 'power-user', need: 4 },
+        { id: 'mad-scientist', icon: '🧪', label: 'Mad Scientist', category: 'advanced', need: 3 },
+        { id: 'completionist', icon: '🏆', label: 'Completionist', category: '__all__', need: -1 }
+    ];
+
+    const STORAGE_KEY = 'agentbox_onboarding';
+
+    /* ── State ── */
+    function loadState() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) return JSON.parse(raw);
+        } catch {}
+        return { completed: [], streak: 0, lastCompleted: null };
+    }
+
+    function saveState(state) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    }
+
+    let state = loadState();
+
+    /* ── Helpers ── */
+    function getAllStepIds() {
+        return CHECKLIST_DATA.flatMap(c => c.steps.map(s => s.id));
+    }
+
+    function getCategoryCompleted(catId) {
+        const cat = CHECKLIST_DATA.find(c => c.id === catId);
+        if (!cat) return 0;
+        return cat.steps.filter(s => state.completed.includes(s.id)).length;
+    }
+
+    function getTimeMinutes(timeStr) {
+        const m = timeStr.match(/([\d.]+)\s*(min|sec)/);
+        if (!m) return 1;
+        return m[2] === 'sec' ? parseFloat(m[1]) / 60 : parseFloat(m[1]);
+    }
+
+    function getRemainingTime() {
+        let total = 0;
+        CHECKLIST_DATA.forEach(cat => {
+            cat.steps.forEach(s => {
+                if (!state.completed.includes(s.id)) total += getTimeMinutes(s.time);
+            });
+        });
+        if (total < 1) return 'Less than 1 min left';
+        return `~${Math.ceil(total)} min left`;
+    }
+
+    function computeStreak() {
+        // streak = consecutive recent completions (simplified: count of completed in last session)
+        return state.streak || 0;
+    }
+
+    /* ── Rendering ── */
+    function render() {
+        const allIds = getAllStepIds();
+        const doneCount = state.completed.length;
+        const totalCount = allIds.length;
+        const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+
+        document.getElementById('doneCount').textContent = doneCount;
+        document.getElementById('totalCount').textContent = totalCount;
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('timeLeft').textContent = getRemainingTime();
+        document.getElementById('streakText').textContent = state.streak + ' streak';
+
+        // Badges
+        const badgesRow = document.getElementById('badgesRow');
+        badgesRow.innerHTML = '';
+        BADGES.forEach(b => {
+            const earned = b.category === '__all__'
+                ? doneCount === totalCount
+                : getCategoryCompleted(b.category) >= b.need;
+            const el = document.createElement('span');
+            el.className = 'badge' + (earned ? ' earned' : '');
+            el.innerHTML = `<span class="badge-icon">${b.icon}</span> ${b.label}`;
+            el.title = earned ? 'Earned!' : `Complete ${b.category === '__all__' ? 'all steps' : b.category} to earn`;
+            badgesRow.appendChild(el);
+        });
+
+        // Categories
+        const container = document.getElementById('categoriesContainer');
+        container.innerHTML = '';
+        CHECKLIST_DATA.forEach(cat => {
+            const catDone = getCategoryCompleted(cat.id);
+            const catTotal = cat.steps.length;
+            const catEl = document.createElement('div');
+            catEl.className = 'category';
+            catEl.dataset.id = cat.id;
+
+            const header = document.createElement('div');
+            header.className = 'category-header';
+            header.setAttribute('role', 'button');
+            header.setAttribute('tabindex', '0');
+            header.setAttribute('aria-expanded', 'true');
+            header.innerHTML = `
+                <span class="category-icon">${cat.icon}</span>
+                <span class="category-title">${cat.title}</span>
+                <span class="category-count">${catDone}/${catTotal}</span>
+                <span class="category-chevron">▼</span>
+            `;
+            header.addEventListener('click', () => {
+                catEl.classList.toggle('collapsed');
+                header.setAttribute('aria-expanded', !catEl.classList.contains('collapsed'));
+            });
+            header.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); header.click(); }
+            });
+            catEl.appendChild(header);
+
+            const list = document.createElement('div');
+            list.className = 'step-list';
+            cat.steps.forEach(step => {
+                const done = state.completed.includes(step.id);
+                const el = document.createElement('div');
+                el.className = 'step' + (done ? ' completed' : '');
+                el.dataset.id = step.id;
+                el.setAttribute('role', 'checkbox');
+                el.setAttribute('aria-checked', done);
+                el.setAttribute('tabindex', '0');
+                el.innerHTML = `
+                    <div class="step-check">${done ? '✓' : ''}</div>
+                    <div class="step-content">
+                        <div class="step-title">${step.title}</div>
+                        <div class="step-desc">${step.desc}</div>
+                        ${step.tip ? `<div class="step-tip">${step.tip}</div>` : ''}
+                    </div>
+                    <div class="step-time">${step.time}</div>
+                `;
+                el.addEventListener('click', () => toggleStep(step.id));
+                el.addEventListener('keydown', e => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleStep(step.id); }
+                });
+                list.appendChild(el);
+            });
+            catEl.appendChild(list);
+            container.appendChild(catEl);
+        });
+
+        // Celebration
+        const celeb = document.getElementById('celebration');
+        if (doneCount === totalCount && totalCount > 0) {
+            celeb.classList.add('visible');
+        } else {
+            celeb.classList.remove('visible');
+        }
+    }
+
+    function toggleStep(stepId) {
+        const idx = state.completed.indexOf(stepId);
+        if (idx >= 0) {
+            state.completed.splice(idx, 1);
+            state.streak = Math.max(0, state.streak - 1);
+        } else {
+            state.completed.push(stepId);
+            state.streak += 1;
+            state.lastCompleted = Date.now();
+        }
+        saveState(state);
+        render();
+    }
+
+    /* ── Theme ── */
+    function initTheme() {
+        const saved = localStorage.getItem('agentbox_onboarding_theme');
+        if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        updateThemeIcon();
+    }
+    function toggleTheme() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        if (isLight) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('agentbox_onboarding_theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('agentbox_onboarding_theme', 'light');
+        }
+        updateThemeIcon();
+    }
+    function updateThemeIcon() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        document.getElementById('themeToggle').textContent = isLight ? '🌙' : '☀️';
+    }
+
+    /* ── Reset ── */
+    function resetProgress() {
+        if (!confirm('Reset all onboarding progress? This cannot be undone.')) return;
+        state = { completed: [], streak: 0, lastCompleted: null };
+        saveState(state);
+        render();
+    }
+
+    /* ── Init ── */
+    document.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        document.getElementById('resetBtn').addEventListener('click', resetProgress);
+        render();
+    });
+
+    /* ── Exports for testing ── */
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = {
+            CHECKLIST_DATA,
+            BADGES,
+            STORAGE_KEY,
+            getAllStepIds,
+            getCategoryCompleted,
+            getTimeMinutes,
+            getRemainingTime,
+            loadState,
+            saveState,
+            toggleStep,
+            resetProgress,
+            get state() { return state; },
+            set state(s) { state = s; }
+        };
+    }
+    </script>
+</body>
+</html>
