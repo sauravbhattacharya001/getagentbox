@@ -2967,6 +2967,12 @@ var ActivityFeed = (function () {
   let cycleTimer = null;
   let counterTimer = null;
 
+  // Track counter values in memory to avoid re-parsing DOM text and
+  // calling toLocaleString() on every tick (both are surprisingly expensive
+  // at 4-second intervals).
+  let activeCount = 1247;
+  let todayCount = 18392;
+
   /** Maximum visible items in the feed. */
   const MAX_VISIBLE = 5;
 
@@ -3056,11 +3062,11 @@ var ActivityFeed = (function () {
     const act = nextActivity();
     const newItem = createItem(act);
 
-    // Age existing time labels
-    const items = feedEl.querySelectorAll('.activity-item');
+    // Age existing time labels — use children (live HTMLCollection, no query overhead)
+    const items = feedEl.children;
     for (var i = 0; i < items.length; i++) {
-      const timeEl = items[i].querySelector('.activity-time');
-      if (timeEl) {
+      const timeEl = items[i].lastElementChild; // .activity-time is always last child
+      if (timeEl && timeEl.classList.contains('activity-time')) {
         const age = (i + 1) * (CYCLE_INTERVAL / 1000);
         if (age < 60) {
           timeEl.textContent = Math.round(age) + 's ago';
@@ -3107,28 +3113,26 @@ var ActivityFeed = (function () {
   /** Slowly increment the counters for visual effect. */
   function tickCounters() {
     if (!activeCountEl || !todayCountEl) return;
-    let active = parseInt(activeCountEl.textContent.replace(/,/g, ''), 10) || 1247;
-    let today = parseInt(todayCountEl.textContent.replace(/,/g, ''), 10) || 18392;
 
     // Active counter: biased-upward fluctuation (-1 to +2) so it
     // doesn't visibly drop frequently.  Floor at 1000.
-    active += Math.floor(Math.random() * 4) - 1;
-    if (active < 1000) active = 1000;
+    activeCount += Math.floor(Math.random() * 4) - 1;
+    if (activeCount < 1000) activeCount = 1000;
 
     // Today counter: diminishing increments near the cap so it never
     // visibly jumps backwards.  Slows to +0/+1 above 24,000 and
     // stalls at 25,000 until the next page load resets it.
-    if (today < 22000) {
-      today += Math.floor(Math.random() * 3) + 1;          // +1..+3
-    } else if (today < 24000) {
-      today += Math.floor(Math.random() * 2) + 1;          // +1..+2
-    } else if (today < 25000) {
-      today += Math.random() < 0.5 ? 1 : 0;                // +0..+1
+    if (todayCount < 22000) {
+      todayCount += Math.floor(Math.random() * 3) + 1;          // +1..+3
+    } else if (todayCount < 24000) {
+      todayCount += Math.floor(Math.random() * 2) + 1;          // +1..+2
+    } else if (todayCount < 25000) {
+      todayCount += Math.random() < 0.5 ? 1 : 0;                // +0..+1
     }
     // At or above 25,000: no further increment (stalls gracefully)
 
-    activeCountEl.textContent = active.toLocaleString();
-    todayCountEl.textContent = today.toLocaleString();
+    activeCountEl.textContent = activeCount.toLocaleString();
+    todayCountEl.textContent = todayCount.toLocaleString();
   }
 
   /** IntersectionObserver callback — only animate when visible. */
