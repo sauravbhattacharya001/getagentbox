@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
+    "./roi-calculator": "./src/roi-calculator.js",
     "./package.json": "./package.json"
   },
   "files": [
