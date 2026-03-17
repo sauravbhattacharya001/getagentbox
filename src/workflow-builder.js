@@ -408,157 +408,177 @@ var WorkflowBuilder = (function () {
     html += '<textarea class="wb-import-area" id="wbImportArea" style="display:none" placeholder="Paste workflow JSON here..."></textarea>';
 
     container.innerHTML = html;
-    bindEvents(container);
+    bindDelegatedEvents(container);
   }
 
+  /** Whether the delegated event handlers have been attached to the root. */
+  var _delegated = false;
+
   /**
-   * Attaches event listeners to all interactive elements within the rendered UI,
-   * including preset buttons, action palette, node selection/drag, config fields, and toolbar actions.
-   * @param {HTMLElement} container - The root DOM element containing the rendered workflow builder.
+   * Attaches delegated event listeners ONCE on the container root.
+   * All interactive elements are handled via event bubbling, so re-rendering
+   * the innerHTML doesn't require re-binding any listeners. This replaces the
+   * previous approach of querying and binding O(n) elements on every render.
+   * @param {HTMLElement} container - The root DOM element.
    */
-  function bindEvents(container) {
-    // Preset buttons
-    var presetBtns = container.querySelectorAll('.wb-preset-btn');
-    for (var i = 0; i < presetBtns.length; i++) {
-      presetBtns[i].addEventListener('click', function () {
-        loadPreset(parseInt(this.getAttribute('data-preset'), 10));
-      });
-    }
+  function bindDelegatedEvents(container) {
+    if (_delegated) return;
+    _delegated = true;
 
-    // Action buttons
-    var actionBtns = container.querySelectorAll('.wb-action-btn');
-    for (var i = 0; i < actionBtns.length; i++) {
-      actionBtns[i].addEventListener('click', function () {
-        addStep(this.getAttribute('data-action'));
-      });
-    }
+    // ── Click delegation ──
+    container.addEventListener('click', function (e) {
+      var target = e.target;
 
-    // Node selection
-    var nodes = container.querySelectorAll('.wb-node');
-    for (var i = 0; i < nodes.length; i++) {
-      (function (node) {
-        node.addEventListener('click', function (e) {
-          if (e.target.classList.contains('wb-node-remove')) return;
-          selectedStep = parseInt(node.getAttribute('data-index'), 10);
-          render();
-        });
-        // Drag and drop
-        node.addEventListener('dragstart', function (e) {
-          dragIndex = parseInt(node.getAttribute('data-index'), 10);
-          e.dataTransfer.effectAllowed = 'move';
-          node.classList.add('wb-dragging');
-        });
-        node.addEventListener('dragend', function () {
-          dragIndex = -1;
-          node.classList.remove('wb-dragging');
-        });
-        node.addEventListener('dragover', function (e) {
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-        });
-        node.addEventListener('drop', function (e) {
-          e.preventDefault();
-          var toIndex = parseInt(node.getAttribute('data-index'), 10);
-          if (dragIndex >= 0 && dragIndex !== toIndex) {
-            moveStep(dragIndex, toIndex);
-          }
-        });
-      })(nodes[i]);
-    }
+      // Preset buttons
+      var presetBtn = target.closest('.wb-preset-btn');
+      if (presetBtn) {
+        loadPreset(parseInt(presetBtn.getAttribute('data-preset'), 10));
+        return;
+      }
 
-    // Remove buttons
-    var removeBtns = container.querySelectorAll('.wb-node-remove');
-    for (var i = 0; i < removeBtns.length; i++) {
-      removeBtns[i].addEventListener('click', function (e) {
+      // Action palette buttons
+      var actionBtn = target.closest('.wb-action-btn');
+      if (actionBtn) {
+        addStep(actionBtn.getAttribute('data-action'));
+        return;
+      }
+
+      // Remove step button (stop propagation to avoid node-select)
+      var removeBtn = target.closest('.wb-node-remove');
+      if (removeBtn) {
         e.stopPropagation();
-        removeStep(parseInt(this.getAttribute('data-remove'), 10));
-      });
-    }
+        removeStep(parseInt(removeBtn.getAttribute('data-remove'), 10));
+        return;
+      }
 
-    // Config fields
-    var fields = container.querySelectorAll('.wb-field-input');
-    for (var i = 0; i < fields.length; i++) {
-      (function (field) {
-        var eventType = field.tagName === 'SELECT' ? 'change' : 'input';
-        field.addEventListener(eventType, function () {
-          updateStepConfig(selectedStep, field.getAttribute('data-field'), field.value);
-          // Update summary without full re-render
-          var node = container.querySelector('.wb-node[data-index="' + selectedStep + '"]');
-          if (node) {
-            var summaryEl = node.querySelector('.wb-node-summary');
-            var s = steps[selectedStep];
-            var parts = [];
-            var keys = Object.keys(s.config);
-            for (var k = 0; k < keys.length; k++) {
-              if (s.config[keys[k]]) {
-                var v = s.config[keys[k]];
-                if (v.length > 30) v = v.substring(0, 27) + '...';
-                parts.push(v);
-              }
-            }
-            if (summaryEl) {
-              summaryEl.textContent = parts.join(' · ');
-            } else if (parts.length > 0) {
-              render(); // Need full re-render to add summary div
-            }
-          }
-        });
-      })(fields[i]);
-    }
+      // Node selection
+      var node = target.closest('.wb-node');
+      if (node) {
+        selectedStep = parseInt(node.getAttribute('data-index'), 10);
+        render();
+        return;
+      }
 
-    // Move buttons
-    var moveBtns = container.querySelectorAll('.wb-move-btn');
-    for (var i = 0; i < moveBtns.length; i++) {
-      moveBtns[i].addEventListener('click', function () {
-        var dir = this.getAttribute('data-move');
+      // Move buttons
+      var moveBtn = target.closest('.wb-move-btn');
+      if (moveBtn) {
+        var dir = moveBtn.getAttribute('data-move');
         if (dir === 'up') moveStep(selectedStep, selectedStep - 1);
         else moveStep(selectedStep, selectedStep + 1);
-      });
-    }
+        return;
+      }
 
-    // Export commands
-    var exportCmd = container.querySelector('.wb-export-cmd');
-    if (exportCmd) exportCmd.addEventListener('click', function () {
-      var text = exportAsCommands();
-      copyToClipboard(text);
-      this.textContent = '✅ Copied!';
-      var btn = this;
-      setTimeout(function () { btn.textContent = '📋 Export Commands'; }, 2000);
-    });
+      // Export commands
+      if (target.closest('.wb-export-cmd')) {
+        var btn = target.closest('.wb-export-cmd');
+        copyToClipboard(exportAsCommands());
+        btn.textContent = '✅ Copied!';
+        setTimeout(function () { btn.textContent = '📋 Export Commands'; }, 2000);
+        return;
+      }
 
-    // Export JSON
-    var exportJson = container.querySelector('.wb-export-json');
-    if (exportJson) exportJson.addEventListener('click', function () {
-      var text = exportAsJSON();
-      copyToClipboard(text);
-      this.textContent = '✅ Copied!';
-      var btn = this;
-      setTimeout(function () { btn.textContent = '💾 Export JSON'; }, 2000);
-    });
+      // Export JSON
+      if (target.closest('.wb-export-json')) {
+        var jsonBtn = target.closest('.wb-export-json');
+        copyToClipboard(exportAsJSON());
+        jsonBtn.textContent = '✅ Copied!';
+        setTimeout(function () { jsonBtn.textContent = '💾 Export JSON'; }, 2000);
+        return;
+      }
 
-    // Import JSON
-    var importBtn = container.querySelector('.wb-import-json');
-    var importArea = container.querySelector('#wbImportArea');
-    if (importBtn && importArea) {
-      importBtn.addEventListener('click', function () {
-        if (importArea.style.display === 'none') {
-          importArea.style.display = 'block';
-          importArea.focus();
-        } else {
-          var ok = importFromJSON(importArea.value);
-          if (!ok) {
-            importArea.style.borderColor = 'var(--color-danger)';
-            setTimeout(function () { importArea.style.borderColor = ''; }, 1500);
+      // Import JSON toggle
+      if (target.closest('.wb-import-json')) {
+        var importArea = container.querySelector('#wbImportArea');
+        if (importArea) {
+          if (importArea.style.display === 'none') {
+            importArea.style.display = 'block';
+            importArea.focus();
+          } else {
+            var ok = importFromJSON(importArea.value);
+            if (!ok) {
+              importArea.style.borderColor = 'var(--color-danger)';
+              setTimeout(function () { importArea.style.borderColor = ''; }, 1500);
+            }
+            importArea.style.display = 'none';
+            importArea.value = '';
           }
-          importArea.style.display = 'none';
-          importArea.value = '';
         }
-      });
+        return;
+      }
+
+      // Clear workflow
+      if (target.closest('.wb-clear')) {
+        clearWorkflow();
+        return;
+      }
+    });
+
+    // ── Input/change delegation for config fields ──
+    container.addEventListener('input', handleFieldUpdate);
+    container.addEventListener('change', handleFieldUpdate);
+
+    function handleFieldUpdate(e) {
+      var field = e.target.closest('.wb-field-input');
+      if (!field) return;
+      // For input events, only handle text inputs; for change events, only handle selects
+      if (e.type === 'input' && field.tagName === 'SELECT') return;
+      if (e.type === 'change' && field.tagName !== 'SELECT') return;
+
+      updateStepConfig(selectedStep, field.getAttribute('data-field'), field.value);
+
+      // Update summary without full re-render
+      var nodeEl = container.querySelector('.wb-node[data-index="' + selectedStep + '"]');
+      if (nodeEl) {
+        var summaryEl = nodeEl.querySelector('.wb-node-summary');
+        var s = steps[selectedStep];
+        var parts = [];
+        var keys = Object.keys(s.config);
+        for (var k = 0; k < keys.length; k++) {
+          if (s.config[keys[k]]) {
+            var v = s.config[keys[k]];
+            if (v.length > 30) v = v.substring(0, 27) + '...';
+            parts.push(v);
+          }
+        }
+        if (summaryEl) {
+          summaryEl.textContent = parts.join(' · ');
+        } else if (parts.length > 0) {
+          render(); // Need full re-render to add summary div
+        }
+      }
     }
 
-    // Clear
-    var clearBtn = container.querySelector('.wb-clear');
-    if (clearBtn) clearBtn.addEventListener('click', clearWorkflow);
+    // ── Drag-and-drop delegation ──
+    container.addEventListener('dragstart', function (e) {
+      var node = e.target.closest('.wb-node');
+      if (!node) return;
+      dragIndex = parseInt(node.getAttribute('data-index'), 10);
+      e.dataTransfer.effectAllowed = 'move';
+      node.classList.add('wb-dragging');
+    });
+
+    container.addEventListener('dragend', function (e) {
+      var node = e.target.closest('.wb-node');
+      if (node) node.classList.remove('wb-dragging');
+      dragIndex = -1;
+    });
+
+    container.addEventListener('dragover', function (e) {
+      if (e.target.closest('.wb-node')) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      }
+    });
+
+    container.addEventListener('drop', function (e) {
+      var node = e.target.closest('.wb-node');
+      if (!node) return;
+      e.preventDefault();
+      var toIndex = parseInt(node.getAttribute('data-index'), 10);
+      if (dragIndex >= 0 && dragIndex !== toIndex) {
+        moveStep(dragIndex, toIndex);
+      }
+    });
   }
 
   /**
