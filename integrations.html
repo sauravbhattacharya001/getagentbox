@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Integration Directory — AgentBox</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#12121a;--card:#1a1a2e;--card-hover:#222240;--border:#2a2a4a;--text:#e0e0f0;--muted:#8888aa;--accent:#6c5ce7;--accent2:#a29bfe;--green:#00b894;--orange:#fdcb6e;--red:#e17055;--blue:#74b9ff}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.hero{text-align:center;padding:60px 20px 40px;background:linear-gradient(135deg,#0a0a1a 0%,#1a1040 50%,#0a0a1a 100%)}
+.hero h1{font-size:2.4rem;margin-bottom:8px;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--muted);font-size:1.1rem;max-width:600px;margin:0 auto 30px}
+.stats-row{display:flex;gap:24px;justify-content:center;margin-bottom:30px;flex-wrap:wrap}
+.stat{text-align:center}
+.stat .num{font-size:2rem;font-weight:700;color:var(--accent2)}
+.stat .label{font-size:.85rem;color:var(--muted)}
+.search-bar{max-width:500px;margin:0 auto;position:relative}
+.search-bar input{width:100%;padding:14px 20px 14px 44px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:1rem;outline:none;transition:border .2s}
+.search-bar input:focus{border-color:var(--accent)}
+.search-bar svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:24px 0}
+.filter-btn{padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:.85rem;transition:all .2s}
+.filter-btn:hover{border-color:var(--accent);color:var(--text)}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.card:hover{background:var(--card-hover);border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,92,231,.15)}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.card-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.card-title{font-weight:600;font-size:1.05rem}
+.card-category{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.card-desc{color:var(--muted);font-size:.9rem;line-height:1.5;margin-bottom:14px}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.status{display:flex;align-items:center;gap:6px;font-size:.8rem}
+.status-dot{width:8px;height:8px;border-radius:50%}
+.status-dot.ga{background:var(--green)}
+.status-dot.beta{background:var(--orange)}
+.status-dot.soon{background:var(--muted)}
+.popularity{display:flex;gap:2px}
+.popularity .bar{width:4px;height:14px;border-radius:2px;background:var(--border)}
+.popularity .bar.filled{background:var(--accent2)}
+.no-results{text-align:center;padding:60px 20px;color:var(--muted)}
+.no-results .emoji{font-size:3rem;margin-bottom:12px}
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:560px;width:100%;padding:32px;position:relative;max-height:85vh;overflow-y:auto}
+.modal-close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer}
+.modal h2{margin-bottom:6px}
+.modal .tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.75rem;margin:4px 2px 16px 0}
+.modal .desc{color:var(--muted);line-height:1.6;margin-bottom:20px}
+.modal .features-list{list-style:none;margin-bottom:20px}
+.modal .features-list li{padding:6px 0;color:var(--text);font-size:.9rem}
+.modal .features-list li::before{content:'✓ ';color:var(--green)}
+.modal .link-btn{display:inline-block;padding:10px 24px;background:var(--accent);color:#fff;border-radius:10px;text-decoration:none;font-size:.9rem;transition:background .2s}
+.modal .link-btn:hover{background:#5a4bd4}
+.count-label{text-align:center;color:var(--muted);font-size:.9rem;margin-top:20px}
+@media(max-width:600px){.hero h1{font-size:1.6rem}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="hero">
+<h1>🔗 Integration Directory</h1>
+<p>Connect AgentBox with your favorite tools and services. Browse 24 integrations across 6 categories.</p>
+<div class="stats-row">
+<div class="stat"><div class="num" id="total-count">24</div><div class="label">Integrations</div></div>
+<div class="stat"><div class="num" id="ga-count">0</div><div class="label">Generally Available</div></div>
+<div class="stat"><div class="num" id="cat-count">6</div><div class="label">Categories</div></div>
+</div>
+<div class="search-bar">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+<input type="text" id="search" placeholder="Search integrations..." autocomplete="off">
+</div>
+</div>
+<div class="container">
+<div class="filters" id="filters"></div>
+<div class="count-label" id="count-label"></div>
+<div class="grid" id="grid"></div>
+<div class="no-results" id="no-results" style="display:none">
+<div class="emoji">🔍</div>
+<p>No integrations match your search.</p>
+</div>
+</div>
+<div class="modal-overlay" id="modal-overlay">
+<div class="modal" id="modal">
+<button class="modal-close" id="modal-close">&times;</button>
+<div id="modal-content"></div>
+</div>
+</div>
+<script>
+const integrations=[
+{name:"OpenAI",icon:"🧠",cat:"AI Models",bg:"#1a3a2a",status:"ga",pop:5,desc:"Connect to GPT-4, GPT-4o, and DALL·E models for text generation, analysis, and image creation.",features:["Chat completions & streaming","Function calling support","Vision & image generation","Embedding models","Fine-tuned model access"],docs:"https://platform.openai.com/docs"},
+{name:"Anthropic",icon:"🔮",cat:"AI Models",bg:"#2a1a3a",status:"ga",pop:5,desc:"Use Claude 3.5 Sonnet, Opus, and Haiku for long-context reasoning, coding, and analysis.",features:["200K context window","Tool use & function calling","Vision capabilities","Streaming responses","System prompt tuning"],docs:"https://docs.anthropic.com"},
+{name:"Google Gemini",icon:"💎",cat:"AI Models",bg:"#1a2a3a",status:"ga",pop:4,desc:"Access Gemini Pro and Ultra for multimodal understanding and generation.",features:["Multimodal input (text, image, video)","Grounding with Google Search","Code generation","Long context support","Safety settings"],docs:"https://ai.google.dev/docs"},
+{name:"Ollama",icon:"🦙",cat:"AI Models",bg:"#2a2a1a",status:"ga",pop:4,desc:"Run local LLMs like Llama 3, Mistral, and CodeLlama privately on your own hardware.",features:["100+ open models","Local/private execution","No API keys needed","GPU acceleration","Custom model files"],docs:"https://ollama.com"},
+{name:"GitHub",icon:"🐙",cat:"Developer Tools",bg:"#1a1a2e",status:"ga",pop:5,desc:"Manage repos, issues, PRs, and Actions workflows directly from your agents.",features:["Create & manage issues","Open pull requests","Trigger Actions workflows","Browse repository contents","Code search & review"],docs:"https://docs.github.com"},
+{name:"GitLab",icon:"🦊",cat:"Developer Tools",bg:"#2e1a1a",status:"ga",pop:3,desc:"CI/CD pipelines, merge requests, and project management through GitLab's API.",features:["Merge request automation","Pipeline triggering","Issue management","Wiki & snippet access","Container registry"],docs:"https://docs.gitlab.com"},
+{name:"Jira",icon:"📋",cat:"Developer Tools",bg:"#1a2e2e",status:"ga",pop:4,desc:"Create issues, manage sprints, and track project progress in Jira.",features:["Issue creation & updates","Sprint management","JQL search queries","Comment & attachment support","Workflow transitions"],docs:"https://developer.atlassian.com"},
+{name:"Linear",icon:"⚡",cat:"Developer Tools",bg:"#2e2e1a",status:"beta",pop:3,desc:"Streamlined issue tracking and project management with Linear's API.",features:["Issue & cycle management","Label & priority filtering","Team & project queries","Webhook support","GraphQL API"],docs:"https://linear.app/docs"},
+{name:"Slack",icon:"💬",cat:"Communication",bg:"#1a2a2a",status:"ga",pop:5,desc:"Send messages, manage channels, and build interactive Slack workflows.",features:["Send & schedule messages","Channel management","Interactive blocks & modals","File uploads","Slash command handling"],docs:"https://api.slack.com"},
+{name:"Discord",icon:"🎮",cat:"Communication",bg:"#2a1a2e",status:"ga",pop:4,desc:"Bot commands, channel messaging, and community management on Discord.",features:["Message sending & embeds","Slash commands","Role management","Thread creation","Reaction handling"],docs:"https://discord.com/developers/docs"},
+{name:"Microsoft Teams",icon:"🟦",cat:"Communication",bg:"#1a1a3a",status:"beta",pop:3,desc:"Post messages, create channels, and manage meetings in Microsoft Teams.",features:["Channel messaging","Adaptive cards","Meeting scheduling","File sharing","Tab & bot integration"],docs:"https://learn.microsoft.com/en-us/graph/teams-concept-overview"},
+{name:"Telegram",icon:"✈️",cat:"Communication",bg:"#1a2e3a",status:"ga",pop:4,desc:"Build Telegram bots with rich messaging, inline keyboards, and media.",features:["Message & media sending","Inline keyboards","Group management","Webhook & polling modes","File & document handling"],docs:"https://core.telegram.org/bots/api"},
+{name:"PostgreSQL",icon:"🐘",cat:"Data & Storage",bg:"#1a2a1a",status:"ga",pop:5,desc:"Query, insert, and manage data in PostgreSQL databases.",features:["SQL query execution","Schema introspection","Transaction support","Connection pooling","Parameterized queries"],docs:"https://www.postgresql.org/docs/"},
+{name:"MongoDB",icon:"🍃",cat:"Data & Storage",bg:"#1a3a1a",status:"ga",pop:4,desc:"Document-based data operations with MongoDB Atlas or self-hosted instances.",features:["CRUD operations","Aggregation pipelines","Index management","Atlas search","Change streams"],docs:"https://www.mongodb.com/docs"},
+{name:"Redis",icon:"🔴",cat:"Data & Storage",bg:"#3a1a1a",status:"ga",pop:4,desc:"In-memory caching, pub/sub messaging, and session storage with Redis.",features:["Key-value operations","Pub/sub messaging","Sorted sets & streams","TTL & expiration","Lua scripting"],docs:"https://redis.io/docs"},
+{name:"AWS S3",icon:"📦",cat:"Data & Storage",bg:"#2a2a1a",status:"ga",pop:4,desc:"Upload, download, and manage files in Amazon S3 buckets.",features:["File upload & download","Bucket management","Pre-signed URLs","Multipart uploads","Lifecycle policies"],docs:"https://docs.aws.amazon.com/s3/"},
+{name:"Notion",icon:"📝",cat:"Productivity",bg:"#1a1a1a",status:"ga",pop:4,desc:"Read and write Notion pages, databases, and blocks programmatically.",features:["Page creation & updates","Database queries","Block manipulation","Search across workspace","Property filtering"],docs:"https://developers.notion.com"},
+{name:"Google Sheets",icon:"📊",cat:"Productivity",bg:"#1a3a2e",status:"ga",pop:4,desc:"Read, write, and analyze spreadsheet data in Google Sheets.",features:["Cell read & write","Sheet creation","Formula support","Batch updates","Chart data extraction"],docs:"https://developers.google.com/sheets/api"},
+{name:"Airtable",icon:"🗂️",cat:"Productivity",bg:"#2e2a1a",status:"beta",pop:3,desc:"Manage records and views in Airtable bases for flexible data workflows.",features:["Record CRUD operations","View & filter queries","Attachment handling","Linked records","Webhook triggers"],docs:"https://airtable.com/developers/web/api"},
+{name:"Zapier",icon:"⚡",cat:"Automation",bg:"#3a2a1a",status:"ga",pop:4,desc:"Trigger and manage Zapier workflows to connect 6,000+ apps.",features:["Trigger Zaps via webhooks","Action step execution","Multi-step workflows","Filter & path logic","Custom app integration"],docs:"https://zapier.com/developer"},
+{name:"Make (Integromat)",icon:"🔄",cat:"Automation",bg:"#1a2e2a",status:"beta",pop:3,desc:"Visual automation scenarios with advanced branching and data transformation.",features:["Scenario triggering","Data mapping","Error handling routes","Iterator & aggregator","Custom HTTP modules"],docs:"https://www.make.com/en/api-documentation"},
+{name:"n8n",icon:"🔧",cat:"Automation",bg:"#2a1a1a",status:"ga",pop:3,desc:"Self-hosted workflow automation with 400+ integrations and code nodes.",features:["Workflow execution","Code nodes (JS/Python)","Credential management","Webhook triggers","Self-hosted & cloud"],docs:"https://docs.n8n.io"},
+{name:"Vercel",icon:"▲",cat:"Developer Tools",bg:"#1a1a1a",status:"beta",pop:3,desc:"Deploy and manage Vercel projects, serverless functions, and edge config.",features:["Project deployments","Serverless functions","Environment variables","Domain management","Edge config"],docs:"https://vercel.com/docs"},
+{name:"Twilio",icon:"📱",cat:"Communication",bg:"#2a1a2a",status:"ga",pop:3,desc:"Send SMS, make voice calls, and manage communication workflows.",features:["SMS sending","Voice calls","WhatsApp messaging","Verify (2FA)","Programmable messaging"],docs:"https://www.twilio.com/docs"}
+];
+
+const cats=[...new Set(integrations.map(i=>i.cat))];
+let activeCat='All';
+const filtersEl=document.getElementById('filters');
+const gridEl=document.getElementById('grid');
+const searchEl=document.getElementById('search');
+const noResults=document.getElementById('no-results');
+const countLabel=document.getElementById('count-label');
+const modalOverlay=document.getElementById('modal-overlay');
+const modalContent=document.getElementById('modal-content');
+
+// Stats
+document.getElementById('ga-count').textContent=integrations.filter(i=>i.status==='ga').length;
+
+function renderFilters(){
+  const all=['All',...cats];
+  filtersEl.innerHTML=all.map(c=>`<button class="filter-btn ${c===activeCat?'active':''}" data-cat="${c}">${c==='All'?'All':c} ${c==='All'?'('+integrations.length+')':'('+integrations.filter(i=>i.cat===c).length+')'}</button>`).join('');
+}
+
+function statusLabel(s){return s==='ga'?'GA':s==='beta'?'Beta':'Coming Soon'}
+function statusClass(s){return s}
+
+function renderGrid(){
+  const q=searchEl.value.toLowerCase();
+  let filtered=integrations.filter(i=>{
+    const matchCat=activeCat==='All'||i.cat===activeCat;
+    const matchSearch=!q||i.name.toLowerCase().includes(q)||i.desc.toLowerCase().includes(q)||i.cat.toLowerCase().includes(q);
+    return matchCat&&matchSearch;
+  });
+  if(!filtered.length){gridEl.innerHTML='';noResults.style.display='block';countLabel.textContent='';return;}
+  noResults.style.display='none';
+  countLabel.textContent=`Showing ${filtered.length} integration${filtered.length!==1?'s':''}`;
+  gridEl.innerHTML=filtered.map((int,idx)=>`
+    <div class="card" data-idx="${integrations.indexOf(int)}">
+      <div class="card-header">
+        <div class="card-icon" style="background:${int.bg}">${int.icon}</div>
+        <div><div class="card-title">${int.name}</div><div class="card-category">${int.cat}</div></div>
+      </div>
+      <div class="card-desc">${int.desc}</div>
+      <div class="card-footer">
+        <div class="status"><span class="status-dot ${statusClass(int.status)}"></span>${statusLabel(int.status)}</div>
+        <div class="popularity">${[1,2,3,4,5].map(n=>`<div class="bar ${n<=int.pop?'filled':''}"></div>`).join('')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openModal(idx){
+  const int=integrations[idx];
+  const statusColors={ga:'var(--green)',beta:'var(--orange)',soon:'var(--muted)'};
+  modalContent.innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
+      <div class="card-icon" style="background:${int.bg};width:52px;height:52px;font-size:1.8rem">${int.icon}</div>
+      <div><h2>${int.name}</h2></div>
+    </div>
+    <span class="tag" style="background:${statusColors[int.status]||statusColors.soon};color:#000">${statusLabel(int.status)}</span>
+    <span class="tag" style="background:var(--border);color:var(--text)">${int.cat}</span>
+    <div class="desc">${int.desc}</div>
+    <h3 style="font-size:.95rem;margin-bottom:10px;color:var(--accent2)">Key Features</h3>
+    <ul class="features-list">${int.features.map(f=>`<li>${f}</li>`).join('')}</ul>
+    <a href="${int.docs}" target="_blank" rel="noopener" class="link-btn">View Documentation →</a>
+  `;
+  modalOverlay.classList.add('open');
+}
+
+filtersEl.addEventListener('click',e=>{
+  if(e.target.classList.contains('filter-btn')){activeCat=e.target.dataset.cat;renderFilters();renderGrid();}
+});
+searchEl.addEventListener('input',renderGrid);
+gridEl.addEventListener('click',e=>{
+  const card=e.target.closest('.card');
+  if(card)openModal(parseInt(card.dataset.idx));
+});
+modalOverlay.addEventListener('click',e=>{if(e.target===modalOverlay)modalOverlay.classList.remove('open');});
+document.getElementById('modal-close').addEventListener('click',()=>modalOverlay.classList.remove('open'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')modalOverlay.classList.remove('open');});
+
+renderFilters();
+renderGrid();
+</script>
+</body>
+</html>
