@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox — Use Case Explorer</title>
+    <meta name="description" content="Explore real-world scenarios showing how AgentBox helps with productivity, research, creative work, and business tasks.">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --bg3: #1a1a2e;
+            --text: #e0e0e8;
+            --text2: #8888a0;
+            --accent: #6c63ff;
+            --accent2: #00c853;
+            --border: #2a2a3e;
+            --card-bg: #16161f;
+            --shadow: rgba(0,0,0,0.4);
+            --cat-productivity: #6c63ff;
+            --cat-research: #00bcd4;
+            --cat-creative: #ff6b9d;
+            --cat-business: #ffa726;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .header {
+            text-align: center;
+            padding: 3rem 1rem 2rem;
+            background: linear-gradient(135deg, var(--bg2), var(--bg3));
+            border-bottom: 1px solid var(--border);
+        }
+        .header h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
+        .header h1 span { color: var(--accent); }
+        .header p { color: var(--text2); max-width: 600px; margin: 0 auto; }
+        .back-link {
+            position: absolute; top: 1rem; left: 1rem;
+            color: var(--accent); text-decoration: none; font-size: 0.9rem;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        .controls {
+            display: flex; gap: 0.5rem; justify-content: center;
+            flex-wrap: wrap; padding: 1.5rem 1rem;
+            position: sticky; top: 0; z-index: 10;
+            background: var(--bg); border-bottom: 1px solid var(--border);
+        }
+        .filter-btn {
+            padding: 0.5rem 1.2rem; border-radius: 2rem;
+            border: 1px solid var(--border); background: var(--bg2);
+            color: var(--text2); cursor: pointer; font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+        .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .filter-btn[data-cat="productivity"].active { background: var(--cat-productivity); border-color: var(--cat-productivity); }
+        .filter-btn[data-cat="research"].active { background: var(--cat-research); border-color: var(--cat-research); }
+        .filter-btn[data-cat="creative"].active { background: var(--cat-creative); border-color: var(--cat-creative); }
+        .filter-btn[data-cat="business"].active { background: var(--cat-business); border-color: var(--cat-business); }
+
+        .search-bar {
+            display: flex; justify-content: center; padding: 0 1rem 1rem;
+            background: var(--bg);
+        }
+        .search-bar input {
+            width: 100%; max-width: 500px; padding: 0.6rem 1rem;
+            border-radius: 0.5rem; border: 1px solid var(--border);
+            background: var(--bg2); color: var(--text); font-size: 0.9rem;
+        }
+        .search-bar input::placeholder { color: var(--text2); }
+        .search-bar input:focus { outline: none; border-color: var(--accent); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem; padding: 1.5rem; max-width: 1200px; margin: 0 auto;
+        }
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 1rem; overflow: hidden; cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .card:hover { transform: translateY(-3px); border-color: var(--accent); }
+        .card-header {
+            padding: 1.2rem 1.2rem 0.8rem;
+            display: flex; align-items: flex-start; gap: 0.8rem;
+        }
+        .card-icon { font-size: 2rem; flex-shrink: 0; }
+        .card-header h3 { font-size: 1.05rem; margin-bottom: 0.2rem; }
+        .card-header .cat-tag {
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 0.15rem 0.5rem; border-radius: 1rem; display: inline-block;
+        }
+        .cat-tag.productivity { background: rgba(108,99,255,0.2); color: var(--cat-productivity); }
+        .cat-tag.research { background: rgba(0,188,212,0.2); color: var(--cat-research); }
+        .cat-tag.creative { background: rgba(255,107,157,0.2); color: var(--cat-creative); }
+        .cat-tag.business { background: rgba(255,167,38,0.2); color: var(--cat-business); }
+        .card-body { padding: 0 1.2rem 1.2rem; color: var(--text2); font-size: 0.9rem; }
+        .card-footer {
+            padding: 0.8rem 1.2rem; border-top: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.8rem; color: var(--text2);
+        }
+        .difficulty { display: flex; gap: 2px; }
+        .difficulty span {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--border);
+        }
+        .difficulty span.filled { background: var(--accent2); }
+
+        /* Modal */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 100;
+            background: rgba(0,0,0,0.7); justify-content: center; align-items: center;
+            padding: 1rem;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: var(--bg2); border: 1px solid var(--border);
+            border-radius: 1rem; max-width: 700px; width: 100%;
+            max-height: 85vh; overflow-y: auto; position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 1rem; right: 1rem;
+            background: none; border: none; color: var(--text2);
+            font-size: 1.5rem; cursor: pointer;
+        }
+        .modal-close:hover { color: var(--text); }
+        .modal-head { padding: 2rem 2rem 1rem; }
+        .modal-head h2 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+        .modal-head .scenario { color: var(--text2); font-style: italic; margin-bottom: 1rem; }
+        .modal-steps { padding: 0 2rem; }
+        .step {
+            display: flex; gap: 1rem; margin-bottom: 1.5rem;
+            position: relative; padding-left: 2rem;
+        }
+        .step::before {
+            content: attr(data-step); position: absolute; left: 0; top: 0;
+            width: 1.5rem; height: 1.5rem; border-radius: 50%;
+            background: var(--accent); color: #fff; font-size: 0.75rem;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+        .step-content { flex: 1; }
+        .step-label { font-size: 0.7rem; text-transform: uppercase; color: var(--text2); margin-bottom: 0.3rem; }
+        .chat-bubble {
+            padding: 0.7rem 1rem; border-radius: 0.8rem; font-size: 0.9rem;
+            max-width: 95%; line-height: 1.5;
+        }
+        .bubble-user {
+            background: var(--accent); color: #fff;
+            border-bottom-right-radius: 0.2rem; margin-left: auto;
+        }
+        .bubble-agent {
+            background: var(--bg3); color: var(--text);
+            border-bottom-left-radius: 0.2rem;
+        }
+        .modal-outcome {
+            margin: 1rem 2rem 2rem; padding: 1rem;
+            background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.3);
+            border-radius: 0.5rem; font-size: 0.9rem;
+        }
+        .modal-outcome strong { color: var(--accent2); }
+        .modal-cta {
+            display: block; width: calc(100% - 4rem); margin: 0 2rem 2rem;
+            padding: 0.8rem; text-align: center; border-radius: 0.5rem;
+            background: var(--accent); color: #fff; text-decoration: none;
+            font-weight: 600; transition: opacity 0.2s;
+        }
+        .modal-cta:hover { opacity: 0.9; }
+
+        .empty-state {
+            text-align: center; padding: 4rem 1rem; color: var(--text2);
+            grid-column: 1 / -1;
+        }
+        .stats-bar {
+            text-align: center; padding: 0.5rem; color: var(--text2);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.6rem; }
+            .grid { grid-template-columns: 1fr; padding: 1rem; }
+            .modal-head, .modal-steps, .modal-outcome, .modal-cta { padding-left: 1.2rem; padding-right: 1.2rem; }
+            .modal-cta { width: calc(100% - 2.4rem); margin-left: 1.2rem; margin-right: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to AgentBox</a>
+    <div class="header">
+        <h1>🔍 Use Case <span>Explorer</span></h1>
+        <p>See exactly how AgentBox handles real scenarios — step-by-step conversations for every situation.</p>
+    </div>
+
+    <div class="controls" id="controls"></div>
+    <div class="search-bar"><input type="text" id="searchInput" placeholder="Search use cases..."></div>
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="grid" id="grid"></div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal"></div>
+    </div>
+
+    <script src="src/use-case-explorer.js"></script>
+</body>
+</html>
