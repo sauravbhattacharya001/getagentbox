@@ -6,6 +6,7 @@
   - changed-files:
     - any-glob-to-any-file:
       - "app.js"
+      - "src/**"
 
 # Frontend / UI
 "frontend":
@@ -13,6 +14,18 @@
     - any-glob-to-any-file:
       - "index.html"
       - "styles.css"
+      - "src/**/*.js"
+
+# Configuration
+"config":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "jest.config.js"
+      - "webpack.config.js"
+      - ".eslintrc*"
+      - ".prettierrc*"
+      - "tsconfig.json"
+      - ".babelrc"
 
 # Tests
 "tests":
@@ -48,10 +61,20 @@
     - any-glob-to-any-file:
       - "README.md"
       - "SECURITY.md"
+      - "CONTRIBUTING.md"
       - "LICENSE"
+      - "docs/**"
       - ".github/copilot-instructions.md"
       - ".github/ISSUE_TEMPLATE/**"
       - ".github/pull_request_template.md"
+
+# Release / Deployment
+"release":
+  - changed-files:
+    - any-glob-to-any-file:
+      - ".github/workflows/publish.yml"
+      - ".github/workflows/pages.yml"
+      - "CHANGELOG.md"
 
 # GitHub configuration
 "github-config":
