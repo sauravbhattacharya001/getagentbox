@@ -2,6 +2,10 @@
 
 Thanks for your interest in improving the AgentBox landing page! This guide will help you get started.
 
+## Code of Conduct
+
+Be respectful, constructive, and inclusive. We're building something cool together — treat fellow contributors the way you'd want to be treated. Harassment, trolling, or dismissive behavior won't be tolerated.
+
 ## Quick Start
 
 ```bash
@@ -117,6 +121,34 @@ npx jest __tests__/index.test.js
    - Screenshots for visual changes
    - Test results
 
+### Commit Message Convention
+
+Use clear, imperative-mood commit messages:
+
+```
+feat: add testimonial carousel autoplay
+fix: correct FAQ accordion keyboard navigation
+docs: update setup instructions for Windows
+test: add coverage for Stats module edge cases
+style: improve mobile nav breakpoint at 480px
+refactor: extract CSP validation into utility
+chore: update Jest to v30
+```
+
+Prefix with `feat:`, `fix:`, `docs:`, `test:`, `style:`, `refactor:`, or `chore:`. Keep the subject line under 72 characters. Add a blank line and body for complex changes.
+
+### Review Checklist
+
+Before requesting review, verify:
+
+- [ ] `npm test` passes with no failures
+- [ ] No console errors or warnings in the browser
+- [ ] CSP meta tag updated if new external resources added
+- [ ] Tested on mobile viewport (≤480px) and tablet (≤768px)
+- [ ] Keyboard navigation works for any new interactive elements
+- [ ] ARIA attributes added to new interactive components
+- [ ] No hardcoded colors — use existing CSS custom properties
+
 ## What We're Looking For
 
 **Good contributions:**
@@ -139,6 +171,20 @@ npx jest __tests__/index.test.js
 Use the [issue templates](https://github.com/sauravbhattacharya001/getagentbox/issues/new/choose) for:
 - 🐛 **Bug reports** — include browser, OS, and steps to reproduce
 - ✨ **Feature requests** — describe the section/interaction you'd like
+
+## Troubleshooting
+
+**Tests fail with `Cannot find module` errors:**
+Delete `node_modules` and run `npm install` again. Make sure you're on Node.js ≥14.
+
+**`npx serve .` shows a blank page:**
+Check the browser console for CSP violations. If you added a new `<script>` or external resource, update the CSP meta tag in `index.html`.
+
+**JSDOM tests can't access DOM elements:**
+Ensure your `beforeEach` sets up `document.body.innerHTML` with the required elements before calling `init()`. JSDOM doesn't load external scripts via `file://` — inline them in the test setup.
+
+**Docker build fails:**
+Verify `Dockerfile` syntax and that you're running `docker build` from the repo root. The nginx config expects `index.html` at the container's web root.
 
 ## License
 
