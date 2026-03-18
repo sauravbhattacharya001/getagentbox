@@ -4,5 +4,6 @@ if (typeof document !== 'undefined') {
     if (typeof WorkflowBuilder !== 'undefined') { WorkflowBuilder.init('workflowBuilderRoot'); }
     if (typeof CapabilityRadar !== 'undefined') { CapabilityRadar.init('capabilityRadarRoot'); }
     if (typeof SetupChecklist !== 'undefined') { SetupChecklist.init('setupChecklistRoot'); }
+    if (typeof ReferralProgram !== 'undefined') { ReferralProgram.init(); }
   });
 }
