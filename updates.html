@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Product Updates</title>
+    <meta name="description" content="Stay up to date with the latest AgentBox features, improvements, and announcements. Visual product update timeline.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        .header a:hover { text-decoration: underline; }
+        .header-title {
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 60px 24px 40px;
+        }
+        .hero h1 {
+            font-size: 2.4em;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.15em;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Filter bar */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 0 24px 32px;
+        }
+        .filter-btn {
+            padding: 8px 18px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--surface);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+        }
+        .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+        .filter-btn.active {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Timeline */
+        .timeline {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px 60px;
+            position: relative;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 28px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--purple), transparent);
+        }
+
+        .update-card {
+            position: relative;
+            margin-left: 56px;
+            margin-bottom: 28px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            transition: all 0.25s ease;
+        }
+        .update-card:hover {
+            border-color: var(--accent);
+            transform: translateX(4px);
+            box-shadow: 0 4px 24px rgba(0, 212, 255, 0.08);
+        }
+        .update-card::before {
+            content: '';
+            position: absolute;
+            left: -40px;
+            top: 28px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            background: var(--bg);
+        }
+
+        .update-date {
+            font-size: 0.82em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .update-version {
+            display: inline-block;
+            font-size: 0.78em;
+            padding: 2px 10px;
+            border-radius: 10px;
+            background: var(--accent-bg);
+            color: var(--accent);
+            margin-left: 8px;
+            font-weight: 600;
+        }
+        .update-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .update-body {
+            color: var(--text-muted);
+            font-size: 0.95em;
+            line-height: 1.7;
+        }
+        .update-body ul {
+            margin-top: 8px;
+            padding-left: 20px;
+        }
+        .update-body li { margin-bottom: 4px; }
+
+        .update-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+        .tag {
+            font-size: 0.75em;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .tag-feature { background: var(--green-bg); color: var(--green); }
+        .tag-improvement { background: var(--accent-bg); color: var(--accent); }
+        .tag-fix { background: var(--yellow-bg); color: var(--yellow); }
+        .tag-announcement { background: var(--purple-bg); color: var(--purple); }
+
+        /* Search */
+        .search-box {
+            display: flex;
+            justify-content: center;
+            padding: 0 24px 24px;
+        }
+        .search-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 20px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.95em;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input::placeholder { color: var(--text-muted); }
+        .search-input:focus { border-color: var(--accent); }
+
+        /* Subscribe */
+        .subscribe-section {
+            text-align: center;
+            padding: 40px 24px 60px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .subscribe-section h2 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+        .subscribe-section p {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        .subscribe-form {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .subscribe-input {
+            padding: 12px 18px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.95em;
+            width: 260px;
+            outline: none;
+        }
+        .subscribe-input:focus { border-color: var(--accent); }
+        .subscribe-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: opacity 0.2s;
+        }
+        .subscribe-btn:hover { opacity: 0.85; }
+        .subscribe-toast {
+            margin-top: 12px;
+            font-size: 0.9em;
+            color: var(--green);
+            display: none;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+            display: none;
+        }
+        .empty-state .emoji { font-size: 2.5em; margin-bottom: 12px; }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.85em;
+            border-top: 1px solid var(--border);
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 1.8em; }
+            .timeline::before { left: 16px; }
+            .update-card { margin-left: 40px; padding: 18px; }
+            .update-card::before { left: -34px; }
+            .subscribe-form { flex-direction: column; align-items: center; }
+            .subscribe-input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← Back to AgentBox</a>
+        <span class="header-title">📦 Product Updates</span>
+        <span></span>
+    </div>
+
+    <div class="hero">
+        <h1>What's New in AgentBox</h1>
+        <p>Track every feature, fix, and improvement. We ship fast — here's what's landed.</p>
+    </div>
+
+    <div class="search-box">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search updates..." aria-label="Search updates">
+    </div>
+
+    <div class="filter-bar" id="filterBar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="feature">✨ Features</button>
+        <button class="filter-btn" data-filter="improvement">⚡ Improvements</button>
+        <button class="filter-btn" data-filter="fix">🔧 Fixes</button>
+        <button class="filter-btn" data-filter="announcement">📢 Announcements</button>
+    </div>
+
+    <div class="timeline" id="timeline"></div>
+
+    <div class="empty-state" id="emptyState">
+        <div class="emoji">🔍</div>
+        <p>No updates match your search or filter.</p>
+    </div>
+
+    <div class="subscribe-section">
+        <h2>📬 Stay in the Loop</h2>
+        <p>Get notified when we ship something new. No spam — just updates.</p>
+        <div class="subscribe-form">
+            <input type="email" class="subscribe-input" id="subscribeEmail" placeholder="your@email.com" aria-label="Email for updates">
+            <button class="subscribe-btn" id="subscribeBtn">Subscribe</button>
+        </div>
+        <div class="subscribe-toast" id="subscribeToast">✅ You're subscribed! We'll keep you posted.</div>
+    </div>
+
+    <div class="footer">
+        <p>🤖 <a href="index.html">AgentBox</a> — Your Personal AI Agent on Telegram</p>
+    </div>
+
+    <script>
+    const UPDATES = [
+        {
+            date: '2026-03-18',
+            version: 'v2.8',
+            title: 'Conversation Branching',
+            body: 'Fork any conversation into parallel threads. Explore different directions without losing your original flow.',
+            tags: ['feature'],
+            items: [
+                'Branch from any message in the chat',
+                'Switch between branches with a simple command',
+                'Merge branches back when you\'re ready',
+                'Full history preserved across all branches'
+            ]
+        },
+        {
+            date: '2026-03-14',
+            version: 'v2.7',
+            title: 'Smart Daily Digest',
+            body: 'Get an automatic morning briefing with your calendar, reminders, and personalized suggestions.',
+            tags: ['feature'],
+            items: [
+                'Configurable digest time (default: 8 AM)',
+                'Pulls from calendar, reminders, and recent conversations',
+                'Weather-aware outfit and commute suggestions',
+                'One-tap snooze or dismiss'
+            ]
+        },
+        {
+            date: '2026-03-10',
+            version: 'v2.6.2',
+            title: 'Faster Image Understanding',
+            body: 'Image analysis is now 3x faster with our optimized vision pipeline.',
+            tags: ['improvement'],
+            items: [
+                'New batched image processing pipeline',
+                'Support for up to 10 images per message',
+                'Improved accuracy on handwritten text',
+                'Reduced memory usage by 40%'
+            ]
+        },
+        {
+            date: '2026-03-06',
+            version: 'v2.6.1',
+            title: 'Memory Reliability Fix',
+            body: 'Fixed an issue where long-term memories could occasionally be lost during high-load periods.',
+            tags: ['fix'],
+            items: [
+                'Added write-ahead logging for memory operations',
+                'Improved conflict resolution for concurrent updates',
+                'Added automatic backup verification'
+            ]
+        },
+        {
+            date: '2026-03-01',
+            version: 'v2.6',
+            title: 'Referral Program Launch',
+            body: 'Share AgentBox with friends and earn free messages. Everyone wins!',
+            tags: ['announcement', 'feature'],
+            items: [
+                '5 reward tiers from Bronze to Diamond',
+                'Earn 50 bonus messages per successful referral',
+                'Track your referrals on the new dashboard',
+                'Custom referral links with your handle'
+            ]
+        },
+        {
+            date: '2026-02-25',
+            version: 'v2.5',
+            title: 'Voice Message Support',
+            body: 'Send voice messages to your agent and get spoken or text replies back.',
+            tags: ['feature'],
+            items: [
+                'Whisper-powered transcription',
+                'Reply as voice or text (configurable)',
+                'Support for 40+ languages',
+                'Works with forwarded voice messages too'
+            ]
+        },
+        {
+            date: '2026-02-20',
+            version: 'v2.4.1',
+            title: 'Web Search Overhaul',
+            body: 'Completely rebuilt web search with better source attribution and faster results.',
+            tags: ['improvement'],
+            items: [
+                'New search engine integration for fresher results',
+                'Source links now always included',
+                'Follow-up questions auto-suggested',
+                'Reduced search latency by 60%'
+            ]
+        },
+        {
+            date: '2026-02-14',
+            version: 'v2.4',
+            title: 'Valentine\'s Day Special — Personality Packs',
+            body: 'Choose from 6 personality styles to make your agent uniquely yours.',
+            tags: ['feature', 'announcement'],
+            items: [
+                'Professional, Casual, Nerdy, Poetic, Pirate, and Zen modes',
+                'Switch anytime with /personality',
+                'Custom personality descriptions supported',
+                'Personality affects tone but not accuracy'
+            ]
+        },
+        {
+            date: '2026-02-08',
+            version: 'v2.3',
+            title: 'Scheduled Messages',
+            body: 'Tell your agent to remind you or send messages at specific times.',
+            tags: ['feature'],
+            items: [
+                'Natural language scheduling ("remind me tomorrow at 3pm")',
+                'Recurring reminders supported',
+                'Timezone-aware with auto-detection',
+                'Manage all scheduled items with /reminders'
+            ]
+        },
+        {
+            date: '2026-02-01',
+            version: 'v2.2',
+            title: 'Group Chat Mode (Beta)',
+            body: 'Add AgentBox to Telegram groups. It\'ll participate when mentioned or when it can help.',
+            tags: ['feature', 'announcement'],
+            items: [
+                'Mention @agentbox to invoke in groups',
+                'Smart participation — won\'t spam the chat',
+                'Per-group memory and context',
+                'Admin controls for group owners'
+            ]
+        },
+        {
+            date: '2026-01-25',
+            version: 'v2.1.3',
+            title: 'Emoji Reaction Bug Fix',
+            body: 'Fixed a bug where emoji reactions weren\'t being saved to conversation memory.',
+            tags: ['fix'],
+            items: [
+                'Reactions now properly tracked in context',
+                'Fixed duplicate reaction notifications'
+            ]
+        },
+        {
+            date: '2026-01-18',
+            version: 'v2.1',
+            title: 'File & Document Analysis',
+            body: 'Upload PDFs, spreadsheets, and documents for your agent to analyze.',
+            tags: ['feature'],
+            items: [
+                'PDF text extraction and summarization',
+                'CSV/Excel data analysis with charts',
+                'Code file review and explanation',
+                'Up to 25MB per file'
+            ]
+        }
+    ];
+
+    let activeFilter = 'all';
+    let searchQuery = '';
+
+    function renderUpdates() {
+        const timeline = document.getElementById('timeline');
+        const emptyState = document.getElementById('emptyState');
+
+        const filtered = UPDATES.filter(u => {
+            const matchesFilter = activeFilter === 'all' || u.tags.includes(activeFilter);
+            const matchesSearch = !searchQuery ||
+                u.title.toLowerCase().includes(searchQuery) ||
+                u.body.toLowerCase().includes(searchQuery) ||
+                (u.items && u.items.some(i => i.toLowerCase().includes(searchQuery)));
+            return matchesFilter && matchesSearch;
+        });
+
+        if (filtered.length === 0) {
+            timeline.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        timeline.innerHTML = filtered.map(u => `
+            <div class="update-card" data-tags="${u.tags.join(',')}">
+                <div class="update-date">${formatDate(u.date)}${u.version ? `<span class="update-version">${u.version}</span>` : ''}</div>
+                <div class="update-title">${u.title}</div>
+                <div class="update-body">
+                    ${u.body}
+                    ${u.items ? `<ul>${u.items.map(i => `<li>${i}</li>`).join('')}</ul>` : ''}
+                </div>
+                <div class="update-tags">
+                    ${u.tags.map(t => `<span class="tag tag-${t}">${tagLabel(t)}</span>`).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function formatDate(dateStr) {
+        const d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function tagLabel(tag) {
+        const labels = { feature: '✨ Feature', improvement: '⚡ Improvement', fix: '🔧 Fix', announcement: '📢 Announcement' };
+        return labels[tag] || tag;
+    }
+
+    // Filter buttons
+    document.getElementById('filterBar').addEventListener('click', e => {
+        const btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        renderUpdates();
+    });
+
+    // Search
+    document.getElementById('searchInput').addEventListener('input', e => {
+        searchQuery = e.target.value.toLowerCase().trim();
+        renderUpdates();
+    });
+
+    // Subscribe (demo)
+    document.getElementById('subscribeBtn').addEventListener('click', () => {
+        const email = document.getElementById('subscribeEmail').value.trim();
+        if (email && email.includes('@')) {
+            document.getElementById('subscribeToast').style.display = 'block';
+            document.getElementById('subscribeEmail').value = '';
+            localStorage.setItem('agentbox-updates-subscribed', email);
+        }
+    });
+
+    // Check if already subscribed
+    if (localStorage.getItem('agentbox-updates-subscribed')) {
+        document.getElementById('subscribeToast').style.display = 'block';
+        document.getElementById('subscribeToast').textContent = '✅ You\'re already subscribed!';
+    }
+
+    // Keyboard: Escape clears search
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            document.getElementById('searchInput').value = '';
+            searchQuery = '';
+            renderUpdates();
+        }
+    });
+
+    renderUpdates();
+    </script>
+</body>
+</html>
