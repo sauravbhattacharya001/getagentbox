@@ -1,6 +1,6 @@
 # Copilot Setup Steps — getagentbox
-# This workflow installs dependencies and builds the project so GitHub Copilot
-# coding agents (Claude, Codex) can autonomously work on issues and PRs.
+# Installs dependencies and runs tests so GitHub Copilot coding agents
+# (Claude, Codex) can autonomously work on issues and PRs.
 
 name: "Copilot Setup"
 
@@ -13,27 +13,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js (for linting/validation tools)
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
 
-      - name: Install HTML validation tools
-        run: |
-          npm install -g htmlhint
-          npm install -g csslint
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
 
       - name: Validate HTML
         run: |
-          htmlhint index.html || true
-          echo "HTML validation complete"
+          npx htmlhint index.html || true
 
       - name: Verify project structure
         run: |
-          echo "=== Project Files ==="
-          find . -not -path './.git/*' -type f | sort
+          echo "=== Project structure ==="
+          find . -not -path './.git/*' -not -path './node_modules/*' -type f | head -60
           echo ""
-          echo "=== index.html stats ==="
-          wc -l index.html
-          echo ""
-          echo "Project is a single-page landing site. All HTML, CSS, and JS are in index.html."
+          echo "=== Key files ==="
+          echo "Landing page: index.html + styles.css + app.js"
+          echo "npm package:  src/index.js (UMD reusable components)"
+          echo "Docs site:    docs/index.html"
+          echo "Tests:        __tests__/ (Jest)"
