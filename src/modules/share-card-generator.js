@@ -24,6 +24,7 @@ var ShareCardGenerator = (function () {
 
   function drawCard(canvas, data) {
     var ctx = canvas.getContext('2d');
+    if (!ctx) return;
     var w = canvas.width, h = canvas.height;
     var theme = THEMES[currentTheme] || THEMES.gradient;
 
@@ -124,6 +125,7 @@ var ShareCardGenerator = (function () {
 
     // Draw placeholder
     var ctx = canvas.getContext('2d');
+    if (!ctx) return;
     ctx.fillStyle = '#f0f0f0';
     roundRect(ctx, 0, 0, canvas.width, canvas.height, 20);
     ctx.fill();

@@ -122,6 +122,7 @@ var CapabilityRadar = (function () {
     canvas.style.width = size + 'px';
     canvas.style.height = size + 'px';
     ctx = canvas.getContext('2d');
+    if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
