@@ -250,11 +250,10 @@ var SuccessStories = (function () {
     }
   }
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML;
-  }
+  // Use shared _escapeHtml from _shared-utils.js
+  var escapeHtml = typeof _escapeHtml === 'function' ? _escapeHtml : function(str) {
+    var d = document.createElement('div'); d.appendChild(document.createTextNode(str)); return d.innerHTML;
+  };
 
   function getStories() { return STORIES.slice(); }
   function getActiveFilter() { return _activeFilter; }

@@ -113,11 +113,10 @@ var PromptGallery = (function () {
    *  repeated toLowerCase() on every keystroke. */
   const searchIndex = [];
 
-  function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-  }
+  // Use shared _escapeHtml from _shared-utils.js
+  var escapeHtml = typeof _escapeHtml === 'function' ? _escapeHtml : function(str) {
+    var d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+  };
 
   /** Build the card pool once. Cards are shown/hidden instead of recreated. */
   function buildCardPool() {

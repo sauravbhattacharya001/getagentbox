@@ -235,11 +235,10 @@ var ApiExplorer = (function () {
     return key;
   }
 
-  function escapeHtml(s) {
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-  }
+  // Use shared _escapeHtml from _shared-utils.js
+  var escapeHtml = typeof _escapeHtml === 'function' ? _escapeHtml : function(s) {
+    var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+  };
 
   return { init: init };
 })();

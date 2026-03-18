@@ -333,11 +333,10 @@ var FeatureBoard = (function () {
   }
 
   // ── Helpers ────────────────────────────────────────────────────
-  function escapeHtml(str) {
-    const d = document.createElement("div");
-    d.textContent = str;
-    return d.innerHTML;
-  }
+  // Use shared _escapeHtml from _shared-utils.js
+  var escapeHtml = typeof _escapeHtml === 'function' ? _escapeHtml : function(str) {
+    var d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+  };
 
   function formatDate(dateStr) {
     try {
