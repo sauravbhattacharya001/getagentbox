@@ -1510,6 +1510,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   lazyInit('calculatorSection', function () {
     Calculator.init();
+    if (typeof CapacityPlanner !== 'undefined') CapacityPlanner.init();
   });
 
   lazyInit('playgroundSection', function () {

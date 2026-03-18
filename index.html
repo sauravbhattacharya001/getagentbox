@@ -41,6 +41,7 @@
                 <li role="none"><a href="#comparisonSection" role="menuitem">Compare</a></li>
                 <li role="none"><a href="#benchmarkSection" role="menuitem">Benchmarks</a></li>
                 <li role="none"><a href="#calculatorSection" role="menuitem">Calculator</a></li>
+                <li role="none"><a href="#capacityPlannerSection" role="menuitem">Planner</a></li>
                 <li role="none"><a href="#notificationSection" role="menuitem">Preview</a></li>
                 <li role="none"><a href="#trustSection" role="menuitem">Trust</a></li>
                 <li role="none"><a href="#storiesSection" role="menuitem">Stories</a></li>
@@ -786,6 +787,57 @@
                         That's like getting <strong>3.5 extra workdays</strong> back every year ✨
                     </div>
                     <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer" class="calc-cta">Start saving time →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="capacity-planner-section" id="capacityPlannerSection" aria-label="Capacity Planner">
+            <h2>Plan Your Team's Usage</h2>
+            <p class="cp-subtitle">Estimate your monthly message volume and find the right plan for your team</p>
+            <div class="cp-grid">
+                <div class="cp-controls">
+                    <div class="cp-slider-group">
+                        <div class="cp-slider-header">
+                            <span class="cp-slider-icon">👥</span>
+                            <span class="cp-slider-label">Team Size</span>
+                            <span class="cp-slider-value" data-cp-val="team">3 users</span>
+                        </div>
+                        <input type="range" data-cp-slider="team" min="1" max="50" value="3" aria-label="Team size">
+                        <div class="cp-slider-scale"><span>1</span><span>25</span><span>50</span></div>
+                    </div>
+                    <div class="cp-slider-group">
+                        <div class="cp-slider-header">
+                            <span class="cp-slider-icon">💬</span>
+                            <span class="cp-slider-label">Messages per User / Day</span>
+                            <span class="cp-slider-value" data-cp-val="messages">15 msg/day</span>
+                        </div>
+                        <input type="range" data-cp-slider="messages" min="1" max="200" value="15" aria-label="Messages per user per day">
+                        <div class="cp-slider-scale"><span>1</span><span>100</span><span>200</span></div>
+                    </div>
+                    <div class="cp-features">
+                        <p class="cp-features-title">Features your team will use:</p>
+                        <label class="cp-feature-label"><input type="checkbox" class="cp-feature-check" data-feature="web-search" checked> 🔍 Web Search</label>
+                        <label class="cp-feature-label"><input type="checkbox" class="cp-feature-check" data-feature="reminders"> ⏰ Reminders</label>
+                        <label class="cp-feature-label"><input type="checkbox" class="cp-feature-check" data-feature="image" checked> 🖼️ Image Analysis</label>
+                        <label class="cp-feature-label"><input type="checkbox" class="cp-feature-check" data-feature="email"> 📧 Email Drafts</label>
+                        <label class="cp-feature-label"><input type="checkbox" class="cp-feature-check" data-feature="code"> 💻 Code Help</label>
+                        <label class="cp-feature-label"><input type="checkbox" class="cp-feature-check" data-feature="memory"> 🧠 Memory</label>
+                    </div>
+                </div>
+                <div class="cp-results">
+                    <div class="cp-result-card">
+                        <div class="cp-result-plan">Pro Plan</div>
+                        <div class="cp-result-cost">$87/mo</div>
+                        <div class="cp-result-messages">1,350 msgs/month</div>
+                    </div>
+                    <div class="cp-utilization">
+                        <div class="cp-utilization-track">
+                            <div class="cp-utilization-fill" style="width:60%"></div>
+                        </div>
+                        <div class="cp-utilization-label">60% capacity used</div>
+                    </div>
+                    <div class="cp-result-tip">✅ Good fit! You're using your plan efficiently.</div>
+                    <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer" class="cp-cta">Get started →</a>
                 </div>
             </div>
         </div>
@@ -2263,6 +2315,7 @@
     <script src="src/modules/roadmap.js" defer></script>
     <script src="src/modules/status-dashboard.js" defer></script>
     <script src="src/modules/calculator.js" defer></script>
+    <script src="src/modules/capacity-planner.js" defer></script>
     <script src="src/modules/command-palette.js" defer></script>
     <script src="src/modules/share-fab.js" defer></script>
     <script src="src/modules/theme-toggle.js" defer></script>
