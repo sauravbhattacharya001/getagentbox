@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Privacy Center</title>
+    <meta name="description" content="Understand how AgentBox handles your data. View data practices, retention policies, and exercise your privacy rights.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --green: #00b894;
+            --yellow: #fdcb6e;
+            --orange: #e17055;
+            --red: #d63031;
+            --blue: #0984e3;
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --border: #ddd;
+            --text: #1a1a1a;
+            --text-muted: #666;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-bar a { color: var(--accent-light); text-decoration: none; font-weight: 600; }
+        .top-bar a:hover { text-decoration: underline; }
+
+        .theme-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.1rem; }
+
+        /* Trust Score */
+        .trust-score {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .score-ring {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .score-ring svg { width: 80px; height: 80px; transform: rotate(-90deg); }
+        .score-ring circle {
+            fill: none;
+            stroke-width: 6;
+        }
+        .score-ring .bg { stroke: var(--border); }
+        .score-ring .fg { stroke: var(--green); stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+        .score-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .score-details h3 { margin-bottom: 0.3rem; }
+        .score-details p { color: var(--text-muted); font-size: 0.9rem; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.7rem 1.2rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            white-space: nowrap;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active { color: var(--accent-light); border-bottom-color: var(--accent); font-weight: 600; }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Data Category Cards */
+        .data-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .data-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .data-card-header:hover { background: var(--surface-2); }
+
+        .data-card-left {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .data-icon { font-size: 1.4rem; }
+
+        .data-card-title { font-weight: 600; }
+        .data-card-sub { color: var(--text-muted); font-size: 0.85rem; }
+
+        .badge {
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-essential { background: var(--green); color: #fff; }
+        .badge-functional { background: var(--blue); color: #fff; }
+        .badge-optional { background: var(--yellow); color: #000; }
+
+        .chevron { transition: transform 0.3s; font-size: 0.8rem; color: var(--text-muted); }
+        .data-card.open .chevron { transform: rotate(180deg); }
+
+        .data-card-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .data-card.open .data-card-body { max-height: 600px; }
+
+        .data-card-content {
+            padding: 0 1.2rem 1.2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .data-item:last-child { border-bottom: none; }
+        .data-item-label { color: var(--text-muted); }
+
+        /* Retention Chart */
+        .retention-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .retention-label {
+            width: 140px;
+            font-size: 0.85rem;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .retention-track {
+            flex: 1;
+            height: 24px;
+            background: var(--surface-2);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .retention-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        /* Rights section */
+        .rights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+
+        .right-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.2rem;
+        }
+
+        .right-card h4 { margin-bottom: 0.4rem; }
+        .right-card p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.8rem; }
+
+        .right-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: opacity 0.2s;
+        }
+
+        .right-btn:hover { opacity: 0.85; }
+        .right-btn.submitted { background: var(--green); cursor: default; }
+
+        /* Comparison table */
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .compare-table th, .compare-table td {
+            padding: 0.7rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .compare-table th {
+            background: var(--surface);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .compare-table tr:hover td { background: var(--surface-2); }
+        .check { color: var(--green); }
+        .cross { color: var(--red); }
+
+        /* Search */
+        .search-box {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box:focus { outline: none; border-color: var(--accent); }
+        .search-box::placeholder { color: var(--text-muted); }
+
+        .no-results { text-align: center; padding: 2rem; color: var(--text-muted); }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        .footer a { color: var(--accent-light); text-decoration: none; }
+
+        @media (max-width: 600px) {
+            .container { padding: 1rem; }
+            h1 { font-size: 1.5rem; }
+            .trust-score { flex-direction: column; text-align: center; }
+            .retention-label { width: 100px; font-size: 0.75rem; }
+            .rights-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html">← Back to AgentBox</a>
+        <button class="theme-btn" id="themeToggle" aria-label="Toggle theme">☀️</button>
+    </div>
+
+    <div class="container">
+        <h1>🔒 Privacy Center</h1>
+        <p class="subtitle">Transparency about how AgentBox handles your data. No legalese — just clear answers.</p>
+
+        <div class="trust-score" id="trustScore">
+            <div class="score-ring">
+                <svg viewBox="0 0 80 80">
+                    <circle class="bg" cx="40" cy="40" r="34"></circle>
+                    <circle class="fg" cx="40" cy="40" r="34"
+                        stroke-dasharray="213.6"
+                        stroke-dashoffset="21.4"></circle>
+                </svg>
+                <span class="score-value">A+</span>
+            </div>
+            <div class="score-details">
+                <h3>Privacy Score: 90/100</h3>
+                <p>End-to-end encryption • No data selling • Minimal collection • User-controlled retention • Full data portability</p>
+            </div>
+        </div>
+
+        <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search privacy topics (e.g. 'messages', 'retention', 'delete')...">
+
+        <div class="tabs" role="tablist">
+            <button class="tab-btn active" data-tab="collection" role="tab">📋 Data Collection</button>
+            <button class="tab-btn" data-tab="retention" role="tab">⏱️ Retention</button>
+            <button class="tab-btn" data-tab="rights" role="tab">✊ Your Rights</button>
+            <button class="tab-btn" data-tab="compare" role="tab">⚖️ vs Others</button>
+            <button class="tab-btn" data-tab="faq" role="tab">❓ FAQ</button>
+        </div>
+
+        <!-- Data Collection Tab -->
+        <div class="tab-panel active" id="tab-collection">
+            <div class="data-card" data-keywords="messages chat conversations text">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">💬</span>
+                        <div>
+                            <div class="data-card-title">Messages & Conversations</div>
+                            <div class="data-card-sub">Your chat history with AgentBox</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.8rem">
+                        <span class="badge badge-essential">Essential</span>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <div class="data-item"><span>What we store</span><span>Message text, timestamps, message IDs</span></div>
+                        <div class="data-item"><span>Why</span><span>To provide persistent memory and context</span></div>
+                        <div class="data-item"><span>Encryption</span><span>AES-256 at rest, TLS in transit</span></div>
+                        <div class="data-item"><span>Retention</span><span>Until you delete or 1 year of inactivity</span></div>
+                        <div class="data-item"><span>Shared with</span><span>AI model provider (for processing only)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card" data-keywords="memory preferences context learning">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">🧠</span>
+                        <div>
+                            <div class="data-card-title">Memory & Preferences</div>
+                            <div class="data-card-sub">What AgentBox learns about you</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.8rem">
+                        <span class="badge badge-functional">Functional</span>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <div class="data-item"><span>What we store</span><span>Preference summaries, key facts, context notes</span></div>
+                        <div class="data-item"><span>Why</span><span>Personalized responses without repeating yourself</span></div>
+                        <div class="data-item"><span>Encryption</span><span>AES-256 at rest</span></div>
+                        <div class="data-item"><span>Retention</span><span>Until you clear memory or delete account</span></div>
+                        <div class="data-item"><span>Shared with</span><span>Nobody — stays on our servers</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card" data-keywords="images photos vision pictures media">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">📷</span>
+                        <div>
+                            <div class="data-card-title">Images & Media</div>
+                            <div class="data-card-sub">Photos and files you send to AgentBox</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.8rem">
+                        <span class="badge badge-optional">Optional</span>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <div class="data-item"><span>What we store</span><span>Temporarily cached for processing only</span></div>
+                        <div class="data-item"><span>Why</span><span>Vision analysis when you send images</span></div>
+                        <div class="data-item"><span>Encryption</span><span>TLS in transit, ephemeral storage</span></div>
+                        <div class="data-item"><span>Retention</span><span>Deleted within 1 hour of processing</span></div>
+                        <div class="data-item"><span>Shared with</span><span>AI vision model (for processing only)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card" data-keywords="usage analytics telemetry tracking">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">📊</span>
+                        <div>
+                            <div class="data-card-title">Usage Analytics</div>
+                            <div class="data-card-sub">How we understand product usage</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.8rem">
+                        <span class="badge badge-functional">Functional</span>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <div class="data-item"><span>What we store</span><span>Message counts, feature usage, error rates</span></div>
+                        <div class="data-item"><span>Why</span><span>Improve service reliability and features</span></div>
+                        <div class="data-item"><span>Encryption</span><span>Aggregated and anonymized</span></div>
+                        <div class="data-item"><span>Retention</span><span>90 days (raw), indefinite (aggregated)</span></div>
+                        <div class="data-item"><span>Shared with</span><span>Nobody — internal only</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card" data-keywords="telegram user id account identity">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">👤</span>
+                        <div>
+                            <div class="data-card-title">Account Identifiers</div>
+                            <div class="data-card-sub">Telegram user info we receive</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.8rem">
+                        <span class="badge badge-essential">Essential</span>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <div class="data-item"><span>What we store</span><span>Telegram user ID, first name, language code</span></div>
+                        <div class="data-item"><span>Why</span><span>Identify your account and route messages</span></div>
+                        <div class="data-item"><span>Encryption</span><span>AES-256 at rest</span></div>
+                        <div class="data-item"><span>Retention</span><span>Until account deletion</span></div>
+                        <div class="data-item"><span>Shared with</span><span>Nobody</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card" data-keywords="reminders tasks scheduling">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">⏰</span>
+                        <div>
+                            <div class="data-card-title">Reminders & Tasks</div>
+                            <div class="data-card-sub">Scheduled items you create</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.8rem">
+                        <span class="badge badge-optional">Optional</span>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <div class="data-item"><span>What we store</span><span>Reminder text, trigger time, recurrence</span></div>
+                        <div class="data-item"><span>Why</span><span>Deliver reminders at the right time</span></div>
+                        <div class="data-item"><span>Encryption</span><span>AES-256 at rest</span></div>
+                        <div class="data-item"><span>Retention</span><span>Until completed + 30 days, or you delete</span></div>
+                        <div class="data-item"><span>Shared with</span><span>Nobody</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Retention Tab -->
+        <div class="tab-panel" id="tab-retention">
+            <h2 style="margin-bottom:1rem">Data Retention Timeline</h2>
+            <p style="color:var(--text-muted);margin-bottom:1.5rem">How long each data type is kept. Shorter is better for your privacy.</p>
+
+            <div class="retention-bar">
+                <span class="retention-label">Images & Media</span>
+                <div class="retention-track">
+                    <div class="retention-fill" style="width:2%;background:var(--green)">1h</div>
+                </div>
+            </div>
+            <div class="retention-bar">
+                <span class="retention-label">Reminders</span>
+                <div class="retention-track">
+                    <div class="retention-fill" style="width:8%;background:var(--green)">30 days</div>
+                </div>
+            </div>
+            <div class="retention-bar">
+                <span class="retention-label">Usage Analytics</span>
+                <div class="retention-track">
+                    <div class="retention-fill" style="width:25%;background:var(--yellow)">90 days</div>
+                </div>
+            </div>
+            <div class="retention-bar">
+                <span class="retention-label">Messages</span>
+                <div class="retention-track">
+                    <div class="retention-fill" style="width:70%;background:var(--orange)">1 year inactive</div>
+                </div>
+            </div>
+            <div class="retention-bar">
+                <span class="retention-label">Memory</span>
+                <div class="retention-track">
+                    <div class="retention-fill" style="width:85%;background:var(--orange)">Until cleared</div>
+                </div>
+            </div>
+            <div class="retention-bar">
+                <span class="retention-label">Account ID</span>
+                <div class="retention-track">
+                    <div class="retention-fill" style="width:100%;background:var(--red)">Until deleted</div>
+                </div>
+            </div>
+
+            <div style="margin-top:2rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem">
+                <h3>🗑️ Automatic Cleanup</h3>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-top:0.5rem">
+                    AgentBox automatically purges data past its retention period. No action needed from you.
+                    Inactive accounts (no messages for 12 months) are fully purged including all associated data.
+                </p>
+            </div>
+        </div>
+
+        <!-- Your Rights Tab -->
+        <div class="tab-panel" id="tab-rights">
+            <h2 style="margin-bottom:0.5rem">Your Data Rights</h2>
+            <p style="color:var(--text-muted);margin-bottom:1.5rem">These rights apply to all users, regardless of location. No account needed — just message AgentBox.</p>
+
+            <div class="rights-grid">
+                <div class="right-card">
+                    <h4>📥 Export Your Data</h4>
+                    <p>Download everything we have about you in a machine-readable JSON format.</p>
+                    <button class="right-btn" onclick="simulateRequest(this, 'Export request submitted! You\'ll receive your data within 24 hours.')">Request Export</button>
+                </div>
+                <div class="right-card">
+                    <h4>🗑️ Delete Everything</h4>
+                    <p>Permanently erase all your data — messages, memory, preferences, account.</p>
+                    <button class="right-btn" style="background:var(--red)" onclick="simulateRequest(this, 'Deletion scheduled. All data will be removed within 48 hours.')">Request Deletion</button>
+                </div>
+                <div class="right-card">
+                    <h4>🧠 Clear Memory Only</h4>
+                    <p>Wipe what AgentBox has learned about you, but keep your account active.</p>
+                    <button class="right-btn" onclick="simulateRequest(this, 'Memory cleared! AgentBox will start fresh next time.')">Clear Memory</button>
+                </div>
+                <div class="right-card">
+                    <h4>⏸️ Pause Learning</h4>
+                    <p>Stop AgentBox from building new memories. Existing memory stays until cleared.</p>
+                    <button class="right-btn" onclick="simulateRequest(this, 'Learning paused. AgentBox will not store new preferences.')">Pause Learning</button>
+                </div>
+                <div class="right-card">
+                    <h4>📋 View What We Know</h4>
+                    <p>See a summary of all data AgentBox has stored about you.</p>
+                    <button class="right-btn" onclick="simulateRequest(this, 'Send /privacy to AgentBox in Telegram to see your data summary.')">View Summary</button>
+                </div>
+                <div class="right-card">
+                    <h4>🚫 Object to Processing</h4>
+                    <p>Request that specific data categories not be used for analytics.</p>
+                    <button class="right-btn" onclick="simulateRequest(this, 'Objection noted. Analytics processing will be restricted within 24 hours.')">File Objection</button>
+                </div>
+            </div>
+
+            <div style="margin-top:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem">
+                <h3>💡 Quick Actions via Telegram</h3>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-top:0.5rem">
+                    You can also manage your data directly in Telegram:<br>
+                    <code>/privacy</code> — View your data summary<br>
+                    <code>/forget</code> — Clear all memories<br>
+                    <code>/export</code> — Request data export<br>
+                    <code>/deleteaccount</code> — Delete everything
+                </p>
+            </div>
+        </div>
+
+        <!-- Comparison Tab -->
+        <div class="tab-panel" id="tab-compare">
+            <h2 style="margin-bottom:0.5rem">How We Compare</h2>
+            <p style="color:var(--text-muted);margin-bottom:1rem">Privacy practices compared to popular AI assistants.</p>
+
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th>Practice</th>
+                        <th>AgentBox</th>
+                        <th>ChatGPT</th>
+                        <th>Gemini</th>
+                        <th>Copilot</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>No account required</td>
+                        <td class="check">✅</td>
+                        <td class="cross">❌</td>
+                        <td class="cross">❌</td>
+                        <td class="cross">❌</td>
+                    </tr>
+                    <tr>
+                        <td>End-to-end encryption at rest</td>
+                        <td class="check">✅</td>
+                        <td class="cross">❌</td>
+                        <td class="cross">❌</td>
+                        <td class="check">✅</td>
+                    </tr>
+                    <tr>
+                        <td>No training on your data</td>
+                        <td class="check">✅</td>
+                        <td class="check">✅ (opt-out)</td>
+                        <td class="cross">❌</td>
+                        <td class="check">✅</td>
+                    </tr>
+                    <tr>
+                        <td>Full data export</td>
+                        <td class="check">✅</td>
+                        <td class="check">✅</td>
+                        <td class="check">✅</td>
+                        <td class="cross">❌</td>
+                    </tr>
+                    <tr>
+                        <td>Instant data deletion</td>
+                        <td class="check">✅ (&lt;48h)</td>
+                        <td class="check">✅ (30 days)</td>
+                        <td class="check">✅ (months)</td>
+                        <td class="check">✅</td>
+                    </tr>
+                    <tr>
+                        <td>No data selling</td>
+                        <td class="check">✅</td>
+                        <td class="check">✅</td>
+                        <td class="cross">❌ (ads)</td>
+                        <td class="check">✅</td>
+                    </tr>
+                    <tr>
+                        <td>User-controlled memory</td>
+                        <td class="check">✅</td>
+                        <td class="check">✅</td>
+                        <td class="cross">❌</td>
+                        <td class="cross">❌</td>
+                    </tr>
+                    <tr>
+                        <td>Ephemeral image processing</td>
+                        <td class="check">✅ (1h)</td>
+                        <td class="cross">❌</td>
+                        <td class="cross">❌</td>
+                        <td class="cross">❌</td>
+                    </tr>
+                    <tr>
+                        <td>Open-source client</td>
+                        <td class="check">✅</td>
+                        <td class="cross">❌</td>
+                        <td class="cross">❌</td>
+                        <td class="cross">❌</td>
+                    </tr>
+                    <tr>
+                        <td>Auto-purge inactive accounts</td>
+                        <td class="check">✅ (12mo)</td>
+                        <td class="cross">❌</td>
+                        <td class="check">✅</td>
+                        <td class="cross">❌</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- FAQ Tab -->
+        <div class="tab-panel" id="tab-faq">
+            <h2 style="margin-bottom:1rem">Privacy FAQ</h2>
+
+            <div class="data-card" data-keywords="ai model training data">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">🤖</span>
+                        <div><div class="data-card-title">Is my data used to train AI models?</div></div>
+                    </div>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <p style="padding-top:0.8rem;color:var(--text-muted)">
+                            <strong>No.</strong> Your conversations are never used for model training. Messages are sent to the AI provider for real-time processing only — they are not stored or used to improve models.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card" data-keywords="who access data employees">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">👀</span>
+                        <div><div class="data-card-title">Can your team read my messages?</div></div>
+                    </div>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <p style="padding-top:0.8rem;color:var(--text-muted)">
+                            Messages are encrypted at rest. Our team does not access individual conversations. The only exception would be if required by law with a valid legal order — and we'd notify you if legally permitted.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card" data-keywords="where stored servers location region">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">🌍</span>
+                        <div><div class="data-card-title">Where is my data stored?</div></div>
+                    </div>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <p style="padding-top:0.8rem;color:var(--text-muted)">
+                            Data is stored on encrypted servers in the United States (AWS). All data transfers use TLS 1.3 encryption. We do not replicate data to other regions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card" data-keywords="gdpr ccpa compliance law regulation">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">⚖️</span>
+                        <div><div class="data-card-title">Are you GDPR/CCPA compliant?</div></div>
+                    </div>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <p style="padding-top:0.8rem;color:var(--text-muted)">
+                            Yes. We follow GDPR and CCPA principles for all users regardless of location: data minimization, purpose limitation, right to access, right to erasure, and data portability. You don't need to be in the EU or California to exercise these rights.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card" data-keywords="breach incident security hack">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">🚨</span>
+                        <div><div class="data-card-title">What happens if there's a data breach?</div></div>
+                    </div>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <p style="padding-top:0.8rem;color:var(--text-muted)">
+                            We will notify affected users within 72 hours via Telegram message, disclose the scope and nature of the breach, and publish a transparency report. Because data is encrypted at rest, a server breach alone would not expose message contents.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-card" data-keywords="children kids minors age">
+                <div class="data-card-header" onclick="toggleCard(this)">
+                    <div class="data-card-left">
+                        <span class="data-icon">👶</span>
+                        <div><div class="data-card-title">Is AgentBox safe for children?</div></div>
+                    </div>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="data-card-body">
+                    <div class="data-card-content">
+                        <p style="padding-top:0.8rem;color:var(--text-muted)">
+                            AgentBox is designed for users 13 and older (in compliance with Telegram's age requirement). We do not knowingly collect data from children under 13. If we learn a child's data was collected, we will delete it promptly.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Last updated: March 2026 · <a href="index.html">Back to AgentBox</a> · <a href="faq.html">Help Center</a></p>
+        <p style="margin-top:0.5rem">Questions? Message <a href="https://t.me/AgentBox11Bot">@AgentBox11Bot</a> with /privacy</p>
+    </div>
+
+    <script>
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('privacy-theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeToggle.textContent = '🌙';
+        }
+        themeToggle.addEventListener('click', () => {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            document.documentElement.setAttribute('data-theme', isLight ? '' : 'light');
+            themeToggle.textContent = isLight ? '☀️' : '🌙';
+            localStorage.setItem('privacy-theme', isLight ? 'dark' : 'light');
+        });
+
+        // Tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Accordion cards
+        function toggleCard(header) {
+            const card = header.parentElement;
+            card.classList.toggle('open');
+        }
+
+        // Search
+        const searchBox = document.getElementById('searchBox');
+        searchBox.addEventListener('input', () => {
+            const q = searchBox.value.toLowerCase().trim();
+            document.querySelectorAll('.data-card').forEach(card => {
+                if (!q) { card.style.display = ''; return; }
+                const text = (card.textContent + ' ' + (card.dataset.keywords || '')).toLowerCase();
+                card.style.display = text.includes(q) ? '' : 'none';
+            });
+            // Show all tabs content when searching
+            if (q) {
+                document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'block');
+            } else {
+                document.querySelectorAll('.tab-panel').forEach(p => p.style.display = '');
+            }
+        });
+
+        // Simulate rights request
+        function simulateRequest(btn, msg) {
+            if (btn.classList.contains('submitted')) return;
+            btn.classList.add('submitted');
+            btn.textContent = '✓ ' + msg;
+            setTimeout(() => {
+                btn.classList.remove('submitted');
+                btn.textContent = btn.textContent.replace('✓ ' + msg, '');
+                // Reset text based on original
+                const card = btn.closest('.right-card');
+                const h4 = card.querySelector('h4').textContent;
+                const labels = {
+                    '📥 Export Your Data': 'Request Export',
+                    '🗑️ Delete Everything': 'Request Deletion',
+                    '🧠 Clear Memory Only': 'Clear Memory',
+                    '⏸️ Pause Learning': 'Pause Learning',
+                    '📋 View What We Know': 'View Summary',
+                    '🚫 Object to Processing': 'File Objection'
+                };
+                btn.textContent = labels[h4] || 'Submit';
+                btn.style.background = '';
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
