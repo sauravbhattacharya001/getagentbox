@@ -151,14 +151,14 @@
             annualBilling: false
         };
 
-        function rebuild() {
-            var result = calculate({
-                teamSize: state.teamSize,
-                hourlyRate: state.hourlyRate,
-                hoursPerWeek: state.hoursPerWeek,
-                annualBilling: state.annualBilling
-            });
-
+        /**
+         * Build the initial DOM once, then use updateResults() for fast
+         * incremental updates.  The previous implementation called
+         * el.innerHTML on every slider input event, which destroyed and
+         * recreated the entire DOM tree (including all event listeners)
+         * ~60 times per second while a user drags a slider.
+         */
+        function buildInitialDOM() {
             var html = '<div class="roi-calc" role="region" aria-label="ROI Calculator">';
 
             // Header
@@ -195,27 +195,27 @@
                 html += '<span class="roi-cat-icon">' + cat.icon + '</span>';
                 html += '<span class="roi-cat-label">' + cat.label + '</span>';
                 html += '<input type="range" min="0" max="40" value="' + hrs + '" data-cat-slider="' + cat.id + '" aria-label="' + cat.label + ' hours per week">';
-                html += '<span class="roi-cat-hours">' + hrs + 'h/wk</span>';
+                html += '<span class="roi-cat-hours" data-cat-display="' + cat.id + '">' + hrs + 'h/wk</span>';
                 html += '</div>';
             }
             html += '</div>';
 
-            // Results summary
+            // Results summary (use data attributes for targeted updates)
             html += '<div class="roi-results">';
             html += '<div class="roi-result-card roi-highlight">';
-            html += '<div class="roi-result-number">' + formatCurrency(result.netAnnualSavings) + '</div>';
+            html += '<div class="roi-result-number" data-result="netAnnualSavings"></div>';
             html += '<div class="roi-result-label">Net Annual Savings</div>';
             html += '</div>';
             html += '<div class="roi-result-card">';
-            html += '<div class="roi-result-number">' + result.totalSavedHours + 'h</div>';
+            html += '<div class="roi-result-number" data-result="savedHours"></div>';
             html += '<div class="roi-result-label">Hours Saved / Week</div>';
             html += '</div>';
             html += '<div class="roi-result-card">';
-            html += '<div class="roi-result-number">' + result.roiPercent + '%</div>';
+            html += '<div class="roi-result-number" data-result="roi"></div>';
             html += '<div class="roi-result-label">ROI</div>';
             html += '</div>';
             html += '<div class="roi-result-card">';
-            html += '<div class="roi-result-number">' + (result.paybackDays === Infinity ? '—' : result.paybackDays + ' days') + '</div>';
+            html += '<div class="roi-result-number" data-result="payback"></div>';
             html += '<div class="roi-result-label">Payback Period</div>';
             html += '</div>';
             html += '</div>';
@@ -223,6 +223,81 @@
             // Category breakdown bars
             html += '<div class="roi-breakdown">';
             html += '<h3>Savings Breakdown</h3>';
+            for (var k = 0; k < CATEGORIES.length; k++) {
+                var c = CATEGORIES[k];
+                html += '<div class="roi-bar-row">';
+                html += '<span class="roi-bar-label">' + c.icon + ' ' + c.label + '</span>';
+                html += '<div class="roi-bar-track"><div class="roi-bar-fill" data-bar="' + c.id + '" style="width:0%"></div></div>';
+                html += '<span class="roi-bar-value" data-bar-value="' + c.id + '"></span>';
+                html += '</div>';
+            }
+            html += '</div>';
+
+            // Plan recommendation
+            html += '<div class="roi-plan" data-result="plan"></div>';
+
+            html += '</div>';
+            el.innerHTML = html;
+
+            // Bind events once (not on every update)
+            var teamSlider = el.querySelector('#roi-team');
+            var rateSlider = el.querySelector('#roi-rate');
+            var annualCheck = el.querySelector('#roi-annual');
+
+            if (teamSlider) teamSlider.addEventListener('input', function () {
+                state.teamSize = parseInt(this.value, 10);
+                el.querySelector('[data-field="team"]').textContent = state.teamSize + ' people';
+                updateResults();
+            });
+            if (rateSlider) rateSlider.addEventListener('input', function () {
+                state.hourlyRate = parseInt(this.value, 10);
+                el.querySelector('[data-field="rate"]').textContent = formatCurrency(state.hourlyRate) + '/hr';
+                updateResults();
+            });
+            if (annualCheck) annualCheck.addEventListener('change', function () {
+                state.annualBilling = this.checked;
+                updateResults();
+            });
+
+            var catSliders = el.querySelectorAll('[data-cat-slider]');
+            for (var s = 0; s < catSliders.length; s++) {
+                (function (slider) {
+                    slider.addEventListener('input', function () {
+                        var catId = slider.getAttribute('data-cat-slider');
+                        var val = parseInt(slider.value, 10);
+                        state.hoursPerWeek[catId] = val;
+                        var display = el.querySelector('[data-cat-display="' + catId + '"]');
+                        if (display) display.textContent = val + 'h/wk';
+                        updateResults();
+                    });
+                })(catSliders[s]);
+            }
+        }
+
+        /**
+         * Fast incremental update — only touches the result text nodes and
+         * bar widths.  No DOM destruction, no innerHTML, no re-binding.
+         */
+        function updateResults() {
+            var result = calculate({
+                teamSize: state.teamSize,
+                hourlyRate: state.hourlyRate,
+                hoursPerWeek: state.hoursPerWeek,
+                annualBilling: state.annualBilling
+            });
+
+            // Update result cards
+            var n;
+            n = el.querySelector('[data-result="netAnnualSavings"]');
+            if (n) n.textContent = formatCurrency(result.netAnnualSavings);
+            n = el.querySelector('[data-result="savedHours"]');
+            if (n) n.textContent = result.totalSavedHours + 'h';
+            n = el.querySelector('[data-result="roi"]');
+            if (n) n.textContent = result.roiPercent + '%';
+            n = el.querySelector('[data-result="payback"]');
+            if (n) n.textContent = result.paybackDays === Infinity ? '—' : result.paybackDays + ' days';
+
+            // Update breakdown bars
             var maxSaving = 1;
             for (var j = 0; j < result.categories.length; j++) {
                 if (result.categories[j].weeklySavings > maxSaving) maxSaving = result.categories[j].weeklySavings;
@@ -230,54 +305,23 @@
             for (var k = 0; k < result.categories.length; k++) {
                 var cr = result.categories[k];
                 var pct = Math.round((cr.weeklySavings / maxSaving) * 100);
-                html += '<div class="roi-bar-row">';
-                html += '<span class="roi-bar-label">' + cr.icon + ' ' + cr.label + '</span>';
-                html += '<div class="roi-bar-track"><div class="roi-bar-fill" style="width:' + pct + '%"></div></div>';
-                html += '<span class="roi-bar-value">' + formatCurrency(cr.weeklySavings) + '/wk</span>';
-                html += '</div>';
+                var bar = el.querySelector('[data-bar="' + cr.id + '"]');
+                if (bar) bar.style.width = pct + '%';
+                var val = el.querySelector('[data-bar-value="' + cr.id + '"]');
+                if (val) val.textContent = formatCurrency(cr.weeklySavings) + '/wk';
             }
-            html += '</div>';
 
-            // Plan recommendation
-            html += '<div class="roi-plan">';
-            html += '<p>Recommended: <strong>' + result.plan.label + '</strong> plan at ' + formatCurrency(result.monthlyPlanCost) + '/mo';
-            if (result.annualBilling) html += ' (annual)';
-            html += '</p>';
-            html += '</div>';
-
-            html += '</div>';
-            el.innerHTML = html;
-
-            // Bind events
-            var teamSlider = el.querySelector('#roi-team');
-            var rateSlider = el.querySelector('#roi-rate');
-            var annualCheck = el.querySelector('#roi-annual');
-
-            if (teamSlider) teamSlider.addEventListener('input', function () {
-                state.teamSize = parseInt(this.value, 10);
-                rebuild();
-            });
-            if (rateSlider) rateSlider.addEventListener('input', function () {
-                state.hourlyRate = parseInt(this.value, 10);
-                rebuild();
-            });
-            if (annualCheck) annualCheck.addEventListener('change', function () {
-                state.annualBilling = this.checked;
-                rebuild();
-            });
-
-            var catSliders = el.querySelectorAll('[data-cat-slider]');
-            for (var s = 0; s < catSliders.length; s++) {
-                (function (slider) {
-                    slider.addEventListener('input', function () {
-                        state.hoursPerWeek[slider.getAttribute('data-cat-slider')] = parseInt(slider.value, 10);
-                        rebuild();
-                    });
-                })(catSliders[s]);
+            // Update plan recommendation
+            var planEl = el.querySelector('[data-result="plan"]');
+            if (planEl) {
+                var planText = 'Recommended: <strong>' + result.plan.label + '</strong> plan at ' + formatCurrency(result.monthlyPlanCost) + '/mo';
+                if (result.annualBilling) planText += ' (annual)';
+                planEl.innerHTML = '<p>' + planText + '</p>';
             }
         }
 
-        rebuild();
+        buildInitialDOM();
+        updateResults();
     }
 
     return {
