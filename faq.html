@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - FAQ & Help Center</title>
+    <meta name="description" content="Find answers to common questions about AgentBox — your personal AI agent on Telegram. Setup, features, billing, troubleshooting, and more.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            border-bottom: 1px solid var(--border);
+        }
+        .header a.back {
+            display: inline-block;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+        .header a.back:hover { text-decoration: underline; }
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Search */
+        .search-wrap {
+            max-width: 600px;
+            margin: 30px auto 0;
+            position: relative;
+        }
+        .search-wrap input {
+            width: 100%;
+            padding: 14px 18px 14px 46px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-wrap input:focus { border-color: var(--accent); }
+        .search-wrap input::placeholder { color: var(--text-muted); }
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            pointer-events: none;
+        }
+        .search-count {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            min-height: 1.2em;
+        }
+
+        /* Category tabs */
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            max-width: 800px;
+            margin: 24px auto 0;
+            padding: 0 20px;
+        }
+        .cat-btn {
+            padding: 8px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cat-btn:hover { border-color: var(--accent); color: var(--text); }
+        .cat-btn.active {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* FAQ list */
+        .faq-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px 60px;
+        }
+        .faq-category-heading {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin: 32px 0 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        .faq-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .faq-item:hover { border-color: var(--surface-3); }
+        .faq-item.highlight { border-color: var(--accent); }
+        .faq-q {
+            padding: 16px 48px 16px 18px;
+            cursor: pointer;
+            font-weight: 500;
+            position: relative;
+            user-select: none;
+        }
+        .faq-q::after {
+            content: '+';
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+        .faq-item.open .faq-q::after {
+            content: '−';
+        }
+        .faq-a {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .faq-a-inner {
+            padding: 0 18px 16px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+        .faq-a-inner a { color: var(--accent); text-decoration: none; }
+        .faq-a-inner a:hover { text-decoration: underline; }
+        .faq-a-inner code {
+            background: var(--surface-3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .faq-item.open .faq-a { max-height: 500px; }
+        .no-results {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px 0;
+            display: none;
+        }
+        .no-results .emoji { font-size: 2rem; margin-bottom: 8px; }
+
+        /* Helpful vote */
+        .helpful {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .helpful button {
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-muted);
+            padding: 2px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .helpful button:hover { border-color: var(--accent); color: var(--accent); }
+        .helpful button.voted { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); pointer-events: none; }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.6rem; }
+            .header { padding: 40px 16px 24px; }
+            .faq-container { padding: 0 12px 40px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html" class="back">← Back to AgentBox</a>
+        <h1>❓ FAQ & Help Center</h1>
+        <p>Find answers to common questions about AgentBox</p>
+        <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search questions..." aria-label="Search FAQ">
+        </div>
+        <div class="search-count" id="searchCount"></div>
+    </div>
+    <div class="categories" id="categories"></div>
+    <div class="faq-container" id="faqContainer">
+        <div class="no-results" id="noResults">
+            <div class="emoji">🤷</div>
+            <p>No matching questions found. Try different keywords.</p>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Still have questions? <a href="https://t.me/agentboxbot">Message AgentBox on Telegram</a> and ask!</p>
+        <p style="margin-top:8px">© 2026 AgentBox</p>
+    </div>
+
+    <script>
+    const FAQ_DATA = [
+        {
+            category: "Getting Started",
+            icon: "🚀",
+            items: [
+                {
+                    q: "What is AgentBox?",
+                    a: "AgentBox is a personal AI assistant that lives in Telegram. It remembers your conversations, learns your preferences over time, and helps you get things done — from answering questions and searching the web to setting reminders and analyzing images."
+                },
+                {
+                    q: "How do I start using AgentBox?",
+                    a: "Just open Telegram and search for <a href='https://t.me/agentboxbot'>@agentboxbot</a>, then tap <strong>Start</strong>. You'll get 20 free messages per day — no sign-up or credit card needed."
+                },
+                {
+                    q: "Do I need to create an account?",
+                    a: "No account creation needed! AgentBox uses your Telegram identity. Just start chatting and you're set up automatically."
+                },
+                {
+                    q: "Is AgentBox available on desktop?",
+                    a: "Yes! Since AgentBox runs inside Telegram, it works anywhere Telegram does — mobile (iOS/Android), desktop (Windows/Mac/Linux), and Telegram Web."
+                },
+                {
+                    q: "What AI model does AgentBox use?",
+                    a: "AgentBox uses state-of-the-art language models (including GPT-4 class models) optimized for conversational assistance. The model may be updated over time to provide better responses."
+                }
+            ]
+        },
+        {
+            category: "Features",
+            icon: "✨",
+            items: [
+                {
+                    q: "What can AgentBox do?",
+                    a: "AgentBox can: answer questions and have conversations, search the web for current information, set reminders and timers, understand and describe images you send, remember context from previous conversations, help with writing/coding/brainstorming, and much more."
+                },
+                {
+                    q: "Can AgentBox search the web?",
+                    a: "Yes! AgentBox can search the web in real-time to find current information. Just ask a question about recent events, look up facts, or ask it to research something for you."
+                },
+                {
+                    q: "Does AgentBox remember our conversations?",
+                    a: "Yes, AgentBox has persistent memory within your conversation. It remembers what you've talked about, your preferences, and important details you've shared. You can also ask it to forget specific things."
+                },
+                {
+                    q: "Can I send images to AgentBox?",
+                    a: "Absolutely! Send any image and AgentBox can describe it, analyze it, extract text (OCR), answer questions about it, or use it as context for your conversation."
+                },
+                {
+                    q: "Can AgentBox set reminders?",
+                    a: "Yes! Just say something like \"Remind me to call the dentist tomorrow at 3pm\" and AgentBox will send you a message at that time."
+                },
+                {
+                    q: "Does AgentBox work in group chats?",
+                    a: "AgentBox is designed primarily for 1-on-1 conversations. Group chat support may be available in the future — stay tuned on the <a href='updates.html'>updates page</a>."
+                }
+            ]
+        },
+        {
+            category: "Pricing & Limits",
+            icon: "💰",
+            items: [
+                {
+                    q: "Is AgentBox free?",
+                    a: "AgentBox offers a generous free tier: <strong>20 messages per day</strong> at no cost. This resets every 24 hours. For heavier usage, premium plans are available."
+                },
+                {
+                    q: "What happens when I hit my daily limit?",
+                    a: "When you reach 20 messages for the day, AgentBox will let you know and tell you when your limit resets. You can upgrade to a premium plan for unlimited messages, or wait until the next day."
+                },
+                {
+                    q: "How do I upgrade to premium?",
+                    a: "Send <code>/upgrade</code> to AgentBox in Telegram, or visit the pricing section on our website. Premium gives you unlimited messages, priority response times, and early access to new features."
+                },
+                {
+                    q: "Can I cancel my subscription anytime?",
+                    a: "Yes, you can cancel anytime with no penalties. Send <code>/billing</code> to AgentBox to manage your subscription. You'll keep premium access until the end of your billing period."
+                },
+                {
+                    q: "Do image messages count toward my daily limit?",
+                    a: "Yes, each message you send (text or image) counts as one message toward your daily allowance."
+                }
+            ]
+        },
+        {
+            category: "Privacy & Security",
+            icon: "🔒",
+            items: [
+                {
+                    q: "Is my data safe with AgentBox?",
+                    a: "Your privacy is a top priority. Conversations are encrypted in transit, stored securely, and never shared with third parties. We don't sell your data or use it for advertising."
+                },
+                {
+                    q: "Can I delete my data?",
+                    a: "Yes! Send <code>/deletedata</code> to AgentBox to permanently erase all your conversation history and stored preferences. This action is irreversible."
+                },
+                {
+                    q: "Does AgentBox read my other Telegram messages?",
+                    a: "No. AgentBox can only see messages you send directly to it. It has no access to your other chats, contacts, or Telegram activity."
+                },
+                {
+                    q: "Where is my data stored?",
+                    a: "Data is stored on secure, encrypted servers. We follow industry best practices for data protection and regularly audit our security practices."
+                }
+            ]
+        },
+        {
+            category: "Troubleshooting",
+            icon: "🔧",
+            items: [
+                {
+                    q: "AgentBox isn't responding — what do I do?",
+                    a: "First, check your internet connection. If that's fine, try sending <code>/start</code> again. AgentBox may occasionally be down for maintenance — check the <a href='updates.html'>updates page</a> for status. If the issue persists, reach out on Telegram."
+                },
+                {
+                    q: "AgentBox gave me wrong information — can I correct it?",
+                    a: "Yes! Just tell AgentBox it was wrong and provide the correct information. It will learn from the correction. Remember that AI can sometimes make mistakes, especially with very recent events or niche topics."
+                },
+                {
+                    q: "My reminder didn't fire — why?",
+                    a: "Reminders require AgentBox to be able to send you messages. Make sure you haven't blocked the bot and that Telegram notifications are enabled. If you set a reminder for the past, it won't fire."
+                },
+                {
+                    q: "How do I reset my conversation / start fresh?",
+                    a: "Send <code>/reset</code> to clear your conversation context. AgentBox will start fresh as if it's your first chat. This won't affect your account or subscription."
+                },
+                {
+                    q: "AgentBox responds slowly — is that normal?",
+                    a: "Response time is usually a few seconds. Complex queries (web searches, image analysis) may take a bit longer. During peak hours, free-tier users may experience slightly longer waits. Premium users get priority queue access."
+                }
+            ]
+        },
+        {
+            category: "Tips & Tricks",
+            icon: "💡",
+            items: [
+                {
+                    q: "How do I get the best responses from AgentBox?",
+                    a: "Be specific! Instead of \"Tell me about Python\", try \"Explain Python list comprehensions with 3 examples\". Give context, specify the format you want, and don't hesitate to ask follow-up questions."
+                },
+                {
+                    q: "What commands are available?",
+                    a: "Key commands: <code>/start</code> — restart the bot, <code>/reset</code> — clear conversation, <code>/upgrade</code> — see premium plans, <code>/billing</code> — manage subscription, <code>/deletedata</code> — erase all data, <code>/help</code> — see all commands."
+                },
+                {
+                    q: "Can AgentBox help me with code?",
+                    a: "Yes! AgentBox is great at writing, explaining, debugging, and reviewing code. It supports all major programming languages. Paste your code directly in the chat or describe what you need."
+                },
+                {
+                    q: "Can I use AgentBox for language translation?",
+                    a: "Yes! Just send a message like \"Translate 'good morning' to Japanese\" or paste text and ask AgentBox to translate it. It supports 100+ languages."
+                },
+                {
+                    q: "Can AgentBox summarize long text?",
+                    a: "Absolutely! Paste any text (articles, emails, documents) and ask AgentBox to summarize it. You can specify the length: \"Summarize in 2 sentences\" or \"Give me a detailed summary\"."
+                }
+            ]
+        }
+    ];
+
+    // Build UI
+    const container = document.getElementById('faqContainer');
+    const noResults = document.getElementById('noResults');
+    const catsEl = document.getElementById('categories');
+    const searchInput = document.getElementById('searchInput');
+    const searchCount = document.getElementById('searchCount');
+
+    // Category buttons
+    const allBtn = document.createElement('button');
+    allBtn.className = 'cat-btn active';
+    allBtn.textContent = 'All';
+    allBtn.dataset.cat = '';
+    catsEl.appendChild(allBtn);
+    FAQ_DATA.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-btn';
+        btn.textContent = cat.icon + ' ' + cat.category;
+        btn.dataset.cat = cat.category;
+        catsEl.appendChild(btn);
+    });
+
+    // Render FAQs
+    function renderFAQs() {
+        // Remove old items (keep noResults)
+        container.querySelectorAll('.faq-category-heading, .faq-item').forEach(el => el.remove());
+        const query = searchInput.value.toLowerCase().trim();
+        const activeCat = document.querySelector('.cat-btn.active')?.dataset.cat || '';
+        let count = 0;
+
+        FAQ_DATA.forEach(cat => {
+            if (activeCat && cat.category !== activeCat) return;
+            const matchingItems = cat.items.filter(item => {
+                if (!query) return true;
+                return item.q.toLowerCase().includes(query) || item.a.toLowerCase().includes(query);
+            });
+            if (matchingItems.length === 0) return;
+
+            const heading = document.createElement('div');
+            heading.className = 'faq-category-heading';
+            heading.textContent = cat.icon + ' ' + cat.category;
+            container.insertBefore(heading, noResults);
+
+            matchingItems.forEach(item => {
+                count++;
+                const div = document.createElement('div');
+                div.className = 'faq-item';
+                if (query && item.q.toLowerCase().includes(query)) div.classList.add('highlight');
+                div.innerHTML = `
+                    <div class="faq-q">${highlightText(item.q, query)}</div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            ${highlightText(item.a, query)}
+                            <div class="helpful">
+                                Was this helpful?
+                                <button onclick="vote(this,'yes')">👍 Yes</button>
+                                <button onclick="vote(this,'no')">👎 No</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                div.querySelector('.faq-q').addEventListener('click', () => {
+                    div.classList.toggle('open');
+                });
+                container.insertBefore(div, noResults);
+            });
+        });
+
+        noResults.style.display = count === 0 ? 'block' : 'none';
+        searchCount.textContent = query ? `${count} result${count !== 1 ? 's' : ''} found` : '';
+    }
+
+    function highlightText(text, query) {
+        if (!query) return text;
+        // Don't highlight inside HTML tags
+        const parts = text.split(/(<[^>]+>)/g);
+        return parts.map(part => {
+            if (part.startsWith('<')) return part;
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return part.replace(regex, '<mark style="background:var(--accent-bg);color:var(--accent);padding:1px 2px;border-radius:2px;">$1</mark>');
+        }).join('');
+    }
+
+    function vote(btn, type) {
+        btn.classList.add('voted');
+        btn.textContent = type === 'yes' ? '👍 Thanks!' : '👎 Noted';
+    }
+
+    // Category clicks
+    catsEl.addEventListener('click', e => {
+        if (!e.target.classList.contains('cat-btn')) return;
+        catsEl.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        renderFAQs();
+    });
+
+    // Search
+    let debounce;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(renderFAQs, 200);
+    });
+
+    // Keyboard: Escape clears search
+    searchInput.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            searchInput.value = '';
+            renderFAQs();
+            searchInput.blur();
+        }
+    });
+
+    // URL hash: open specific question
+    function checkHash() {
+        const hash = decodeURIComponent(location.hash.slice(1));
+        if (!hash) return;
+        searchInput.value = hash;
+        renderFAQs();
+        // Auto-open first match
+        const first = container.querySelector('.faq-item');
+        if (first) {
+            first.classList.add('open');
+            first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    renderFAQs();
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    </script>
+</body>
+</html>
