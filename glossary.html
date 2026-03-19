@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - AI Glossary & Jargon Buster</title>
+    <meta name="description" content="Plain-English glossary of AI, chatbot, and AgentBox terms. Search, filter by category, and finally understand what all the jargon means.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            padding: 20px 24px;
+            transition: opacity 0.2s;
+        }
+        .back-link:hover { opacity: 0.8; }
+
+        .glossary-header {
+            text-align: center;
+            padding: 20px 24px 40px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .glossary-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .glossary-header p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        .controls {
+            max-width: 800px;
+            margin: 0 auto 24px;
+            padding: 0 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 220px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 42px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-box input:focus { border-color: var(--accent); }
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+        }
+
+        .cat-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .cat-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .cat-btn:hover { border-color: var(--accent); color: var(--text); }
+        .cat-btn.active {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .stats-bar {
+            max-width: 800px;
+            margin: 0 auto 16px;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats-bar .count {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .stats-bar .sort-toggle {
+            font-size: 13px;
+            color: var(--accent);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 4px 8px;
+        }
+        .stats-bar .sort-toggle:hover { text-decoration: underline; }
+
+        .alpha-nav {
+            max-width: 800px;
+            margin: 0 auto 20px;
+            padding: 0 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .alpha-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .alpha-btn:hover { border-color: var(--accent); color: var(--text); }
+        .alpha-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+        .alpha-btn.disabled { opacity: 0.3; cursor: default; }
+
+        .glossary-list {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px 60px;
+        }
+
+        .letter-group { margin-bottom: 32px; }
+        .letter-heading {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .term-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .term-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+        .term-card.expanded { border-color: var(--accent); }
+
+        .term-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .term-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+        .term-name mark {
+            background: var(--accent-bg);
+            color: var(--accent);
+            border-radius: 3px;
+            padding: 0 2px;
+        }
+        .term-badges {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        .badge-cat { background: var(--purple-bg); color: var(--purple); }
+        .badge-level-beginner { background: var(--green-bg); color: var(--green); }
+        .badge-level-intermediate { background: var(--yellow-bg); color: var(--yellow); }
+        .badge-level-advanced { background: #e1705522; color: var(--orange); }
+        .chevron {
+            font-size: 12px;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+        .expanded .chevron { transform: rotate(180deg); }
+
+        .term-short {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        .term-detail {
+            display: none;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+        .expanded .term-detail { display: block; }
+
+        .term-long {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+        .term-example {
+            background: var(--surface-2);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+        .term-example strong { color: var(--accent); }
+        .term-related {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .term-related a {
+            color: var(--accent);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .term-related a:hover { text-decoration: underline; }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .no-results .emoji { font-size: 3rem; margin-bottom: 12px; }
+
+        .random-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .random-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        @media (max-width: 600px) {
+            .glossary-header h1 { font-size: 1.6rem; }
+            .controls { flex-direction: column; }
+            .alpha-nav { gap: 3px; }
+            .alpha-btn { width: 28px; height: 28px; font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to AgentBox</a>
+
+    <header class="glossary-header">
+        <h1>📖 AI Glossary & Jargon Buster</h1>
+        <p>Plain-English explanations for AI, chatbot, and AgentBox terminology. No PhD required.</p>
+    </header>
+
+    <div class="controls">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search terms..." aria-label="Search glossary">
+        </div>
+        <button class="random-btn" id="randomBtn" title="Jump to a random term">🎲 Random</button>
+    </div>
+
+    <div class="controls" style="padding-top: 0;">
+        <div class="cat-filters" id="catFilters"></div>
+    </div>
+
+    <div class="stats-bar">
+        <span class="count" id="resultCount"></span>
+        <button class="sort-toggle" id="sortToggle">Sort: A → Z</button>
+    </div>
+
+    <nav class="alpha-nav" id="alphaNav" aria-label="Jump to letter"></nav>
+
+    <main class="glossary-list" id="glossaryList"></main>
+
+    <script>
+    const TERMS = [
+        { term: "AI Agent", short: "An AI that can take actions, not just answer questions.", long: "Unlike a basic chatbot that waits for your input, an AI agent can proactively do things — search the web, set reminders, manage files, and chain multiple steps together to complete a task. AgentBox is an AI agent.", cat: "Core Concepts", level: "beginner", example: "You ask AgentBox to 'find cheap flights to Tokyo next month' — it searches, compares prices, and summarizes the best options.", related: ["LLM", "Chatbot", "Autonomous Agent"] },
+        { term: "LLM", short: "Large Language Model — the brain behind AI assistants.", long: "A massive neural network trained on text data that can understand and generate human language. Models like GPT-4, Claude, and Gemini are LLMs. They're the engine that powers AgentBox's understanding.", cat: "Core Concepts", level: "beginner", example: "When you type a message to AgentBox, an LLM processes your words and generates a helpful response.", related: ["AI Agent", "Token", "Model"] },
+        { term: "Token", short: "A small chunk of text that AI models process.", long: "LLMs don't read words — they read tokens, which are roughly ¾ of a word. 'Hello world' is 2 tokens. Understanding tokens helps you know why there are message limits and why longer conversations cost more.", cat: "Core Concepts", level: "intermediate", example: "'The quick brown fox' is about 4 tokens. A typical message might be 20-100 tokens.", related: ["LLM", "Context Window", "Rate Limit"] },
+        { term: "Context Window", short: "How much conversation history AI can 'remember' at once.", long: "The context window is the total amount of text (in tokens) an AI can consider at one time. It includes your message, the conversation history, and the AI's response. Once it fills up, older messages get dropped.", cat: "Core Concepts", level: "intermediate", example: "If the context window is 128K tokens, that's roughly a 300-page book of conversation the AI can reference.", related: ["Token", "Memory", "LLM"] },
+        { term: "Prompt", short: "The text you send to an AI to get a response.", long: "Every message you type is a prompt. But 'prompt engineering' is the art of writing prompts that get better results — being specific, giving examples, or setting a role for the AI.", cat: "Core Concepts", level: "beginner", example: "Basic: 'Write a poem.' Better prompt: 'Write a 4-line rhyming poem about a cat who thinks it's a dog, in a playful tone.'", related: ["System Prompt", "Prompt Engineering", "Few-Shot"] },
+        { term: "System Prompt", short: "Hidden instructions that define how the AI behaves.", long: "Before you ever type a message, the AI has already received a system prompt that sets its personality, rules, and capabilities. In AgentBox, this is what makes your agent feel like yours — its persona is defined here.", cat: "Core Concepts", level: "intermediate", example: "AgentBox's system prompt might include: 'You are a helpful, witty assistant. You remember the user's preferences. Be concise.'", related: ["Prompt", "Persona", "Memory"] },
+        { term: "Chatbot", short: "An AI that converses with humans — the simpler cousin of an agent.", long: "A chatbot responds to messages but typically can't take actions beyond text replies. AI agents are the evolution: they can search, browse, execute code, manage files, and more. AgentBox is an agent, not just a chatbot.", cat: "Core Concepts", level: "beginner", example: "Old chatbot: 'What's the weather?' → 'I can't check that.' AgentBox: 'What's the weather?' → actually searches and tells you.", related: ["AI Agent", "LLM"] },
+        { term: "Memory", short: "The ability to remember things across conversations.", long: "Most AI chats forget everything when the conversation ends. Memory lets AgentBox remember your name, preferences, past conversations, and important details across sessions. It's what makes it feel personal.", cat: "AgentBox Features", level: "beginner", example: "You mention you're vegetarian once. Weeks later you ask for dinner ideas — AgentBox remembers and suggests only veggie options.", related: ["Context Window", "Persona", "Long-Term Memory"] },
+        { term: "Long-Term Memory", short: "Persistent storage of important facts across sessions.", long: "Different from the context window (short-term), long-term memory stores curated information indefinitely. AgentBox maintains files that persist your preferences, history, and important context.", cat: "AgentBox Features", level: "intermediate", example: "AgentBox writes 'User prefers dark mode, lives in Seattle, has a cat named Mochi' to its memory file.", related: ["Memory", "Context Window"] },
+        { term: "Persona", short: "The personality and communication style of your AI agent.", long: "AgentBox can be customized to match your preferred communication style — formal, casual, witty, or professional. The persona defines how it talks, what emoji it uses, and its overall vibe.", cat: "AgentBox Features", level: "beginner", example: "A 'professional' persona responds formally. A 'casual' persona might say 'lol sure, here you go 😄'.", related: ["System Prompt", "Memory"] },
+        { term: "Hallucination", short: "When AI confidently makes things up.", long: "Sometimes LLMs generate text that sounds convincing but is factually wrong. They don't 'know' things — they predict likely text. This is why fact-checking AI responses matters, especially for important decisions.", cat: "AI Risks", level: "beginner", example: "Ask an AI about a niche topic and it might invent a plausible-sounding but fictional study or statistic.", related: ["Grounding", "RAG", "LLM"] },
+        { term: "Grounding", short: "Connecting AI responses to real, verified information.", long: "Grounding techniques give the AI access to real data (web searches, documents, databases) so it answers based on facts rather than guessing. This reduces hallucinations significantly.", cat: "AI Risks", level: "intermediate", example: "When you ask AgentBox about today's news, it searches the web first rather than guessing from training data.", related: ["Hallucination", "RAG", "Tool Use"] },
+        { term: "RAG", short: "Retrieval-Augmented Generation — AI + search combined.", long: "RAG is a technique where the AI first retrieves relevant documents, then uses them to generate an informed answer. It's like giving the AI a research assistant. This powers many of AgentBox's accurate responses.", cat: "Technical", level: "advanced", example: "Ask about your company's policies → RAG retrieves the policy doc → AI summarizes the relevant section.", related: ["Grounding", "Embedding", "Vector Database"] },
+        { term: "Tool Use", short: "AI's ability to use external tools and services.", long: "Modern AI agents can use tools: web search, calculators, code execution, API calls, file management. This is what separates agents from basic chatbots. AgentBox has access to multiple tools it chains together.", cat: "Core Concepts", level: "intermediate", example: "You ask 'What's 15% tip on $47.80?' — the AI uses a calculator tool rather than doing mental math (which it's bad at).", related: ["AI Agent", "Function Calling", "API"] },
+        { term: "Function Calling", short: "How AI decides to use specific tools.", long: "When an LLM needs external information or actions, it outputs a structured 'function call' — like filling out a form that says 'search the web for X.' The system executes it and feeds results back to the AI.", cat: "Technical", level: "advanced", example: "AI thinks: 'User wants weather' → calls function: {name: 'get_weather', args: {city: 'Seattle'}} → gets data → responds.", related: ["Tool Use", "API", "AI Agent"] },
+        { term: "API", short: "Application Programming Interface — how software talks to software.", long: "An API is a set of rules that lets programs communicate. When AgentBox searches the web or checks your calendar, it's using APIs. You don't need to know this — but it's why integrations work.", cat: "Technical", level: "intermediate", example: "AgentBox uses the weather API to get forecasts, the search API to find information, etc.", related: ["Function Calling", "Webhook", "Integration"] },
+        { term: "Embedding", short: "Converting text into numbers so AI can compare meanings.", long: "Embeddings turn words and sentences into lists of numbers (vectors) where similar meanings are close together. 'Happy' and 'joyful' would have similar embeddings. This powers search, recommendations, and memory retrieval.", cat: "Technical", level: "advanced", example: "When you search your notes, embeddings help find relevant entries even if the exact words don't match.", related: ["RAG", "Vector Database", "Semantic Search"] },
+        { term: "Vector Database", short: "A database optimized for finding similar things.", long: "Regular databases find exact matches. Vector databases find similar items using embeddings. They're essential for AI memory and search — finding 'what's most relevant' rather than 'what matches exactly.'", cat: "Technical", level: "advanced", example: "Search 'recipes with chicken' and find a note titled 'Easy Poultry Dinner Ideas' even though the words differ.", related: ["Embedding", "RAG", "Semantic Search"] },
+        { term: "Fine-Tuning", short: "Customizing an AI model with specialized training data.", long: "Fine-tuning takes a pre-trained LLM and trains it further on specific data to make it better at particular tasks. It's like teaching a general doctor to specialize in cardiology.", cat: "Technical", level: "advanced", example: "A model fine-tuned on legal documents becomes much better at summarizing contracts.", related: ["LLM", "Model", "Training Data"] },
+        { term: "Rate Limit", short: "The maximum number of requests allowed in a time period.", long: "To keep things fair and prevent abuse, AI services limit how many messages you can send. AgentBox's free tier includes 20 messages/day. Paid plans have higher or unlimited limits.", cat: "AgentBox Features", level: "beginner", example: "If you hit the rate limit, you'll get a friendly message saying to try again later or upgrade.", related: ["Token", "Pricing", "Quota"] },
+        { term: "Webhook", short: "An automatic notification from one service to another.", long: "A webhook is like a doorbell — when something happens in one service, it 'rings' another service to let it know. AgentBox can use webhooks to get notified of events and act on them.", cat: "Technical", level: "intermediate", example: "When you receive an email, a webhook could notify AgentBox, which then sends you a Telegram summary.", related: ["API", "Integration", "Automation"] },
+        { term: "Prompt Engineering", short: "The skill of writing effective AI prompts.", long: "Getting good results from AI is partly about how you ask. Prompt engineering involves techniques like being specific, providing examples, setting constraints, and breaking complex tasks into steps.", cat: "Skills", level: "beginner", example: "Instead of 'write code,' try 'write a Python function that takes a list of numbers and returns the median, with error handling.'", related: ["Prompt", "Few-Shot", "Chain of Thought"] },
+        { term: "Few-Shot", short: "Teaching AI by showing it examples in the prompt.", long: "Instead of explaining what you want, you show the AI examples. 'Few-shot' means a few examples, 'zero-shot' means no examples. It's surprisingly effective at getting consistent output formats.", cat: "Skills", level: "intermediate", example: "Translate: 'cat' → 'gato', 'dog' → 'perro', 'house' → ? The AI learns the pattern from examples.", related: ["Prompt Engineering", "Chain of Thought", "Prompt"] },
+        { term: "Chain of Thought", short: "Making AI show its reasoning step by step.", long: "When you ask AI to 'think step by step,' it often gives better answers because it breaks down the problem. This technique improves accuracy for math, logic, and complex reasoning tasks.", cat: "Skills", level: "intermediate", example: "Ask 'If a shirt costs $25 and is 20% off, what do I pay? Think step by step.' → more accurate than just asking for the answer.", related: ["Prompt Engineering", "Few-Shot"] },
+        { term: "Temperature", short: "How creative vs. predictable AI responses are.", long: "Temperature is a setting (0 to 2) that controls randomness. Low temperature (0.1) = precise, factual, repetitive. High temperature (1.5) = creative, varied, sometimes wild. Most assistants use 0.7-1.0.", cat: "Technical", level: "intermediate", example: "Temperature 0.1: 'The capital of France is Paris.' Temperature 1.5: 'Ah, Paris! The luminous heart of la belle France...'", related: ["LLM", "Model"] },
+        { term: "Autonomous Agent", short: "An AI that works on its own with minimal human guidance.", long: "An autonomous agent can plan, execute multi-step tasks, use tools, and adapt without constant human input. It's the most advanced form of AI assistant — given a goal, it figures out the steps itself.", cat: "Core Concepts", level: "advanced", example: "Tell it 'plan my trip to Japan' and it researches flights, hotels, attractions, and creates a full itinerary.", related: ["AI Agent", "Tool Use", "Planning"] },
+        { term: "Semantic Search", short: "Search by meaning, not just matching words.", long: "Traditional search looks for keyword matches. Semantic search understands meaning, so searching 'fast car' also finds 'high-speed vehicle.' This makes AI-powered search feel almost magical.", cat: "Technical", level: "intermediate", example: "Search your notes for 'feeling stressed' and find an entry titled 'overwhelming workload this week.'", related: ["Embedding", "Vector Database", "RAG"] },
+        { term: "Model", short: "The specific AI 'brain' being used (GPT-4, Claude, etc.).", long: "Different models have different strengths. Some are faster, some are smarter, some are cheaper. AgentBox uses frontier models to give you the best balance of quality and speed.", cat: "Core Concepts", level: "beginner", example: "GPT-4 is great at reasoning. Claude excels at long documents. Gemini handles images well.", related: ["LLM", "Fine-Tuning", "Temperature"] },
+        { term: "Multimodal", short: "AI that understands images, audio, and text — not just words.", long: "Multimodal AI can process different types of input: photos, voice messages, documents, and text. AgentBox can understand images you send, transcribe voice notes, and read documents.", cat: "Core Concepts", level: "intermediate", example: "Send a photo of a restaurant menu and ask AgentBox to suggest the best dishes for vegetarians.", related: ["LLM", "Model", "Vision"] },
+        { term: "Integration", short: "Connecting AgentBox with other apps and services.", long: "Integrations let AgentBox work with your existing tools — calendar, email, task managers, smart home devices. The more integrations, the more useful your agent becomes.", cat: "AgentBox Features", level: "beginner", example: "Connect your Google Calendar and AgentBox can check your schedule, create events, and send reminders.", related: ["API", "Webhook", "Tool Use"] },
+        { term: "Latency", short: "The delay between sending a message and getting a response.", long: "Latency is how long you wait. AI responses involve sending your message to a server, processing it through an LLM, and sending back the result. AgentBox optimizes this to keep responses snappy.", cat: "Technical", level: "intermediate", example: "Low latency: response in 1-2 seconds. High latency: waiting 10+ seconds, usually on complex tasks.", related: ["Streaming", "Model"] },
+        { term: "Streaming", short: "Seeing the AI response appear word by word in real-time.", long: "Instead of waiting for the entire response to generate, streaming shows you words as they're produced — like watching someone type. It feels faster even if the total time is the same.", cat: "Technical", level: "beginner", example: "In Telegram, you see AgentBox's reply appear progressively rather than all at once.", related: ["Latency", "Token"] },
+        { term: "Guardrails", short: "Safety rules that prevent AI from doing harmful things.", long: "Guardrails are filters and rules that keep AI responses safe, accurate, and appropriate. They prevent generating harmful content, leaking private data, or taking dangerous actions.", cat: "AI Risks", level: "beginner", example: "Ask an AI to help with something dangerous and guardrails will redirect the conversation safely.", related: ["Hallucination", "Alignment"] },
+        { term: "Alignment", short: "Making AI behave in ways humans actually want.", long: "AI alignment is the challenge of ensuring AI systems do what we intend, not just what we literally say. It's one of the biggest challenges in AI safety and an active area of research.", cat: "AI Risks", level: "advanced", example: "If you say 'clean my inbox,' you want it to organize — not delete everything (which would technically 'clean' it).", related: ["Guardrails", "RLHF"] },
+        { term: "RLHF", short: "Reinforcement Learning from Human Feedback — training AI with human preferences.", long: "RLHF is how modern AI models learn to be helpful. Humans rate AI responses, and the model learns which responses people prefer. It's why ChatGPT feels more helpful than raw language models.", cat: "Technical", level: "advanced", example: "AI generates two responses. Humans pick the better one. Repeat millions of times → a more helpful AI.", related: ["Alignment", "Fine-Tuning", "LLM"] },
+        { term: "Quota", short: "Your remaining usage allowance.", long: "Your quota tracks how many messages, tokens, or API calls you have left in your billing period. AgentBox shows your usage so you always know where you stand.", cat: "AgentBox Features", level: "beginner", example: "Free plan: 20 messages/day. Pro plan: 1000 messages/day. Check /usage to see your remaining quota.", related: ["Rate Limit", "Token", "Pricing"] },
+        { term: "Planning", short: "AI's ability to break complex tasks into steps.", long: "Advanced agents can decompose a big goal into smaller subtasks, order them logically, and execute them. Good planning is what separates a smart agent from one that gets confused on multi-step requests.", cat: "Core Concepts", level: "intermediate", example: "'Help me move to a new city' → research cost of living → find apartments → compare neighborhoods → create budget.", related: ["Autonomous Agent", "Chain of Thought", "Tool Use"] },
+        { term: "Training Data", short: "The massive text dataset an AI learned from.", long: "LLMs are trained on billions of web pages, books, and articles. The training data determines what the AI knows — and its knowledge has a cutoff date after which it doesn't know what happened.", cat: "Technical", level: "intermediate", example: "If an AI was trained up to April 2024, it won't know about events after that date unless it searches the web.", related: ["LLM", "Fine-Tuning", "Hallucination"] },
+        { term: "Vision", short: "AI's ability to understand and analyze images.", long: "Vision-capable models can describe photos, read text in images, analyze charts, identify objects, and even understand memes. Send AgentBox a picture and it can tell you what it sees.", cat: "Core Concepts", level: "beginner", example: "Send a photo of a plant and AgentBox can identify the species and give care instructions.", related: ["Multimodal", "Model"] },
+        { term: "Pricing", short: "How AgentBox plans and costs work.", long: "AgentBox offers a free tier (20 messages/day) and paid plans with higher limits, faster responses, and premium features. Pricing is designed to be transparent with no hidden fees.", cat: "AgentBox Features", level: "beginner", example: "Free: casual use. Pro: power users. Business: teams. Check the pricing page for current rates.", related: ["Quota", "Rate Limit", "Token"] }
+    ];
+
+    const CATEGORIES = [...new Set(TERMS.map(t => t.cat))].sort();
+    let activeCategory = null;
+    let sortAZ = true;
+    let activeLetter = null;
+
+    function initCategories() {
+        const el = document.getElementById('catFilters');
+        el.innerHTML = '<button class="cat-btn active" data-cat="">All</button>' +
+            CATEGORIES.map(c => `<button class="cat-btn" data-cat="${c}">${c}</button>`).join('');
+        el.addEventListener('click', e => {
+            const btn = e.target.closest('.cat-btn');
+            if (!btn) return;
+            el.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeCategory = btn.dataset.cat || null;
+            activeLetter = null;
+            render();
+        });
+    }
+
+    function initAlphaNav() {
+        const nav = document.getElementById('alphaNav');
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        const used = new Set(TERMS.map(t => t.term[0].toUpperCase()));
+        nav.innerHTML = letters.map(l =>
+            `<button class="alpha-btn${used.has(l) ? '' : ' disabled'}" data-letter="${l}" ${used.has(l) ? '' : 'disabled'}>${l}</button>`
+        ).join('');
+        nav.addEventListener('click', e => {
+            const btn = e.target.closest('.alpha-btn:not(.disabled)');
+            if (!btn) return;
+            const letter = btn.dataset.letter;
+            activeLetter = activeLetter === letter ? null : letter;
+            render();
+        });
+    }
+
+    function getFiltered() {
+        const q = document.getElementById('searchInput').value.toLowerCase().trim();
+        let filtered = TERMS.filter(t => {
+            if (activeCategory && t.cat !== activeCategory) return false;
+            if (activeLetter && t.term[0].toUpperCase() !== activeLetter) return false;
+            if (q) {
+                return t.term.toLowerCase().includes(q) ||
+                       t.short.toLowerCase().includes(q) ||
+                       t.long.toLowerCase().includes(q);
+            }
+            return true;
+        });
+        filtered.sort((a, b) => sortAZ ? a.term.localeCompare(b.term) : b.term.localeCompare(a.term));
+        return filtered;
+    }
+
+    function highlight(text, query) {
+        if (!query) return text;
+        const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(re, '<mark>$1</mark>');
+    }
+
+    function render() {
+        const q = document.getElementById('searchInput').value.toLowerCase().trim();
+        const filtered = getFiltered();
+        const list = document.getElementById('glossaryList');
+
+        // Update count
+        document.getElementById('resultCount').textContent = `${filtered.length} term${filtered.length !== 1 ? 's' : ''}`;
+
+        // Update alpha nav active state
+        document.querySelectorAll('.alpha-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.letter === activeLetter);
+        });
+
+        if (filtered.length === 0) {
+            list.innerHTML = `<div class="no-results"><div class="emoji">🤷</div><p>No terms found. Try a different search or category.</p></div>`;
+            return;
+        }
+
+        // Group by letter
+        const groups = {};
+        filtered.forEach(t => {
+            const letter = t.term[0].toUpperCase();
+            if (!groups[letter]) groups[letter] = [];
+            groups[letter].push(t);
+        });
+
+        list.innerHTML = Object.keys(groups).sort((a, b) => sortAZ ? a.localeCompare(b) : b.localeCompare(a)).map(letter => `
+            <div class="letter-group" id="letter-${letter}">
+                <div class="letter-heading">${letter}</div>
+                ${groups[letter].map(t => `
+                    <div class="term-card" data-term="${t.term}">
+                        <div class="term-header">
+                            <span class="term-name">${highlight(t.term, q)}</span>
+                            <div class="term-badges">
+                                <span class="badge badge-cat">${t.cat}</span>
+                                <span class="badge badge-level-${t.level}">${t.level}</span>
+                                <span class="chevron">▼</span>
+                            </div>
+                        </div>
+                        <div class="term-short">${highlight(t.short, q)}</div>
+                        <div class="term-detail">
+                            <div class="term-long">${t.long}</div>
+                            ${t.example ? `<div class="term-example"><strong>Example:</strong> ${t.example}</div>` : ''}
+                            ${t.related && t.related.length ? `<div class="term-related">Related: ${t.related.map(r => `<a data-jump="${r}">${r}</a>`).join(', ')}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `).join('');
+
+        // Card click to expand
+        list.querySelectorAll('.term-card').forEach(card => {
+            card.addEventListener('click', e => {
+                if (e.target.closest('.term-related a')) return;
+                card.classList.toggle('expanded');
+            });
+        });
+
+        // Related term links
+        list.querySelectorAll('.term-related a').forEach(a => {
+            a.addEventListener('click', e => {
+                e.stopPropagation();
+                const target = a.dataset.jump;
+                document.getElementById('searchInput').value = target;
+                activeCategory = null;
+                activeLetter = null;
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.cat-btn[data-cat=""]').classList.add('active');
+                render();
+                const found = document.querySelector(`.term-card[data-term="${target}"]`);
+                if (found) {
+                    found.classList.add('expanded');
+                    found.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        });
+    }
+
+    // Init
+    initCategories();
+    initAlphaNav();
+    render();
+
+    document.getElementById('searchInput').addEventListener('input', () => {
+        activeLetter = null;
+        render();
+    });
+
+    document.getElementById('sortToggle').addEventListener('click', function() {
+        sortAZ = !sortAZ;
+        this.textContent = sortAZ ? 'Sort: A → Z' : 'Sort: Z → A';
+        render();
+    });
+
+    document.getElementById('randomBtn').addEventListener('click', () => {
+        const t = TERMS[Math.floor(Math.random() * TERMS.length)];
+        document.getElementById('searchInput').value = t.term;
+        activeCategory = null;
+        activeLetter = null;
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.cat-btn[data-cat=""]').classList.add('active');
+        render();
+        const card = document.querySelector(`.term-card[data-term="${t.term}"]`);
+        if (card) {
+            card.classList.add('expanded');
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
+    // Keyboard shortcut: / to focus search
+    document.addEventListener('keydown', e => {
+        if (e.key === '/' && document.activeElement !== document.getElementById('searchInput')) {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
+    });
+    </script>
+</body>
+</html>
