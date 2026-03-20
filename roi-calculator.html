@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox — ROI Calculator</title>
+    <meta name="description" content="Calculate your return on investment with AgentBox. Estimate time saved, cost reduction, and productivity gains for your team.">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --bg3: #1a1a2e;
+            --text: #e0e0e8;
+            --text2: #8888a0;
+            --accent: #6c63ff;
+            --accent2: #00c853;
+            --accent3: #ff6b9d;
+            --border: #2a2a3e;
+            --card-bg: #16161f;
+            --shadow: rgba(0,0,0,0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .back-link {
+            display: inline-block;
+            padding: 1rem 2rem;
+            font-size: 0.9rem;
+            color: var(--text2);
+        }
+        .back-link:hover { color: var(--accent); }
+
+        header {
+            text-align: center;
+            padding: 2rem 1rem 1rem;
+        }
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        header p {
+            color: var(--text2);
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 1.05rem;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem 3rem;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        .panel h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text2);
+            margin-bottom: 0.4rem;
+        }
+        .input-group input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        .input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.3rem;
+        }
+        .input-row .value {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--accent2);
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .preset-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .preset-btn {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.4rem 0.9rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            transition: all 0.2s;
+        }
+        .preset-btn:hover, .preset-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* Results */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .result-card {
+            background: var(--bg3);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .result-card .label {
+            font-size: 0.78rem;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.3rem;
+        }
+        .result-card .number {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+        .result-card .sub {
+            font-size: 0.78rem;
+            color: var(--text2);
+            margin-top: 0.2rem;
+        }
+        .green { color: var(--accent2); }
+        .purple { color: var(--accent); }
+        .pink { color: var(--accent3); }
+
+        .big-result {
+            background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,200,83,0.15));
+            border: 1px solid var(--accent);
+            border-radius: 14px;
+            padding: 1.2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .big-result .label { font-size: 0.85rem; color: var(--text2); margin-bottom: 0.3rem; }
+        .big-result .number { font-size: 2.8rem; font-weight: 900; color: var(--accent2); }
+        .big-result .sub { font-size: 0.9rem; color: var(--text2); margin-top: 0.2rem; }
+
+        /* Bar chart */
+        .bar-chart { margin-top: 1rem; }
+        .bar-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.7rem;
+            gap: 0.8rem;
+        }
+        .bar-label {
+            font-size: 0.8rem;
+            color: var(--text2);
+            min-width: 100px;
+            text-align: right;
+        }
+        .bar-track {
+            flex: 1;
+            background: var(--bg);
+            border-radius: 6px;
+            height: 24px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.6s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #fff;
+            min-width: fit-content;
+        }
+
+        /* Timeline */
+        .timeline {
+            margin-top: 1rem;
+        }
+        .timeline-row {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .timeline-row:last-child { border-bottom: none; }
+        .timeline-month {
+            font-size: 0.82rem;
+            color: var(--text2);
+            min-width: 70px;
+        }
+        .timeline-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .timeline-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+        .timeline-val {
+            font-size: 0.82rem;
+            font-weight: 700;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        /* Export */
+        .export-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .export-btn {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            transition: all 0.2s;
+        }
+        .export-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .assumptions {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 10px;
+            font-size: 0.78rem;
+            color: var(--text2);
+        }
+        .assumptions h3 {
+            font-size: 0.85rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+        .assumptions ul { padding-left: 1.2rem; }
+        .assumptions li { margin-bottom: 0.3rem; }
+
+        footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text2);
+            font-size: 0.82rem;
+        }
+
+        @media (max-width: 768px) {
+            .layout { grid-template-columns: 1fr; }
+            .results-grid { grid-template-columns: 1fr 1fr; }
+            header h1 { font-size: 1.7rem; }
+            .big-result .number { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">← Back to AgentBox</a>
+
+<header>
+    <h1>💰 ROI Calculator</h1>
+    <p>Estimate how much time and money your team saves with AgentBox. Adjust the inputs to match your workflow.</p>
+</header>
+
+<div class="container">
+
+    <div class="preset-bar">
+        <button class="preset-btn active" onclick="applyPreset('solo')">👤 Solo User</button>
+        <button class="preset-btn" onclick="applyPreset('small')">👥 Small Team (5)</button>
+        <button class="preset-btn" onclick="applyPreset('medium')">🏢 Medium Team (20)</button>
+        <button class="preset-btn" onclick="applyPreset('enterprise')">🏗️ Enterprise (100)</button>
+        <button class="preset-btn" onclick="applyPreset('custom')">⚙️ Custom</button>
+    </div>
+
+    <div class="layout">
+        <!-- Inputs -->
+        <div class="panel">
+            <h2>📊 Your Inputs</h2>
+
+            <div class="input-group">
+                <div class="input-row">
+                    <label>Team members using AgentBox</label>
+                    <span class="value" id="vTeam">1</span>
+                </div>
+                <input type="range" id="sTeam" min="1" max="200" value="1" oninput="calc()">
+            </div>
+
+            <div class="input-group">
+                <div class="input-row">
+                    <label>Messages per person per day</label>
+                    <span class="value" id="vMessages">15</span>
+                </div>
+                <input type="range" id="sMessages" min="5" max="100" value="15" oninput="calc()">
+            </div>
+
+            <div class="input-group">
+                <div class="input-row">
+                    <label>Avg. minutes saved per message</label>
+                    <span class="value" id="vMinutes">3</span>
+                </div>
+                <input type="range" id="sMinutes" min="1" max="15" value="3" oninput="calc()">
+            </div>
+
+            <div class="input-group">
+                <div class="input-row">
+                    <label>Avg. hourly cost per team member ($)</label>
+                    <span class="value" id="vRate">$50</span>
+                </div>
+                <input type="range" id="sRate" min="15" max="200" value="50" oninput="calc()">
+            </div>
+
+            <div class="input-group">
+                <div class="input-row">
+                    <label>Working days per month</label>
+                    <span class="value" id="vDays">22</span>
+                </div>
+                <input type="range" id="sDays" min="15" max="30" value="22" oninput="calc()">
+            </div>
+
+            <div class="input-group">
+                <div class="input-row">
+                    <label>AgentBox monthly cost per user ($)</label>
+                    <span class="value" id="vCost">$9</span>
+                </div>
+                <input type="range" id="sCost" min="0" max="50" value="9" oninput="calc()">
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="panel">
+            <h2>🚀 Your Results</h2>
+
+            <div class="big-result">
+                <div class="label">Annual Net Savings</div>
+                <div class="number" id="rAnnualNet">$0</div>
+                <div class="sub" id="rRoi">0× return on investment</div>
+            </div>
+
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="label">Hours Saved / Month</div>
+                    <div class="number green" id="rHours">0</div>
+                    <div class="sub" id="rHoursSub">per team</div>
+                </div>
+                <div class="result-card">
+                    <div class="label">Monthly Value</div>
+                    <div class="number purple" id="rValue">$0</div>
+                    <div class="sub">of recovered time</div>
+                </div>
+                <div class="result-card">
+                    <div class="label">Monthly Cost</div>
+                    <div class="number pink" id="rCostOut">$0</div>
+                    <div class="sub">AgentBox subscription</div>
+                </div>
+                <div class="result-card">
+                    <div class="label">Payback Period</div>
+                    <div class="number green" id="rPayback">&lt;1 day</div>
+                    <div class="sub">to break even</div>
+                </div>
+            </div>
+
+            <h3 style="font-size:0.95rem; margin-bottom:0.8rem;">📅 12-Month Cumulative Savings</h3>
+            <div class="timeline" id="timeline"></div>
+
+            <div class="export-bar">
+                <button class="export-btn" onclick="exportJSON()">📋 Copy JSON</button>
+                <button class="export-btn" onclick="exportCSV()">📄 Download CSV</button>
+                <button class="export-btn" onclick="shareLink()">🔗 Share Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Savings Breakdown -->
+    <div class="panel" style="margin-top:2rem;">
+        <h2>📈 Where the Savings Come From</h2>
+        <div class="bar-chart" id="breakdown"></div>
+    </div>
+
+    <div class="assumptions">
+        <h3>📝 Assumptions & Methodology</h3>
+        <ul>
+            <li>Time savings assume each AgentBox interaction replaces a manual task (research, drafting, scheduling, etc.)</li>
+            <li>Dollar value uses fully loaded hourly cost (salary + benefits + overhead)</li>
+            <li>ROI = (Annual savings − Annual cost) ÷ Annual cost</li>
+            <li>Estimates are conservative — many users report higher per-message time savings for complex tasks</li>
+            <li>Free tier (20 msgs/day) not factored in; calculations use the subscription cost you set</li>
+        </ul>
+    </div>
+</div>
+
+<footer>
+    <p>🤖 <a href="index.html">AgentBox</a> — Your Personal AI Agent on Telegram</p>
+</footer>
+
+<script>
+const presets = {
+    solo:       { team:1,   msgs:15, mins:3,  rate:50,  days:22, cost:9  },
+    small:      { team:5,   msgs:20, mins:3,  rate:55,  days:22, cost:9  },
+    medium:     { team:20,  msgs:25, mins:4,  rate:60,  days:22, cost:9  },
+    enterprise: { team:100, msgs:30, mins:5,  rate:75,  days:22, cost:7  },
+    custom:     null
+};
+let currentPreset = 'solo';
+
+function applyPreset(name) {
+    currentPreset = name;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    if (!presets[name]) return;
+    const p = presets[name];
+    s('sTeam', p.team); s('sMessages', p.msgs); s('sMinutes', p.mins);
+    s('sRate', p.rate); s('sDays', p.days); s('sCost', p.cost);
+    calc();
+}
+
+function s(id, v) { document.getElementById(id).value = v; }
+function g(id) { return parseInt(document.getElementById(id).value); }
+
+function calc() {
+    const team = g('sTeam'), msgs = g('sMessages'), mins = g('sMinutes');
+    const rate = g('sRate'), days = g('sDays'), cost = g('sCost');
+
+    // Display values
+    document.getElementById('vTeam').textContent = team;
+    document.getElementById('vMessages').textContent = msgs;
+    document.getElementById('vMinutes').textContent = mins;
+    document.getElementById('vRate').textContent = '$' + rate;
+    document.getElementById('vDays').textContent = days;
+    document.getElementById('vCost').textContent = '$' + cost;
+
+    // Calculations
+    const totalMsgsMonth = team * msgs * days;
+    const hoursSavedMonth = (totalMsgsMonth * mins) / 60;
+    const monthlyValue = hoursSavedMonth * rate;
+    const monthlyCost = team * cost;
+    const monthlyNet = monthlyValue - monthlyCost;
+    const annualNet = monthlyNet * 12;
+    const annualCost = monthlyCost * 12;
+    const roi = annualCost > 0 ? annualNet / annualCost : Infinity;
+
+    document.getElementById('rHours').textContent = hoursSavedMonth.toFixed(0);
+    document.getElementById('rValue').textContent = fmt(monthlyValue);
+    document.getElementById('rCostOut').textContent = fmt(monthlyCost);
+    document.getElementById('rAnnualNet').textContent = fmt(annualNet);
+    document.getElementById('rRoi').textContent = (roi === Infinity ? '∞' : roi.toFixed(1) + '×') + ' return on investment';
+
+    // Payback
+    const dailyNet = monthlyNet / days;
+    if (monthlyCost === 0) {
+        document.getElementById('rPayback').textContent = 'Free!';
+    } else if (dailyNet <= 0) {
+        document.getElementById('rPayback').textContent = 'N/A';
+    } else {
+        const paybackDays = monthlyCost / dailyNet;
+        document.getElementById('rPayback').textContent = paybackDays < 1 ? '<1 day' : paybackDays.toFixed(1) + ' days';
+    }
+
+    // Timeline
+    let html = '';
+    let cumulative = 0;
+    const maxCum = monthlyNet * 12;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    for (let i = 0; i < 12; i++) {
+        cumulative += monthlyNet;
+        const pct = maxCum > 0 ? Math.max(0, (cumulative / maxCum) * 100) : 0;
+        const color = cumulative >= 0 ? 'var(--accent2)' : 'var(--accent3)';
+        html += `<div class="timeline-row">
+            <span class="timeline-month">Month ${i+1}</span>
+            <div class="timeline-bar"><div class="timeline-fill" style="width:${pct}%;background:${color}"></div></div>
+            <span class="timeline-val" style="color:${color}">${fmt(cumulative)}</span>
+        </div>`;
+    }
+    document.getElementById('timeline').innerHTML = html;
+
+    // Breakdown bars
+    const categories = [
+        { label: 'Research', pct: 30, color: 'var(--accent)' },
+        { label: 'Drafting', pct: 25, color: 'var(--accent2)' },
+        { label: 'Scheduling', pct: 15, color: '#ffa726' },
+        { label: 'Data lookup', pct: 15, color: 'var(--accent3)' },
+        { label: 'Other tasks', pct: 15, color: '#00bcd4' }
+    ];
+    let bHtml = '';
+    categories.forEach(c => {
+        const val = (monthlyValue * c.pct / 100);
+        bHtml += `<div class="bar-row">
+            <span class="bar-label">${c.label}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${c.pct}%;background:${c.color}">${fmt(val)}/mo</div></div>
+        </div>`;
+    });
+    document.getElementById('breakdown').innerHTML = bHtml;
+}
+
+function fmt(n) {
+    if (Math.abs(n) >= 1000) return (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString();
+    return (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n));
+}
+
+function getState() {
+    return {
+        team: g('sTeam'), messages: g('sMessages'), minutes: g('sMinutes'),
+        rate: g('sRate'), days: g('sDays'), cost: g('sCost'), preset: currentPreset
+    };
+}
+
+function exportJSON() {
+    const d = getState();
+    const team = d.team, msgs = d.messages, mins = d.minutes, rate = d.rate, days = d.days, cost = d.cost;
+    const hoursSaved = (team * msgs * days * mins) / 60;
+    const monthlyValue = hoursSaved * rate;
+    const monthlyCost = team * cost;
+    const annualNet = (monthlyValue - monthlyCost) * 12;
+    const obj = { inputs: d, results: { hoursSavedPerMonth: Math.round(hoursSaved), monthlyValue: Math.round(monthlyValue), monthlyCost, annualNetSavings: Math.round(annualNet) }};
+    navigator.clipboard.writeText(JSON.stringify(obj, null, 2));
+    alert('Copied to clipboard!');
+}
+
+function exportCSV() {
+    const d = getState();
+    const team = d.team, msgs = d.messages, mins = d.minutes, rate = d.rate, days = d.days, cost = d.cost;
+    const hoursSaved = (team * msgs * days * mins) / 60;
+    const monthlyValue = hoursSaved * rate;
+    const monthlyCost = team * cost;
+    let csv = 'Month,Cumulative Savings,Monthly Value,Monthly Cost\n';
+    let cum = 0;
+    for (let i = 1; i <= 12; i++) {
+        cum += monthlyValue - monthlyCost;
+        csv += `${i},${Math.round(cum)},${Math.round(monthlyValue)},${monthlyCost}\n`;
+    }
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'agentbox-roi.csv'; a.click();
+}
+
+function shareLink() {
+    const d = getState();
+    const params = new URLSearchParams(d);
+    const url = location.origin + location.pathname + '?' + params.toString();
+    navigator.clipboard.writeText(url);
+    alert('Link copied!');
+}
+
+// Load from URL params
+(function() {
+    const p = new URLSearchParams(location.search);
+    if (p.has('team')) {
+        s('sTeam', p.get('team')); s('sMessages', p.get('messages'));
+        s('sMinutes', p.get('minutes')); s('sRate', p.get('rate'));
+        s('sDays', p.get('days')); s('sCost', p.get('cost'));
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    }
+    calc();
+})();
+</script>
+
+</body>
+</html>
