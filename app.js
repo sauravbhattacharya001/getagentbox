@@ -8873,6 +8873,7 @@ if (typeof window !== 'undefined') { window.ShareCardGenerator = ShareCardGenera
   if (!container || !canvas || !detail) return;
 
   var ctx = canvas.getContext('2d');
+  if (!ctx) return;  // Canvas 2D not available (e.g. jsdom, SSR)
   var selected = null;
   var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
