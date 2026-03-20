@@ -7268,7 +7268,7 @@ var CommunityShowcase = (function () {
     return (
       '<article class="showcase-card" data-id="' + item.id + '" data-category="' + item.category + '">' +
         '<div class="showcase-card-header">' +
-          '<div class="showcase-avatar" aria-hidden="true">' + item.avatar + '</div>' +
+          '<div class="showcase-avatar" aria-hidden="true">' + _escapeHtml(item.avatar) + '</div>' +
           '<div class="showcase-meta">' +
             '<span class="showcase-author">' + _escapeHtml(item.author) + '</span>' +
             '<span class="showcase-date">' + _formatDate(item.date) + '</span>' +
