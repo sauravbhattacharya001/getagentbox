@@ -1,0 +1,11313 @@
+/* Auto-generated bundle — do not edit directly. Run: npm run build */
+
+/* === src/modules/globals.js === */
+/**
+ * AgentBox Landing Page - Interactive Components
+ *
+ * Architecture:
+ *   Each module is a self-contained IIFE exposing a public API via
+ *   return object.  All DOM wiring happens in the DOMContentLoaded
+ *   block.  Shared utilities (arrowKeyNav, activateOnKeyboard,
+ *   prefersReducedMotion) are defined at the top level.
+ *
+ * Modules:
+ *  - ChatDemo:                 animated chat scenario player
+ *  - Testimonials:             auto-rotating testimonials carousel
+ *  - Pricing:                  monthly/yearly billing toggle
+ *  - FAQ:                      accordion behaviour
+ *  - HowItWorks:               scroll-triggered step animations
+ *  - Stats:                    animated social proof counters
+ *  - UseCases:                 tabbed section with keyboard nav
+ *  - Integrations:             category-filtered integration grid
+ *  - Changelog:                tag-filtered changelog entries
+ *  - Trust:                    expandable privacy detail cards
+ *  - SiteNav:                  sticky nav bar with scroll spy
+ *  - Newsletter:               signup form with email validation
+ *  - Roadmap:                  product roadmap with voting + filters
+ *  - StatusDashboard:          service health monitoring panel
+ *  - Calculator:               interactive time-saved calculator
+ *  - CommandPalette:           Ctrl+K quick section navigation
+ *  - ShareFab:                 floating share button with link copy
+ *  - ThemeToggle:              dark/light theme switch
+ *  - ScrollProgress:           scroll progress bar + back-to-top
+ *  - ShortcutsHelp:            keyboard shortcuts help dialog
+ *  - Playground:               interactive chat playground
+ *  - ActivityFeed:             simulated real-time activity feed
+ *  - PromptGallery:            interactive prompt template gallery
+ *  - PersonalityConfigurator:  agent personality sliders + preview
+ *  - FeatureTour:              guided walkthrough overlay with spotlight
+ *  - ApiExplorer:              interactive API endpoint browser with curl/response preview
+ */
+
+/** Global reduced-motion check (WCAG 2.3.3 compliance).
+ *  Reactive: listens for OS preference changes at runtime so toggling
+ *  "Reduce motion" in system settings takes effect immediately.
+ */
+var _prefersReducedMotionQuery = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+var prefersReducedMotion = _prefersReducedMotionQuery ? _prefersReducedMotionQuery.matches : false;
+
+if (_prefersReducedMotionQuery && _prefersReducedMotionQuery.addEventListener) {
+  _prefersReducedMotionQuery.addEventListener('change', function (e) {
+    prefersReducedMotion = e.matches;
+
+    // Stop or resume testimonial autoplay based on the new preference.
+    if (typeof Testimonials !== 'undefined' && Testimonials._onMotionChange) {
+      Testimonials._onMotionChange(e.matches);
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Chat Demo Scenarios
+// ---------------------------------------------------------------------------
+
+/* exported SCENARIOS, ChatDemo, Testimonials, Pricing, FAQ, Stats, Trust */
+/* eslint-disable no-var */
+var SCENARIOS = Object.freeze({
+  memory: [
+    { role: 'user', text: 'Hey, what was that pasta recipe I asked about last week?' },
+    { role: 'bot', text: 'The one with sun-dried tomatoes and basil! You mentioned wanting to try it with penne instead of fusilli. Want me to pull up the full recipe?' },
+    { role: 'user', text: 'Yes! And remind me to buy penne tonight' },
+    { role: 'bot', text: 'Here\'s the recipe:\n\n🍝 Sun-dried tomato pasta\n• 400g penne\n• 100g sun-dried tomatoes\n• Fresh basil, garlic, olive oil\n• Parmesan to finish\n\nBoil pasta, sauté garlic + tomatoes 3 min, toss together, top with basil & parmesan.\n\nI\'ll remind you tonight at 7pm to grab penne! ✅' },
+  ],
+  search: [
+    { role: 'user', text: 'What\'s the weather like in Seattle this weekend?' },
+    { role: 'bot', text: '🌧️ Seattle this weekend:\n\nSaturday: 48°F, light rain in the morning, clearing by noon\nSunday: 52°F, partly cloudy\n\nNot bad for February! Might be worth getting out on Sunday.' },
+    { role: 'user', text: 'Any good hikes near Seattle that work in light rain?' },
+    { role: 'bot', text: 'Here are some rain-friendly options:\n\n🌲 Twin Falls (easy, 2.6 mi) - waterfall is amazing after rain\n🏔️ Rattlesnake Ledge (moderate, 4 mi) - canopy cover most of the way\n🌿 Discovery Park Loop (easy, 2.8 mi) - scenic + mostly sheltered\n\nI\'d go Twin Falls if you want the payoff. Want directions?' },
+  ],
+  reminder: [
+    { role: 'user', text: 'Remind me to take my medicine in 30 minutes' },
+    { role: 'bot', text: 'Got it! I\'ll ping you in 30 minutes to take your medicine 💊' },
+    { role: 'user', text: 'Also remind me about the team standup at 9am tomorrow' },
+    { role: 'bot', text: 'Done! Two reminders set:\n\n⏰ In 30 min - take medicine\n⏰ Tomorrow 9:00 AM - team standup\n\nI\'ll make sure you don\'t miss either one.' },
+  ],
+  image: [
+    { role: 'user', text: '📷 [sends a photo of an error message on their screen]' },
+    { role: 'bot', text: 'I can see the error - it\'s a CORS issue. Your frontend at localhost:3000 is trying to hit an API on a different port without the right headers.\n\nQuick fix: add this to your server:\n\n`Access-Control-Allow-Origin: *`\n\nOr if you\'re using Express:\n`app.use(cors())`\n\nWant me to walk through the full setup?' },
+    { role: 'user', text: 'That fixed it, thanks!' },
+    { role: 'bot', text: 'Nice! 🎉 Pro tip: in production, replace the wildcard `*` with your actual domain for security. Let me know if anything else comes up.' },
+  ],
+});
+
+
+/* === src/modules/_typing-indicator-template.js === */
+
+// ---------------------------------------------------------------------------
+// Shared Utilities
+// ---------------------------------------------------------------------------
+
+/**
+ * Reusable typing indicator template.
+ * Shared between ChatDemo and Playground — clone with cloneNode(true).
+ */
+var _typingIndicatorTemplate = (function () {
+  let el = document.createElement('div');
+  el.className = 'typing-indicator';
+  for (var i = 0; i < 3; i++) el.appendChild(document.createElement('span'));
+  return el;
+})();
+
+
+/* === src/modules/chat-demo.js === */
+
+// ---------------------------------------------------------------------------
+// Chat Demo Module
+// ---------------------------------------------------------------------------
+
+var ChatDemo = (function () {
+  let animationTimer = null;
+  let animationGeneration = 0;
+  let scrollRafId = 0;
+  /** Cached scenario buttons — avoids querySelectorAll on every switch. */
+  let _scenarioBtns = null;
+
+  /**
+   * Batched scroll-to-bottom via requestAnimationFrame to avoid forced
+   * synchronous layout. Defers the read+write to the browser's next
+   * paint frame where layout is already computed.
+   */
+  function scheduleScroll(el) {
+    if (scrollRafId) return;
+    scrollRafId = requestAnimationFrame(function () {
+      scrollRafId = 0;
+      el.scrollTop = el.scrollHeight;
+    });
+  }
+
+  /** Build a chat bubble DOM node from a message object. */
+  function createBubble(msg) {
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + msg.role;
+
+    const frag = document.createDocumentFragment();
+    const lines = msg.text.split('\n');
+
+    for (var i = 0; i < lines.length; i++) {
+      if (i > 0) frag.appendChild(document.createElement('br'));
+      // Split on backtick-delimited code spans (odd indices are code).
+      const segments = lines[i].split(/`([^`]+)`/);
+      for (var s = 0; s < segments.length; s++) {
+        if (s % 2 === 1) {
+          const code = document.createElement('code');
+          code.textContent = segments[s];
+          frag.appendChild(code);
+        } else if (segments[s]) {
+          frag.appendChild(document.createTextNode(segments[s]));
+        }
+      }
+    }
+
+    bubble.appendChild(frag);
+    return bubble;
+  }
+
+  /** Play a named scenario in the chat window. */
+  function play(name) {
+    const chatWindow = document.getElementById('chatWindow');
+    if (!chatWindow) return;
+
+    chatWindow.innerHTML = '';
+    if (!Object.prototype.hasOwnProperty.call(SCENARIOS, name)) return;
+    const messages = SCENARIOS[name];
+    if (!messages) return;
+
+    let idx = 0;
+    const gen = animationGeneration;
+
+    function isStale() {
+      return gen !== animationGeneration;
+    }
+
+    function showNext() {
+      if (idx >= messages.length || isStale()) return;
+      const msg = messages[idx];
+
+      if (msg.role === 'bot') {
+        const typing = _typingIndicatorTemplate.cloneNode(true);
+        chatWindow.appendChild(typing);
+        scheduleScroll(chatWindow);
+
+        animationTimer = setTimeout(function () {
+          if (isStale()) return;
+          if (typing.parentNode) typing.parentNode.removeChild(typing);
+          chatWindow.appendChild(createBubble(msg));
+          scheduleScroll(chatWindow);
+          idx++;
+          animationTimer = setTimeout(showNext, 1200);
+        }, 800 + Math.random() * 600);
+      } else {
+        chatWindow.appendChild(createBubble(msg));
+        scheduleScroll(chatWindow);
+        idx++;
+        animationTimer = setTimeout(showNext, 900);
+      }
+    }
+
+    animationTimer = setTimeout(showNext, 500);
+  }
+
+  /** Switch to a new scenario, cancelling any in-flight animation. */
+  function switchTo(name) {
+    animationGeneration++;
+    if (animationTimer) {
+      clearTimeout(animationTimer);
+      animationTimer = null;
+    }
+    if (scrollRafId) {
+      cancelAnimationFrame(scrollRafId);
+      scrollRafId = 0;
+    }
+    if (!_scenarioBtns) {
+      _scenarioBtns = document.querySelectorAll('.scenario-btn');
+    }
+    for (var i = 0; i < _scenarioBtns.length; i++) {
+      _scenarioBtns[i].classList.toggle('active', _scenarioBtns[i].dataset.scenario === name);
+    }
+    play(name);
+  }
+
+  return { switchTo: switchTo, play: play };
+})();
+
+
+/* === src/modules/testimonials.js === */
+
+// ---------------------------------------------------------------------------
+// Testimonials Carousel Module
+// ---------------------------------------------------------------------------
+
+var Testimonials = (function () {
+  let currentIndex = 0;
+  let totalSlides = 0;
+  let autoPlayTimer = null;
+  const AUTO_PLAY_INTERVAL = 5000;
+
+  // Cached DOM references — avoid re-querying on every goTo() call.
+  // goTo() runs every 5s via autoplay; caching eliminates ~12
+  // getElementById + querySelectorAll calls per minute.
+  let _track = null;
+  let _dots = [];
+
+  /** Initialise the carousel: count slides, build dots, start auto-play. */
+  function init() {
+    _track = document.getElementById('testimonialsTrack');
+    if (!_track) return;
+
+    totalSlides = _track.querySelectorAll('.testimonial-card').length;
+    if (totalSlides === 0) return;
+
+    buildDots();
+    goTo(0);
+
+    // Only auto-play if user hasn't requested reduced motion.
+    if (!prefersReducedMotion) {
+      startAutoPlay();
+    }
+
+    // Pause auto-play on hover, resume on leave.
+    const section = document.getElementById('testimonialsSection');
+    if (section) {
+      section.addEventListener('mouseenter', stopAutoPlay);
+      section.addEventListener('mouseleave', function () {
+        if (!prefersReducedMotion) startAutoPlay();
+      });
+
+      // Keyboard navigation for the carousel.
+      section.setAttribute('tabindex', '0');
+      section.setAttribute('role', 'region');
+      section.setAttribute('aria-roledescription', 'carousel');
+      section.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          goTo(currentIndex + 1);
+          if (autoPlayTimer) startAutoPlay();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          goTo(currentIndex - 1);
+          if (autoPlayTimer) startAutoPlay();
+        }
+      });
+    }
+  }
+
+  /** Create navigation dots matching the number of slides. */
+  function buildDots() {
+    const dotsContainer = document.getElementById('testimonialsDots');
+    if (!dotsContainer) return;
+
+    dotsContainer.innerHTML = '';
+    _dots = [];
+    for (var i = 0; i < totalSlides; i++) {
+      const dot = document.createElement('button');
+      dot.className = 'testimonial-dot';
+      dot.setAttribute('aria-label', 'Go to testimonial ' + (i + 1));
+      dot.dataset.index = String(i);
+      (function (idx) {
+        dot.addEventListener('click', function () {
+          goTo(idx);
+          if (autoPlayTimer) startAutoPlay();
+        });
+      })(i);
+      dotsContainer.appendChild(dot);
+      _dots.push(dot);
+    }
+  }
+
+  /** Navigate to a specific slide index. */
+  function goTo(index) {
+    if (index < 0) index = totalSlides - 1;
+    if (index >= totalSlides) index = 0;
+    currentIndex = index;
+
+    if (_track) {
+      _track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+    }
+
+    for (var i = 0; i < _dots.length; i++) {
+      _dots[i].classList.toggle('active', i === currentIndex);
+    }
+  }
+
+  /** Go to the next slide. */
+  function next() {
+    goTo(currentIndex + 1);
+  }
+
+  /** Go to the previous slide. */
+  function prev() {
+    goTo(currentIndex - 1);
+  }
+
+  /** Start the auto-play timer. */
+  function startAutoPlay() {
+    stopAutoPlay();
+    autoPlayTimer = setInterval(next, AUTO_PLAY_INTERVAL);
+  }
+
+  /** Stop the auto-play timer. */
+  function stopAutoPlay() {
+    if (autoPlayTimer) {
+      clearInterval(autoPlayTimer);
+      autoPlayTimer = null;
+    }
+  }
+
+  /** Get the current slide index. */
+  function getCurrent() {
+    return currentIndex;
+  }
+
+  /** Get the total number of slides. */
+  function getTotal() {
+    return totalSlides;
+  }
+
+  return {
+    init: init,
+    goTo: goTo,
+    next: next,
+    prev: prev,
+    startAutoPlay: startAutoPlay,
+    stopAutoPlay: stopAutoPlay,
+    getCurrent: getCurrent,
+    getTotal: getTotal,
+    /** Called when the OS prefers-reduced-motion setting changes at runtime. */
+    _onMotionChange: function (reducedMotion) {
+      if (reducedMotion) {
+        stopAutoPlay();
+      } else {
+        startAutoPlay();
+      }
+    },
+  };
+})();
+
+
+/* === src/modules/pricing.js === */
+
+// ---------------------------------------------------------------------------
+// Pricing Module
+// ---------------------------------------------------------------------------
+
+var Pricing = (function () {
+  let isYearly = false;
+
+  // Cached DOM references — resolved once, reused on each toggle.
+  let _toggleEl = null;
+  let _monthlyLabel = null;
+  let _yearlyLabel = null;
+  let _priceAmounts = null;
+  let _pricePeriods = null;
+  let _resolved = false;
+
+  function _resolve() {
+    if (_resolved) return;
+    _toggleEl = document.getElementById('billingToggle');
+    _monthlyLabel = document.getElementById('monthlyLabel');
+    _yearlyLabel = document.getElementById('yearlyLabel');
+    _priceAmounts = document.querySelectorAll('.price-amount');
+    _pricePeriods = document.querySelectorAll('.price-period-dynamic');
+    _resolved = true;
+  }
+
+  function toggle() {
+    isYearly = !isYearly;
+    _resolve();
+
+    if (_toggleEl) {
+      _toggleEl.classList.toggle('yearly', isYearly);
+      _toggleEl.setAttribute('aria-checked', String(isYearly));
+    }
+    if (_monthlyLabel) _monthlyLabel.classList.toggle('active-label', !isYearly);
+    if (_yearlyLabel) _yearlyLabel.classList.toggle('active-label', isYearly);
+
+    for (var pi = 0; pi < _priceAmounts.length; pi++) {
+      const priceEl = _priceAmounts[pi].parentElement;
+      _priceAmounts[pi].textContent = isYearly ? priceEl.dataset.yearly : priceEl.dataset.monthly;
+    }
+    for (var pj = 0; pj < _pricePeriods.length; pj++) {
+      _pricePeriods[pj].textContent = isYearly ? 'per month, billed yearly' : 'per month';
+    }
+  }
+
+  return { toggle: toggle };
+})();
+
+
+/* === src/modules/faq.js === */
+
+// ---------------------------------------------------------------------------
+// FAQ Module
+// ---------------------------------------------------------------------------
+
+var FAQ = (function () {
+  function toggle(questionEl) {
+    const item = questionEl.closest('.faq-item');
+    if (!item) return;
+
+    const wasOpen = item.classList.contains('open');
+
+    // Close sibling items (accordion behaviour).
+    // Scoped to parent container instead of full document scan.
+    const siblings = item.parentElement ? item.parentElement.querySelectorAll('.faq-item.open') : [];
+    for (var si = 0; si < siblings.length; si++) {
+      siblings[si].classList.remove('open');
+      const q = siblings[si].querySelector('.faq-question');
+      if (q) q.setAttribute('aria-expanded', 'false');
+    }
+
+    // Re-open the clicked item if it wasn't already open.
+    if (!wasOpen) {
+      item.classList.add('open');
+      questionEl.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  return { toggle: toggle };
+})();
+
+
+/* === src/modules/how-it-works.js === */
+
+// ---------------------------------------------------------------------------
+// How It Works - Scroll-triggered Step Animation
+// ---------------------------------------------------------------------------
+
+var HowItWorks = (function () {
+  let observed = false;
+
+  /** Reveal step cards with staggered animation when section scrolls into view. */
+  function init() {
+    const section = document.getElementById('howItWorks');
+    if (!section) return;
+
+    const steps = section.querySelectorAll('.step');
+    if (steps.length === 0) return;
+
+    // Use IntersectionObserver if available, otherwise reveal immediately.
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting && !observed) {
+              observed = true;
+              revealSteps(steps);
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.2 }
+      );
+      observer.observe(section);
+    } else {
+      // Fallback: reveal immediately for older browsers.
+      revealSteps(steps);
+    }
+  }
+
+  /** Add the visible class to each step (CSS handles staggered transition-delay). */
+  function revealSteps(steps) {
+    for (var i = 0; i < steps.length; i++) {
+      steps[i].classList.add('visible');
+    }
+  }
+
+  /** Check if steps have been revealed (useful for testing). */
+  function isRevealed() {
+    return observed;
+  }
+
+  /** Reset state (useful for testing). */
+  function reset() {
+    observed = false;
+    const section = document.getElementById('howItWorks');
+    if (section) {
+      const steps = section.querySelectorAll('.step');
+      for (var i = 0; i < steps.length; i++) {
+        steps[i].classList.remove('visible');
+      }
+    }
+  }
+
+  return { init: init, isRevealed: isRevealed, reset: reset, revealSteps: revealSteps };
+})();
+
+
+/* === src/modules/stats.js === */
+
+// ---------------------------------------------------------------------------
+// Social Proof Stats - Animated Counters
+// ---------------------------------------------------------------------------
+
+var Stats = (function () {
+  let animated = false;
+  const DURATION = 2000; // animation duration in ms
+
+  /**
+   * Easing function - ease-out cubic for a satisfying deceleration.
+   * @param {number} t - Progress from 0 to 1
+   * @returns {number} Eased value from 0 to 1
+   */
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  /**
+   * Format a number with commas as thousand separators.
+   * @param {number} n
+   * @returns {string}
+   */
+  function formatNumber(n) {
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  /**
+   * Animate a single stat card's number from 0 to its target value.
+   * Uses requestAnimationFrame for smooth 60fps animation instead of
+   * setInterval which can cause jank and layout thrashing.
+   * @param {Element} card - The .stat-card element
+   */
+  function animateCard(card) {
+    const numberEl = card.querySelector('.stat-number');
+    if (!numberEl) return;
+
+    let target = parseInt(card.dataset.target, 10);
+    const suffix = card.dataset.suffix || '';
+    const decimal = card.dataset.decimal || '';
+    let prefix = '';
+
+    // Check if the display starts with < (e.g., "<2s")
+    if (numberEl.textContent.indexOf('<') === 0) {
+      prefix = '<';
+    }
+
+    if (isNaN(target)) return;
+
+    // Cancel any existing animation on this element to prevent stacking
+    if (card._statsRafId) {
+      cancelAnimationFrame(card._statsRafId);
+      card._statsRafId = null;
+    }
+
+    let startTime = null;
+    let prev = -1;
+
+    function tick(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / DURATION, 1);
+      const easedProgress = easeOutCubic(progress);
+      let current = Math.round(easedProgress * target);
+
+      // Ensure monotonic progression - never go backwards
+      if (current < prev) current = prev;
+      prev = current;
+
+      // Final frame
+      if (current === target || progress >= 1) {
+        card._statsRafId = null;
+
+        let finalDisplay = prefix + formatNumber(target);
+        if (decimal) {
+          finalDisplay = prefix + formatNumber(target) + '.' + decimal;
+        }
+        finalDisplay += suffix;
+        numberEl.textContent = finalDisplay;
+        card.classList.add('animated');
+        return;
+      }
+
+      let display = prefix + formatNumber(current);
+      if (decimal) display += '.' + decimal;
+      display += suffix;
+      numberEl.textContent = display;
+
+      card._statsRafId = requestAnimationFrame(tick);
+    }
+
+    card._statsRafId = requestAnimationFrame(tick);
+  }
+
+  /**
+   * Animate all stat cards in the section.
+   * If prefers-reduced-motion is set, show final values immediately.
+   * @param {NodeList|Array} cards - The .stat-card elements
+   */
+  function animateAll(cards) {
+    if (prefersReducedMotion) {
+      // Skip animation - show final values immediately
+      for (var i = 0; i < cards.length; i++) {
+        showFinalValue(cards[i]);
+      }
+    } else {
+      for (var j = 0; j < cards.length; j++) {
+        animateCard(cards[j]);
+      }
+    }
+    animated = true;
+  }
+
+  /**
+   * Show the final stat value without animation.
+   * @param {Element} card - A .stat-card element
+   */
+  function showFinalValue(card) {
+    const numberEl = card.querySelector('.stat-number');
+    if (!numberEl) return;
+
+    let target = parseInt(card.dataset.target, 10);
+    const suffix = card.dataset.suffix || '';
+    const decimal = card.dataset.decimal || '';
+    let prefix = '';
+
+    if (numberEl.textContent.indexOf('<') === 0) {
+      prefix = '<';
+    }
+
+    if (isNaN(target)) return;
+
+    let display = prefix + formatNumber(target);
+    if (decimal) display += '.' + decimal;
+    display += suffix;
+    numberEl.textContent = display;
+    card.classList.add('animated');
+  }
+
+  /** Initialize - observe the stats section for scroll-triggered animation. */
+  function init() {
+    const section = document.getElementById('statsSection');
+    if (!section) return;
+
+    const cards = section.querySelectorAll('.stat-card');
+    if (cards.length === 0) return;
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting && !animated) {
+              animateAll(cards);
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.3 }
+      );
+      observer.observe(section);
+    } else {
+      // Fallback: animate immediately.
+      animateAll(cards);
+    }
+  }
+
+  /** Check whether the animation has already played. */
+  function isAnimated() {
+    return animated;
+  }
+
+  /** Reset state for testing. */
+  function reset() {
+    animated = false;
+    const section = document.getElementById('statsSection');
+    if (section) {
+      const cards = section.querySelectorAll('.stat-card');
+      for (var i = 0; i < cards.length; i++) {
+        if (cards[i]._statsRafId) {
+          cancelAnimationFrame(cards[i]._statsRafId);
+          cards[i]._statsRafId = null;
+        }
+        cards[i].classList.remove('animated');
+        const numEl = cards[i].querySelector('.stat-number');
+        if (numEl) numEl.textContent = '0';
+      }
+    }
+  }
+
+  return {
+    init: init,
+    isAnimated: isAnimated,
+    reset: reset,
+    animateAll: animateAll,
+    animateCard: animateCard,
+    formatNumber: formatNumber,
+    easeOutCubic: easeOutCubic,
+    DURATION: DURATION
+  };
+})();
+
+
+/* === src/modules/use-cases.js === */
+
+// ---------------------------------------------------------------------------
+// Use Cases Tabbed Section
+// ---------------------------------------------------------------------------
+
+var UseCases = (function () {
+  let currentTab = 'dev';
+  let _section = null;
+
+  /** Lazily resolve the section element (cache on first use). */
+  function section() {
+    if (!_section) _section = document.getElementById('usecasesSection');
+    return _section;
+  }
+
+  /**
+   * Switch to a different use-case tab.
+   * Updates ARIA attributes, active classes, and panel visibility.
+   * @param {string} tabId  The data-usecase value to switch to.
+   */
+  function switchTo(tabId) {
+    if (!tabId || tabId === currentTab) return;
+
+    if (!section()) return;
+
+    // Deactivate current tab button.
+    const tabs = section().querySelectorAll('.usecase-tab');
+    const panels = section().querySelectorAll('.usecase-panel');
+
+    let found = false;
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].dataset.usecase === tabId) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) return;
+
+    for (var j = 0; j < tabs.length; j++) {
+      const isTarget = tabs[j].dataset.usecase === tabId;
+      tabs[j].classList.toggle('active', isTarget);
+      tabs[j].setAttribute('aria-selected', isTarget ? 'true' : 'false');
+      tabs[j].setAttribute('tabindex', isTarget ? '0' : '-1');
+    }
+
+    for (var k = 0; k < panels.length; k++) {
+      const panelId = panels[k].id;
+      let isActive = panelId === 'usecase-' + tabId;
+      panels[k].classList.toggle('active', isActive);
+      if (isActive) {
+        panels[k].removeAttribute('hidden');
+      } else {
+        panels[k].setAttribute('hidden', '');
+      }
+    }
+
+    currentTab = tabId;
+  }
+
+  /** Return the current active tab id. */
+  function getCurrent() {
+    return currentTab;
+  }
+
+  /** Get list of all available tab ids. */
+  function getTabs() {
+    if (!section()) return [];
+    const tabs = section().querySelectorAll('.usecase-tab');
+    const ids = [];
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].dataset.usecase) ids.push(tabs[i].dataset.usecase);
+    }
+    return ids;
+  }
+
+  /**
+   * Initialise tabindex values for tabs (keyboard support).
+   * Click and keyboard event delegation is handled in the
+   * DOMContentLoaded block to avoid stale closure issues.
+   */
+  function init() {
+    _section = document.getElementById('usecasesSection');
+    if (!section()) return;
+
+    const tablist = section().querySelector('[role="tablist"]');
+    if (!tablist) return;
+
+    // Set initial tabindex values.
+    const tabs = tablist.querySelectorAll('.usecase-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].setAttribute('tabindex', tabs[i].classList.contains('active') ? '0' : '-1');
+    }
+  }
+
+  return {
+    switchTo: switchTo,
+    getCurrent: getCurrent,
+    getTabs: getTabs,
+    init: init
+  };
+})();
+
+
+/* === src/modules/integrations.js === */
+
+// ---------------------------------------------------------------------------
+// Integrations Module - category filtering for integrations grid
+// ---------------------------------------------------------------------------
+
+var Integrations = (function () {
+  let currentCategory = 'all';
+  let _section = null;
+
+  /** Lazily resolve the section element (cache on first use). */
+  function section() {
+    if (!_section) _section = document.getElementById('integrationsSection');
+    return _section;
+  }
+
+  /**
+   * Filter integration cards by category.
+   * @param {string} category  The data-category to show, or 'all'.
+   */
+  function filterBy(category) {
+    if (!category) return;
+
+    if (!section()) return;
+
+    const cards = section().querySelectorAll('.integration-card');
+    const buttons = section().querySelectorAll('.integration-filter-btn');
+
+    // Update filter buttons
+    for (var i = 0; i < buttons.length; i++) {
+      let isActive = buttons[i].dataset.category === category;
+      buttons[i].classList.toggle('active', isActive);
+      buttons[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
+
+    // Show/hide cards
+    let visibleCount = 0;
+    for (var j = 0; j < cards.length; j++) {
+      const match = category === 'all' || cards[j].dataset.category === category;
+      cards[j].classList.toggle('hidden', !match);
+      if (match) visibleCount++;
+    }
+
+    currentCategory = category;
+    return visibleCount;
+  }
+
+  /** Get the current active category. */
+  function getCurrent() {
+    return currentCategory;
+  }
+
+  /** Get all available categories. */
+  function getCategories() {
+    if (!section()) return [];
+    const buttons = section().querySelectorAll('.integration-filter-btn');
+    const cats = [];
+    for (var i = 0; i < buttons.length; i++) {
+      if (buttons[i].dataset.category) cats.push(buttons[i].dataset.category);
+    }
+    return cats;
+  }
+
+  /** Get integration cards data. */
+  function getIntegrations(category) {
+    if (!section()) return [];
+    const cards = section().querySelectorAll('.integration-card');
+    let result = [];
+    for (var i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      if (category && category !== 'all' && card.dataset.category !== category) continue;
+      result.push({
+        name: card.querySelector('h3') ? card.querySelector('h3').textContent : '',
+        category: card.dataset.category || '',
+        status: card.dataset.status || '',
+        description: card.querySelector('p') ? card.querySelector('p').textContent : ''
+      });
+    }
+    return result;
+  }
+
+  /** Get count by status (live/coming). */
+  function getStatusCounts() {
+    const integrations = getIntegrations();
+    const counts = { live: 0, coming: 0 };
+    for (var i = 0; i < integrations.length; i++) {
+      if (integrations[i].status === 'live') counts.live++;
+      else if (integrations[i].status === 'coming') counts.coming++;
+    }
+    return counts;
+  }
+
+  /** Initialize click handlers on filter buttons. */
+  function init() {
+    _section = document.getElementById('integrationsSection');
+    if (!section()) return;
+
+    let filterContainer = section().querySelector('.integrations-filter');
+    if (!filterContainer) return;
+
+    filterContainer.addEventListener('click', function (e) {
+      let btn = e.target.closest('.integration-filter-btn');
+      if (!btn || !btn.dataset.category) return;
+      filterBy(btn.dataset.category);
+    });
+  }
+
+  return {
+    filterBy: filterBy,
+    getCurrent: getCurrent,
+    getCategories: getCategories,
+    getIntegrations: getIntegrations,
+    getStatusCounts: getStatusCounts,
+    init: init
+  };
+})();
+
+
+/* === src/modules/changelog.js === */
+
+// ---------------------------------------------------------------------------
+// Changelog Module
+// ---------------------------------------------------------------------------
+
+var Changelog = (function () {
+  let currentTag = 'all';
+  let _section = null;
+
+  /** Lazily resolve the section element (cache on first use). */
+  function section() {
+    if (!_section) _section = document.getElementById('changelogSection');
+    return _section;
+  }
+
+  /**
+   * Filter changelog entries by tag.
+   * @param {string} tag  The data-tag to show, or 'all'.
+   * @returns {number} Number of visible entries.
+   */
+  function filterBy(tag) {
+    if (!tag) return 0;
+
+    if (!section()) return 0;
+
+    // Lazy-init cached arrays (avoids DOM queries on repeat calls)
+    if (_filterBtns.length === 0) {
+      _filterBtns = Array.prototype.slice.call(
+        section().querySelectorAll('.changelog-filter-btn')
+      );
+    }
+    if (_entries.length === 0) {
+      _entries = Array.prototype.slice.call(
+        section().querySelectorAll('.changelog-entry')
+      );
+    }
+
+    for (var i = 0; i < _filterBtns.length; i++) {
+      let isActive = _filterBtns[i].dataset.tag === tag;
+      _filterBtns[i].classList.toggle('active', isActive);
+      _filterBtns[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
+
+    let visibleCount = 0;
+    for (var j = 0; j < _entries.length; j++) {
+      const match = tag === 'all' || _entries[j].dataset.tag === tag;
+      _entries[j].classList.toggle('hidden', !match);
+      if (match) visibleCount++;
+    }
+
+    currentTag = tag;
+    return visibleCount;
+  }
+
+  /** Get the current active tag filter. */
+  function getCurrent() {
+    return currentTag;
+  }
+
+  /** Get all available filter tags. */
+  function getTags() {
+    if (!section()) return [];
+    const buttons = section().querySelectorAll('.changelog-filter-btn');
+    const tags = [];
+    for (var i = 0; i < buttons.length; i++) {
+      if (buttons[i].dataset.tag) tags.push(buttons[i].dataset.tag);
+    }
+    return tags;
+  }
+
+  /** Get changelog entries data, optionally filtered by tag. */
+  function getEntries(tag) {
+    if (!section()) return [];
+    const entries = section().querySelectorAll('.changelog-entry');
+    let result = [];
+    for (var i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      if (tag && tag !== 'all' && entry.dataset.tag !== tag) continue;
+      const content = entry.querySelector('.changelog-content');
+      result.push({
+        tag: entry.dataset.tag || '',
+        date: entry.querySelector('.changelog-date') ? entry.querySelector('.changelog-date').textContent : '',
+        title: content && content.querySelector('h3') ? content.querySelector('h3').textContent : '',
+        description: content && content.querySelector('p') ? content.querySelector('p').textContent : ''
+      });
+    }
+    return result;
+  }
+
+  /** Get count of entries by tag. */
+  function getTagCounts() {
+    const entries = getEntries();
+    const counts = { feature: 0, improvement: 0, fix: 0 };
+    for (var i = 0; i < entries.length; i++) {
+      if (counts[entries[i].tag] !== undefined) counts[entries[i].tag]++;
+    }
+    return counts;
+  }
+
+  /** Cached DOM collections — resolved once on init. */
+  let _filterBtns = [];
+  let _entries = [];
+
+  /** Initialize click handlers on filter buttons. */
+  function init() {
+    _section = document.getElementById('changelogSection');
+    if (!section()) return;
+
+    _filterBtns = Array.prototype.slice.call(
+      section().querySelectorAll('.changelog-filter-btn')
+    );
+    _entries = Array.prototype.slice.call(
+      section().querySelectorAll('.changelog-entry')
+    );
+
+    let filterContainer = section().querySelector('.changelog-filter');
+    if (!filterContainer) return;
+
+    filterContainer.addEventListener('click', function (e) {
+      let btn = e.target.closest('.changelog-filter-btn');
+      if (!btn || !btn.dataset.tag) return;
+      filterBy(btn.dataset.tag);
+    });
+  }
+
+  return {
+    filterBy: filterBy,
+    getCurrent: getCurrent,
+    getTags: getTags,
+    getEntries: getEntries,
+    getTagCounts: getTagCounts,
+    init: init
+  };
+})();
+
+
+/* === src/modules/notification-preview.js === */
+
+// ---------------------------------------------------------------------------
+// Notification Preview - Phone Mockup with Scenario Cycling
+// ---------------------------------------------------------------------------
+
+var NotificationPreview = (function () {
+  let SCENARIOS = [
+    { title: 'Reminder', body: 'Your meeting with Sarah starts in 15 minutes', detail: 'Meeting: Q1 Planning Review\nLocation: Conference Room B\nAttendees: Sarah, Mike, Lisa', time: '2m ago' },
+    { title: 'Search Result', body: 'Found 3 flights to Tokyo under $500', detail: 'Flight 1: ANA — $487 (direct, 11h 20m)\nFlight 2: JAL — $492 (direct, 11h 45m)\nFlight 3: United — $498 (1 stop, 14h 10m)', time: '5m ago' },
+    { title: 'Daily Digest', body: 'Good morning! You have 4 tasks today...', detail: '1. Review PR #342\n2. Submit expense report\n3. Call dentist at 2pm\n4. Pick up groceries', time: '8:00 AM' },
+    { title: 'Smart Alert', body: 'Your Amazon package is out for delivery', detail: 'Order: Wireless Earbuds (Pro)\nEstimated delivery: Today by 5pm\nCarrier: UPS — 8 stops away', time: '11m ago' },
+    { title: 'Scheduled Message', body: 'Message sent to Mom: Happy Birthday!', detail: 'Scheduled at 7:00 AM\nDelivered via iMessage\nRead receipt: Seen at 7:03 AM', time: '7:00 AM' }
+  ];
+
+  let _currentIndex = 0;
+  let _viewMode = 'compact'; // 'compact' or 'detailed'
+  let _titleEl = null;
+  let _bodyEl = null;
+  let _detailEl = null;
+  let _notifEl = null;
+
+  function _cacheDOM() {
+    const section = document.getElementById('notificationSection');
+    if (!section) return false;
+    _notifEl = section.querySelector('.phone-notification');
+    _titleEl = section.querySelector('.phone-notif-title');
+    _bodyEl = section.querySelector('.phone-notif-body');
+    _detailEl = section.querySelector('.phone-notif-detail');
+    return !!(_titleEl && _bodyEl && _detailEl && _notifEl);
+  }
+
+  function _render() {
+    if (!_titleEl && !_cacheDOM()) return;
+    let s = SCENARIOS[_currentIndex];
+    _titleEl.textContent = s.title;
+    _bodyEl.textContent = s.body;
+    _detailEl.textContent = s.detail;
+    _detailEl.hidden = _viewMode !== 'detailed';
+  }
+
+  function _animateIn() {
+    if (!_notifEl) return;
+    _notifEl.classList.remove('notif-slide-in');
+    // Force reflow so re-adding the class triggers animation
+    void _notifEl.offsetWidth;
+    if (!prefersReducedMotion) {
+      _notifEl.classList.add('notif-slide-in');
+    }
+  }
+
+  function switchScenario(index) {
+    if (index < 0 || index >= SCENARIOS.length) return;
+    _currentIndex = index;
+    _animateIn();
+    _render();
+
+    // Update active states on scenario buttons
+    const section = document.getElementById('notificationSection');
+    if (!section) return;
+    const btns = section.querySelectorAll('.notif-scenario-btn');
+    for (var i = 0; i < btns.length; i++) {
+      let isActive = i === index;
+      btns[i].classList.toggle('active', isActive);
+      btns[i].setAttribute('aria-selected', String(isActive));
+      btns[i].setAttribute('tabindex', isActive ? '0' : '-1');
+    }
+  }
+
+  function setView(mode) {
+    if (mode !== 'compact' && mode !== 'detailed') return;
+    _viewMode = mode;
+    _render();
+
+    const section = document.getElementById('notificationSection');
+    if (!section) return;
+    const btns = section.querySelectorAll('.notif-view-btn');
+    for (var i = 0; i < btns.length; i++) {
+      let isActive = btns[i].dataset.view === mode;
+      btns[i].classList.toggle('active', isActive);
+      btns[i].setAttribute('aria-pressed', String(isActive));
+    }
+  }
+
+  function init() {
+    if (!_cacheDOM()) return;
+    _render();
+
+    // Bind event delegation (previously in the main DOMContentLoaded block)
+    var section = document.getElementById('notificationSection');
+    if (!section) return;
+    var notifScenarios = section.querySelector('.notification-scenarios');
+    if (notifScenarios) {
+      notifScenarios.addEventListener('click', function (e) {
+        var btn = e.target.closest('.notif-scenario-btn');
+        if (btn && btn.dataset.scenario !== undefined) {
+          switchScenario(parseInt(btn.dataset.scenario, 10));
+        }
+      });
+      arrowKeyNav(notifScenarios, '.notif-scenario-btn', function (btn) {
+        switchScenario(parseInt(btn.dataset.scenario, 10));
+        btn.focus();
+      });
+    }
+    var notifViewToggle = section.querySelector('.notification-view-toggle');
+    if (notifViewToggle) {
+      notifViewToggle.addEventListener('click', function (e) {
+        var btn = e.target.closest('.notif-view-btn');
+        if (btn && btn.dataset.view) {
+          setView(btn.dataset.view);
+        }
+      });
+    }
+  }
+
+  function getCurrent() { return _currentIndex; }
+  function getView() { return _viewMode; }
+  function getScenarios() { return SCENARIOS; }
+
+  return {
+    init: init,
+    switchScenario: switchScenario,
+    setView: setView,
+    getCurrent: getCurrent,
+    getView: getView,
+    getScenarios: getScenarios
+  };
+})();
+
+
+/* === src/modules/trust.js === */
+
+// ---------------------------------------------------------------------------
+// Trust & Privacy - Expandable Detail Cards
+// ---------------------------------------------------------------------------
+
+var Trust = (function () {
+  /**
+   * Toggle the detail panel on a trust card.
+   * Only one card can be expanded at a time (accordion).
+   */
+  function toggle(card) {
+    if (!card || !card.classList.contains('trust-card')) return;
+
+    const detail = card.querySelector('.trust-detail');
+    if (!detail) return;
+
+    const wasExpanded = card.classList.contains('expanded');
+
+    // Collapse sibling cards (accordion).
+    // Scoped to parent instead of full document scan.
+    const parent = card.parentElement;
+    if (parent) {
+      const expanded = parent.querySelectorAll('.trust-card.expanded');
+      for (var ei = 0; ei < expanded.length; ei++) {
+        expanded[ei].classList.remove('expanded');
+        const d = expanded[ei].querySelector('.trust-detail');
+        if (d) d.hidden = true;
+      }
+    }
+
+    // Toggle the clicked card.
+    if (!wasExpanded) {
+      card.classList.add('expanded');
+      detail.hidden = false;
+    }
+  }
+
+  return { toggle: toggle };
+})();
+
+
+/* === src/modules/site-nav.js === */
+
+// ---------------------------------------------------------------------------
+// Sticky Navigation Bar
+// ---------------------------------------------------------------------------
+
+var SiteNav = (function () {
+  let nav = null;
+  const links = [];
+  const sections = [];
+  let toggle = null;
+  let linksContainer = null;
+  let activeLink = null;
+  let _lastActiveIdx = -1;
+  let ticking = false;
+
+  /**
+   * Cached section offsetTop values. Reading offsetTop on every scroll
+   * event forces synchronous layout recalculation. Cache and recompute
+   * only on resize when layout actually changes.
+   */
+  let sectionOffsets = [];
+  let _resizeHandler = null;
+  let _keydownHandler = null;
+  let _resizeTimer = null;
+
+  function cacheSectionOffsets() {
+    sectionOffsets = [];
+    for (var i = 0; i < sections.length; i++) {
+      sectionOffsets.push(sections[i].offsetTop);
+    }
+  }
+
+  function init() {
+    nav = document.getElementById('siteNav');
+    toggle = document.getElementById('navToggle');
+    linksContainer = document.getElementById('navLinks');
+    if (!nav || !linksContainer) return;
+
+    // Collect nav links and their target sections
+    const anchors = linksContainer.querySelectorAll('a[href^="#"]');
+    for (var i = 0; i < anchors.length; i++) {
+      let href = anchors[i].getAttribute('href');
+      let target = document.querySelector(href);
+      if (target) {
+        links.push(anchors[i]);
+        sections.push(target);
+      }
+    }
+
+    // Cache section positions (recompute on resize, debounced)
+    cacheSectionOffsets();
+    _resizeHandler = function () {
+      if (_resizeTimer) clearTimeout(_resizeTimer);
+      _resizeTimer = setTimeout(cacheSectionOffsets, 200);
+    };
+    window.addEventListener('resize', _resizeHandler, { passive: true });
+
+    // Smooth scroll + close mobile menu on click
+    linksContainer.addEventListener('click', function (e) {
+      const a = e.target.closest('a[href^="#"]');
+      if (!a) return;
+      e.preventDefault();
+      let target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+      }
+      closeMenu();
+    });
+
+    // Logo scroll to top
+    const logo = nav.querySelector('.nav-logo');
+    if (logo) {
+      logo.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+        closeMenu();
+      });
+    }
+
+    // Mobile hamburger toggle
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        const expanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!expanded));
+        linksContainer.classList.toggle('open');
+      });
+    }
+
+    // Close menu on Escape
+    _keydownHandler = function (e) {
+      if (e.key === 'Escape') closeMenu();
+    };
+    document.addEventListener('keydown', _keydownHandler);
+
+    // Scroll listener for active link + scrolled class
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  function closeMenu() {
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    if (linksContainer) linksContainer.classList.remove('open');
+  }
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      updateScrolledClass();
+      updateActiveLink();
+    });
+  }
+
+  function updateScrolledClass() {
+    if (!nav) return;
+    if (window.scrollY > 40) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+  }
+
+  function updateActiveLink() {
+    let scrollY = window.scrollY + 100; // offset for nav height + margin
+
+    // Fast path: if scroll position is within the same section as last time,
+    // skip the full scan.  This avoids redundant classList operations during
+    // continuous scrolling within a long section.
+    if (activeLink !== null && _lastActiveIdx >= 0 && _lastActiveIdx < sectionOffsets.length) {
+      const lo = sectionOffsets[_lastActiveIdx];
+      const hi = _lastActiveIdx + 1 < sectionOffsets.length ? sectionOffsets[_lastActiveIdx + 1] : Infinity;
+      if (scrollY >= lo && scrollY < hi) return;
+    }
+
+    let current = null;
+    let currentIdx = -1;
+
+    // Use cached offsets instead of reading offsetTop (avoids forced layout)
+    for (var i = sectionOffsets.length - 1; i >= 0; i--) {
+      if (sectionOffsets[i] <= scrollY) {
+        current = links[i];
+        currentIdx = i;
+        break;
+      }
+    }
+
+    if (current !== activeLink) {
+      if (activeLink) activeLink.classList.remove('active');
+      if (current) current.classList.add('active');
+      activeLink = current;
+      _lastActiveIdx = currentIdx;
+    }
+  }
+
+  function getActiveSection() {
+    return activeLink ? activeLink.getAttribute('href').slice(1) : null;
+  }
+
+  function reset() {
+    if (activeLink) activeLink.classList.remove('active');
+    activeLink = null;
+    _lastActiveIdx = -1;
+    closeMenu();
+  }
+
+  function destroy() {
+    if (_resizeHandler) window.removeEventListener('resize', _resizeHandler);
+    if (_keydownHandler) document.removeEventListener('keydown', _keydownHandler);
+    window.removeEventListener('scroll', onScroll);
+    if (_resizeTimer) clearTimeout(_resizeTimer);
+    _resizeHandler = null;
+    _keydownHandler = null;
+    _resizeTimer = null;
+    reset();
+  }
+
+  return {
+    init: init,
+    destroy: destroy,
+    getActiveSection: getActiveSection,
+    reset: reset,
+    closeMenu: closeMenu,
+    cacheSectionOffsets: cacheSectionOffsets
+  };
+})();
+
+
+/* === src/modules/newsletter.js === */
+
+/* eslint-enable no-var */
+
+/**
+ * Newsletter - email signup form with client-side validation and feedback.
+ * Stores subscriptions in localStorage (demo) since there's no backend.
+ */
+var Newsletter = (function () {
+  'use strict';
+
+  function init() {
+    const form = document.getElementById('newsletterForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const emailInput = document.getElementById('newsletterEmail');
+      let btn = document.getElementById('newsletterBtn');
+      const status = document.getElementById('newsletterStatus');
+      const email = emailInput.value.trim();
+
+      if (!email || !isValidEmail(email)) {
+        showStatus(status, 'Please enter a valid email address.', 'error');
+        return;
+      }
+
+      // Check for duplicate
+      const subs = getSubscribers();
+      if (subs.indexOf(email) !== -1) {
+        showStatus(status, 'You\'re already subscribed! 🎉', 'success');
+        return;
+      }
+
+      // Prevent unbounded localStorage growth (demo — no real backend)
+      if (subs.length >= 1000) {
+        showStatus(status, 'Subscriber list is full.', 'error');
+        return;
+      }
+
+      // Simulate subscribe
+      btn.disabled = true;
+      btn.textContent = 'Subscribing…';
+
+      setTimeout(function () {
+        subs.push(email);
+        try {
+          localStorage.setItem('agentbox_newsletter', JSON.stringify(subs));
+        } catch (_) { /* ignore */ }
+
+        showStatus(status, 'You\'re in! Welcome aboard. 🚀', 'success');
+        btn.textContent = 'Subscribed ✓';
+        emailInput.value = '';
+
+        setTimeout(function () {
+          btn.disabled = false;
+          btn.textContent = 'Subscribe';
+        }, 3000);
+      }, 800);
+    });
+  }
+
+  function isValidEmail(email) {
+    // Length cap prevents localStorage pollution via oversized payloads.
+    // RFC 5321 limits local-part to 64 chars, domain to 255 chars, total ≤ 320.
+    if (email.length > 320) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function showStatus(el, msg, type) {
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'newsletter-status ' + type;
+  }
+
+  function getSubscribers() {
+    try {
+      const data = localStorage.getItem('agentbox_newsletter');
+      if (!data) return [];
+      const parsed = JSON.parse(data);
+      // Validate: must be an array of strings (email addresses)
+      if (!Array.isArray(parsed)) return [];
+      const safe = [];
+      for (var i = 0; i < parsed.length; i++) {
+        if (typeof parsed[i] === 'string') safe.push(parsed[i]);
+      }
+      return safe;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  return { init: init, getSubscribers: getSubscribers };
+})();
+
+
+/* === src/modules/roadmap.js === */
+
+// ---------------------------------------------------------------------------
+// Roadmap Module
+// ---------------------------------------------------------------------------
+
+var Roadmap = (function () {
+  const STORAGE_KEY = 'agentbox_roadmap_votes';
+  let currentFilter = 'all';
+  let _container = null;
+  let _grid = null;
+
+  /** Lazily resolve the container element (cache on first use). */
+  function container() {
+    if (!_container) _container = document.getElementById('roadmapSection');
+    return _container;
+  }
+
+  /** Lazily resolve the grid element (cache on first use). */
+  function grid() {
+    if (!_grid) _grid = document.getElementById('roadmapGrid');
+    return _grid;
+  }
+
+  /** Cached DOM collections — resolved once on init, reused on every filter. */
+  let _filterBtns = [];
+  let _cards = [];
+  let _summaryItems = [];
+
+  function init() {
+    _container = document.getElementById('roadmapSection');
+    if (!container()) return;
+
+    restoreVotes();
+
+    _filterBtns = Array.prototype.slice.call(
+      container().querySelectorAll('.roadmap-filter-btn')
+    );
+    for (var i = 0; i < _filterBtns.length; i++) {
+      _filterBtns[i].addEventListener('click', function (e) {
+        const status = e.currentTarget.getAttribute('data-status');
+        filterBy(status);
+      });
+    }
+
+    _grid = document.getElementById('roadmapGrid');
+
+    _cards = Array.prototype.slice.call(
+      container().querySelectorAll('.roadmap-card')
+    );
+    _summaryItems = Array.prototype.slice.call(
+      container().querySelectorAll('.roadmap-summary-item')
+    );
+
+    if (grid()) {
+      grid().addEventListener('click', function (e) {
+        let btn = e.target.closest('.roadmap-vote-btn');
+        if (!btn) return;
+        toggleVote(btn);
+      });
+    }
+
+    arrowKeyNav(container(), '.roadmap-filter-btn', function (btn) {
+      btn.focus();
+      btn.click();
+    });
+  }
+
+  function filterBy(status) {
+    currentFilter = status || 'all';
+    if (!container()) return;
+
+    // Lazy-init cached arrays (avoids DOM queries on repeat calls)
+    if (_filterBtns.length === 0) {
+      _filterBtns = Array.prototype.slice.call(
+        container().querySelectorAll('.roadmap-filter-btn')
+      );
+    }
+    if (_cards.length === 0) {
+      _cards = Array.prototype.slice.call(
+        container().querySelectorAll('.roadmap-card')
+      );
+    }
+    if (_summaryItems.length === 0) {
+      _summaryItems = Array.prototype.slice.call(
+        container().querySelectorAll('.roadmap-summary-item')
+      );
+    }
+
+    for (var i = 0; i < _filterBtns.length; i++) {
+      let isActive =
+        _filterBtns[i].getAttribute('data-status') === currentFilter;
+      _filterBtns[i].classList.toggle('active', isActive);
+      _filterBtns[i].setAttribute(
+        'aria-selected',
+        isActive ? 'true' : 'false'
+      );
+    }
+
+    for (var j = 0; j < _cards.length; j++) {
+      const cardStatus = _cards[j].getAttribute('data-status');
+      let visible = currentFilter === 'all' || cardStatus === currentFilter;
+      _cards[j].setAttribute('data-hidden', visible ? 'false' : 'true');
+    }
+
+    for (var k = 0; k < _summaryItems.length; k++) {
+      const itemStatus = _summaryItems[k].getAttribute('data-status');
+      const highlighted =
+        currentFilter === 'all' || itemStatus === currentFilter;
+      _summaryItems[k].style.opacity = highlighted ? '1' : '0.4';
+    }
+  }
+
+  function toggleVote(btn) {
+    const card = btn.closest('.roadmap-card');
+    if (!card) return;
+
+    const countEl = card.querySelector('.roadmap-vote-count');
+    if (!countEl) return;
+
+    let count = parseInt(countEl.textContent, 10) || 0;
+    const wasVoted = btn.classList.contains('voted');
+
+    // Cap at 999999 to match restoreVotes validation and prevent overflow
+    const MAX_VOTES = 999999;
+
+    if (wasVoted) {
+      count = Math.max(0, count - 1);
+      btn.classList.remove('voted');
+      btn.setAttribute('aria-pressed', 'false');
+    } else {
+      if (count >= MAX_VOTES) return; // Prevent overflow
+      count += 1;
+      btn.classList.add('voted');
+      btn.setAttribute('aria-pressed', 'true');
+    }
+
+    countEl.textContent = String(count);
+    saveVotes();
+  }
+
+  function getCards() {
+    if (!grid()) return [];
+    return Array.prototype.slice.call(grid().querySelectorAll('.roadmap-card'));
+  }
+
+  function getVisibleCards() {
+    return getCards().filter(function (c) {
+      return c.getAttribute('data-hidden') !== 'true';
+    });
+  }
+
+  function getCurrent() {
+    return currentFilter;
+  }
+
+  function getStatuses() {
+    return ['all', 'shipped', 'progress', 'planned'];
+  }
+
+  function getStatusCounts() {
+    const cards = getCards();
+    const counts = { shipped: 0, progress: 0, planned: 0 };
+    for (var i = 0; i < cards.length; i++) {
+      let s = cards[i].getAttribute('data-status');
+      if (counts.hasOwnProperty(s)) counts[s]++;
+    }
+    return counts;
+  }
+
+  function getVotes() {
+    const cards = getCards();
+    const votes = Object.create(null);
+    for (var i = 0; i < cards.length; i++) {
+      const h3 = cards[i].querySelector('h3');
+      const countEl = cards[i].querySelector('.roadmap-vote-count');
+      if (h3 && countEl) {
+        votes[h3.textContent] = parseInt(countEl.textContent, 10) || 0;
+      }
+    }
+    return votes;
+  }
+
+  function saveVotes() {
+    try {
+      const cards = getCards();
+      const data = Object.create(null);
+      for (var i = 0; i < cards.length; i++) {
+        const h3 = cards[i].querySelector('h3');
+        let btn = cards[i].querySelector('.roadmap-vote-btn');
+        const countEl = cards[i].querySelector('.roadmap-vote-count');
+        if (h3 && btn && countEl) {
+          data[h3.textContent] = {
+            count: parseInt(countEl.textContent, 10) || 0,
+            voted: btn.classList.contains('voted')
+          };
+        }
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (_) {
+      /* localStorage unavailable */
+    }
+  }
+
+  function restoreVotes() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
+      // Rebuild as prototype-safe map with validated entries
+      const data = Object.create(null);
+      for (var key in parsed) {
+        if (!Object.prototype.hasOwnProperty.call(parsed, key)) continue;
+        const entry = parsed[key];
+        if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+          data[key] = entry;
+        }
+      }
+      const cards = getCards();
+      for (var i = 0; i < cards.length; i++) {
+        const h3 = cards[i].querySelector('h3');
+        if (!h3 || !data[h3.textContent]) continue;
+        const item = data[h3.textContent];
+        const countEl = cards[i].querySelector('.roadmap-vote-count');
+        let btn = cards[i].querySelector('.roadmap-vote-btn');
+        // Validate count is a safe integer before rendering
+        let count = parseInt(item.count, 10);
+        if (countEl && !isNaN(count) && count >= 0 && count <= 999999) {
+          countEl.textContent = String(count);
+        }
+        if (btn && item.voted === true) {
+          btn.classList.add('voted');
+          btn.setAttribute('aria-pressed', 'true');
+        }
+      }
+    } catch (_) {
+      /* localStorage unavailable or corrupted */
+    }
+  }
+
+  return {
+    init: init,
+    filterBy: filterBy,
+    getCurrent: getCurrent,
+    getStatuses: getStatuses,
+    getStatusCounts: getStatusCounts,
+    getCards: getCards,
+    getVisibleCards: getVisibleCards,
+    getVotes: getVotes
+  };
+})();
+
+
+/* === src/modules/status-dashboard.js === */
+
+// ---------------------------------------------------------------------------
+// System Status Dashboard Module
+// ---------------------------------------------------------------------------
+
+var StatusDashboard = (function () {
+  const STATUS_LEVELS = ['operational', 'degraded', 'outage'];
+  let _grid = null;
+  let _incidents = null;
+  let _overall = null;
+  /** Cached service elements keyed by data-service name for O(1) lookup. */
+  let _serviceCache = null;
+  /** Cached service element array (avoids querySelectorAll on every call). */
+  let _serviceList = null;
+
+  /** Lazily resolve grid element. */
+  function getGrid() {
+    if (!_grid) _grid = document.getElementById('statusGrid');
+    return _grid;
+  }
+
+  /** Lazily resolve incidents container. */
+  function getIncidentsEl() {
+    if (!_incidents) _incidents = document.getElementById('statusIncidents');
+    return _incidents;
+  }
+
+  /** Lazily resolve overall status element. */
+  function getOverall() {
+    if (!_overall) _overall = document.getElementById('statusOverall');
+    return _overall;
+  }
+
+  function init() {
+    _grid = document.getElementById('statusGrid');
+    _incidents = document.getElementById('statusIncidents');
+    _overall = document.getElementById('statusOverall');
+    _buildServiceCache();
+    updateOverall();
+  }
+
+  /** Build O(1) service lookup from DOM. Called once on init. */
+  function _buildServiceCache() {
+    _serviceCache = Object.create(null);
+    _serviceList = [];
+    if (!getGrid()) return;
+    const els = getGrid().querySelectorAll('.status-service');
+    for (var i = 0; i < els.length; i++) {
+      _serviceList.push(els[i]);
+      const name = els[i].getAttribute('data-service');
+      if (name) _serviceCache[name] = els[i];
+    }
+  }
+
+  function getServices() {
+    if (_serviceList) return _serviceList;
+    if (!getGrid()) return [];
+    _buildServiceCache();
+    return _serviceList;
+  }
+
+  function getIncidents() {
+    if (!getIncidentsEl()) return [];
+    return Array.prototype.slice.call(
+      getIncidentsEl().querySelectorAll('.status-incident')
+    );
+  }
+
+  function getServiceStatus(serviceName) {
+    if (!_serviceCache) _buildServiceCache();
+    let el = _serviceCache[serviceName];
+    return el ? el.getAttribute('data-status') : null;
+  }
+
+  function getServiceUptime(serviceName) {
+    if (!_serviceCache) _buildServiceCache();
+    let el = _serviceCache[serviceName];
+    if (!el) return null;
+    const uptimeEl = el.querySelector('.status-uptime');
+    return uptimeEl ? parseFloat(uptimeEl.textContent) : null;
+  }
+
+  function setServiceStatus(serviceName, status) {
+    if (!_serviceCache) _buildServiceCache();
+    let el = _serviceCache[serviceName];
+    if (el) {
+      el.setAttribute('data-status', status);
+      const dot = el.querySelector('.status-dot');
+      if (dot) dot.className = 'status-dot ' + status;
+    }
+    updateOverall();
+  }
+
+  function setServiceUptime(serviceName, uptime) {
+    if (!_serviceCache) _buildServiceCache();
+    const svc = _serviceCache[serviceName];
+    if (!svc) return;
+    let el = svc.querySelector('.status-uptime');
+    if (el) el.textContent = uptime.toFixed(2) + '%';
+    let bar = svc.querySelector('.status-bar-fill');
+    if (bar) bar.style.width = Math.min(100, Math.max(0, uptime)) + '%';
+    const meter = svc.querySelector('.status-bar');
+    if (meter) meter.setAttribute('aria-valuenow', String(uptime));
+  }
+
+  function updateOverall() {
+    const services = getServices();
+    let worst = 'operational';
+    for (var i = 0; i < services.length; i++) {
+      let s = services[i].getAttribute('data-status');
+      if (STATUS_LEVELS.indexOf(s) > STATUS_LEVELS.indexOf(worst)) {
+        worst = s;
+      }
+    }
+
+    if (!getOverall()) return;
+
+    const dot = getOverall().querySelector('.status-dot');
+    let text = getOverall().querySelector('.status-overall-text');
+    if (dot) dot.className = 'status-dot ' + worst;
+
+    const messages = {
+      operational: 'All systems operational',
+      degraded: 'Some systems degraded',
+      outage: 'System outage detected'
+    };
+    if (text) text.textContent = messages[worst] || worst;
+  }
+
+  function getOverallStatus() {
+    if (!getOverall()) return null;
+    const dot = getOverall().querySelector('.status-dot');
+    if (!dot) return null;
+    for (var i = STATUS_LEVELS.length - 1; i >= 0; i--) {
+      if (dot.classList.contains(STATUS_LEVELS[i])) return STATUS_LEVELS[i];
+    }
+    return 'operational';
+  }
+
+  function getServiceNames() {
+    return getServices().map(function (s) {
+      return s.getAttribute('data-service');
+    });
+  }
+
+  function getAverageUptime() {
+    const services = getServices();
+    if (services.length === 0) return 0;
+    let total = 0;
+    for (var i = 0; i < services.length; i++) {
+      let el = services[i].querySelector('.status-uptime');
+      total += el ? parseFloat(el.textContent) || 0 : 0;
+    }
+    return total / services.length;
+  }
+
+  function getIncidentCount() {
+    return getIncidents().length;
+  }
+
+  return {
+    init: init,
+    getServices: getServices,
+    getIncidents: getIncidents,
+    getServiceStatus: getServiceStatus,
+    getServiceUptime: getServiceUptime,
+    setServiceStatus: setServiceStatus,
+    setServiceUptime: setServiceUptime,
+    updateOverall: updateOverall,
+    getOverallStatus: getOverallStatus,
+    getServiceNames: getServiceNames,
+    getAverageUptime: getAverageUptime,
+    getIncidentCount: getIncidentCount
+  };
+})();
+
+
+/* === src/modules/calculator.js === */
+
+// Module exposure moved to end of file (after all IIFEs) to ensure
+// every module is defined before assignment. See #23.
+
+
+// ---------------------------------------------------------------------------
+// Time Saved Calculator Module
+// ---------------------------------------------------------------------------
+
+var Calculator = (function () {
+  let _section = null;
+
+  // Cached DOM references — resolved once in init(), reused on every
+  // slider input event.  Eliminates 5 getElementById + 1 querySelectorAll
+  // calls per update (~dozens per second while dragging a slider).
+  let _weeklyEl = null;
+  let _monthlyEl = null;
+  let _yearlyEl = null;
+  let _equivEl = null;
+  let _groups = [];
+
+  /** Lazily resolve the section element (cache on first use). */
+  function section() {
+    if (!_section) _section = document.getElementById('calculatorSection');
+    return _section;
+  }
+
+  function init() {
+    _section = document.getElementById('calculatorSection');
+    if (!section()) return;
+
+    // Cache all static elements once
+    _weeklyEl = document.getElementById('calcWeekly');
+    _monthlyEl = document.getElementById('calcMonthly');
+    _yearlyEl = document.getElementById('calcYearly');
+    _equivEl = document.getElementById('calcEquivalent');
+    _groups = section().querySelectorAll('.calc-slider-group');
+
+    const sliders = section().querySelectorAll('.calc-range');
+    for (var i = 0; i < sliders.length; i++) {
+      sliders[i].addEventListener('input', update);
+    }
+    update();
+  }
+
+  function update() {
+    if (!section()) return;
+
+    let totalMinutes = 0;
+
+    for (var i = 0; i < _groups.length; i++) {
+      const slider = _groups[i].querySelector('.calc-range');
+      const valueEl = _groups[i].querySelector('.calc-slider-value');
+      const minutesPer = parseInt(_groups[i].dataset.minutes, 10) || 0;
+      let count = parseInt(slider.value, 10) || 0;
+
+      if (valueEl) valueEl.textContent = count + ' /week';
+      totalMinutes += count * minutesPer;
+    }
+
+    if (_weeklyEl) _weeklyEl.textContent = totalMinutes;
+
+    const monthlyHours = (totalMinutes * 4.33 / 60);
+    if (_monthlyEl) _monthlyEl.textContent = monthlyHours < 10 ? monthlyHours.toFixed(1) : Math.round(monthlyHours);
+
+    const yearlyHours = (totalMinutes * 52 / 60);
+    if (_yearlyEl) _yearlyEl.textContent = Math.round(yearlyHours);
+
+    if (_equivEl) {
+      if (yearlyHours === 0) {
+        _equivEl.textContent = 'Move the sliders to see your potential time savings \u261D\uFE0F';
+      } else if (yearlyHours < 8) {
+        _setEquivText(_equivEl, 'That\u2019s ', Math.round(yearlyHours) + ' hours',
+          ' back every year \u2014 time for what matters \u2728');
+      } else {
+        const workdays = (yearlyHours / 8).toFixed(1);
+        _setEquivText(_equivEl, 'That\u2019s like getting ', workdays + ' extra workdays',
+          ' back every year \u2728');
+      }
+    }
+  }
+
+  /**
+   * Safely set equivalent text with a bold middle portion (no innerHTML).
+   * @param {Element} el - target element
+   * @param {string} prefix - text before bold
+   * @param {string} boldText - text to make bold
+   * @param {string} suffix - text after bold
+   */
+  function _setEquivText(el, prefix, boldText, suffix) {
+    while (el.firstChild) el.removeChild(el.firstChild);
+    el.appendChild(document.createTextNode(prefix));
+    const strong = document.createElement('strong');
+    strong.textContent = boldText;
+    el.appendChild(strong);
+    el.appendChild(document.createTextNode(suffix));
+  }
+
+  function getTotal() {
+    if (!_weeklyEl || !_weeklyEl.isConnected) return 0;
+    return parseInt(_weeklyEl.textContent, 10) || 0;
+  }
+
+  return { init: init, update: update, getTotal: getTotal };
+})();
+
+
+/* === src/modules/capacity-planner.js === */
+// ---------------------------------------------------------------------------
+// Capacity Planner Module
+// ---------------------------------------------------------------------------
+// Interactive tool that helps teams estimate their AgentBox usage,
+// recommended plan, and monthly cost based on team size, message volume,
+// and feature usage.
+
+var CapacityPlanner = (function () {
+  'use strict';
+
+  var _section = null;
+  var _teamSlider = null;
+  var _msgSlider = null;
+  var _teamVal = null;
+  var _msgVal = null;
+  var _featureChecks = [];
+  var _resultPlan = null;
+  var _resultCost = null;
+  var _resultMessages = null;
+  var _resultBar = null;
+  var _resultBarLabel = null;
+  var _resultTip = null;
+
+  // Plan definitions
+  var PLANS = [
+    { name: 'Free',       msgLimit: 20,   price: 0,    color: '#6c757d' },
+    { name: 'Starter',    msgLimit: 200,  price: 9,    color: '#0d6efd' },
+    { name: 'Pro',        msgLimit: 1000, price: 29,   color: '#6f42c1' },
+    { name: 'Team',       msgLimit: 5000, price: 79,   color: '#198754' },
+    { name: 'Enterprise', msgLimit: 99999, price: 199, color: '#dc3545' }
+  ];
+
+  // Feature multipliers (how much they increase message consumption)
+  var FEATURE_MULT = {
+    'web-search':  1.3,
+    'reminders':   1.1,
+    'image':       1.5,
+    'email':       1.2,
+    'code':        1.4,
+    'memory':      1.15
+  };
+
+  function section() {
+    if (!_section) _section = document.getElementById('capacityPlannerSection');
+    return _section;
+  }
+
+  function init() {
+    _section = document.getElementById('capacityPlannerSection');
+    if (!section()) return;
+
+    _teamSlider = section().querySelector('[data-cp-slider="team"]');
+    _msgSlider = section().querySelector('[data-cp-slider="messages"]');
+    _teamVal = section().querySelector('[data-cp-val="team"]');
+    _msgVal = section().querySelector('[data-cp-val="messages"]');
+    _featureChecks = section().querySelectorAll('.cp-feature-check');
+    _resultPlan = section().querySelector('.cp-result-plan');
+    _resultCost = section().querySelector('.cp-result-cost');
+    _resultMessages = section().querySelector('.cp-result-messages');
+    _resultBar = section().querySelector('.cp-utilization-fill');
+    _resultBarLabel = section().querySelector('.cp-utilization-label');
+    _resultTip = section().querySelector('.cp-result-tip');
+
+    if (_teamSlider) _teamSlider.addEventListener('input', update);
+    if (_msgSlider) _msgSlider.addEventListener('input', update);
+
+    for (var i = 0; i < _featureChecks.length; i++) {
+      _featureChecks[i].addEventListener('change', update);
+    }
+
+    update();
+  }
+
+  function update() {
+    if (!section()) return;
+
+    var teamSize = parseInt(_teamSlider.value, 10) || 1;
+    var msgsPerUser = parseInt(_msgSlider.value, 10) || 10;
+
+    if (_teamVal) _teamVal.textContent = teamSize + (teamSize === 1 ? ' user' : ' users');
+    if (_msgVal) _msgVal.textContent = msgsPerUser + ' msg/day';
+
+    // Calculate feature multiplier
+    var multiplier = 1.0;
+    for (var i = 0; i < _featureChecks.length; i++) {
+      if (_featureChecks[i].checked) {
+        var feat = _featureChecks[i].dataset.feature;
+        if (FEATURE_MULT[feat]) {
+          multiplier *= FEATURE_MULT[feat];
+        }
+      }
+    }
+
+    // Effective daily messages per user (features increase effective usage)
+    var effectiveDaily = Math.ceil(msgsPerUser * multiplier);
+    var totalDaily = effectiveDaily * teamSize;
+    var totalMonthly = totalDaily * 30;
+
+    if (_resultMessages) {
+      _resultMessages.textContent = totalMonthly.toLocaleString() + ' msgs/month';
+    }
+
+    // Find the best plan
+    var bestPlan = PLANS[PLANS.length - 1];
+    for (var j = 0; j < PLANS.length; j++) {
+      if (PLANS[j].msgLimit >= totalDaily) {
+        bestPlan = PLANS[j];
+        break;
+      }
+    }
+
+    // Cost for team = plan price * number of users (except Free)
+    var totalCost = bestPlan.price === 0 ? 0 : bestPlan.price * teamSize;
+
+    if (_resultPlan) {
+      _resultPlan.textContent = bestPlan.name + ' Plan';
+      _resultPlan.style.color = bestPlan.color;
+    }
+    if (_resultCost) {
+      _resultCost.textContent = totalCost === 0 ? 'Free!' : '$' + totalCost + '/mo';
+    }
+
+    // Utilization bar
+    var utilization = Math.min(100, Math.round((totalDaily / bestPlan.msgLimit) * 100));
+    if (_resultBar) {
+      _resultBar.style.width = utilization + '%';
+      _resultBar.style.backgroundColor = utilization > 85 ? '#dc3545' : utilization > 60 ? '#ffc107' : '#198754';
+    }
+    if (_resultBarLabel) {
+      _resultBarLabel.textContent = utilization + '% capacity used';
+    }
+
+    // Tip
+    if (_resultTip) {
+      if (utilization > 85) {
+        _resultTip.textContent = '\u26A0\uFE0F You\'re near the limit \u2014 consider the next plan up for headroom.';
+      } else if (utilization < 30 && bestPlan.price > 0) {
+        _resultTip.textContent = '\uD83D\uDCA1 You have plenty of room \u2014 great for growth without plan changes.';
+      } else if (totalCost === 0) {
+        _resultTip.textContent = '\u2728 The free tier covers your current usage perfectly!';
+      } else {
+        _resultTip.textContent = '\u2705 Good fit! You\'re using your plan efficiently.';
+      }
+    }
+  }
+
+  return { init: init, update: update };
+})();
+
+
+/* === src/modules/command-palette.js === */
+
+// ---------------------------------------------------------------------------
+// Command Palette (Ctrl+K / Cmd+K)
+// ---------------------------------------------------------------------------
+var CommandPalette = (function () {
+  const SECTIONS = [
+    { id: 'featuresSection', icon: '✨', label: 'Features', hint: 'What AgentBox can do' },
+    { id: 'howItWorks', icon: '🚀', label: 'How It Works', hint: 'Getting started' },
+    { id: 'demoSection', icon: '💬', label: 'Demo', hint: 'See it in action' },
+    { id: 'statsSection', icon: '📊', label: 'Stats', hint: 'Social proof' },
+    { id: 'usecasesSection', icon: '👨‍💻', label: 'Use Cases', hint: 'Who it is for' },
+    { id: 'integrationsSection', icon: '🔗', label: 'Integrations', hint: 'Connected tools' },
+    { id: 'comparisonSection', icon: '⚖️', label: 'Compare', hint: 'vs ChatGPT, Siri' },
+    { id: 'calculatorSection', icon: '⏱️', label: 'Time Calculator', hint: 'Estimate time saved' },
+    { id: 'trustSection', icon: '🔒', label: 'Trust & Privacy', hint: 'Security details' },
+    { id: 'testimonialsSection', icon: '💬', label: 'Testimonials', hint: 'What people say' },
+    { id: 'pricingSection', icon: '💰', label: 'Pricing', hint: 'Plans & pricing' },
+    { id: 'quizSection', icon: '🎯', label: 'Plan Quiz', hint: 'Find your ideal plan' },
+    { id: 'changelogSection', icon: '📋', label: 'Changelog', hint: 'What is new' },
+    { id: 'roadmapSection', icon: '🗺️', label: 'Roadmap', hint: 'Coming soon' },
+    { id: 'statusSection', icon: '🟢', label: 'System Status', hint: 'Service health' },
+    { id: 'faqSection', icon: '❓', label: 'FAQ', hint: 'Common questions' },
+    { id: 'commandsSection', icon: '📋', label: 'Commands', hint: 'Command cheat sheet' },
+    { id: 'apiExplorerSection', icon: '🔌', label: 'API Explorer', hint: 'Browse API endpoints' },
+    { id: 'newsletterSection', icon: '📬', label: 'Newsletter', hint: 'Stay in the loop' }
+  ];
+
+  let overlay, input, results;
+  let selectedIndex = 0;
+  let filtered = [];
+  const pool = []; // Pre-created <li> elements, one per SECTIONS entry
+  const poolIndex = Object.create(null); // section.id -> pool array index (O(1) lookup)
+  let _globalKeyHandler = null;
+
+  function init() {
+    overlay = document.getElementById('cmdPaletteOverlay');
+    input = document.getElementById('cmdPaletteInput');
+    results = document.getElementById('cmdPaletteResults');
+    if (!overlay || !input || !results) return;
+
+    _globalKeyHandler = function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        toggle();
+      }
+      if (e.key === 'Escape' && !overlay.hidden) {
+        close();
+      }
+    };
+    document.addEventListener('keydown', _globalKeyHandler);
+
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) close();
+    });
+
+    input.addEventListener('input', function () {
+      filter(input.value);
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+      else if (e.key === 'Enter') { e.preventDefault(); go(); }
+    });
+
+    buildPool();
+    filter('');
+  }
+
+  function toggle() {
+    if (overlay.hidden) open(); else close();
+  }
+
+  function open() {
+    overlay.hidden = false;
+    input.value = '';
+    filter('');
+    input.focus();
+  }
+
+  function close() {
+    overlay.hidden = true;
+  }
+
+  function filter(q) {
+    const query = q.toLowerCase().trim();
+    filtered = query
+      ? SECTIONS.filter(function (s) {
+          return s.label.toLowerCase().indexOf(query) !== -1 ||
+                 s.hint.toLowerCase().indexOf(query) !== -1;
+        })
+      : SECTIONS.slice();
+    selectedIndex = 0;
+    render();
+  }
+
+  function buildPool() {
+    SECTIONS.forEach(function (s, idx) {
+      const li = document.createElement('li');
+      li.className = 'cmd-palette-item';
+      li.setAttribute('role', 'option');
+      li.dataset.sectionId = s.id;
+
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'cmd-palette-item-icon';
+      iconSpan.textContent = s.icon;
+
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'cmd-palette-item-label';
+      labelSpan.textContent = s.label;
+
+      const hintSpan = document.createElement('span');
+      hintSpan.className = 'cmd-palette-item-hint';
+      hintSpan.textContent = s.hint;
+
+      li.appendChild(iconSpan);
+      li.appendChild(labelSpan);
+      li.appendChild(hintSpan);
+
+      li.addEventListener('click', function () {
+        // Find this item's current index in filtered list
+        for (var j = 0; j < filtered.length; j++) {
+          if (filtered[j].id === s.id) {
+            selectedIndex = j;
+            go();
+            break;
+          }
+        }
+      });
+
+      pool[idx] = { el: li, section: s };
+      poolIndex[s.id] = idx;
+      results.appendChild(li);
+    });
+  }
+
+  function render() {
+    // Build lookup of visible section ids
+    const visibleIds = Object.create(null);
+    for (var i = 0; i < filtered.length; i++) {
+      visibleIds[filtered[i].id] = i;
+    }
+
+    // Show/hide pooled elements and reorder visible ones
+    const fragment = document.createDocumentFragment();
+    // First, append visible items in filtered order — O(n) via poolIndex
+    for (var i = 0; i < filtered.length; i++) {
+      let idx = poolIndex[filtered[i].id];
+      if (idx !== undefined) {
+        const li = pool[idx].el;
+        li.hidden = false;
+        if (i === selectedIndex) {
+          li.setAttribute('aria-selected', 'true');
+        } else {
+          li.removeAttribute('aria-selected');
+        }
+        fragment.appendChild(li);
+      }
+    }
+    // Then append hidden items (keeps them in DOM but invisible)
+    for (var j = 0; j < pool.length; j++) {
+      if (!(pool[j].section.id in visibleIds)) {
+        pool[j].el.hidden = true;
+        pool[j].el.removeAttribute('aria-selected');
+        fragment.appendChild(pool[j].el);
+      }
+    }
+    results.appendChild(fragment);
+  }
+
+  /**
+   * Move selection up/down without rebuilding DOM.
+   * Old code called render() on every arrow key, destroying and recreating
+   * all list items to move a highlight. Now updates aria-selected in-place
+   * — O(1) DOM writes instead of O(n).
+   */
+  function move(dir) {
+    if (!filtered.length) return;
+    const items = results.children;
+    if (items[selectedIndex]) items[selectedIndex].removeAttribute('aria-selected');
+    selectedIndex = (selectedIndex + dir + filtered.length) % filtered.length;
+    if (items[selectedIndex]) {
+      items[selectedIndex].setAttribute('aria-selected', 'true');
+      items[selectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  function go() {
+    if (!filtered.length) return;
+    const section = filtered[selectedIndex];
+    let el = document.getElementById(section.id);
+    if (el) {
+      close();
+      el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+    }
+  }
+
+  function destroy() {
+    if (_globalKeyHandler) document.removeEventListener('keydown', _globalKeyHandler);
+    _globalKeyHandler = null;
+    close();
+  }
+
+  return { init: init, destroy: destroy, open: open, close: close };
+})();
+
+
+/* === src/modules/share-fab.js === */
+
+// ---------------------------------------------------------------------------
+// Floating Share Button
+// ---------------------------------------------------------------------------
+var ShareFab = (function () {
+  let btn, menu, toast, toastTimer;
+  const PAGE_URL = 'https://getagentbox.com';
+  const PAGE_TITLE = 'AgentBox - Your Personal AI Agent on Telegram';
+  const PAGE_DESC = 'Get your own AI assistant that lives in Telegram. It remembers you, searches the web, and helps you get things done.';
+
+  function init() {
+    btn = document.getElementById('shareFabBtn');
+    menu = document.getElementById('shareFabMenu');
+    toast = document.getElementById('shareToast');
+    if (!btn || !menu) return;
+
+    btn.addEventListener('click', toggle);
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.share-fab')) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+
+    const options = menu.querySelectorAll('.share-option');
+    for (var i = 0; i < options.length; i++) {
+      options[i].addEventListener('click', handleShare);
+    }
+  }
+
+  function toggle() {
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    if (open) close(); else openMenu();
+  }
+
+  function openMenu() {
+    menu.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    toast.hidden = true;
+  }
+
+  function close() {
+    menu.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function handleShare(e) {
+    const type = e.currentTarget.getAttribute('data-share');
+    let url;
+    if (type === 'twitter') {
+      url = 'https://twitter.com/intent/tweet?text=' +
+        encodeURIComponent(PAGE_TITLE + ' — ' + PAGE_DESC) +
+        '&url=' + encodeURIComponent(PAGE_URL);
+      window.open(url, '_blank', 'noopener,width=550,height=420');
+    } else if (type === 'linkedin') {
+      url = 'https://www.linkedin.com/sharing/share-offsite/?url=' +
+        encodeURIComponent(PAGE_URL);
+      window.open(url, '_blank', 'noopener,width=550,height=500');
+    } else if (type === 'copy') {
+      copyLink();
+    }
+    close();
+  }
+
+  function copyLink() {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(PAGE_URL).then(showToast);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = PAGE_URL;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast();
+    }
+  }
+
+  function showToast() {
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.hidden = true; }, 2000);
+  }
+
+  return { init: init };
+})();
+
+
+/* === src/modules/theme-toggle.js === */
+
+// ---------------------------------------------------------------------------
+// Theme Toggle (Light/Dark Mode)
+// ---------------------------------------------------------------------------
+var ThemeToggle = (function () {
+  const STORAGE_KEY = 'agentbox-theme';
+  let btn, icon;
+
+  function init() {
+    btn = document.getElementById('themeToggle');
+    icon = document.getElementById('themeIcon');
+    if (!btn) return;
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === 'light') {
+        document.body.classList.add('light-mode');
+        if (icon) icon.textContent = '🌙';
+      }
+    } catch (e) { /* localStorage unavailable (private browsing) */ }
+
+    btn.addEventListener('click', toggle);
+  }
+
+  function toggle() {
+    const isLight = document.body.classList.toggle('light-mode');
+    if (icon) icon.textContent = isLight ? '🌙' : '☀️';
+    try { localStorage.setItem(STORAGE_KEY, isLight ? 'light' : 'dark'); } catch (e) { /* private browsing */ }
+  }
+
+  return { init: init };
+})();
+
+
+/* === src/modules/scroll-progress.js === */
+
+// ---------------------------------------------------------------------------
+// Scroll Progress + Back-to-Top Module
+// ---------------------------------------------------------------------------
+
+var ScrollProgress = (function () {
+  'use strict';
+
+  let bar, btn, ticking;
+
+  function init() {
+    // Guard against double-init: destroy previous listeners first
+    destroy();
+
+    bar = document.getElementById('scrollProgressBar');
+    btn = document.getElementById('backToTop');
+    if (!bar || !btn) return;
+
+    ticking = false;
+    window.addEventListener('scroll', onScroll, { passive: true });
+    btn.addEventListener('click', scrollToTop);
+    update(); // initial state
+  }
+
+  function onScroll() {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(function () {
+        update();
+        ticking = false;
+      });
+    }
+  }
+
+  function update() {
+    // Guard against stale DOM references (element removed or hidden)
+    if (!bar || bar.offsetParent === null) return;
+
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+
+    bar.style.width = progress + '%';
+
+    if (btn) {
+      if (scrollTop > 400) {
+        btn.classList.add('visible');
+      } else {
+        btn.classList.remove('visible');
+      }
+    }
+  }
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  }
+
+  /**
+   * Remove scroll listener and release DOM references.
+   * Safe to call multiple times or before init().
+   */
+  function destroy() {
+    window.removeEventListener('scroll', onScroll);
+    if (btn) {
+      btn.removeEventListener('click', scrollToTop);
+    }
+    bar = null;
+    btn = null;
+    ticking = false;
+  }
+
+  return { init: init, destroy: destroy };
+})();
+
+
+/* === src/modules/shortcuts-help.js === */
+
+/* ── Keyboard Shortcuts Help (?) ── */
+var ShortcutsHelp = (function () {
+  let overlay, closeBtn;
+
+  function open() {
+    overlay.hidden = false;
+    closeBtn.focus();
+  }
+
+  function close() {
+    overlay.hidden = true;
+  }
+
+  function init() {
+    overlay = document.getElementById('shortcutsOverlay');
+    closeBtn = document.getElementById('shortcutsClose');
+    if (!overlay || !closeBtn) return;
+
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) close();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      // Don't trigger when typing in inputs
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        if (overlay.hidden) { open(); } else { close(); }
+      }
+
+      if (e.key === 'Escape' && !overlay.hidden) {
+        close();
+      }
+
+      // T for theme toggle
+      if (e.key === 't' && !e.ctrlKey && !e.metaKey && !e.altKey && overlay.hidden) {
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) themeBtn.click();
+      }
+    });
+  }
+
+  return { init: init };
+})();
+
+
+/* === src/modules/playground.js === */
+
+/* ── Chat Playground ── */
+var Playground = (function () {
+  let messagesEl, inputEl, formEl;
+
+  /** Pending reply timer — cleared on new submit to prevent stacking. */
+  let pendingTimer = null;
+  /** Typing indicator currently in the DOM. */
+  let currentTyping = null;
+
+  /**
+   * Security limits to prevent resource exhaustion.
+   * MAX_INPUT_LENGTH: caps the text processed by findResponse() to avoid
+   *   unbounded regex/split operations on multi-MB pastes.
+   * MAX_MESSAGES: caps DOM children in the messages container to prevent
+   *   memory exhaustion from automated or rapid submissions.
+   */
+  const MAX_INPUT_LENGTH = 500;
+  const MAX_MESSAGES = 50;
+
+  const responses = [
+    { patterns: ['hi', 'hello', 'hey', 'sup', 'yo'], reply: 'Hey there! \u{1F44B} I\'m your AgentBox agent. Ask me anything \u2014 weather, recipes, coding help, reminders, or whatever\'s on your mind.' },
+    { patterns: ['weather', 'temperature', 'rain', 'sunny', 'forecast'], reply: '\u{1F324}\uFE0F I can check real-time weather for any city! In the full version, I search the web and give you current conditions + forecasts. Try me on Telegram to get live data!' },
+    { patterns: ['recipe', 'cook', 'food', 'dinner', 'lunch', 'pasta', 'chicken'], reply: '\u{1F373} I love helping with recipes! Tell me what ingredients you have and I\'ll suggest something. I also remember your dietary preferences across conversations \u2014 no repeating yourself.' },
+    { patterns: ['remind', 'reminder', 'alarm', 'schedule', 'todo'], reply: '\u23F0 Reminders are one of my favorite features! Just say "remind me to X in 30 minutes" and I\'ll ping you. I handle recurring reminders too. Try it on Telegram for the real thing!' },
+    { patterns: ['code', 'error', 'bug', 'debug', 'programming', 'javascript', 'python'], reply: '\u{1F4BB} Send me error messages, code snippets, or screenshots \u2014 I\'ll help you debug. I remember your tech stack across conversations so my answers stay relevant.' },
+    { patterns: ['image', 'photo', 'picture', 'screenshot', 'see'], reply: '\u{1F4F7} In the full version, you can send me photos and I\'ll analyze them! Screenshots of errors, documents, memes, food \u2014 I see what you see and answer questions about it.' },
+    { patterns: ['voice', 'audio', 'speak', 'talk'], reply: '\u{1F3A4} Too lazy to type? Send a voice message on Telegram and I\'ll understand it. I transcribe and respond naturally \u2014 it\'s like texting, but hands-free.' },
+    { patterns: ['price', 'cost', 'plan', 'free', 'premium', 'pro'], reply: '\u{1F4B0} I\'m free to try \u2014 20 messages/day, no signup. Pro is $9/mo for unlimited messages, advanced memory, and priority responses. Scroll down to see all plans!' },
+    { patterns: ['memory', 'remember', 'forget', 'context'], reply: '\u{1F9E0} That\'s my superpower! I remember your preferences, past conversations, and context. Tell me something once and I\'ll know it forever \u2014 unless you ask me to forget.' },
+    { patterns: ['privacy', 'data', 'secure', 'safe', 'private'], reply: '\u{1F512} Your data is yours. Each user gets an isolated workspace \u2014 no shared context, no training on your data, no third-party sharing. You can wipe my memory anytime.' },
+    { patterns: ['thank', 'thanks', 'awesome', 'great', 'cool', 'nice'], reply: 'You\'re welcome! \u{1F60A} This is just a demo \u2014 the real agent on Telegram is way more capable. Give it a try!' },
+    { patterns: ['who', 'what are you', 'about'], reply: 'I\'m AgentBox \u2014 your personal AI agent that lives in Telegram. I can search the web, set reminders, understand images, and most importantly: I remember you across conversations. \u{1F916}' },
+    { patterns: ['help', 'can you', 'what can'], reply: 'I can help with:\n\u{1F50D} Web search & research\n\u23F0 Reminders & scheduling\n\u{1F4F7} Image analysis\n\u{1F9E0} Remembering your preferences\n\u{1F4BB} Coding help\n\u{1F373} Recipes & recommendations\n\nAnd much more on Telegram!' },
+  ];
+  const fallbacks = [
+    'Interesting question! In the full version on Telegram, I\'d search the web and give you a detailed answer. Try me there! \u{1F680}',
+    'I\'d love to help with that! This demo is limited, but the real agent on Telegram has full web search, memory, and image understanding. Give it a spin! \u2728',
+    'Good one! The real AgentBox would handle this with a web search and your personal context. Head to Telegram to try the full experience \u{1F4AC}',
+  ];
+  let fallbackIdx = 0;
+
+  /**
+   * Pre-built keyword → reply index for O(1) lookup instead of
+   * nested linear scan on every message.
+   */
+  let patternMap = null;
+
+  function buildPatternMap() {
+    patternMap = Object.create(null);
+    for (var i = 0; i < responses.length; i++) {
+      for (var j = 0; j < responses[i].patterns.length; j++) {
+        patternMap[responses[i].patterns[j]] = responses[i].reply;
+      }
+    }
+  }
+
+  function findResponse(text) {
+    if (!patternMap) buildPatternMap();
+    const lower = text.toLowerCase().replace(/[^\w\s]/g, '');
+    const words = lower.split(/\s+/);
+
+    // Check single words first (most patterns are single keywords)
+    for (var i = 0; i < words.length; i++) {
+      if (patternMap[words[i]]) return patternMap[words[i]];
+    }
+
+    // Fall back to substring match for multi-word patterns
+    for (var key in patternMap) {
+      if (key.indexOf(' ') !== -1 && lower.indexOf(key) !== -1) {
+        return patternMap[key];
+      }
+    }
+
+    const fb = fallbacks[fallbackIdx % fallbacks.length];
+    fallbackIdx++;
+    return fb;
+  }
+
+  function addBubble(role, text) {
+    // Evict oldest messages when DOM children exceed safety limit.
+    while (messagesEl.children.length >= MAX_MESSAGES) {
+      messagesEl.removeChild(messagesEl.firstChild);
+    }
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + role;
+    bubble.textContent = text;
+    messagesEl.appendChild(bubble);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function addTyping() {
+    let el = _typingIndicatorTemplate.cloneNode(true);
+    el.id = 'playgroundTyping';
+    messagesEl.appendChild(el);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return el;
+  }
+
+  /** Remove current typing indicator if present. */
+  function clearTyping() {
+    if (currentTyping && currentTyping.parentNode) {
+      currentTyping.parentNode.removeChild(currentTyping);
+    }
+    currentTyping = null;
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    let text = inputEl.value.trim();
+    if (!text) return;
+
+    // Truncate to prevent unbounded regex/split in findResponse().
+    if (text.length > MAX_INPUT_LENGTH) {
+      text = text.slice(0, MAX_INPUT_LENGTH);
+    }
+
+    // Cancel any pending reply to prevent stacking
+    if (pendingTimer) {
+      clearTimeout(pendingTimer);
+      pendingTimer = null;
+      clearTyping();
+    }
+
+    addBubble('user', text);
+    inputEl.value = '';
+
+    const reply = findResponse(text);
+    currentTyping = addTyping();
+    const delay = prefersReducedMotion ? 200 : 800 + Math.min(reply.length * 5, 1200);
+
+    pendingTimer = setTimeout(function () {
+      pendingTimer = null;
+      clearTyping();
+      addBubble('bot', reply);
+    }, delay);
+  }
+
+  function init() {
+    formEl = document.getElementById('playgroundForm');
+    inputEl = document.getElementById('playgroundInput');
+    messagesEl = document.getElementById('playgroundMessages');
+    if (!formEl || !inputEl || !messagesEl) return;
+    inputEl.setAttribute('maxlength', String(MAX_INPUT_LENGTH));
+    formEl.addEventListener('submit', handleSubmit);
+  }
+
+  return { init: init };
+})();
+
+
+/* === src/modules/activity-feed.js === */
+
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Agent Activity Feed — Live-style simulated activity stream
+// ---------------------------------------------------------------------------
+var ActivityFeed = (function () {
+  'use strict';
+
+  let feedEl;
+  let activeCountEl, todayCountEl;
+  let cycleTimer = null;
+  let counterTimer = null;
+
+  /** Maximum visible items in the feed. */
+  const MAX_VISIBLE = 5;
+
+  /** Interval between new activity items (ms). */
+  const CYCLE_INTERVAL = 4000;
+
+  /** Pool of simulated agent activities. */
+  const ACTIVITIES = [
+    { icon: '\u{1F50D}', text: 'searched the web for "best budget laptops 2026"' },
+    { icon: '\u23F0', text: 'set a reminder: "Call dentist at 3 PM"' },
+    { icon: '\u{1F4E7}', text: 'summarized 5 unread emails into key action items' },
+    { icon: '\u{1F373}', text: 'found a 20-minute chicken stir-fry recipe' },
+    { icon: '\u{1F4BB}', text: 'debugged a React useEffect infinite loop' },
+    { icon: '\u{1F30D}', text: 'translated a business email from Japanese to English' },
+    { icon: '\u{1F4CA}', text: 'analyzed Q4 sales data and created a summary chart' },
+    { icon: '\u{1F3B5}', text: 'created a focus playlist with lo-fi and ambient tracks' },
+    { icon: '\u{1F4DD}', text: 'drafted meeting notes from a 45-minute standup' },
+    { icon: '\u2708\uFE0F', text: 'found the cheapest flights to Tokyo for March' },
+    { icon: '\u{1F4F7}', text: 'identified a plant from a photo: Monstera deliciosa' },
+    { icon: '\u{1F4B0}', text: 'compared 3 savings accounts and recommended the best APY' },
+    { icon: '\u{1F3CB}\uFE0F', text: 'generated a 4-week workout plan for muscle building' },
+    { icon: '\u{1F4DA}', text: 'summarized a 300-page book into 10 key takeaways' },
+    { icon: '\u{1F6D2}', text: 'built a grocery list from 5 saved recipes' },
+    { icon: '\u2600\uFE0F', text: 'checked the weekend forecast: sunny, perfect for hiking' },
+    { icon: '\u{1F3E0}', text: 'scheduled a smart home routine: lights off at 11 PM' },
+    { icon: '\u{1F4AC}', text: 'drafted a polite follow-up email to a recruiter' },
+    { icon: '\u{1F52C}', text: 'explained quantum entanglement in simple terms' },
+    { icon: '\u{1F3AF}', text: 'broke down a project into 12 actionable tasks with deadlines' },
+  ];
+
+  /** Shuffled index to avoid repeats until pool exhausted. */
+  let shuffled = [];
+  let shuffleIdx = 0;
+
+  function shuffle() {
+    shuffled = [];
+    for (var i = 0; i < ACTIVITIES.length; i++) shuffled.push(i);
+    for (var j = shuffled.length - 1; j > 0; j--) {
+      let k = Math.floor(Math.random() * (j + 1));
+      const tmp = shuffled[j];
+      shuffled[j] = shuffled[k];
+      shuffled[k] = tmp;
+    }
+    shuffleIdx = 0;
+  }
+
+  function nextActivity() {
+    if (shuffleIdx >= shuffled.length) shuffle();
+    return ACTIVITIES[shuffled[shuffleIdx++]];
+  }
+
+  function timeLabel() {
+    return 'just now';
+  }
+
+  /** Create an activity item DOM node. */
+  function createItem(activity) {
+    const item = document.createElement('div');
+    item.className = 'activity-item entering';
+
+    let icon = document.createElement('span');
+    icon.className = 'activity-icon';
+    icon.textContent = activity.icon;
+
+    let text = document.createElement('span');
+    text.className = 'activity-text';
+    const strong = document.createElement('strong');
+    strong.textContent = 'Agent';
+    text.appendChild(strong);
+    text.appendChild(document.createTextNode(' ' + activity.text));
+
+    const time = document.createElement('span');
+    time.className = 'activity-time';
+    time.textContent = timeLabel();
+
+    item.appendChild(icon);
+    item.appendChild(text);
+    item.appendChild(time);
+
+    return item;
+  }
+
+  /** Cycle: add a new item at top, remove oldest if over limit. */
+  function cycle() {
+    if (!feedEl) return;
+
+    const act = nextActivity();
+    const newItem = createItem(act);
+
+    // Age existing time labels
+    const items = feedEl.querySelectorAll('.activity-item');
+    for (var i = 0; i < items.length; i++) {
+      const timeEl = items[i].querySelector('.activity-time');
+      if (timeEl) {
+        const age = (i + 1) * (CYCLE_INTERVAL / 1000);
+        if (age < 60) {
+          timeEl.textContent = Math.round(age) + 's ago';
+        } else {
+          timeEl.textContent = Math.round(age / 60) + 'm ago';
+        }
+      }
+    }
+
+    // Remove oldest if over limit
+    if (items.length >= MAX_VISIBLE) {
+      const last = items[items.length - 1];
+      last.classList.add('exiting');
+
+      // Guard: prevent double-removal if animationend races with fallback
+      let removed = false;
+      function removeOnce() {
+        if (removed) return;
+        removed = true;
+        if (last.parentNode) last.parentNode.removeChild(last);
+      }
+
+      if (prefersReducedMotion) {
+        // Immediate removal when animations are disabled
+        removeOnce();
+      } else {
+        last.addEventListener('animationend', removeOnce);
+        // Fallback: if animationend never fires (CSS animation missing,
+        // browser throttled, or tab backgrounded), remove after 1s to
+        // prevent unbounded DOM growth.
+        setTimeout(removeOnce, 1000);
+      }
+    }
+
+    // Insert new at top
+    feedEl.insertBefore(newItem, feedEl.firstChild);
+
+    // Remove entering class after animation
+    setTimeout(function () {
+      newItem.classList.remove('entering');
+    }, 400);
+  }
+
+  /** Slowly increment the counters for visual effect. */
+  function tickCounters() {
+    if (!activeCountEl || !todayCountEl) return;
+    let active = parseInt(activeCountEl.textContent.replace(/,/g, ''), 10) || 1247;
+    let today = parseInt(todayCountEl.textContent.replace(/,/g, ''), 10) || 18392;
+
+    // Active counter: biased-upward fluctuation (-1 to +2) so it
+    // doesn't visibly drop frequently.  Floor at 1000.
+    active += Math.floor(Math.random() * 4) - 1;
+    if (active < 1000) active = 1000;
+
+    // Today counter: diminishing increments near the cap so it never
+    // visibly jumps backwards.  Slows to +0/+1 above 24,000 and
+    // stalls at 25,000 until the next page load resets it.
+    if (today < 22000) {
+      today += Math.floor(Math.random() * 3) + 1;          // +1..+3
+    } else if (today < 24000) {
+      today += Math.floor(Math.random() * 2) + 1;          // +1..+2
+    } else if (today < 25000) {
+      today += Math.random() < 0.5 ? 1 : 0;                // +0..+1
+    }
+    // At or above 25,000: no further increment (stalls gracefully)
+
+    activeCountEl.textContent = active.toLocaleString();
+    todayCountEl.textContent = today.toLocaleString();
+  }
+
+  /** IntersectionObserver callback — only animate when visible. */
+  function onVisible(entries) {
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].isIntersecting) {
+        startCycling();
+      } else {
+        stopCycling();
+      }
+    }
+  }
+
+  function startCycling() {
+    if (cycleTimer) return;
+    cycleTimer = setInterval(cycle, CYCLE_INTERVAL);
+    counterTimer = setInterval(tickCounters, CYCLE_INTERVAL);
+  }
+
+  function stopCycling() {
+    if (cycleTimer) { clearInterval(cycleTimer); cycleTimer = null; }
+    if (counterTimer) { clearInterval(counterTimer); counterTimer = null; }
+  }
+
+  function init() {
+    feedEl = document.getElementById('activityFeed');
+    activeCountEl = document.getElementById('activityActiveCount');
+    todayCountEl = document.getElementById('activityTodayCount');
+    if (!feedEl) return;
+
+    shuffle();
+
+    // Use IntersectionObserver if available, otherwise just start
+    if (typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver(onVisible, { threshold: 0.2 });
+      const section = document.getElementById('activitySection');
+      if (section) observer.observe(section);
+    } else {
+      startCycling();
+    }
+  }
+
+  function destroy() {
+    stopCycling();
+  }
+
+  return { init: init, destroy: destroy };
+})();
+
+
+/* === src/modules/prompt-gallery.js === */
+
+// ---------------------------------------------------------------------------
+// Prompt Gallery — searchable/filterable example prompts with response modal
+// ---------------------------------------------------------------------------
+var PromptGallery = (function () {
+  const PROMPTS = [
+    {
+      category: "productivity",
+      icon: "\u26a1",
+      prompt: "Remind me to call the dentist tomorrow at 9am",
+      response: "Done! I\u2019ll remind you tomorrow at 9:00 AM to call the dentist. \u23f0\n\nWant me to also draft a message you can send them, or look up their number?"
+    },
+    {
+      category: "productivity",
+      icon: "\u26a1",
+      prompt: "Summarize my last 3 conversations with you",
+      response: "Here\u2019s a quick recap:\n\n1. Yesterday \u2014 You asked about flight options to NYC for March. I found Delta and JetBlue options under $250.\n\n2. Monday \u2014 We worked through your grocery list and I suggested a meal plan for the week.\n\n3. Last Friday \u2014 You asked me to explain async/await in JavaScript. I gave you examples with fetch() and error handling.\n\nWant me to dig deeper into any of these?"
+    },
+    {
+      category: "productivity",
+      icon: "\u26a1",
+      prompt: "What\u2019s on my plate this week?",
+      response: "Based on what you\u2019ve told me:\n\n\ud83d\udcc5 Tuesday \u2014 Dentist appointment at 2pm\n\ud83d\udcc5 Wednesday \u2014 Team standup moved to 10am\n\ud83d\udcc5 Thursday \u2014 Gym (you said you wanted to go 3x this week)\n\ud83d\udcc5 Friday \u2014 Dinner with Sam at 7pm\n\nYou also mentioned wanting to finish that blog post. Want me to set a reminder for that?"
+    },
+    {
+      category: "learning",
+      icon: "\ud83d\udcda",
+      prompt: "Explain quantum computing like I\u2019m 10",
+      response: "Imagine you have a coin. A normal computer looks at it and says \"heads\" or \"tails\" \u2014 one or the other.\n\nA quantum computer can look at the coin while it\u2019s still spinning! It sees heads AND tails at the same time. \ud83e\udea9\n\nThis means it can try lots of answers at once instead of one at a time. That\u2019s why it can solve really hard puzzles way faster than a regular computer.\n\nWant me to go deeper, or is that the right level?"
+    },
+    {
+      category: "learning",
+      icon: "\ud83d\udcda",
+      prompt: "What\u2019s the difference between TCP and UDP?",
+      response: "Think of it like mail:\n\n\ud83d\udce6 TCP = Certified mail. You send it, the other side confirms they got it, and if anything\u2019s missing, it gets resent. Reliable but slower.\n\n\u2709\ufe0f UDP = Postcards. You toss them out fast with no confirmation. Some might get lost, but it\u2019s way quicker.\n\nUse TCP for: web pages, file downloads, email\nUse UDP for: video calls, gaming, live streaming\n\nThe trade-off is always reliability vs speed."
+    },
+    {
+      category: "learning",
+      icon: "\ud83d\udcda",
+      prompt: "Recommend a book about behavioral economics",
+      response: "Top pick: \"Thinking, Fast and Slow\" by Daniel Kahneman \ud83e\udde0\n\nIt covers how we make decisions using two systems \u2014 fast intuition vs. slow deliberation. Tons of real experiments and surprising findings about human bias.\n\nAlso great:\n\u2022 \"Nudge\" by Thaler & Sunstein \u2014 more practical/policy-focused\n\u2022 \"Predictably Irrational\" by Dan Ariely \u2014 shorter, more fun examples\n\nWant a summary of any of these, or should I find audiobook options?"
+    },
+    {
+      category: "coding",
+      icon: "\ud83d\udcbb",
+      prompt: "Write a Python function to flatten nested lists",
+      response: "Here you go:\n\ndef flatten(lst):\n    result = []\n    for item in lst:\n        if isinstance(item, list):\n            result.extend(flatten(item))\n        else:\n            result.append(item)\n    return result\n\n# Example:\nflatten([1, [2, [3, 4]], [5, 6]])\n# \u2192 [1, 2, 3, 4, 5, 6]\n\nThis handles any depth of nesting recursively. Want an iterative version, or should I add type hints?"
+    },
+    {
+      category: "coding",
+      icon: "\ud83d\udcbb",
+      prompt: "Why is my API returning 403?",
+      response: "A 403 means the server understood your request but refuses to authorize it. Common causes:\n\n1. \ud83d\udd11 Missing or expired API key/token\n2. \ud83d\udeab Wrong permissions \u2014 your token might not have the right scopes\n3. \ud83c\udf10 CORS issue \u2014 if calling from a browser, the server might block your origin\n4. \ud83d\udee1\ufe0f Rate limiting \u2014 some APIs return 403 instead of 429\n5. \ud83d\udc64 IP allowlist \u2014 your IP might not be whitelisted\n\nCan you share the endpoint and headers (redact secrets)? I can help narrow it down."
+    },
+    {
+      category: "coding",
+      icon: "\ud83d\udcbb",
+      prompt: "What\u2019s the best way to handle errors in async JavaScript?",
+      response: "Use try/catch with async/await \u2014 it\u2019s the cleanest pattern:\n\nasync function fetchUser(id) {\n  try {\n    const res = await fetch('/api/users/' + id);\n    if (!res.ok) throw new Error('HTTP ' + res.status);\n    return await res.json();\n  } catch (err) {\n    console.error('Failed to fetch user:', err.message);\n    return null;\n  }\n}\n\nPro tips:\n\u2022 Always check res.ok \u2014 fetch doesn\u2019t throw on 4xx/5xx\n\u2022 Use Error subclasses for different error types\n\u2022 Add a global unhandledrejection listener as a safety net"
+    },
+    {
+      category: "creative",
+      icon: "\ud83c\udfa8",
+      prompt: "Write a haiku about debugging",
+      response: "It works on my box\nProduction burns at midnight\nConsole dot log saves \ud83d\udd25\n\nWant another one? I can also do limericks, sonnets, or a dramatic monologue about a segfault."
+    },
+    {
+      category: "creative",
+      icon: "\ud83c\udfa8",
+      prompt: "Give me a name for my startup that makes AI planners",
+      response: "Here are some ideas:\n\n\ud83c\udfaf Clean & Modern:\n\u2022 Planwise \u2014 simple, says what it does\n\u2022 Driftless \u2014 suggests staying on track\n\u2022 Cadence AI \u2014 rhythm and structure\n\n\ud83d\ude80 Bold & Techy:\n\u2022 NeuralDay \u2014 AI + daily planning\n\u2022 Orchestr8 \u2014 playful, memorable\n\u2022 Autopilot \u2014 already well-known word, strong brand\n\n\ud83c\udf3f Calm & Approachable:\n\u2022 Clearpath \u2014 friendly, goal-oriented\n\u2022 Tempo \u2014 minimal, musical\n\u2022 Morningside AI \u2014 fresh start vibes\n\nWhich direction resonates? I can riff on any of these."
+    },
+    {
+      category: "creative",
+      icon: "\ud83c\udfa8",
+      prompt: "Help me write a thank-you note to my mentor",
+      response: "Here\u2019s a draft:\n\n\"Hi [Name],\n\nI wanted to take a moment to say thank you. Your guidance over the past [time] has genuinely shaped how I think about [topic/career]. The way you [specific thing they did] made a real difference.\n\nI don\u2019t take that for granted. Thank you for investing in me.\n\nWarmly,\n[Your name]\"\n\nWant me to adjust the tone (more formal/casual) or add specific details?"
+    },
+    {
+      category: "daily",
+      icon: "\u2600\ufe0f",
+      prompt: "What\u2019s the weather like in Seattle today?",
+      response: "\ud83c\udf27\ufe0f Seattle today:\n\n\u2022 Currently: 48\u00b0F (9\u00b0C), light rain\n\u2022 High: 52\u00b0F | Low: 41\u00b0F\n\u2022 Wind: 12 mph SW\n\u2022 Rain chance: 80% through afternoon, clearing by evening\n\nYou might want a jacket and umbrella if you\u2019re heading out before 5pm. Tomorrow looks drier \u2014 partly cloudy, high of 55\u00b0F.\n\nWant the full week forecast?"
+    },
+    {
+      category: "daily",
+      icon: "\u2600\ufe0f",
+      prompt: "What\u2019s a quick healthy dinner I can make in 20 minutes?",
+      response: "How about a Mediterranean chickpea bowl? \ud83e\udd66\n\n\ud83d\udc68\u200d\ud83c\udf73 Ingredients:\n\u2022 1 can chickpeas (drained)\n\u2022 Cherry tomatoes, cucumber, red onion\n\u2022 Feta cheese, olives\n\u2022 Olive oil + lemon juice + garlic\n\u2022 Serve over rice or greens\n\n\u23f1\ufe0f Steps (15 min):\n1. Warm chickpeas in a pan with olive oil, paprika, cumin\n2. Chop veggies while they cook\n3. Toss everything in a bowl, squeeze lemon, crumble feta\n\n~450 calories, high protein, zero stress. Want me to adjust for any dietary preferences?"
+    },
+    {
+      category: "daily",
+      icon: "\u2600\ufe0f",
+      prompt: "Help me decide: should I take an Uber or the bus?",
+      response: "Let\u2019s break it down:\n\n\ud83d\ude95 Uber:\n\u2022 ~$12\u201318 depending on surge\n\u2022 Door to door, ~15 min\n\u2022 Good if you\u2019re running late or carrying stuff\n\n\ud83d\ude8c Bus:\n\u2022 $2.75 flat\n\u2022 ~35 min including walking + wait\n\u2022 Good if you\u2019re not in a rush\n\n\ud83e\udd14 My take: If you\u2019re within 10 min of your departure, take the bus and save $15. If you\u2019re already running behind, Uber\u2019s worth it for the peace of mind.\n\nWhere are you headed? I can check real-time transit."
+    }
+  ];
+
+  let grid = null;
+  let searchInput = null;
+  let emptyState = null;
+  let modal = null;
+  let modalBackdrop = null;
+  let modalCloseBtn = null;
+  let modalQuestion = null;
+  let modalAnswer = null;
+  let filterBtns = null;
+  let activeCategory = 'all';
+
+  /** Pre-created card elements — one per PROMPTS entry, created once in init. */
+  let cardPool = [];
+  /** Pre-lowercased search text for each prompt (prompt + response), avoids
+   *  repeated toLowerCase() on every keystroke. */
+  const searchIndex = [];
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  /** Build the card pool once. Cards are shown/hidden instead of recreated. */
+  function buildCardPool() {
+    if (cardPool.length > 0) return; // already built
+    for (var i = 0; i < PROMPTS.length; i++) {
+      const p = PROMPTS[i];
+      const card = document.createElement('div');
+      card.className = 'prompt-card';
+      card.setAttribute('role', 'listitem');
+      card.setAttribute('tabindex', '0');
+      card.dataset.category = p.category;
+      card.dataset.index = i;
+      card.innerHTML =
+        '<div class="prompt-card-category">' + p.icon + ' ' + p.category + '</div>' +
+        '<div class="prompt-card-text">\u201c' + escapeHtml(p.prompt) + '\u201d</div>' +
+        '<div class="prompt-card-hint">Tap to see response \u2192</div>';
+      (function (prompt) {
+        card.addEventListener('click', function () { openModal(prompt); });
+        card.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(prompt); }
+        });
+      })(p);
+      cardPool.push(card);
+      grid.appendChild(card);
+      // Pre-lowercase for search — avoids repeated toLowerCase per keystroke
+      searchIndex.push(p.prompt.toLowerCase() + ' ' + p.response.toLowerCase());
+    }
+  }
+
+  /**
+   * Show/hide pre-created cards based on active category and search query.
+   * O(n) visibility toggles instead of O(n) DOM create+destroy per keystroke.
+   */
+  function renderCards() {
+    const search = (searchInput.value || '').toLowerCase().trim();
+    let count = 0;
+    for (var i = 0; i < PROMPTS.length; i++) {
+      const p = PROMPTS[i];
+      let visible = true;
+      if (activeCategory !== 'all' && p.category !== activeCategory) visible = false;
+      if (visible && search && searchIndex[i].indexOf(search) === -1) visible = false;
+      cardPool[i].hidden = !visible;
+      if (visible) count++;
+    }
+    emptyState.hidden = count > 0;
+  }
+
+  function openModal(p) {
+    modalQuestion.textContent = p.prompt;
+    modalAnswer.textContent = p.response;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    modalCloseBtn.focus();
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  function init() {
+    grid = document.getElementById('promptGalleryGrid');
+    searchInput = document.getElementById('promptSearchInput');
+    emptyState = document.getElementById('promptGalleryEmpty');
+    modal = document.getElementById('promptResponseModal');
+    modalBackdrop = document.getElementById('promptModalBackdrop');
+    modalCloseBtn = document.getElementById('promptModalClose');
+    modalQuestion = document.getElementById('promptModalQuestion');
+    modalAnswer = document.getElementById('promptModalAnswer');
+    filterBtns = document.querySelectorAll('.prompt-filter-btn');
+
+    if (!grid) return;
+
+    filterBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        filterBtns.forEach(function (b) {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        activeCategory = btn.dataset.promptCategory;
+        renderCards();
+      });
+    });
+
+    searchInput.addEventListener('input', renderCards);
+
+    modalBackdrop.addEventListener('click', closeModal);
+    modalCloseBtn.addEventListener('click', closeModal);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !modal.hidden) closeModal();
+    });
+
+    buildCardPool();
+    renderCards();
+  }
+
+  return { init: init };
+})();
+
+
+/* === src/modules/personality-configurator.js === */
+
+// ---------------------------------------------------------------------------
+// Personality Configurator
+// ---------------------------------------------------------------------------
+
+/* exported PersonalityConfigurator */
+var PersonalityConfigurator = (function () {
+  'use strict';
+
+  const STORAGE_KEY_PERSONALITY = 'agentbox_personality';
+
+  const QUESTIONS = [
+    { q: 'What\'s a good recipe for dinner tonight?', key: 'recipe' },
+    { q: 'Explain how DNS works.', key: 'dns' },
+    { q: 'What should I do this weekend?', key: 'weekend' },
+    { q: 'Remind me about my meeting at 3pm.', key: 'reminder' },
+    { q: 'Help me write a thank-you email.', key: 'email' },
+    { q: 'How do I stay focused while working from home?', key: 'focus' },
+    { q: 'Summarize the latest tech news.', key: 'technews' },
+    { q: 'What\'s the difference between a latte and a cappuccino?', key: 'coffee' },
+    { q: 'Help me plan a road trip.', key: 'roadtrip' },
+    { q: 'How do I start learning Python?', key: 'learnpython' },
+    { q: 'What should I name my new cat?', key: 'catname' },
+    { q: 'Help me debug this error message.', key: 'debug' },
+    { q: 'What\'s a good book to read this month?', key: 'book' },
+    { q: 'Create a workout plan for beginners.', key: 'workout' },
+    { q: 'How do I negotiate a raise?', key: 'negotiate' }
+  ];
+
+  const RESPONSES = {
+    recipe: {
+      casualBrief: 'Garlic butter shrimp pasta. 20 min, one pan. Can\'t go wrong.',
+      casualDetailed: 'Garlic butter shrimp pasta is my go-to.\n\nHere\'s the play:\n1. Cook pasta (linguine works great)\n2. Saute garlic in butter until fragrant\n3. Toss in shrimp, cook 2-3 min per side\n4. Add pasta, splash of pasta water, lemon juice\n5. Fresh parsley on top\n\nTotal time: 20 min. Leftovers reheat well too.',
+      formalBrief: 'I\'d recommend garlic butter shrimp pasta. It takes approximately 20 minutes and requires minimal cleanup.',
+      formalDetailed: 'I would recommend garlic butter shrimp pasta. It\'s an efficient yet impressive dish.\n\nIngredients:\n- 400g linguine\n- 450g large shrimp, peeled\n- 4 cloves garlic, minced\n- 3 tbsp butter\n- Lemon juice, fresh parsley\n\nPreparation:\n1. Cook pasta to al dente, reserve 1 cup pasta water\n2. Saute garlic in butter over medium heat (60 seconds)\n3. Add shrimp, cook 2-3 minutes per side until pink\n4. Toss in pasta with a splash of reserved water\n5. Finish with lemon juice and parsley\n\nTotal preparation time: approximately 20 minutes.'
+    },
+    dns: {
+      casualBrief: 'DNS is basically the internet\'s phone book. You type a domain, it finds the IP address.',
+      casualDetailed: 'DNS is the internet\'s phone book.\n\nWhen you type "google.com":\n1. Your browser asks a DNS resolver (usually your ISP\'s)\n2. The resolver checks its cache first\n3. If not cached, it asks root servers -> TLD servers -> authoritative servers\n4. Gets back an IP like 142.250.80.46\n5. Your browser connects to that IP\n\nThe whole thing takes milliseconds. It\'s cached at multiple levels so repeat lookups are instant.',
+      formalBrief: 'DNS (Domain Name System) translates human-readable domain names into IP addresses that computers use to identify each other on the network.',
+      formalDetailed: 'The Domain Name System (DNS) is a hierarchical, distributed naming system that translates domain names into IP addresses.\n\nResolution process:\n1. Client sends query to configured recursive resolver\n2. Resolver checks local cache for existing records\n3. If uncached, resolver queries root nameservers for TLD delegation\n4. TLD nameserver provides authoritative nameserver reference\n5. Authoritative server returns the definitive A/AAAA record\n6. Resolver caches the result per the TTL value and returns it to the client\n\nThis process typically completes in under 100ms, with caching at each layer significantly reducing latency for subsequent queries.'
+    },
+    weekend: {
+      casualBrief: 'If the weather\'s nice, hit a trail or check out a farmer\'s market. Rainy? Movie marathon.',
+      casualDetailed: 'Here are some ideas depending on your vibe:\n\nOutdoor:\n- Hit a local trail or park\n- Check out a farmer\'s market\n- Bike ride or picnic\n\nChill:\n- Movie marathon (got any genres in mind?)\n- Try a new coffee shop\n- Cook something ambitious you\'ve been putting off\n\nSocial:\n- Board game night with friends\n- Check for local events or live music\n\nWant me to look up what\'s happening near you this weekend?',
+      formalBrief: 'I\'d suggest considering outdoor activities if weather permits, or exploring local cultural events. Shall I look up options in your area?',
+      formalDetailed: 'Here are some well-rounded weekend suggestions:\n\nOutdoor Activities:\n- Nature hikes at local trails\n- Farmer\'s market visits\n- Cycling or outdoor dining\n\nCultural & Social:\n- Local museum exhibitions\n- Live music or community events\n- Restaurant exploration\n\nRelaxation:\n- Cooking a new recipe\n- Reading or creative projects\n- Wellness activities (yoga, spa)\n\nI can look up specific events and weather conditions for your area to help narrow down the options. Would that be helpful?'
+    },
+    reminder: {
+      casualBrief: 'Done! I\'ll ping you at 3pm about your meeting.',
+      casualDetailed: 'You got it! Reminder set.\n\nI\'ll message you at 3:00 PM about your meeting. If you want, I can also remind you 15 min before so you have time to prep. Just say the word.',
+      formalBrief: 'Reminder set. You will receive a notification at 3:00 PM regarding your meeting.',
+      formalDetailed: 'Your reminder has been configured with the following details:\n\nEvent: Meeting\nReminder time: 3:00 PM today\nNotification: Push message via Telegram\n\nWould you like me to add a 15-minute advance warning as well? I can also include any preparation notes or agenda items you\'d like to review beforehand.'
+    },
+    email: {
+      casualBrief: 'Sure! Who\'s it for and what are you thanking them for? I\'ll draft something quick.',
+      casualDetailed: 'Happy to help! Just need a couple things:\n\n1. Who\'s it to? (boss, friend, client?)\n2. What are you thanking them for?\n3. How formal should it be?\n\nI\'ll write a draft you can tweak. Usually a good thank-you email is 3-4 sentences max \u2014 specific about what you\'re grateful for, and genuine.',
+      formalBrief: 'I\'d be glad to assist. Could you share the recipient and the context for the thank-you? I\'ll prepare an appropriate draft.',
+      formalDetailed: 'I would be happy to help you compose a thank-you email. To craft the most appropriate message, I\'ll need a few details:\n\n1. Recipient: Who is the email addressed to?\n2. Context: What specific action or gesture are you expressing gratitude for?\n3. Relationship: Professional colleague, supervisor, client, or personal contact?\n4. Tone preference: Warm and personal, or strictly professional?\n\nOnce I have this information, I\'ll draft a polished message that you can review and adjust before sending.'
+    },
+    focus: {
+      casualBrief: 'Block distractions, time-box your work in 25-min chunks, and take real breaks.',
+      casualDetailed: 'Here\'s what actually works:\n\n1. Time-box with Pomodoro: 25 min work, 5 min break\n2. Put your phone in another room (seriously)\n3. Use website blockers for social media during work hours\n4. Have a dedicated workspace — even a corner counts\n5. Start with your hardest task while your energy is fresh\n6. Background music without lyrics helps some people\n\nThe key is consistency. Your brain learns "this space = work mode" over time.',
+      formalBrief: 'I recommend time-blocking techniques, minimizing digital distractions, and maintaining a dedicated workspace.',
+      formalDetailed: 'Maintaining focus while working from home requires structured strategies:\n\nEnvironment:\n- Designate a specific workspace separate from leisure areas\n- Ensure proper lighting and ergonomic setup\n\nTime Management:\n- Apply the Pomodoro Technique (25-minute focused intervals)\n- Schedule your most demanding tasks during peak energy hours\n- Block calendar time for deep work\n\nDistraction Control:\n- Use application blockers during focus periods\n- Set device notifications to "Do Not Disturb"\n- Communicate availability boundaries with household members\n\nConsistency is essential — these habits compound over time.'
+    },
+    technews: {
+      casualBrief: 'AI models keep getting better, open-source is thriving, and everyone\'s building agents.',
+      casualDetailed: 'Here\'s the quick rundown:\n\n- AI: New models dropping almost weekly. Agents are the hot topic — everyone wants AI that can actually do things, not just chat.\n- Open source: Massive momentum. Local models are surprisingly good now.\n- Hardware: Apple and Nvidia in a quiet arms race for ML chips.\n- Security: Ransomware still a nightmare. Patch your stuff.\n\nWant me to dig into any of these?',
+      formalBrief: 'Key trends include rapid AI model advancement, growing open-source adoption, and increased focus on autonomous AI agents.',
+      formalDetailed: 'Here is a summary of current technology trends:\n\nArtificial Intelligence:\n- Foundation models continue rapid capability improvements\n- Agent-based architectures gaining significant traction\n- Open-source models narrowing the gap with proprietary offerings\n\nInfrastructure:\n- Accelerated hardware competition between major chipmakers\n- Edge computing and on-device AI becoming more viable\n\nSecurity:\n- Ransomware and supply-chain attacks remain prevalent\n- AI-assisted security tooling showing promise\n\nWould you like a deeper analysis of any particular area?'
+    },
+    coffee: {
+      casualBrief: 'Latte = more milk, smooth. Cappuccino = more foam, stronger espresso taste.',
+      casualDetailed: 'Both start with espresso, but:\n\nLatte:\n- 1/3 espresso, 2/3 steamed milk, thin layer of foam\n- Smooth, milky, great canvas for flavors\n- Bigger drink usually\n\nCappuccino:\n- Equal parts espresso, steamed milk, foam\n- Stronger coffee taste, lighter feel\n- That thick foam layer is the signature\n\nTL;DR: Want coffee-flavored milk? Latte. Want to actually taste the espresso? Cappuccino.',
+      formalBrief: 'A latte contains more steamed milk with a thin foam layer, while a cappuccino has equal parts espresso, steamed milk, and foam.',
+      formalDetailed: 'The distinction between these espresso-based beverages lies in their milk-to-espresso ratios:\n\nCaffè Latte:\n- Composition: 1/3 espresso, 2/3 steamed milk, thin foam layer (~1cm)\n- Character: Smooth, mild coffee flavor, creamy texture\n- Typical volume: 350-450ml\n\nCappuccino:\n- Composition: Equal thirds of espresso, steamed milk, and frothed milk foam\n- Character: Stronger espresso presence, lighter mouthfeel\n- Typical volume: 150-180ml\n\nBoth use the same espresso base; the preparation technique and proportions create distinctly different drinking experiences.'
+    },
+    roadtrip: {
+      casualBrief: 'Pick a direction, map out stops every 2-3 hours, and don\'t over-plan. The detours are the best part.',
+      casualDetailed: 'Here\'s how to plan a solid road trip:\n\n1. Pick your destination (or just a direction — no judgment)\n2. Map stops every 2-3 hours — scenic overlooks, weird roadside attractions, good food spots\n3. Book the first night, wing the rest\n4. Pack snacks, a great playlist, and a car charger\n5. Download offline maps in case cell service dies\n6. Budget 20% more than you think you\'ll need\n\nHonestly, the best road trip moments are the unplanned ones. Leave room for spontaneity.',
+      formalBrief: 'I\'d recommend defining your route, scheduling rest stops every 2-3 hours, and preparing accommodations in advance.',
+      formalDetailed: 'A well-planned road trip involves several key considerations:\n\nRoute Planning:\n- Define primary destination and identify scenic alternatives\n- Schedule rest stops every 2-3 hours for safety\n- Research fuel station availability on rural routes\n\nAccommodations:\n- Book lodging in advance for peak travel periods\n- Consider a mix of hotels and unique stays (cabins, B&Bs)\n\nPreparation:\n- Vehicle inspection: tires, oil, brakes, spare tire\n- Emergency kit: first aid, jumper cables, flashlight\n- Download offline maps for areas with limited connectivity\n\nBudget:\n- Allocate funds for fuel, lodging, meals, and activities\n- Include a 20% contingency buffer\n\nShall I help plan a specific route?'
+    },
+    learnpython: {
+      casualBrief: 'Start with Python.org\'s tutorial, then build small projects. Best way to learn is by doing.',
+      casualDetailed: 'Here\'s a no-BS path to learning Python:\n\n1. Start here: python.org tutorial or Automate the Boring Stuff (free online)\n2. Set up VS Code with the Python extension\n3. Learn the basics: variables, loops, functions, lists, dicts\n4. Build something small ASAP — a calculator, a to-do app, a web scraper\n5. When you get stuck, read the error message (seriously, Python errors are pretty clear)\n6. Then level up: classes, file I/O, APIs, pip packages\n\nDon\'t try to learn everything first. Build → get stuck → learn → repeat.',
+      formalBrief: 'I recommend starting with the official Python tutorial, then progressing to practical projects to reinforce concepts.',
+      formalDetailed: 'Here is a structured approach to learning Python:\n\nFoundation (Weeks 1-2):\n- Complete the official Python tutorial at python.org\n- Set up a development environment (VS Code + Python extension)\n- Master core concepts: variables, data types, control flow, functions\n\nIntermediate (Weeks 3-4):\n- Data structures: lists, dictionaries, sets, tuples\n- File I/O and error handling\n- Object-oriented programming basics\n- Package management with pip\n\nPractical Application (Weeks 5+):\n- Build small projects: CLI tools, web scrapers, data analysis scripts\n- Explore popular libraries: requests, pandas, Flask\n- Contribute to open-source projects for real-world experience\n\nRecommended resources:\n- "Automate the Boring Stuff with Python" (free online)\n- Python documentation (docs.python.org)\n- LeetCode for algorithmic practice'
+    },
+    catname: {
+      casualBrief: 'Mochi, Pixel, or Chairman Meow. Depends on the cat\'s vibe.',
+      casualDetailed: 'Depends on the cat\'s personality! Some ideas:\n\nClassic: Luna, Milo, Oliver, Cleo\nFoodie: Mochi, Biscuit, Waffles, Pesto\nNerdy: Pixel, Byte, Schrödinger, Ada\nDignified: Professor Whiskers, Chairman Meow, Sir Fluffington\nChaotic: Gremlin, Chaos, Bandit\n\nHonest advice: wait a day or two. Their personality will name them. You\'ll know.',
+      formalBrief: 'Popular options include Luna, Milo, and Oliver. I\'d suggest observing your cat\'s temperament first.',
+      formalDetailed: 'Selecting a name for your new cat is a meaningful decision. Here are categorized suggestions:\n\nPopular & Timeless: Luna, Milo, Oliver, Cleo, Leo\nFood-Inspired: Mochi, Biscuit, Ginger, Sage\nLiterary: Gatsby, Austen, Poe, Hemingway\nScience & Tech: Pixel, Ada, Tesla, Qubit\nDistinguished: Winston, Duchess, Reginald\n\nRecommendation: Spend 1-2 days observing your cat\'s personality traits and habits. Cats often "earn" their names through distinctive behaviors. A reserved cat might suit "Sage," while an energetic one might be a natural "Bandit."'
+    },
+    debug: {
+      casualBrief: 'Paste the error — I\'ll tell you what\'s wrong and how to fix it.',
+      casualDetailed: 'Let\'s squash that bug! Here\'s what helps:\n\n1. Paste the full error message and stack trace\n2. What language/framework?\n3. What were you trying to do when it broke?\n4. Did it work before? What changed?\n\nQuick self-check before we dive in:\n- Did you save the file? (We\'ve all been there)\n- Is the right environment/version active?\n- Google the exact error message in quotes — Stack Overflow is your friend\n\nPaste it and let\'s figure it out.',
+      formalBrief: 'Please share the full error message and stack trace. I\'ll analyze it and provide a solution.',
+      formalDetailed: 'I\'d be happy to help you resolve that error. To provide an accurate diagnosis, please share:\n\n1. The complete error message and stack trace\n2. The programming language and framework version\n3. The relevant code section (if not sensitive)\n4. Steps to reproduce the issue\n5. Any recent changes to the codebase\n\nIn the meantime, here are immediate troubleshooting steps:\n- Verify the error message for line numbers and file references\n- Check for recent dependency updates that may have introduced breaking changes\n- Review version compatibility between your tools and libraries\n- Search the exact error string in the project\'s issue tracker\n\nI\'ll provide a targeted solution once I can review the details.'
+    },
+    book: {
+      casualBrief: 'What are you in the mood for? I\'ve got picks for fiction, non-fiction, or "blow my mind."',
+      casualDetailed: 'Here are some solid picks across genres:\n\nFiction:\n- "Project Hail Mary" by Andy Weir — sci-fi, unputdownable\n- "Klara and the Sun" by Kazuo Ishiguro — quiet, beautiful AI story\n\nNon-Fiction:\n- "Thinking, Fast and Slow" by Daniel Kahneman — how your brain tricks you\n- "The Code Breaker" by Walter Isaacson — CRISPR and the future of genetics\n\nQuick reads:\n- "The Midnight Library" by Matt Haig — what if you could try different lives?\n- "Atomic Habits" by James Clear — small changes, big results\n\nWhat genre are you leaning toward?',
+      formalBrief: 'I\'d recommend "Project Hail Mary" for fiction or "Thinking, Fast and Slow" for non-fiction. What genre interests you?',
+      formalDetailed: 'Here are curated recommendations across categories:\n\nFiction:\n- "Project Hail Mary" by Andy Weir — compelling science fiction with rigorous scientific detail\n- "Klara and the Sun" by Kazuo Ishiguro — a thoughtful exploration of artificial intelligence and human connection\n- "The Midnight Library" by Matt Haig — philosophical fiction examining life choices\n\nNon-Fiction:\n- "Thinking, Fast and Slow" by Daniel Kahneman — foundational work on cognitive biases and decision-making\n- "The Code Breaker" by Walter Isaacson — the story of CRISPR and gene editing\n- "Atomic Habits" by James Clear — evidence-based framework for behavior change\n\nTechnical:\n- "Designing Data-Intensive Applications" by Martin Kleppmann\n- "The Pragmatic Programmer" by Hunt and Thomas\n\nWould you like recommendations tailored to a specific interest area?'
+    },
+    workout: {
+      casualBrief: 'Start with 3 days a week: bodyweight stuff like squats, push-ups, and walks. Keep it simple.',
+      casualDetailed: 'Here\'s a beginner plan that won\'t destroy you:\n\n3 days/week (e.g., Mon/Wed/Fri):\n- 10 squats\n- 5-10 push-ups (knees are fine!)\n- 30-second plank\n- 10 lunges each leg\n- 15 min walk or light jog\n\nWeek 2+: bump reps by 2-3 each week\n\nRules:\n- Rest days matter. Don\'t skip them.\n- Form > speed. Always.\n- Sore is normal. Sharp pain isn\'t — stop.\n- Consistency beats intensity every time\n\nYou don\'t need a gym or equipment to start. Just start.',
+      formalBrief: 'I recommend beginning with 3 sessions per week focusing on bodyweight exercises: squats, push-ups, planks, and walking.',
+      formalDetailed: 'Here is a structured beginner workout plan:\n\nSchedule: 3 sessions per week with rest days between\n\nWorkout Structure (30-40 minutes):\nWarm-up (5 minutes):\n- Light walking or marching in place\n- Arm circles and leg swings\n\nStrength Circuit (20 minutes, 2-3 rounds):\n- Bodyweight squats: 10-12 repetitions\n- Push-ups (modified if needed): 5-10 repetitions\n- Plank hold: 20-30 seconds\n- Lunges: 8-10 per leg\n- Glute bridges: 10-12 repetitions\n\nCardio (10 minutes):\n- Brisk walking or light jogging\n\nProgression:\n- Increase repetitions by 2-3 each week\n- Add exercises or rounds as fitness improves\n- Prioritize proper form over volume\n\nImportant: Allow 48 hours between sessions for recovery. Consult a physician before beginning any new exercise program.'
+    },
+    negotiate: {
+      casualBrief: 'Know your market value, bring receipts of your wins, and practice saying the number out loud.',
+      casualDetailed: 'Here\'s the playbook:\n\n1. Research: Know your market rate (Glassdoor, Levels.fyi, talking to peers)\n2. Document your wins: revenue generated, problems solved, projects shipped\n3. Pick the right time: after a big win, during reviews, or after getting a competing offer\n4. Lead with value, not need: "Here\'s what I\'ve delivered" > "I need more money"\n5. Give a range, anchor high: if you want $120k, say "$120-135k"\n6. Practice saying the number out loud until it feels normal\n7. Be ready for "not right now" — ask what milestones would get you there\n\nThe worst they can say is no. And even then, you\'ve planted the seed.',
+      formalBrief: 'Prepare by researching market rates, documenting your contributions, and presenting a data-driven case.',
+      formalDetailed: 'Negotiating a salary increase requires thorough preparation:\n\nResearch Phase:\n- Benchmark your role against market data (Glassdoor, LinkedIn Salary, industry surveys)\n- Document quantifiable achievements: revenue impact, cost savings, project outcomes\n- Identify your unique value proposition within the organization\n\nTiming:\n- Align with performance review cycles when possible\n- Following successful project completions strengthens your position\n- Avoid periods of organizational stress or budget constraints\n\nPresentation:\n- Frame the conversation around value delivered, not personal financial needs\n- Present specific metrics and achievements\n- Propose a salary range anchored at the higher end of market rates\n- Be prepared to discuss non-monetary compensation (equity, flexibility, development)\n\nFollow-up:\n- If declined, request specific milestones for future consideration\n- Get any commitments in writing\n- Maintain professionalism regardless of outcome'
+    }
+  };
+
+  const HUMOR_ADDITIONS = {
+    recipe: { low: '', mid: ' Trust me on this one.', high: ' Chef\'s kiss, honestly. Gordon Ramsay would nod approvingly. Probably.' },
+    dns: { low: '', mid: ' Pretty clever system, honestly.', high: ' It\'s like asking 10 people for directions and somehow getting there in 50ms. The internet is wild.' },
+    weekend: { low: '', mid: ' Life\'s short, pick the fun one.', high: ' Plot twist: do ALL of them. Sleep is overrated anyway.' },
+    reminder: { low: '', mid: ' I never forget.', high: ' I\'m basically your brain\'s backup server now. You\'re welcome.' },
+    email: { low: '', mid: ' A good thank-you goes a long way.', high: ' Pro tip: don\'t start with "Per my last email" \u2014 save that energy for passive-aggressive Mondays.' },
+    focus: { low: '', mid: ' You got this.', high: ' Your couch is the enemy. Treat it accordingly.' },
+    technews: { low: '', mid: ' Exciting times.', high: ' The future is here, it\'s just unevenly distributed and mostly running on GPUs.' },
+    coffee: { low: '', mid: ' Both are great choices.', high: ' Baristas love when you know the difference. Instant cred. Literally.' },
+    roadtrip: { low: '', mid: ' The journey is the destination.', high: ' If you don\'t stop at least one sketchy roadside attraction, did you even road trip?' },
+    learnpython: { low: '', mid: ' Python\'s a great choice.', high: ' Fair warning: once you learn Python, every other language feels like doing taxes.' },
+    catname: { low: '', mid: ' Cats are the best.', high: ' Honestly, the cat will ignore whatever name you pick. But that\'s part of the charm.' },
+    debug: { low: '', mid: ' We\'ll figure it out.', high: ' The bug is scared. It can sense us coming.' },
+    book: { low: '', mid: ' Happy reading!', high: ' Warning: "just one more chapter" is a lie your brain tells you at 2am.' },
+    workout: { low: '', mid: ' Consistency is key.', high: ' Day 1 of becoming someone who says "I actually love mornings now." Scary.' },
+    negotiate: { low: '', mid: ' You deserve fair compensation.', high: ' Channel your inner "I know what I bring to this table and I also brought dessert."' }
+  };
+
+  const EMOJI_SETS = {
+    recipe: { none: '', some: ' \uD83C\uDF5D', lots: ' \uD83C\uDF5D\uD83E\uDD29\uD83D\uDE0B' },
+    dns: { none: '', some: ' \uD83C\uDF10', lots: ' \uD83C\uDF10\uD83D\uDD0D\u26A1' },
+    weekend: { none: '', some: ' \u2600\uFE0F', lots: ' \u2600\uFE0F\uD83C\uDF89\uD83C\uDF1F' },
+    reminder: { none: '', some: ' \u23F0', lots: ' \u23F0\u2705\uD83D\uDCAA' },
+    email: { none: '', some: ' \u2709\uFE0F', lots: ' \u2709\uFE0F\u270D\uFE0F\uD83D\uDE4F' },
+    focus: { none: '', some: ' \uD83C\uDFAF', lots: ' \uD83C\uDFAF\uD83D\uDCAA\uD83D\uDD25' },
+    technews: { none: '', some: ' \uD83D\uDCF0', lots: ' \uD83D\uDCF0\uD83E\uDD16\uD83D\uDE80' },
+    coffee: { none: '', some: ' \u2615', lots: ' \u2615\uD83E\uDD24\u2728' },
+    roadtrip: { none: '', some: ' \uD83D\uDE97', lots: ' \uD83D\uDE97\uD83D\uDDFA\uFE0F\uD83C\uDF05' },
+    learnpython: { none: '', some: ' \uD83D\uDC0D', lots: ' \uD83D\uDC0D\uD83D\uDCBB\uD83D\uDE80' },
+    catname: { none: '', some: ' \uD83D\uDC31', lots: ' \uD83D\uDC31\uD83D\uDE3B\u2728' },
+    debug: { none: '', some: ' \uD83D\uDD0D', lots: ' \uD83D\uDD0D\uD83D\uDC1B\uD83D\uDCA5' },
+    book: { none: '', some: ' \uD83D\uDCDA', lots: ' \uD83D\uDCDA\uD83E\uDD13\u2728' },
+    workout: { none: '', some: ' \uD83C\uDFCB\uFE0F', lots: ' \uD83C\uDFCB\uFE0F\uD83D\uDCAA\uD83D\uDD25' },
+    negotiate: { none: '', some: ' \uD83D\uDCBC', lots: ' \uD83D\uDCBC\uD83D\uDCB0\uD83D\uDE0E' }
+  };
+
+  const PRESETS = {
+    professional: { formality: 85, humor: 10, detail: 70, emoji: 5 },
+    friendly: { formality: 25, humor: 60, detail: 50, emoji: 55 },
+    minimal: { formality: 40, humor: 15, detail: 10, emoji: 0 },
+    enthusiastic: { formality: 15, humor: 80, detail: 65, emoji: 90 }
+  };
+
+  let currentQuestionIndex = 0;
+  let _debounceTimer = null;
+
+  // Cached slider DOM references — resolved once in init(), avoids
+  // repeated getElementById calls in getSliderValues/applyPreset.
+  let _sliders = null;
+
+  /** Resolve & cache the four personality slider elements. */
+  function _getSliders() {
+    if (!_sliders) {
+      _sliders = {
+        formality: document.getElementById('sliderFormality'),
+        humor:     document.getElementById('sliderHumor'),
+        detail:    document.getElementById('sliderDetail'),
+        emoji:     document.getElementById('sliderEmoji')
+      };
+    }
+    return _sliders;
+  }
+
+  function saveToStorage(values) {
+    try {
+      localStorage.setItem(STORAGE_KEY_PERSONALITY, JSON.stringify(values));
+    } catch (e) {
+      /* localStorage unavailable */
+    }
+  }
+
+  function loadFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_PERSONALITY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (typeof parsed.formality === 'number') { return parsed; }
+      }
+    } catch (e) {
+      /* localStorage unavailable or corrupted */
+    }
+    return null;
+  }
+
+  function getSliderValues() {
+    let s = _getSliders();
+    return {
+      formality: s.formality ? parseInt(s.formality.value, 10) : 50,
+      humor:     s.humor     ? parseInt(s.humor.value, 10)     : 50,
+      detail:    s.detail    ? parseInt(s.detail.value, 10)    : 50,
+      emoji:     s.emoji     ? parseInt(s.emoji.value, 10)     : 50
+    };
+  }
+
+  function generateResponse(questionKey, values) {
+    const responses = RESPONSES[questionKey];
+    if (!responses) { return ''; }
+
+    const formalKey = values.formality >= 50 ? 'formal' : 'casual';
+    const detailKey = values.detail >= 50 ? 'Detailed' : 'Brief';
+    let base = responses[formalKey + detailKey];
+
+    const humorData = HUMOR_ADDITIONS[questionKey];
+    if (humorData) {
+      const humorLevel = values.humor < 30 ? 'low' : (values.humor < 70 ? 'mid' : 'high');
+      base += humorData[humorLevel];
+    }
+
+    const emojiData = EMOJI_SETS[questionKey];
+    if (emojiData) {
+      const emojiLevel = values.emoji < 20 ? 'none' : (values.emoji < 65 ? 'some' : 'lots');
+      base += emojiData[emojiLevel];
+    }
+
+    return base;
+  }
+
+  function updatePreview() {
+    const bubble = document.getElementById('personalityResponse');
+    if (!bubble) { return; }
+
+    const values = getSliderValues();
+    saveToStorage(values);
+    const question = QUESTIONS[currentQuestionIndex];
+    const response = generateResponse(question.key, values);
+
+    bubble.classList.add('updating');
+    setTimeout(function () {
+      bubble.textContent = response;
+      bubble.classList.remove('updating');
+    }, 150);
+
+    const presetBtns = document.querySelectorAll('.preset-btn');
+    for (var i = 0; i < presetBtns.length; i++) {
+      const presetName = presetBtns[i].getAttribute('data-preset');
+      const preset = PRESETS[presetName];
+      if (!preset) { continue; }
+      const isMatch = Math.abs(preset.formality - values.formality) <= 5 &&
+                    Math.abs(preset.humor - values.humor) <= 5 &&
+                    Math.abs(preset.detail - values.detail) <= 5 &&
+                    Math.abs(preset.emoji - values.emoji) <= 5;
+      if (isMatch) {
+        presetBtns[i].classList.add('active');
+      } else {
+        presetBtns[i].classList.remove('active');
+      }
+    }
+  }
+
+  function debouncedUpdate() {
+    if (_debounceTimer) { clearTimeout(_debounceTimer); }
+    _debounceTimer = setTimeout(updatePreview, 80);
+  }
+
+  function cycleQuestion() {
+    currentQuestionIndex = (currentQuestionIndex + 1) % QUESTIONS.length;
+    const questionEl = document.getElementById('personalityQuestion');
+    if (questionEl) {
+      questionEl.textContent = '"' + QUESTIONS[currentQuestionIndex].q + '"';
+    }
+    updatePreview();
+  }
+
+  function applyPreset(presetName) {
+    const preset = PRESETS[presetName];
+    if (!preset) { return; }
+
+    let s = _getSliders();
+    if (s.formality) { s.formality.value = preset.formality; }
+    if (s.humor)     { s.humor.value     = preset.humor; }
+    if (s.detail)    { s.detail.value    = preset.detail; }
+    if (s.emoji)     { s.emoji.value     = preset.emoji; }
+    saveToStorage(preset);
+    updatePreview();
+  }
+
+  function init() {
+    // Eagerly resolve and cache slider references
+    let s = _getSliders();
+
+    // Restore saved slider values from localStorage
+    const saved = loadFromStorage();
+    if (saved) {
+      if (s.formality) { s.formality.value = saved.formality; }
+      if (s.humor)     { s.humor.value     = saved.humor; }
+      if (s.detail)    { s.detail.value    = saved.detail; }
+      if (s.emoji)     { s.emoji.value     = saved.emoji; }
+    }
+
+    const sliders = document.querySelectorAll('.personality-range');
+    for (var i = 0; i < sliders.length; i++) {
+      sliders[i].addEventListener('input', debouncedUpdate);
+    }
+
+    const presetBtns = document.querySelectorAll('.preset-btn');
+    for (var j = 0; j < presetBtns.length; j++) {
+      presetBtns[j].addEventListener('click', function () {
+        const preset = this.getAttribute('data-preset');
+        applyPreset(preset);
+      });
+    }
+
+    const cycleBtn = document.getElementById('personalityCycleBtn');
+    if (cycleBtn) {
+      cycleBtn.addEventListener('click', cycleQuestion);
+    }
+
+    updatePreview();
+  }
+
+  return {
+    init: init,
+    applyPreset: applyPreset,
+    cycleQuestion: cycleQuestion,
+    getSliderValues: getSliderValues,
+    _QUESTIONS: QUESTIONS,
+    _PRESETS: PRESETS,
+    _RESPONSES: RESPONSES,
+    _generateResponse: generateResponse
+  };
+})();
+
+
+/* === src/modules/feature-tour.js === */
+
+// ---------------------------------------------------------------------------
+// Feature Tour — Guided Walkthrough Overlay
+// ---------------------------------------------------------------------------
+/**
+ * Interactive step-by-step product tour that highlights key sections
+ * of the landing page.  Shows a spotlight overlay with a tooltip,
+ * progress dots, and prev/next/skip controls.
+ *
+ * Tour can be launched via:
+ *   - The "Take a Tour" button (#tourTrigger) if present in the HTML
+ *   - Keyboard shortcut: Shift+/ (?) — same as help, tour shown on
+ *     second press if help is already open
+ *   - Programmatically: FeatureTour.start()
+ *
+ * Accessibility: focus trap inside tooltip, arrow-key navigation,
+ * Escape to exit, reduced-motion support.
+ *
+ * Persistence: remembers whether the user has completed the tour
+ * in localStorage so it doesn't re-prompt.
+ */
+var FeatureTour = (function () {
+  'use strict';
+
+  // ── Tour stop definitions ────────────────────────────────────────
+  const STOPS = [
+    {
+      target: '#chatWindow',
+      title: 'Interactive Chat Demo',
+      body: 'Try a live conversation! Switch between scenarios to see how AgentBox handles memory, search, reminders, and image generation.',
+      position: 'bottom'
+    },
+    {
+      target: '#testimonialsSection',
+      title: 'What People Say',
+      body: 'Read real testimonials from developers, students, and professionals who use AgentBox every day.',
+      position: 'top'
+    },
+    {
+      target: '.pricing-section, #billingToggle',
+      title: 'Simple Pricing',
+      body: 'Toggle between monthly and yearly billing. The free tier gives you 20 messages a day — enough to get started.',
+      position: 'top'
+    },
+    {
+      target: '#usecasesSection',
+      title: 'Use Cases',
+      body: 'See tailored examples for developers, students, and professionals. Click the tabs to explore each.',
+      position: 'top'
+    },
+    {
+      target: '#integrationsSection',
+      title: 'Integrations',
+      body: 'AgentBox connects to messaging apps, productivity tools, and developer platforms you already use.',
+      position: 'top'
+    },
+    {
+      target: '.playground-section, #playgroundInput',
+      title: 'Try the Playground',
+      body: 'Type a message and see how AgentBox responds. It\'s pattern-matched for this demo — the real thing is even smarter.',
+      position: 'top'
+    },
+    {
+      target: '#promptGalleryGrid',
+      title: 'Prompt Gallery',
+      body: 'Browse ready-made prompts by category. Click any card to see the AI response. Great for getting started quickly.',
+      position: 'top'
+    },
+    {
+      target: '.trust-section',
+      title: 'Privacy & Trust',
+      body: 'Your data stays on your device. Click any card to learn more about our privacy-first architecture.',
+      position: 'top'
+    }
+  ];
+
+  const STORAGE_KEY = 'agentbox_tour_completed';
+
+  // ── State ────────────────────────────────────────────────────────
+  let currentStep = -1;
+  let isActive = false;
+  let overlay = null;
+  let tooltip = null;
+  let spotlight = null;
+
+  // ── Helpers ──────────────────────────────────────────────────────
+
+  /** Resolve the first matching element for a comma-separated selector. */
+  function resolveTarget(selectorList) {
+    const selectors = selectorList.split(',');
+    for (var i = 0; i < selectors.length; i++) {
+      let el = document.querySelector(selectors[i].trim());
+      if (el) return el;
+    }
+    return null;
+  }
+
+  /** Smoothly scroll element into view, respecting reduced motion. */
+  function scrollIntoView(el, cb) {
+    const rect = el.getBoundingClientRect();
+    const inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
+    if (inView) {
+      if (cb) cb();
+      return;
+    }
+    if (typeof prefersReducedMotion !== 'undefined' && prefersReducedMotion) {
+      el.scrollIntoView({ block: 'center' });
+      if (cb) cb();
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Wait for scroll to settle
+      setTimeout(function () { if (cb) cb(); }, 400);
+    }
+  }
+
+  /** Position the spotlight overlay to frame the target element. */
+  function positionSpotlight(el) {
+    const rect = el.getBoundingClientRect();
+    const pad = 8;
+    spotlight.style.top = (window.scrollY + rect.top - pad) + 'px';
+    spotlight.style.left = (rect.left - pad) + 'px';
+    spotlight.style.width = (rect.width + pad * 2) + 'px';
+    spotlight.style.height = (rect.height + pad * 2) + 'px';
+  }
+
+  /** Position tooltip relative to spotlight. */
+  function positionTooltip(el, position) {
+    const rect = el.getBoundingClientRect();
+    const tw = Math.min(340, window.innerWidth - 32);
+    tooltip.style.width = tw + 'px';
+
+    if (position === 'bottom') {
+      tooltip.style.top = (window.scrollY + rect.bottom + 16) + 'px';
+    } else {
+      // above the element
+      tooltip.style.top = (window.scrollY + rect.top - tooltip.offsetHeight - 16) + 'px';
+    }
+
+    // Horizontally center on target, clamp to viewport
+    let left = rect.left + rect.width / 2 - tw / 2;
+    left = Math.max(16, Math.min(left, window.innerWidth - tw - 16));
+    tooltip.style.left = left + 'px';
+  }
+
+  // ── DOM creation ─────────────────────────────────────────────────
+
+  function createOverlay() {
+    if (overlay) return;
+
+    // Semi-transparent backdrop
+    overlay = document.createElement('div');
+    overlay.id = 'tourOverlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-label', 'Feature Tour');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;'
+      + 'background:rgba(0,0,0,0.55);z-index:10000;transition:opacity 0.25s;';
+
+    // Spotlight cutout (positioned absolutely over the page)
+    spotlight = document.createElement('div');
+    spotlight.id = 'tourSpotlight';
+    spotlight.style.cssText = 'position:absolute;border-radius:8px;'
+      + 'box-shadow:0 0 0 9999px rgba(0,0,0,0.55);z-index:10001;'
+      + 'pointer-events:none;transition:top 0.3s,left 0.3s,width 0.3s,height 0.3s;';
+    document.body.appendChild(spotlight);
+
+    // Tooltip
+    tooltip = document.createElement('div');
+    tooltip.id = 'tourTooltip';
+    tooltip.setAttribute('role', 'status');
+    tooltip.setAttribute('aria-live', 'polite');
+    tooltip.style.cssText = 'position:absolute;z-index:10002;background:#fff;color:#1a1a2e;'
+      + 'border-radius:12px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.25);'
+      + 'font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;'
+      + 'max-width:340px;transition:top 0.3s,left 0.3s;';
+
+    tooltip.innerHTML = '<div id="tourTitle" style="font-size:16px;font-weight:700;margin-bottom:8px;"></div>'
+      + '<div id="tourBody" style="font-size:14px;line-height:1.5;color:#444;margin-bottom:16px;"></div>'
+      + '<div id="tourDots" style="text-align:center;margin-bottom:12px;"></div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '  <button id="tourSkip" style="background:none;border:none;color:#888;cursor:pointer;'
+      + '    font-size:13px;padding:4px 8px;" aria-label="Skip tour">Skip</button>'
+      + '  <div>'
+      + '    <button id="tourPrev" style="background:none;border:1px solid #ddd;border-radius:6px;'
+      + '      padding:6px 14px;cursor:pointer;margin-right:8px;font-size:13px;" aria-label="Previous step">← Prev</button>'
+      + '    <button id="tourNext" style="background:#6c5ce7;color:#fff;border:none;border-radius:6px;'
+      + '      padding:6px 14px;cursor:pointer;font-size:13px;font-weight:600;" aria-label="Next step">Next →</button>'
+      + '  </div>'
+      + '</div>';
+
+    document.body.appendChild(tooltip);
+
+    // Events
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) stop();
+    });
+
+    tooltip.querySelector('#tourSkip').addEventListener('click', stop);
+    tooltip.querySelector('#tourPrev').addEventListener('click', prev);
+    tooltip.querySelector('#tourNext').addEventListener('click', function () {
+      if (currentStep >= STOPS.length - 1) {
+        stop();
+      } else {
+        next();
+      }
+    });
+
+    document.body.appendChild(overlay);
+  }
+
+  function destroyOverlay() {
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if (spotlight && spotlight.parentNode) spotlight.parentNode.removeChild(spotlight);
+    if (tooltip && tooltip.parentNode) tooltip.parentNode.removeChild(tooltip);
+    overlay = null;
+    spotlight = null;
+    tooltip = null;
+  }
+
+  // ── Navigation ───────────────────────────────────────────────────
+
+  function showStep(idx) {
+    if (idx < 0 || idx >= STOPS.length) return;
+    currentStep = idx;
+    const stepDef = STOPS[idx];
+    let target = resolveTarget(stepDef.target);
+
+    if (!target) {
+      // Skip missing sections
+      if (idx < STOPS.length - 1) { showStep(idx + 1); }
+      else { stop(); }
+      return;
+    }
+
+    scrollIntoView(target, function () {
+      positionSpotlight(target);
+      // Render content
+      tooltip.querySelector('#tourTitle').textContent = stepDef.title;
+      tooltip.querySelector('#tourBody').textContent = stepDef.body;
+
+      // Progress dots
+      let dotsHtml = '';
+      for (var i = 0; i < STOPS.length; i++) {
+        let active = i === idx;
+        dotsHtml += '<span style="display:inline-block;width:8px;height:8px;'
+          + 'border-radius:50%;margin:0 3px;background:'
+          + (active ? '#6c5ce7' : '#ddd') + ';" aria-label="Step ' + (i + 1)
+          + (active ? ' (current)' : '') + '"></span>';
+      }
+      tooltip.querySelector('#tourDots').innerHTML = dotsHtml;
+
+      // Prev button visibility
+      tooltip.querySelector('#tourPrev').style.display = idx === 0 ? 'none' : 'inline-block';
+
+      // Last step: change Next to "Done"
+      const nextBtn = tooltip.querySelector('#tourNext');
+      if (idx === STOPS.length - 1) {
+        nextBtn.textContent = 'Done ✓';
+      } else {
+        nextBtn.textContent = 'Next →';
+      }
+
+      // Step counter in title
+      tooltip.querySelector('#tourTitle').textContent =
+        '(' + (idx + 1) + '/' + STOPS.length + ') ' + stepDef.title;
+
+      positionTooltip(target, stepDef.position);
+      nextBtn.focus();
+    });
+  }
+
+  function next() {
+    if (currentStep < STOPS.length - 1) showStep(currentStep + 1);
+  }
+
+  function prev() {
+    if (currentStep > 0) showStep(currentStep - 1);
+  }
+
+  // ── Public API ───────────────────────────────────────────────────
+
+  function start() {
+    if (isActive) return;
+    isActive = true;
+    currentStep = -1;
+    createOverlay();
+    overlay.style.opacity = '1';
+    showStep(0);
+
+    // Keyboard handler
+    document.addEventListener('keydown', onKeyDown);
+  }
+
+  function stop() {
+    if (!isActive) return;
+    isActive = false;
+    currentStep = -1;
+    document.removeEventListener('keydown', onKeyDown);
+    destroyOverlay();
+
+    // Mark as completed
+    try { localStorage.setItem(STORAGE_KEY, 'true'); } catch (e) { /* private browsing */ }
+  }
+
+  function onKeyDown(e) {
+    if (!isActive) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      stop();
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (currentStep >= STOPS.length - 1) stop();
+      else next();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      prev();
+    }
+  }
+
+  /** Whether the user has completed the tour before. */
+  function hasCompleted() {
+    try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch (e) { return false; }
+  }
+
+  /** Reset the completed flag (for testing or re-prompting). */
+  function reset() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* noop */ }
+  }
+
+  // ── Init: bind trigger button ────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function () {
+    const trigger = document.getElementById('tourTrigger');
+    if (trigger) {
+      trigger.addEventListener('click', function () { start(); });
+    }
+  });
+
+  return {
+    start: start,
+    stop: stop,
+    next: next,
+    prev: prev,
+    currentStep: function () { return currentStep; },
+    isActive: function () { return isActive; },
+    hasCompleted: hasCompleted,
+    reset: reset,
+    _STOPS: STOPS
+  };
+})();
+
+
+/* === src/modules/commands-cheat-sheet.js === */
+
+/* ── Commands Cheat Sheet ── */
+var CommandsCheatSheet = (function () {
+  const COMMANDS = [
+    { category: "memory", icon: "\uD83E\uDDE0", name: "Remember this", command: "Remember that I prefer dark roast coffee", desc: "Tell your agent something to remember for future conversations.", example: "Remember my anniversary is March 15" },
+    { category: "memory", icon: "\uD83E\uDDE0", name: "What do you know?", command: "What do you remember about me?", desc: "See everything your agent has stored about your preferences and context.", example: "What do you know about my work?" },
+    { category: "memory", icon: "\uD83E\uDDE0", name: "Forget something", command: "Forget my dietary preferences", desc: "Ask your agent to clear specific memories.", example: "Forget what I told you about my schedule" },
+    { category: "productivity", icon: "\u26A1", name: "Set a reminder", command: "Remind me in 30 minutes to check the oven", desc: "Set one-time or recurring reminders delivered right in Telegram.", example: "Remind me every Monday at 9am to submit reports" },
+    { category: "productivity", icon: "\u26A1", name: "Summarize text", command: "Summarize this article: [paste URL or text]", desc: "Get a concise summary of articles, documents, or long messages.", example: "Summarize the key points from this email" },
+    { category: "productivity", icon: "\u26A1", name: "Draft an email", command: "Draft a professional email declining a meeting invitation", desc: "Generate polished emails in your preferred tone and style.", example: "Write a follow-up email to the client about the proposal" },
+    { category: "productivity", icon: "\u26A1", name: "Make a list", command: "Create a packing list for a 5-day beach trip", desc: "Generate organized lists for any purpose \u2014 shopping, tasks, ideas.", example: "List the pros and cons of remote work" },
+    { category: "productivity", icon: "\u26A1", name: "Translate", command: "Translate 'Where is the nearest pharmacy?' to Japanese", desc: "Translate text between any languages with natural phrasing.", example: "How do you say 'thank you for your help' in French?" },
+    { category: "search", icon: "\uD83D\uDD0D", name: "Web search", command: "Search for the best noise-canceling headphones in 2026", desc: "Real-time web search for current information, reviews, and news.", example: "What are the latest iPhone rumors?" },
+    { category: "search", icon: "\uD83D\uDD0D", name: "Quick answer", command: "What's the capital of New Zealand?", desc: "Get instant answers to factual questions without searching yourself.", example: "How many calories in an avocado?" },
+    { category: "search", icon: "\uD83D\uDD0D", name: "Compare things", command: "Compare React vs Vue for a new project", desc: "Get balanced comparisons with pros, cons, and recommendations.", example: "iPhone 16 vs Samsung Galaxy S26 \u2014 which is better for photos?" },
+    { category: "search", icon: "\uD83D\uDD0D", name: "Explain a topic", command: "Explain blockchain like I'm 12", desc: "Complex topics broken down to your level of understanding.", example: "What is quantum computing and why does it matter?" },
+    { category: "media", icon: "\uD83D\uDCF7", name: "Analyze an image", command: "[Send a photo] What's in this image?", desc: "Send screenshots, documents, or photos and ask questions about them.", example: "[Send error screenshot] How do I fix this?" },
+    { category: "media", icon: "\uD83D\uDCF7", name: "Read a document", command: "[Send a PDF] Summarize the key findings", desc: "Upload documents and get summaries, answers, or extracted data.", example: "[Send receipt photo] What was the total?" },
+    { category: "media", icon: "\uD83D\uDCF7", name: "Voice message", command: "[Send a voice note]", desc: "Send voice messages instead of typing \u2014 your agent understands speech.", example: "Just hold the mic button and talk naturally" },
+    { category: "settings", icon: "\u2699\uFE0F", name: "Change personality", command: "Be more casual and use more emojis", desc: "Adjust how your agent communicates \u2014 formal, playful, brief, detailed.", example: "Be more concise in your responses" },
+    { category: "settings", icon: "\u2699\uFE0F", name: "Set preferences", command: "I prefer metric units and Celsius", desc: "Configure default preferences so answers are always tailored to you.", example: "Always give me prices in EUR" },
+    { category: "settings", icon: "\u2699\uFE0F", name: "Clear history", command: "Clear your memory and start fresh", desc: "Wipe your agent's memory completely for a fresh start.", example: "Reset everything you know about me" }
+  ];
+
+  let currentCategory = 'all';
+  let currentSearch = '';
+  let toastTimer = null;
+
+  function getFiltered() {
+    return COMMANDS.filter(function (cmd) {
+      const matchCat = currentCategory === 'all' || cmd.category === currentCategory;
+      if (!matchCat) return false;
+      if (!currentSearch) return true;
+      const q = currentSearch.toLowerCase();
+      return cmd.name.toLowerCase().indexOf(q) !== -1 ||
+             cmd.desc.toLowerCase().indexOf(q) !== -1 ||
+             cmd.command.toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  function render() {
+    let grid = document.getElementById('commandsGrid');
+    const empty = document.getElementById('commandsEmpty');
+    if (!grid) return;
+    let filtered = getFiltered();
+    if (filtered.length === 0) {
+      grid.innerHTML = '';
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    grid.innerHTML = filtered.map(function (cmd) {
+      return '<div class="command-card" role="listitem" data-command="' + cmd.command.replace(/"/g, '&quot;') + '" tabindex="0">' +
+        '<span class="command-card-copy-hint">click to copy</span>' +
+        '<div class="command-card-header">' +
+          '<span class="command-card-icon">' + cmd.icon + '</span>' +
+          '<span class="command-card-name">' + cmd.name + '</span>' +
+        '</div>' +
+        '<div class="command-card-desc">' + cmd.desc + '</div>' +
+        '<div class="command-card-example">' + cmd.example + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function copyCommand(card) {
+    let text = card.getAttribute('data-command');
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    }
+    card.classList.add('copied');
+    setTimeout(function () { card.classList.remove('copied'); }, 1200);
+    let toast = document.getElementById('commandsCopiedToast');
+    if (toast) {
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toast.hidden = true; }, 2000);
+    }
+  }
+
+  function init() {
+    render();
+
+    let filterContainer = document.querySelector('.commands-filter');
+    if (filterContainer) {
+      filterContainer.addEventListener('click', function (e) {
+        let btn = e.target.closest('.commands-filter-btn');
+        if (!btn) return;
+        currentCategory = btn.getAttribute('data-cmd-category') || 'all';
+        filterContainer.querySelectorAll('.commands-filter-btn').forEach(function (b) {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        render();
+      });
+    }
+
+    let searchInput = document.getElementById('commandsSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        currentSearch = searchInput.value.trim();
+        render();
+      });
+    }
+
+    let grid = document.getElementById('commandsGrid');
+    if (grid) {
+      grid.addEventListener('click', function (e) {
+        const card = e.target.closest('.command-card');
+        if (card) copyCommand(card);
+      });
+      grid.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const card = e.target.closest('.command-card');
+          if (card) { e.preventDefault(); copyCommand(card); }
+        }
+      });
+    }
+  }
+
+  return { init: init, render: render };
+})();
+
+
+/* === src/modules/onboarding-quiz.js === */
+
+// ---------------------------------------------------------------------------
+// Onboarding Quiz — "Which plan is right for you?"
+// ---------------------------------------------------------------------------
+
+var OnboardingQuiz = (function () {
+  const QUESTIONS = [
+    {
+      id: 'usage',
+      text: 'How often will you use AgentBox?',
+      options: [
+        { label: 'A few times a week', icon: '🌱', value: 'light' },
+        { label: 'Every day', icon: '☀️', value: 'daily' },
+        { label: 'All day, every day', icon: '🔥', value: 'heavy' }
+      ]
+    },
+    {
+      id: 'team',
+      text: 'Will you use it solo or with a team?',
+      options: [
+        { label: 'Just me', icon: '🧑', value: 'solo' },
+        { label: 'Me and a few others', icon: '👥', value: 'small_team' },
+        { label: 'My whole team (5+)', icon: '🏢', value: 'large_team' }
+      ]
+    },
+    {
+      id: 'features',
+      text: 'Which feature matters most?',
+      options: [
+        { label: 'Web search & answers', icon: '🔍', value: 'search' },
+        { label: 'Memory & context', icon: '🧠', value: 'memory' },
+        { label: 'Reminders & files', icon: '📂', value: 'productivity' }
+      ]
+    },
+    {
+      id: 'volume',
+      text: 'How many messages do you expect per day?',
+      options: [
+        { label: 'Under 20', icon: '💬', value: 'low' },
+        { label: '20–100', icon: '📨', value: 'medium' },
+        { label: '100+', icon: '📬', value: 'high' }
+      ]
+    },
+    {
+      id: 'priority',
+      text: 'What matters most to you?',
+      options: [
+        { label: 'It is free', icon: '🆓', value: 'cost' },
+        { label: 'No limits on usage', icon: '♾️', value: 'unlimited' },
+        { label: 'Team collaboration', icon: '🤝', value: 'collaboration' }
+      ]
+    }
+  ];
+
+  const PLANS = {
+    free: {
+      name: 'Free',
+      icon: '🎉',
+      desc: 'The Free plan is perfect for you — get started with 20 messages/day, web search, and image understanding at no cost.',
+      cta: 'Get Started Free',
+      cls: 'quiz-plan-free'
+    },
+    pro: {
+      name: 'Pro',
+      icon: '⚡',
+      desc: 'The Pro plan gives you unlimited messages, advanced memory, reminders, and file analysis — everything a power user needs.',
+      cta: 'Upgrade to Pro — $9/mo',
+      cls: 'quiz-plan-pro'
+    },
+    team: {
+      name: 'Team',
+      icon: '🏢',
+      desc: 'The Team plan is built for collaboration — shared knowledge base, admin dashboard, and up to 10 members.',
+      cta: 'Get Team — $29/mo',
+      cls: 'quiz-plan-team'
+    }
+  };
+
+  let currentStep = -1;
+  let answers = {};
+  let questionArea, progressBar, progressText, resultEl;
+  let startEl, startBtn, retakeBtn;
+
+  function init() {
+    questionArea = document.getElementById('quizQuestionArea');
+    progressBar = document.getElementById('quizProgressBar');
+    progressText = document.getElementById('quizProgressText');
+    resultEl = document.getElementById('quizResult');
+    startEl = document.getElementById('quizStart');
+    startBtn = document.getElementById('quizStartBtn');
+    retakeBtn = document.getElementById('quizRetakeBtn');
+
+    if (!questionArea || !startBtn) return;
+
+    startBtn.addEventListener('click', function () {
+      currentStep = 0;
+      answers = {};
+      showQuestion(0);
+    });
+
+    if (retakeBtn) {
+      retakeBtn.addEventListener('click', function () {
+        reset();
+      });
+    }
+  }
+
+  function reset() {
+    currentStep = -1;
+    answers = {};
+    if (resultEl) resultEl.hidden = true;
+    if (startEl) startEl.style.display = '';
+    updateProgress(0);
+    const existing = questionArea.querySelector('.quiz-q');
+    if (existing) existing.remove();
+  }
+
+  function updateProgress(step) {
+    const pct = Math.round((step / QUESTIONS.length) * 100);
+    if (progressBar) progressBar.style.width = pct + '%';
+    if (progressText) progressText.textContent = step + ' / ' + QUESTIONS.length;
+    const pb = progressBar && progressBar.parentElement;
+    if (pb) {
+      pb.setAttribute('aria-valuenow', String(step));
+    }
+  }
+
+  function showQuestion(idx) {
+    if (startEl) startEl.style.display = 'none';
+    if (resultEl) resultEl.hidden = true;
+    updateProgress(idx);
+
+    const q = QUESTIONS[idx];
+    let prev = questionArea.querySelector('.quiz-q');
+    if (prev) prev.remove();
+
+    const wrap = document.createElement('div');
+    wrap.className = 'quiz-q';
+    wrap.setAttribute('role', 'radiogroup');
+    wrap.setAttribute('aria-label', q.text);
+
+    const title = document.createElement('h3');
+    title.className = 'quiz-q-title';
+    title.textContent = q.text;
+    wrap.appendChild(title);
+
+    const stepLabel = document.createElement('span');
+    stepLabel.className = 'quiz-step-label';
+    stepLabel.textContent = 'Question ' + (idx + 1) + ' of ' + QUESTIONS.length;
+    wrap.appendChild(stepLabel);
+
+    const optionsWrap = document.createElement('div');
+    optionsWrap.className = 'quiz-options';
+
+    for (var i = 0; i < q.options.length; i++) {
+      (function (opt, oi) {
+        let btn = document.createElement('button');
+        btn.className = 'quiz-option';
+        btn.setAttribute('role', 'radio');
+        btn.setAttribute('aria-checked', 'false');
+        btn.setAttribute('tabindex', oi === 0 ? '0' : '-1');
+        btn.innerHTML = '<span class="quiz-option-icon">' + opt.icon + '</span>' +
+          '<span class="quiz-option-label">' + opt.label + '</span>';
+
+        btn.addEventListener('click', function () {
+          selectAnswer(q.id, opt.value, btn, idx);
+        });
+
+        btn.addEventListener('keydown', function (e) {
+          const opts = Array.prototype.slice.call(optionsWrap.querySelectorAll('.quiz-option'));
+          const ki = opts.indexOf(e.target);
+          let next = -1;
+          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+            next = (ki + 1) % opts.length;
+          } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            next = (ki - 1 + opts.length) % opts.length;
+          }
+          if (next >= 0) {
+            e.preventDefault();
+            opts[next].focus();
+            opts[next].setAttribute('tabindex', '0');
+            e.target.setAttribute('tabindex', '-1');
+          }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectAnswer(q.id, opt.value, btn, idx);
+          }
+        });
+
+        optionsWrap.appendChild(btn);
+      })(q.options[i], i);
+    }
+
+    wrap.appendChild(optionsWrap);
+
+    if (idx > 0) {
+      const backBtn = document.createElement('button');
+      backBtn.className = 'quiz-back-btn';
+      backBtn.textContent = '\u2190 Back';
+      backBtn.addEventListener('click', function () {
+        currentStep = idx - 1;
+        showQuestion(idx - 1);
+      });
+      wrap.appendChild(backBtn);
+    }
+
+    questionArea.appendChild(wrap);
+  }
+
+  function selectAnswer(questionId, value, btn, idx) {
+    answers[questionId] = value;
+
+    const siblings = btn.parentElement.querySelectorAll('.quiz-option');
+    for (var i = 0; i < siblings.length; i++) {
+      siblings[i].classList.remove('selected');
+      siblings[i].setAttribute('aria-checked', 'false');
+    }
+    btn.classList.add('selected');
+    btn.setAttribute('aria-checked', 'true');
+
+    setTimeout(function () {
+      if (idx < QUESTIONS.length - 1) {
+        currentStep = idx + 1;
+        showQuestion(idx + 1);
+      } else {
+        showResult();
+      }
+    }, 350);
+  }
+
+  function scorePlan() {
+    const scores = { free: 0, pro: 0, team: 0 };
+    const reasons = [];
+
+    if (answers.usage === 'light') {
+      scores.free += 3;
+      reasons.push({ plan: 'free', text: 'You use it a few times a week \u2014 Free covers that' });
+    } else if (answers.usage === 'daily') {
+      scores.pro += 3;
+      reasons.push({ plan: 'pro', text: 'Daily usage benefits from unlimited messages' });
+    } else if (answers.usage === 'heavy') {
+      scores.pro += 2;
+      scores.team += 2;
+      reasons.push({ plan: 'pro', text: 'Heavy usage needs no message limits' });
+    }
+
+    if (answers.team === 'solo') {
+      scores.free += 1;
+      scores.pro += 1;
+    } else if (answers.team === 'small_team') {
+      scores.team += 3;
+      reasons.push({ plan: 'team', text: 'Your team can share a knowledge base' });
+    } else if (answers.team === 'large_team') {
+      scores.team += 5;
+      reasons.push({ plan: 'team', text: 'Team plan supports up to 10 members with admin controls' });
+    }
+
+    if (answers.features === 'search') {
+      scores.free += 2;
+      reasons.push({ plan: 'free', text: 'Web search is included in every plan' });
+    } else if (answers.features === 'memory') {
+      scores.pro += 3;
+      reasons.push({ plan: 'pro', text: 'Advanced memory keeps context across long conversations' });
+    } else if (answers.features === 'productivity') {
+      scores.pro += 3;
+      reasons.push({ plan: 'pro', text: 'Reminders and file analysis are Pro features' });
+    }
+
+    if (answers.volume === 'low') {
+      scores.free += 3;
+      reasons.push({ plan: 'free', text: 'Under 20 messages/day fits the Free tier perfectly' });
+    } else if (answers.volume === 'medium') {
+      scores.pro += 3;
+      reasons.push({ plan: 'pro', text: 'With 20\u2013100 daily messages, you need unlimited' });
+    } else if (answers.volume === 'high') {
+      scores.pro += 2;
+      scores.team += 2;
+      reasons.push({ plan: 'pro', text: '100+ messages/day requires an unlimited plan' });
+    }
+
+    if (answers.priority === 'cost') {
+      scores.free += 4;
+      reasons.push({ plan: 'free', text: 'Free plan \u2014 no credit card, no strings attached' });
+    } else if (answers.priority === 'unlimited') {
+      scores.pro += 4;
+      reasons.push({ plan: 'pro', text: 'Pro removes all usage limits' });
+    } else if (answers.priority === 'collaboration') {
+      scores.team += 4;
+      reasons.push({ plan: 'team', text: 'Team features are built for collaboration' });
+    }
+
+    let best = 'free';
+    if (scores.pro > scores[best]) best = 'pro';
+    if (scores.team > scores[best]) best = 'team';
+
+    const planReasons = [];
+    for (var i = 0; i < reasons.length; i++) {
+      if (reasons[i].plan === best) planReasons.push(reasons[i].text);
+    }
+    if (planReasons.length === 0) {
+      planReasons.push('This plan is the best fit based on your answers');
+    }
+
+    return { plan: best, scores: scores, reasons: planReasons };
+  }
+
+  function showResult() {
+    updateProgress(QUESTIONS.length);
+    let prev = questionArea.querySelector('.quiz-q');
+    if (prev) prev.remove();
+    if (startEl) startEl.style.display = 'none';
+
+    let result = scorePlan();
+    const plan = PLANS[result.plan];
+
+    const iconEl = document.getElementById('quizResultIcon');
+    const titleEl = document.getElementById('quizResultTitle');
+    const descEl = document.getElementById('quizResultDesc');
+    const reasonsEl = document.getElementById('quizResultReasons');
+    const ctaEl = document.getElementById('quizResultCta');
+
+    if (iconEl) iconEl.textContent = plan.icon;
+    if (titleEl) titleEl.textContent = 'We recommend: ' + plan.name;
+    if (descEl) descEl.textContent = plan.desc;
+    if (ctaEl) {
+      ctaEl.textContent = plan.cta;
+      ctaEl.className = 'quiz-result-cta ' + plan.cls;
+    }
+
+    if (reasonsEl) {
+      reasonsEl.innerHTML = '';
+      for (var i = 0; i < result.reasons.length; i++) {
+        const li = document.createElement('li');
+        li.textContent = '\u2713 ' + result.reasons[i];
+        reasonsEl.appendChild(li);
+      }
+    }
+
+    if (resultEl) resultEl.hidden = false;
+  }
+
+  return {
+    init: init,
+    reset: reset,
+    showQuestion: showQuestion,
+    scorePlan: scorePlan,
+    _getAnswers: function () { return answers; },
+    _setAnswers: function (a) { answers = a; },
+    QUESTIONS: QUESTIONS,
+    PLANS: PLANS
+  };
+})();
+
+
+/* === src/modules/api-explorer.js === */
+
+// ── API Explorer ────────────────────────────────────────────────────────────
+var ApiExplorer = (function () {
+  'use strict';
+
+  const ENDPOINTS = [
+    {
+      method: 'POST', path: '/v1/chat/completions', category: 'chat',
+      desc: 'Send a message and get an AI response',
+      auth: 'Bearer token', rateLimit: '60 req/min',
+      reqBody: JSON.stringify({ model: 'agentbox-1', messages: [{ role: 'user', content: 'What is the weather in Seattle?' }], max_tokens: 256, temperature: 0.7 }, null, 2),
+      respBody: JSON.stringify({ id: 'chatcmpl-abc123', object: 'chat.completion', created: 1709769600, model: 'agentbox-1', choices: [{ index: 0, message: { role: 'assistant', content: 'Currently in Seattle it is 48\u00b0F (9\u00b0C) with overcast skies and light rain.' }, finish_reason: 'stop' }], usage: { prompt_tokens: 14, completion_tokens: 22, total_tokens: 36 } }, null, 2)
+    },
+    {
+      method: 'POST', path: '/v1/chat/completions', category: 'chat',
+      desc: 'Stream a response in real time',
+      auth: 'Bearer token', rateLimit: '60 req/min',
+      suffix: ' (streaming)',
+      reqBody: JSON.stringify({ model: 'agentbox-1', messages: [{ role: 'user', content: 'Explain quantum computing in one paragraph.' }], stream: true }, null, 2),
+      respBody: 'data: {"id":"chatcmpl-xyz","object":"chat.completion.chunk","choices":[{"delta":{"content":"Quantum"},"index":0}]}\n\ndata: {"id":"chatcmpl-xyz","object":"chat.completion.chunk","choices":[{"delta":{"content":" computing"},"index":0}]}\n\ndata: [DONE]'
+    },
+    {
+      method: 'GET', path: '/v1/memory', category: 'memory',
+      desc: 'Retrieve stored memories',
+      auth: 'Bearer token', rateLimit: '30 req/min',
+      respBody: JSON.stringify({ memories: [{ id: 'mem_01', content: 'User prefers dark mode', created_at: '2026-02-15T10:30:00Z', category: 'preference' }, { id: 'mem_02', content: 'Working on a React project called Dashboard Pro', created_at: '2026-02-20T14:00:00Z', category: 'context' }], total: 2, has_more: false }, null, 2)
+    },
+    {
+      method: 'POST', path: '/v1/memory', category: 'memory',
+      desc: 'Store a new memory',
+      auth: 'Bearer token', rateLimit: '30 req/min',
+      reqBody: JSON.stringify({ content: 'My preferred programming language is Python', category: 'preference', ttl: null }, null, 2),
+      respBody: JSON.stringify({ id: 'mem_03', content: 'My preferred programming language is Python', category: 'preference', created_at: '2026-03-06T12:00:00Z' }, null, 2)
+    },
+    {
+      method: 'DELETE', path: '/v1/memory/{id}', category: 'memory',
+      desc: 'Delete a specific memory',
+      auth: 'Bearer token', rateLimit: '30 req/min',
+      respBody: JSON.stringify({ deleted: true, id: 'mem_03' }, null, 2)
+    },
+    {
+      method: 'POST', path: '/v1/tools/execute', category: 'tools',
+      desc: 'Execute an agent tool (search, calculate, etc.)',
+      auth: 'Bearer token', rateLimit: '20 req/min',
+      reqBody: JSON.stringify({ tool: 'web_search', parameters: { query: 'latest AI news 2026', max_results: 5 } }, null, 2),
+      respBody: JSON.stringify({ tool: 'web_search', status: 'success', result: { results: [{ title: 'OpenAI Announces GPT-5', url: 'https://example.com/gpt5', snippet: 'OpenAI has released GPT-5 with improved reasoning...' }, { title: 'AI Regulation Update', url: 'https://example.com/regulation', snippet: 'New EU AI Act provisions take effect...' }] }, execution_time_ms: 342 }, null, 2)
+    },
+    {
+      method: 'GET', path: '/v1/tools', category: 'tools',
+      desc: 'List available tools and their capabilities',
+      auth: 'Bearer token', rateLimit: '30 req/min',
+      respBody: JSON.stringify({ tools: [{ name: 'web_search', description: 'Search the web for information', parameters: { query: 'string', max_results: 'integer (1-10)' } }, { name: 'calculator', description: 'Evaluate mathematical expressions', parameters: { expression: 'string' } }, { name: 'image_generate', description: 'Generate images from text prompts', parameters: { prompt: 'string', size: '256|512|1024' } }] }, null, 2)
+    },
+    {
+      method: 'GET', path: '/v1/sessions', category: 'sessions',
+      desc: 'List conversation sessions',
+      auth: 'Bearer token', rateLimit: '30 req/min',
+      respBody: JSON.stringify({ sessions: [{ id: 'sess_abc', title: 'Project Planning', created_at: '2026-03-01T09:00:00Z', message_count: 42, last_active: '2026-03-06T15:30:00Z' }, { id: 'sess_def', title: 'Code Review Helper', created_at: '2026-03-04T11:00:00Z', message_count: 18, last_active: '2026-03-06T14:00:00Z' }], total: 2 }, null, 2)
+    },
+    {
+      method: 'GET', path: '/v1/sessions/{id}/messages', category: 'sessions',
+      desc: 'Get messages in a session',
+      auth: 'Bearer token', rateLimit: '30 req/min',
+      respBody: JSON.stringify({ messages: [{ id: 'msg_01', role: 'user', content: 'Help me plan a REST API', timestamp: '2026-03-01T09:00:00Z' }, { id: 'msg_02', role: 'assistant', content: 'I would suggest starting with your resource models...', timestamp: '2026-03-01T09:00:02Z' }], has_more: true, cursor: 'msg_02' }, null, 2)
+    },
+    {
+      method: 'DELETE', path: '/v1/sessions/{id}', category: 'sessions',
+      desc: 'Delete a session and its messages',
+      auth: 'Bearer token', rateLimit: '10 req/min',
+      respBody: JSON.stringify({ deleted: true, id: 'sess_abc', messages_removed: 42 }, null, 2)
+    },
+    {
+      method: 'GET', path: '/v1/usage', category: 'account',
+      desc: 'Get current usage and quota info',
+      auth: 'Bearer token', rateLimit: '10 req/min',
+      respBody: JSON.stringify({ plan: 'pro', period: { start: '2026-03-01', end: '2026-03-31' }, usage: { messages_sent: 847, messages_limit: null, tokens_used: 234500, tools_executed: 156 }, billing: { amount_due: 12.00, currency: 'USD', next_invoice: '2026-04-01' } }, null, 2)
+    },
+    {
+      method: 'GET', path: '/v1/models', category: 'account',
+      desc: 'List available models',
+      auth: 'Bearer token', rateLimit: '10 req/min',
+      respBody: JSON.stringify({ models: [{ id: 'agentbox-1', name: 'AgentBox Standard', max_tokens: 4096, supports_streaming: true }, { id: 'agentbox-1-turbo', name: 'AgentBox Turbo', max_tokens: 8192, supports_streaming: true }, { id: 'agentbox-vision', name: 'AgentBox Vision', max_tokens: 4096, supports_streaming: true, supports_images: true }] }, null, 2)
+    }
+  ];
+
+  const CATEGORIES = [
+    { key: 'chat', label: '\uD83D\uDCAC Chat', name: 'Chat' },
+    { key: 'memory', label: '\uD83E\uDDE0 Memory', name: 'Memory' },
+    { key: 'tools', label: '\uD83D\uDD27 Tools', name: 'Tools' },
+    { key: 'sessions', label: '\uD83D\uDCC1 Sessions', name: 'Sessions' },
+    { key: 'account', label: '\uD83D\uDC64 Account', name: 'Account' }
+  ];
+
+  let grid, detailPanel, filterContainer;
+  let activeCard = null;
+  let currentFilter = 'all';
+  let cardPool = [];
+
+  function init() {
+    grid = document.getElementById('apiExplorerGrid');
+    detailPanel = document.getElementById('apiDetailPanel');
+    filterContainer = document.querySelector('.api-explorer-filter');
+    if (!grid) return;
+
+    // Build filter buttons
+    CATEGORIES.forEach(function (cat) {
+      let btn = document.createElement('button');
+      btn.className = 'api-filter-btn';
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', 'false');
+      btn.setAttribute('data-api-cat', cat.key);
+      btn.textContent = cat.label;
+      filterContainer.appendChild(btn);
+    });
+
+    // Wire filter clicks
+    filterContainer.addEventListener('click', function (e) {
+      let btn = e.target.closest('.api-filter-btn');
+      if (!btn) return;
+      let cat = btn.getAttribute('data-api-cat');
+      currentFilter = cat;
+      filterContainer.querySelectorAll('.api-filter-btn').forEach(function (b) {
+        let isActive = b.getAttribute('data-api-cat') === cat;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      filterGrid();
+      closeDetail();
+    });
+
+    // Close button
+    let closeBtn = document.getElementById('apiDetailClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeDetail);
+
+    // Copy buttons
+    document.querySelectorAll('.api-copy-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const targetId = btn.getAttribute('data-copy-target');
+        let target = document.getElementById(targetId);
+        if (!target) return;
+        let text = target.textContent;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(function () {
+            btn.textContent = '\u2705 Copied!';
+            btn.classList.add('copied');
+            setTimeout(function () { btn.textContent = '\uD83D\uDCCB Copy'; btn.classList.remove('copied'); }, 1500);
+          });
+        }
+      });
+    });
+
+    // Build card pool once — cards are shown/hidden on filter, not recreated
+    cardPool = [];
+    ENDPOINTS.forEach(function (ep) {
+      const card = document.createElement('div');
+      card.className = 'api-endpoint-card';
+      card.setAttribute('role', 'listitem');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('data-category', ep.category);
+      card.innerHTML =
+        '<span class="api-method-badge ' + ep.method.toLowerCase() + '">' + ep.method + '</span>' +
+        '<span class="api-endpoint-path">' + escapeHtml(ep.path) + (ep.suffix ? ' <small style="opacity:0.5">' + escapeHtml(ep.suffix) + '</small>' : '') + '</span>' +
+        '<span class="api-endpoint-desc">' + escapeHtml(ep.desc) + '</span>';
+
+      card.addEventListener('click', function () { showDetail(ep, card); });
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showDetail(ep, card); }
+      });
+      grid.appendChild(card);
+      cardPool.push(card);
+    });
+
+    filterGrid();
+  }
+
+  function filterGrid() {
+    for (var i = 0; i < cardPool.length; i++) {
+      cardPool[i].hidden = (currentFilter !== 'all' && cardPool[i].getAttribute('data-category') !== currentFilter);
+    }
+  }
+
+  function showDetail(ep, card) {
+    if (activeCard) activeCard.classList.remove('active');
+    activeCard = card;
+    card.classList.add('active');
+
+    document.getElementById('apiDetailTitle').innerHTML =
+      '<span class="api-method-badge ' + ep.method.toLowerCase() + '">' + ep.method + '</span> ' +
+      escapeHtml(ep.path) + (ep.suffix ? ' ' + escapeHtml(ep.suffix) : '');
+
+    document.getElementById('apiDetailMeta').innerHTML =
+      '<span>\uD83D\uDD12 ' + escapeHtml(ep.auth) + '</span>' +
+      '<span>\u26A1 ' + escapeHtml(ep.rateLimit) + '</span>' +
+      '<span>\uD83C\uDFF7\uFE0F ' + escapeHtml(getCategoryName(ep.category)) + '</span>';
+
+    // Curl command
+    let curl = 'curl';
+    if (ep.method !== 'GET') curl += ' -X ' + ep.method;
+    curl += " 'https://api.agentbox.ai" + ep.path + "'";
+    curl += " \\\n  -H 'Authorization: Bearer YOUR_API_KEY'";
+    curl += " \\\n  -H 'Content-Type: application/json'";
+    if (ep.reqBody) curl += " \\\n  -d '" + ep.reqBody.replace(/'/g, "'\\''") + "'";
+    document.getElementById('apiCurlCode').textContent = curl;
+
+    // Request body
+    const reqSection = document.getElementById('apiReqBodySection');
+    if (ep.reqBody) {
+      reqSection.hidden = false;
+      document.getElementById('apiReqBody').textContent = ep.reqBody;
+    } else {
+      reqSection.hidden = true;
+    }
+
+    // Response
+    document.getElementById('apiRespBody').textContent = ep.respBody;
+
+    // Status badge
+    const badge = document.getElementById('apiStatusBadge');
+    if (ep.method === 'DELETE') { badge.textContent = '200 OK'; }
+    else { badge.textContent = '200 OK'; }
+
+    detailPanel.hidden = false;
+    if (detailPanel.scrollIntoView) { detailPanel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' }); }
+  }
+
+  function closeDetail() {
+    if (detailPanel) detailPanel.hidden = true;
+    if (activeCard) { activeCard.classList.remove('active'); activeCard = null; }
+  }
+
+  function getCategoryName(key) {
+    for (var i = 0; i < CATEGORIES.length; i++) {
+      if (CATEGORIES[i].key === key) return CATEGORIES[i].name;
+    }
+    return key;
+  }
+
+  function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  return { init: init };
+})();
+
+
+/* === src/modules/workflow-templates.js === */
+
+// ---------------------------------------------------------------------------
+// Workflow Templates — Ready-to-use automation recipes
+// ---------------------------------------------------------------------------
+var WorkflowTemplates = (function () {
+  'use strict';
+
+  const TEMPLATES = [
+    {
+      id: 'daily-briefing',
+      title: 'Daily Briefing',
+      icon: '\u2615',
+      category: 'productivity',
+      description: 'Get a personalized morning briefing with weather, calendar events, and top news — delivered to Telegram every day.',
+      steps: [
+        'Agent checks your local weather forecast',
+        'Pulls today\'s calendar events and reminders',
+        'Summarizes top 3 news headlines for your interests',
+        'Sends a single concise morning message'
+      ],
+      setup: '/remind every day at 8am: Give me a morning briefing with weather in Seattle, my calendar, and top tech news',
+      tags: ['morning', 'weather', 'news', 'calendar'],
+      difficulty: 'easy'
+    },
+    {
+      id: 'expense-tracker',
+      title: 'Expense Tracker',
+      icon: '\uD83D\uDCB0',
+      category: 'finance',
+      description: 'Log expenses by text or photo. Get weekly summaries with category breakdowns and budget warnings.',
+      steps: [
+        'Send a message like "Coffee $4.50" or snap a receipt photo',
+        'Agent categorizes and stores the expense',
+        'Ask "How much did I spend this week?" anytime',
+        'Get a weekly summary every Sunday with charts'
+      ],
+      setup: '/remind every Sunday at 8pm: Summarize my expenses this week by category and tell me if I\'m over budget',
+      tags: ['money', 'budget', 'receipts', 'tracking'],
+      difficulty: 'easy'
+    },
+    {
+      id: 'research-assistant',
+      title: 'Research Assistant',
+      icon: '\uD83D\uDD0D',
+      category: 'productivity',
+      description: 'Delegate web research tasks. Agent searches, compiles findings, and saves structured notes you can reference later.',
+      steps: [
+        'Ask a research question or topic',
+        'Agent searches multiple sources on the web',
+        'Compiles key findings with source links',
+        'Remembers the research for future conversations'
+      ],
+      setup: 'Research the best noise-cancelling headphones under $300. Compare at least 5 models on sound quality, ANC, battery, and comfort.',
+      tags: ['search', 'analysis', 'comparison', 'notes'],
+      difficulty: 'easy'
+    },
+    {
+      id: 'code-reviewer',
+      title: 'Code Review Bot',
+      icon: '\uD83D\uDCBB',
+      category: 'development',
+      description: 'Send code snippets or screenshots for instant review. Catches bugs, suggests improvements, and explains concepts.',
+      steps: [
+        'Paste code or send a screenshot of your editor',
+        'Agent analyzes for bugs, style, and performance',
+        'Returns specific suggestions with explanations',
+        'Remembers your tech stack for contextual advice'
+      ],
+      setup: 'Review this code for bugs, performance issues, and best practices:\n\n```python\ndef process(data):\n  results = []\n  for item in data:\n    if item not in results:\n      results.append(item)\n  return results\n```',
+      tags: ['coding', 'debugging', 'review', 'python'],
+      difficulty: 'medium'
+    },
+    {
+      id: 'meeting-prep',
+      title: 'Meeting Prep',
+      icon: '\uD83D\uDCC5',
+      category: 'productivity',
+      description: 'Before any meeting, get a briefing with attendee context, agenda summary, and suggested talking points.',
+      steps: [
+        'Tell the agent about your upcoming meeting',
+        'Agent recalls past context about attendees and topics',
+        'Generates agenda summary and talking points',
+        'Sends a prep brief 15 minutes before the meeting'
+      ],
+      setup: '/remind 15 min before my next meeting: Prepare a brief with talking points, open action items, and any context you remember about the attendees',
+      tags: ['meetings', 'preparation', 'calendar', 'context'],
+      difficulty: 'medium'
+    },
+    {
+      id: 'habit-tracker',
+      title: 'Habit Tracker',
+      icon: '\u2705',
+      category: 'health',
+      description: 'Track daily habits with natural language. Get streak reports, gentle nudges, and weekly progress summaries.',
+      steps: [
+        'Tell the agent your habits: "I want to track meditation, exercise, and reading"',
+        'Check in naturally: "Did 20 min meditation and a 5k run today"',
+        'Agent tracks streaks and sends evening check-ins',
+        'Weekly progress report with streak counts and trends'
+      ],
+      setup: '/remind every day at 9pm: Check in on my habits. Ask what I did today for meditation, exercise, and reading. Track my streaks.',
+      tags: ['habits', 'streaks', 'health', 'accountability'],
+      difficulty: 'easy'
+    },
+    {
+      id: 'content-curator',
+      title: 'Content Curator',
+      icon: '\uD83D\uDCF0',
+      category: 'productivity',
+      description: 'Agent monitors topics you care about and sends curated digests with the most relevant articles and discussions.',
+      steps: [
+        'Define your interests: "AI safety, Rust programming, indie games"',
+        'Agent searches for fresh content daily',
+        'Filters out noise, keeps only high-quality pieces',
+        'Sends a digest with summaries and links'
+      ],
+      setup: '/remind every day at 12pm: Find the 5 most interesting articles from today about AI safety and Rust programming. Include a 2-sentence summary for each.',
+      tags: ['news', 'curation', 'digest', 'reading'],
+      difficulty: 'easy'
+    },
+    {
+      id: 'workout-planner',
+      title: 'Workout Planner',
+      icon: '\uD83C\uDFCB\uFE0F',
+      category: 'health',
+      description: 'Get personalized workout suggestions based on your equipment, fitness level, and schedule. Agent remembers your preferences.',
+      steps: [
+        'Tell the agent your fitness goals and available equipment',
+        'Request a workout: "Give me a 30-min upper body routine"',
+        'Agent creates a structured plan with sets and reps',
+        'Remembers what you did last time to vary exercises'
+      ],
+      setup: 'I have dumbbells (5-40 lbs), a pull-up bar, and a yoga mat. I can work out 4 days a week for 30-45 minutes. Create a weekly plan for muscle building.',
+      tags: ['fitness', 'exercise', 'planning', 'health'],
+      difficulty: 'easy'
+    },
+    {
+      id: 'price-watcher',
+      title: 'Price Watcher',
+      icon: '\uD83D\uDCCA',
+      category: 'finance',
+      description: 'Monitor product prices and get notified when they drop. Agent checks periodically and alerts you on deals.',
+      steps: [
+        'Share a product link or name with target price',
+        'Agent checks the current price periodically',
+        'Sends an alert when the price drops below your target',
+        'Tracks price history so you can see trends'
+      ],
+      setup: '/remind every day at 10am: Check if the Sony WH-1000XM5 headphones are below $280 on Amazon. If yes, send me a price alert with the link.',
+      tags: ['shopping', 'deals', 'monitoring', 'alerts'],
+      difficulty: 'medium'
+    },
+    {
+      id: 'language-tutor',
+      title: 'Language Tutor',
+      icon: '\uD83C\uDF0D',
+      category: 'learning',
+      description: 'Practice a new language with daily vocabulary, conversation drills, and grammar corrections in natural chat.',
+      steps: [
+        'Tell the agent which language and your level',
+        'Get daily vocabulary words with example sentences',
+        'Practice conversations — agent corrects your grammar',
+        'Weekly quiz on words you\'ve learned'
+      ],
+      setup: '/remind every day at 7am: Teach me 5 new Spanish words with example sentences. Include pronunciation tips. Quiz me on yesterday\'s words first.',
+      tags: ['languages', 'vocabulary', 'practice', 'education'],
+      difficulty: 'easy'
+    },
+    {
+      id: 'standup-bot',
+      title: 'Standup Reporter',
+      icon: '\uD83D\uDCE2',
+      category: 'development',
+      description: 'Agent asks for your daily standup updates, formats them, and keeps a searchable log you can reference in retros.',
+      steps: [
+        'Agent asks: "What did you do yesterday? What\'s the plan today? Any blockers?"',
+        'You reply in natural language',
+        'Agent formats it into a clean standup report',
+        'Searchable history: "What was I working on last Tuesday?"'
+      ],
+      setup: '/remind every weekday at 9:30am: Ask me for my standup update. Format it as Yesterday/Today/Blockers. Save it so I can search later.',
+      tags: ['standup', 'agile', 'team', 'reporting'],
+      difficulty: 'easy'
+    },
+    {
+      id: 'meal-planner',
+      title: 'Meal Planner',
+      icon: '\uD83C\uDF73',
+      category: 'health',
+      description: 'Get personalized meal suggestions based on dietary preferences, ingredients on hand, and nutritional goals.',
+      steps: [
+        'Set dietary preferences: "vegetarian, high protein, under 600 cal"',
+        'Ask for meal ideas or send a photo of your fridge',
+        'Agent suggests recipes with step-by-step instructions',
+        'Generates a weekly grocery list on demand'
+      ],
+      setup: 'I\'m vegetarian and trying to eat 120g protein daily. Suggest 3 easy dinner recipes I can make in under 30 minutes with common ingredients.',
+      tags: ['cooking', 'nutrition', 'recipes', 'diet'],
+      difficulty: 'easy'
+    }
+  ];
+
+  const CATEGORIES = [
+    { id: 'all', label: 'All' },
+    { id: 'productivity', label: '\uD83D\uDCBC Productivity' },
+    { id: 'development', label: '\uD83D\uDCBB Development' },
+    { id: 'finance', label: '\uD83D\uDCB0 Finance' },
+    { id: 'health', label: '\uD83C\uDFCB\uFE0F Health' },
+    { id: 'learning', label: '\uD83C\uDF0D Learning' }
+  ];
+
+  let _currentCategory = 'all';
+  let _gridEl = null;
+  let _detailEl = null;
+  let _filterContainer = null;
+
+  function init() {
+    _gridEl = document.getElementById('workflowGrid');
+    _detailEl = document.getElementById('workflowDetail');
+    _filterContainer = document.querySelector('.workflow-filter');
+    if (!_gridEl) return;
+
+    _buildFilterButtons();
+    _renderGrid();
+    _bindDetailClose();
+    _bindCopy();
+  }
+
+  function _buildFilterButtons() {
+    if (!_filterContainer) return;
+    // Clear existing buttons (the HTML has the "All" button as a placeholder)
+    while (_filterContainer.firstChild) {
+      _filterContainer.removeChild(_filterContainer.firstChild);
+    }
+    for (var i = 0; i < CATEGORIES.length; i++) {
+      let cat = CATEGORIES[i];
+      let btn = document.createElement('button');
+      btn.className = 'workflow-filter-btn' + (cat.id === 'all' ? ' active' : '');
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', cat.id === 'all' ? 'true' : 'false');
+      btn.dataset.wfCat = cat.id;
+      btn.textContent = cat.label;
+      btn.addEventListener('click', _onFilterClick);
+      _filterContainer.appendChild(btn);
+    }
+  }
+
+  function _onFilterClick(e) {
+    let cat = e.target.dataset.wfCat;
+    if (!cat || cat === _currentCategory) return;
+    filterBy(cat);
+  }
+
+  function filterBy(category) {
+    _currentCategory = category;
+    // Update button states
+    const btns = _filterContainer.querySelectorAll('.workflow-filter-btn');
+    for (var i = 0; i < btns.length; i++) {
+      let isActive = btns[i].dataset.wfCat === category;
+      btns[i].classList.toggle('active', isActive);
+      btns[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
+    _renderGrid();
+    // Hide detail panel when switching categories
+    if (_detailEl) _detailEl.hidden = true;
+  }
+
+  function _renderGrid() {
+    if (!_gridEl) return;
+    while (_gridEl.firstChild) _gridEl.removeChild(_gridEl.firstChild);
+
+    let filtered = _currentCategory === 'all'
+      ? TEMPLATES
+      : TEMPLATES.filter(function (t) { return t.category === _currentCategory; });
+
+    for (var i = 0; i < filtered.length; i++) {
+      _gridEl.appendChild(_createCard(filtered[i]));
+    }
+  }
+
+  function _createCard(template) {
+    const card = document.createElement('div');
+    card.className = 'workflow-card';
+    card.setAttribute('role', 'listitem');
+    card.dataset.wfId = template.id;
+    card.tabIndex = 0;
+
+    let icon = document.createElement('div');
+    icon.className = 'workflow-card-icon';
+    icon.textContent = template.icon;
+    card.appendChild(icon);
+
+    const title = document.createElement('h4');
+    title.className = 'workflow-card-title';
+    title.textContent = template.title;
+    card.appendChild(title);
+
+    const desc = document.createElement('p');
+    desc.className = 'workflow-card-desc';
+    desc.textContent = template.description;
+    card.appendChild(desc);
+
+    const meta = document.createElement('div');
+    meta.className = 'workflow-card-meta';
+
+    const diffBadge = document.createElement('span');
+    diffBadge.className = 'workflow-difficulty workflow-difficulty-' + template.difficulty;
+    diffBadge.textContent = template.difficulty;
+    meta.appendChild(diffBadge);
+
+    const catBadge = document.createElement('span');
+    catBadge.className = 'workflow-category-badge';
+    catBadge.textContent = template.category;
+    meta.appendChild(catBadge);
+
+    card.appendChild(meta);
+
+    card.addEventListener('click', function () {
+      _showDetail(template);
+    });
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        _showDetail(template);
+      }
+    });
+
+    return card;
+  }
+
+  function _showDetail(template) {
+    if (!_detailEl) return;
+
+    const titleEl = document.getElementById('workflowDetailTitle');
+    const descEl = document.getElementById('workflowDetailDesc');
+    const stepsEl = document.getElementById('workflowSteps');
+    const codeEl = document.getElementById('workflowSetupCode');
+    const tagsEl = document.getElementById('workflowTags');
+
+    if (titleEl) titleEl.textContent = template.icon + ' ' + template.title;
+    if (descEl) descEl.textContent = template.description;
+
+    if (stepsEl) {
+      while (stepsEl.firstChild) stepsEl.removeChild(stepsEl.firstChild);
+      const ol = document.createElement('ol');
+      ol.className = 'workflow-steps-list';
+      for (var i = 0; i < template.steps.length; i++) {
+        const li = document.createElement('li');
+        li.textContent = template.steps[i];
+        ol.appendChild(li);
+      }
+      stepsEl.appendChild(ol);
+    }
+
+    if (codeEl) codeEl.textContent = template.setup;
+
+    if (tagsEl) {
+      while (tagsEl.firstChild) tagsEl.removeChild(tagsEl.firstChild);
+      for (var j = 0; j < template.tags.length; j++) {
+        const tag = document.createElement('span');
+        tag.className = 'workflow-tag';
+        tag.textContent = '#' + template.tags[j];
+        tagsEl.appendChild(tag);
+      }
+    }
+
+    _detailEl.hidden = false;
+    if (_detailEl.scrollIntoView) _detailEl.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+  }
+
+  function _bindDetailClose() {
+    let closeBtn = document.getElementById('workflowDetailClose');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        if (_detailEl) _detailEl.hidden = true;
+      });
+    }
+  }
+
+  function _bindCopy() {
+    const copyBtn = document.getElementById('workflowCopyBtn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function () {
+        const codeEl = document.getElementById('workflowSetupCode');
+        if (!codeEl) return;
+        let text = codeEl.textContent;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text);
+        }
+        copyBtn.textContent = '\u2705 Copied!';
+        setTimeout(function () { copyBtn.textContent = '\uD83D\uDCCB Copy'; }, 2000);
+      });
+    }
+  }
+
+  function getTemplates() { return TEMPLATES.slice(); }
+  function getCategories() { return CATEGORIES.slice(); }
+  function getCurrent() { return _currentCategory; }
+
+  function getByCategory(category) {
+    if (category === 'all') return TEMPLATES.slice();
+    return TEMPLATES.filter(function (t) { return t.category === category; });
+  }
+
+  function getById(id) {
+    for (var i = 0; i < TEMPLATES.length; i++) {
+      if (TEMPLATES[i].id === id) return TEMPLATES[i];
+    }
+    return null;
+  }
+
+  return {
+    init: init,
+    filterBy: filterBy,
+    getTemplates: getTemplates,
+    getCategories: getCategories,
+    getCurrent: getCurrent,
+    getByCategory: getByCategory,
+    getById: getById,
+    TEMPLATES: TEMPLATES,
+    CATEGORIES: CATEGORIES
+  };
+})();
+
+
+/* === src/modules/quick-start-wizard.js === */
+
+// ---------------------------------------------------------------------------
+// Quick Start Wizard
+// ---------------------------------------------------------------------------
+var QuickStartWizard = (function () {
+  'use strict';
+
+  const state = { step: 1, useCase: null, frequency: null };
+
+  const plans = {
+    productivity: {
+      steps: [
+        { title: 'Open AgentBox in Telegram', desc: 'Tap the link and press Start' },
+        { title: 'Set your timezone', desc: 'Say "My timezone is [your timezone]" so reminders work correctly' },
+        { title: 'Try a reminder', desc: 'Type: "Remind me in 10 minutes to take a break"' },
+        { title: 'Create a daily standup', desc: 'Ask: "Every morning at 9am, ask me what I plan to do today"' },
+        { title: 'Send a task list', desc: 'Type your tasks and ask it to organize them by priority' }
+      ],
+      tip: 'Productivity users get the most value from reminders and daily check-ins. The free tier (20 msg/day) covers most daily planning needs.'
+    },
+    research: {
+      steps: [
+        { title: 'Open AgentBox in Telegram', desc: 'Tap the link and press Start' },
+        { title: 'Ask a research question', desc: 'Try: "What are the latest developments in quantum computing?"' },
+        { title: 'Send an article screenshot', desc: 'Screenshot a paper or article and ask for a summary' },
+        { title: 'Compare sources', desc: 'Ask: "Compare what Reuters and AP say about [topic]"' },
+        { title: 'Build a reading list', desc: 'Say: "Remember these articles for me" and send links over time' }
+      ],
+      tip: 'Research users love web search and image understanding. For heavy research days, the Pro plan gives you unlimited messages.'
+    },
+    creative: {
+      steps: [
+        { title: 'Open AgentBox in Telegram', desc: 'Tap the link and press Start' },
+        { title: 'Start a brainstorm', desc: 'Try: "Give me 10 creative names for a coffee shop in Portland"' },
+        { title: 'Send a mood board', desc: 'Send images and ask for style analysis or color palette extraction' },
+        { title: 'Workshop your writing', desc: 'Paste a draft and ask: "Make this punchier but keep the tone"' },
+        { title: 'Set a creative prompt', desc: 'Ask: "Every morning, send me a random writing prompt"' }
+      ],
+      tip: 'Creative users benefit from the agent\'s memory — it learns your style preferences over time. Try chatting for a week and notice the difference.'
+    },
+    coding: {
+      steps: [
+        { title: 'Open AgentBox in Telegram', desc: 'Tap the link and press Start' },
+        { title: 'Ask a coding question', desc: 'Try: "Explain the difference between Promise.all and Promise.allSettled"' },
+        { title: 'Send a screenshot', desc: 'Screenshot an error message and ask for help debugging' },
+        { title: 'Code review on the go', desc: 'Paste a function and ask: "Any bugs or improvements here?"' },
+        { title: 'Build a snippet library', desc: 'Send useful snippets and ask it to remember them for later' }
+      ],
+      tip: 'Coding on mobile is surprisingly useful for quick reviews, learning, and debugging. Your agent remembers your language preferences.'
+    }
+  };
+
+  const freqRecs = {
+    casual: { plan: 'Free', reason: '20 messages/day is plenty for occasional use.' },
+    daily: { plan: 'Free or Pro', reason: 'Free works for light daily use. Upgrade to Pro if you hit the limit.' },
+    power: { plan: 'Pro', reason: 'Unlimited messages for heavy daily usage. Totally worth it.' }
+  };
+
+  function init() {
+    const container = document.getElementById('wizardContainer');
+    if (!container) return;
+
+    const nextBtn = document.getElementById('wizardNext');
+    const backBtn = document.getElementById('wizardBack');
+
+    container.addEventListener('click', function (e) {
+      const opt = e.target.closest('.wizard-option');
+      if (!opt) return;
+
+      const group = opt.parentElement;
+      group.querySelectorAll('.wizard-option').forEach(function (o) {
+        o.classList.remove('selected');
+        o.setAttribute('aria-checked', 'false');
+      });
+      opt.classList.add('selected');
+      opt.setAttribute('aria-checked', 'true');
+
+      if (state.step === 1) state.useCase = opt.getAttribute('data-value');
+      if (state.step === 2) state.frequency = opt.getAttribute('data-value');
+
+      nextBtn.disabled = false;
+    });
+
+    nextBtn.addEventListener('click', function () {
+      if (state.step < 3) {
+        state.step++;
+        render();
+      }
+    });
+
+    backBtn.addEventListener('click', function () {
+      if (state.step > 1) {
+        state.step--;
+        render();
+      }
+    });
+  }
+
+  function render() {
+    const steps = document.querySelectorAll('.wizard-step');
+    steps.forEach(function (s) { s.classList.remove('active'); });
+    let active = document.querySelector('[data-wizard-step="' + state.step + '"]');
+    if (active) active.classList.add('active');
+
+    let bar = document.getElementById('wizardProgressBar');
+    if (bar) bar.style.width = (state.step / 3 * 100) + '%';
+
+    const indicator = document.getElementById('wizardIndicator');
+    if (indicator) indicator.textContent = 'Step ' + state.step + ' of 3';
+
+    const backBtn = document.getElementById('wizardBack');
+    const nextBtn = document.getElementById('wizardNext');
+    backBtn.disabled = state.step === 1;
+
+    if (state.step === 3) {
+      nextBtn.style.display = 'none';
+      renderResult();
+    } else {
+      nextBtn.style.display = '';
+      // Check if current step has a selection
+      let currentStep = document.querySelector('.wizard-step.active');
+      const hasSelection = currentStep && currentStep.querySelector('.wizard-option.selected');
+      nextBtn.disabled = !hasSelection;
+    }
+  }
+
+  function renderResult() {
+    let result = document.getElementById('wizardResult');
+    if (!result || !state.useCase) return;
+
+    const plan = plans[state.useCase];
+    const freq = freqRecs[state.frequency] || freqRecs.casual;
+
+    let html = '<ul class="wizard-result-plan">';
+    plan.steps.forEach(function (s, i) {
+      html += '<li><span class="plan-step-num">' + (i + 1) + '</span>';
+      html += '<span class="plan-step-text"><strong>' + s.title + '</strong>';
+      html += '<span>' + s.desc + '</span></span></li>';
+    });
+    html += '</ul>';
+
+    html += '<div class="wizard-result-rec">';
+    html += '<strong>💡 ' + plan.tip + '</strong>';
+    html += '</div>';
+
+    html += '<div class="wizard-result-rec">';
+    html += '<strong>📊 Recommended plan: ' + freq.plan + '</strong>';
+    html += '<span>' + freq.reason + '</span>';
+    html += '</div>';
+
+    html += '<div style="text-align:center">';
+    html += '<a href="#pricingSection" class="wizard-result-cta">Get Started →</a>';
+    html += '</div>';
+
+    result.innerHTML = html;
+  }
+
+  return { init: init };
+})();
+
+
+/* === src/modules/social-proof-toasts.js === */
+var SocialProofToasts = (function () {
+  'use strict';
+
+  let _container = null;
+  let _timer = null;
+  let _dismissed = false;
+  let _prefersReducedMotion = false;
+  const _toastQueue = [];
+  let _activeToast = null;
+
+  const DISPLAY_MS = 5000;
+  const INTERVAL_MS = 25000;
+  const INITIAL_DELAY_MS = 12000;
+  const MAX_TOASTS_PER_SESSION = 15;
+  let _toastsShown = 0;
+
+  const cities = [
+    'Seattle', 'San Francisco', 'New York', 'London', 'Berlin',
+    'Tokyo', 'Toronto', 'Sydney', 'Amsterdam', 'Singapore',
+    'Austin', 'Portland', 'Denver', 'Chicago', 'Los Angeles',
+    'Stockholm', 'Dublin', 'Bangalore', 'Seoul', 'Paris'
+  ];
+
+  const actions = [
+    { icon: '🚀', text: 'just started using AgentBox' },
+    { icon: '⭐', text: 'upgraded to Pro' },
+    { icon: '🎉', text: 'sent their 100th message' },
+    { icon: '🔔', text: 'set up their first reminder' },
+    { icon: '🧠', text: 'enabled long-term memory' },
+    { icon: '📷', text: 'analyzed their first image' },
+    { icon: '🔍', text: 'ran their first web search' },
+    { icon: '💬', text: 'created a custom persona' },
+    { icon: '📊', text: 'connected a new integration' },
+    { icon: '🎯', text: 'completed the onboarding quiz' }
+  ];
+
+  const timeLabels = [
+    'just now', '2 minutes ago', '5 minutes ago',
+    '8 minutes ago', '12 minutes ago'
+  ];
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function generateToast() {
+    const city = pick(cities);
+    const action = pick(actions);
+    const time = pick(timeLabels);
+    return {
+      icon: action.icon,
+      city: city,
+      text: action.text,
+      time: time
+    };
+  }
+
+  function createToastEl(data) {
+    let toast = document.createElement('div');
+    toast.className = 'sp-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+
+    let icon = document.createElement('span');
+    icon.className = 'sp-toast-icon';
+    icon.textContent = data.icon;
+
+    const body = document.createElement('div');
+    body.className = 'sp-toast-body';
+
+    const msg = document.createElement('span');
+    msg.className = 'sp-toast-msg';
+    msg.textContent = 'Someone in ' + data.city + ' ' + data.text;
+
+    const time = document.createElement('span');
+    time.className = 'sp-toast-time';
+    time.textContent = data.time;
+
+    body.appendChild(msg);
+    body.appendChild(time);
+
+    const close = document.createElement('button');
+    close.className = 'sp-toast-close';
+    close.setAttribute('aria-label', 'Dismiss notification');
+    close.textContent = '\u00D7';
+    close.addEventListener('click', function (e) {
+      e.stopPropagation();
+      hideToast(toast);
+    });
+
+    toast.appendChild(icon);
+    toast.appendChild(body);
+    toast.appendChild(close);
+
+    return toast;
+  }
+
+  function showToast() {
+    if (_dismissed || _toastsShown >= MAX_TOASTS_PER_SESSION) {
+      stop();
+      return;
+    }
+    if (_activeToast) return;
+
+    const data = generateToast();
+    let el = createToastEl(data);
+    _activeToast = el;
+    _container.appendChild(el);
+    _toastsShown++;
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        el.classList.add('sp-toast-visible');
+      });
+    });
+
+    setTimeout(function () {
+      hideToast(el);
+    }, DISPLAY_MS);
+  }
+
+  function hideToast(el) {
+    if (!el || !el.parentNode) {
+      _activeToast = null;
+      return;
+    }
+    el.classList.remove('sp-toast-visible');
+    el.classList.add('sp-toast-hiding');
+    const onEnd = function () {
+      el.removeEventListener('transitionend', onEnd);
+      if (el.parentNode) el.parentNode.removeChild(el);
+      if (_activeToast === el) _activeToast = null;
+    };
+    el.addEventListener('transitionend', onEnd);
+    // Fallback in case transitionend doesn't fire
+    setTimeout(onEnd, 500);
+  }
+
+  function start() {
+    if (_prefersReducedMotion || _dismissed) return;
+    _timer = setInterval(showToast, INTERVAL_MS);
+  }
+
+  function stop() {
+    if (_timer) {
+      clearInterval(_timer);
+      _timer = null;
+    }
+  }
+
+  function dismiss() {
+    _dismissed = true;
+    stop();
+    if (_activeToast) hideToast(_activeToast);
+    try {
+      sessionStorage.setItem('sp-toasts-dismissed', '1');
+    } catch (e) { /* noop */ }
+  }
+
+  function init() {
+    if (typeof document === 'undefined') return;
+
+    try {
+      if (sessionStorage.getItem('sp-toasts-dismissed') === '1') {
+        _dismissed = true;
+        return;
+      }
+    } catch (e) { /* noop */ }
+
+    const mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq) {
+      _prefersReducedMotion = mq.matches;
+      mq.addEventListener('change', function (e) {
+        _prefersReducedMotion = e.matches;
+        if (_prefersReducedMotion) stop();
+      });
+    }
+    if (_prefersReducedMotion) return;
+
+    _container = document.createElement('div');
+    _container.className = 'sp-toast-container';
+    _container.setAttribute('aria-label', 'Activity notifications');
+    document.body.appendChild(_container);
+
+    setTimeout(function () {
+      showToast();
+      start();
+    }, INITIAL_DELAY_MS);
+  }
+
+  function destroy() {
+    stop();
+    if (_activeToast) hideToast(_activeToast);
+    if (_container && _container.parentNode) {
+      _container.parentNode.removeChild(_container);
+    }
+    _container = null;
+    _toastsShown = 0;
+    _dismissed = false;
+  }
+
+  return {
+    init: init,
+    dismiss: dismiss,
+    destroy: destroy,
+    _showToast: showToast
+  };
+})();
+
+
+/* === src/modules/before-after.js === */
+var BeforeAfter = (function () {
+  'use strict';
+
+  function init() {
+    if (typeof document === 'undefined') return;
+    const tabBefore = document.getElementById('baTabBefore');
+    const tabAfter  = document.getElementById('baTabAfter');
+    const panelBefore = document.getElementById('baPanelBefore');
+    const panelAfter  = document.getElementById('baPanelAfter');
+    if (!tabBefore || !tabAfter || !panelBefore || !panelAfter) return;
+
+    function switchTo(which) {
+      const isBefore = which === 'before';
+      tabBefore.classList.toggle('active', isBefore);
+      tabAfter.classList.toggle('active', !isBefore);
+      tabBefore.setAttribute('aria-selected', isBefore ? 'true' : 'false');
+      tabAfter.setAttribute('aria-selected', !isBefore ? 'true' : 'false');
+      panelBefore.classList.toggle('active', isBefore);
+      panelAfter.classList.toggle('active', !isBefore);
+      panelBefore.hidden = !isBefore;
+      panelAfter.hidden = isBefore;
+    }
+
+    tabBefore.addEventListener('click', function () { switchTo('before'); });
+    tabAfter.addEventListener('click', function () { switchTo('after'); });
+
+    tabBefore.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { tabAfter.focus(); switchTo('after'); }
+    });
+    tabAfter.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') { tabBefore.focus(); switchTo('before'); }
+    });
+  }
+
+  return { init: init };
+})();
+
+
+/* === src/modules/growth-timeline.js === */
+
+/* ═══════════════════════════════════════════════════════════════
+ *  Growth Timeline – interactive user journey milestone viewer
+ * ═══════════════════════════════════════════════════════════════ */
+var GrowthTimeline = (function () {
+  'use strict';
+
+  const MILESTONES = ['week1', 'month1', 'month3', 'month6'];
+  const PROGRESS = { week1: 12.5, month1: 37.5, month3: 62.5, month6: 87.5 };
+  const AUTO_INTERVAL = 4000;
+  let _current = 0;
+  let _timer = null;
+  let _paused = false;
+
+  function select(index) {
+    if (index < 0 || index >= MILESTONES.length) return;
+    _current = index;
+    const milestone = MILESTONES[index];
+
+    // Tabs
+    const tabs = document.querySelectorAll('.growth-tab');
+    tabs.forEach(function (t) {
+      let active = t.getAttribute('data-milestone') === milestone;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+
+    // Cards
+    document.querySelectorAll('.growth-card').forEach(function (c) {
+      c.classList.toggle('visible', c.getAttribute('data-milestone') === milestone);
+    });
+
+    // Progress bar
+    const fill = document.getElementById('growthProgressFill');
+    if (fill) fill.style.width = PROGRESS[milestone] + '%';
+
+    // Markers
+    document.querySelectorAll('.growth-marker').forEach(function (m, i) {
+      m.classList.toggle('active', i === index);
+      m.classList.toggle('passed', i < index);
+    });
+  }
+
+  function next() {
+    select((_current + 1) % MILESTONES.length);
+  }
+
+  function startAutoPlay() {
+    stopAutoPlay();
+    _paused = false;
+    _timer = setInterval(function () {
+      if (!_paused) next();
+    }, AUTO_INTERVAL);
+  }
+
+  function stopAutoPlay() {
+    if (_timer) { clearInterval(_timer); _timer = null; }
+  }
+
+  function pauseAutoPlay() { _paused = true; }
+  function resumeAutoPlay() { _paused = false; }
+
+  function init() {
+    const section = document.getElementById('growthTimelineSection');
+    if (!section) return;
+
+    // Tab click handlers
+    section.querySelectorAll('.growth-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        const ms = tab.getAttribute('data-milestone');
+        let idx = MILESTONES.indexOf(ms);
+        if (idx !== -1) {
+          select(idx);
+          // Reset autoplay timer on manual interaction
+          startAutoPlay();
+        }
+      });
+    });
+
+    // Marker click handlers
+    section.querySelectorAll('.growth-marker').forEach(function (marker) {
+      marker.style.cursor = 'pointer';
+      marker.addEventListener('click', function () {
+        const ms = marker.getAttribute('data-milestone');
+        let idx = MILESTONES.indexOf(ms);
+        if (idx !== -1) {
+          select(idx);
+          startAutoPlay();
+        }
+      });
+    });
+
+    // Pause on hover
+    section.addEventListener('mouseenter', pauseAutoPlay);
+    section.addEventListener('mouseleave', resumeAutoPlay);
+
+    // Keyboard navigation
+    section.setAttribute('tabindex', '0');
+    section.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        select(Math.min(_current + 1, MILESTONES.length - 1));
+        startAutoPlay();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        select(Math.max(_current - 1, 0));
+        startAutoPlay();
+      }
+    });
+
+    select(0);
+    startAutoPlay();
+  }
+
+  return {
+    init: init,
+    select: select,
+    next: next,
+    startAutoPlay: startAutoPlay,
+    stopAutoPlay: stopAutoPlay,
+    getCurrent: function () { return _current; },
+    getMilestones: function () { return MILESTONES.slice(); },
+    MILESTONES: MILESTONES,
+    PROGRESS: PROGRESS
+  };
+})();
+
+
+/* === src/modules/comparison-table.js === */
+
+// Competitive Comparison Table
+// ---------------------------------------------------------------------------
+// Interactive feature comparison matrix showing AgentBox vs alternatives.
+// Users can filter by category, hover for details, and see at-a-glance
+// where AgentBox wins.
+
+var ComparisonTable = (function () {
+  let _section = null;
+
+  const COMPETITORS = [
+    { id: 'agentbox', name: 'AgentBox', highlight: true },
+    { id: 'chatgpt', name: 'ChatGPT' },
+    { id: 'zapier', name: 'Zapier' },
+    { id: 'custom', name: 'Custom Bot' },
+    { id: 'manual', name: 'Manual' }
+  ];
+
+  const CATEGORIES = [
+    { id: 'automation', label: 'Automation' },
+    { id: 'integration', label: 'Integration' },
+    { id: 'intelligence', label: 'Intelligence' },
+    { id: 'ops', label: 'Operations' },
+    { id: 'pricing', label: 'Pricing' }
+  ];
+
+  // Rating: 3 = full, 2 = partial, 1 = limited, 0 = none
+  const FEATURES = [
+    { name: 'Multi-step workflows',       cat: 'automation',   ratings: { agentbox: 3, chatgpt: 1, zapier: 3, custom: 2, manual: 0 } },
+    { name: 'Natural language triggers',   cat: 'automation',   ratings: { agentbox: 3, chatgpt: 3, zapier: 1, custom: 1, manual: 0 } },
+    { name: 'Scheduled tasks',             cat: 'automation',   ratings: { agentbox: 3, chatgpt: 0, zapier: 3, custom: 2, manual: 1 } },
+    { name: 'Error recovery',              cat: 'automation',   ratings: { agentbox: 3, chatgpt: 0, zapier: 2, custom: 1, manual: 0 } },
+    { name: 'API connections',             cat: 'integration',  ratings: { agentbox: 3, chatgpt: 2, zapier: 3, custom: 3, manual: 0 } },
+    { name: 'Browser automation',          cat: 'integration',  ratings: { agentbox: 3, chatgpt: 0, zapier: 1, custom: 2, manual: 3 } },
+    { name: 'Database access',             cat: 'integration',  ratings: { agentbox: 3, chatgpt: 0, zapier: 2, custom: 3, manual: 1 } },
+    { name: 'File management',             cat: 'integration',  ratings: { agentbox: 3, chatgpt: 1, zapier: 2, custom: 2, manual: 3 } },
+    { name: 'Context awareness',           cat: 'intelligence', ratings: { agentbox: 3, chatgpt: 2, zapier: 0, custom: 1, manual: 3 } },
+    { name: 'Learning from feedback',      cat: 'intelligence', ratings: { agentbox: 3, chatgpt: 1, zapier: 0, custom: 1, manual: 2 } },
+    { name: 'Decision reasoning',          cat: 'intelligence', ratings: { agentbox: 3, chatgpt: 2, zapier: 0, custom: 0, manual: 3 } },
+    { name: 'Multi-model support',         cat: 'intelligence', ratings: { agentbox: 3, chatgpt: 0, zapier: 0, custom: 2, manual: 0 } },
+    { name: 'Real-time monitoring',        cat: 'ops',          ratings: { agentbox: 3, chatgpt: 0, zapier: 2, custom: 1, manual: 0 } },
+    { name: 'Audit logs',                  cat: 'ops',          ratings: { agentbox: 3, chatgpt: 1, zapier: 2, custom: 1, manual: 0 } },
+    { name: 'Team collaboration',          cat: 'ops',          ratings: { agentbox: 3, chatgpt: 1, zapier: 3, custom: 1, manual: 2 } },
+    { name: 'Usage analytics',             cat: 'ops',          ratings: { agentbox: 3, chatgpt: 1, zapier: 2, custom: 0, manual: 0 } },
+    { name: 'Free tier available',         cat: 'pricing',      ratings: { agentbox: 3, chatgpt: 2, zapier: 2, custom: 0, manual: 3 } },
+    { name: 'Pay-per-use pricing',         cat: 'pricing',      ratings: { agentbox: 3, chatgpt: 1, zapier: 1, custom: 0, manual: 0 } },
+    { name: 'No per-seat fees',            cat: 'pricing',      ratings: { agentbox: 3, chatgpt: 0, zapier: 0, custom: 3, manual: 3 } },
+    { name: 'Transparent cost tracking',   cat: 'pricing',      ratings: { agentbox: 3, chatgpt: 1, zapier: 2, custom: 1, manual: 0 } }
+  ];
+
+  const RATING_LABELS = ['None', 'Limited', 'Partial', 'Full'];
+  const RATING_ICONS = ['\u2014', '\u25CB', '\u25D1', '\u25CF'];
+
+  let _activeCategory = 'all';
+  let _filterBtns = [];
+  let _tbody = null;
+  const _scoreEls = {};
+  let _summaryEl = null;
+
+  function section() {
+    if (!_section) _section = document.getElementById('comparisonSection');
+    return _section;
+  }
+
+  function init() {
+    _section = document.getElementById('comparisonSection');
+    if (!section()) return;
+
+    _filterBtns = section().querySelectorAll('.cmp-filter-btn');
+    _tbody = section().querySelector('.cmp-tbody');
+    _summaryEl = section().querySelector('.cmp-summary');
+
+    for (var i = 0; i < COMPETITORS.length; i++) {
+      let el = document.getElementById('cmpScore_' + COMPETITORS[i].id);
+      if (el) _scoreEls[COMPETITORS[i].id] = el;
+    }
+
+    for (var j = 0; j < _filterBtns.length; j++) {
+      _filterBtns[j].addEventListener('click', _onFilterClick);
+    }
+
+    _render();
+  }
+
+  function _onFilterClick(e) {
+    let btn = e.currentTarget;
+    let cat = btn.getAttribute('data-category');
+    if (!cat) return;
+    _activeCategory = cat;
+
+    for (var i = 0; i < _filterBtns.length; i++) {
+      let active = _filterBtns[i].getAttribute('data-category') === cat;
+      _filterBtns[i].classList.toggle('active', active);
+      _filterBtns[i].setAttribute('aria-pressed', active ? 'true' : 'false');
+    }
+
+    _render();
+  }
+
+  function _render() {
+    if (!_tbody) return;
+
+    // Clear tbody
+    while (_tbody.firstChild) _tbody.removeChild(_tbody.firstChild);
+
+    let filtered = _activeCategory === 'all'
+      ? FEATURES
+      : FEATURES.filter(function (f) { return f.cat === _activeCategory; });
+
+    // Scores accumulator
+    const scores = {};
+    for (var c = 0; c < COMPETITORS.length; c++) {
+      scores[COMPETITORS[c].id] = 0;
+    }
+
+    for (var i = 0; i < filtered.length; i++) {
+      const feature = filtered[i];
+      const row = document.createElement('tr');
+      row.className = 'cmp-row';
+
+      // Feature name cell
+      const nameCell = document.createElement('td');
+      nameCell.className = 'cmp-feature-name';
+      nameCell.textContent = feature.name;
+      row.appendChild(nameCell);
+
+      // Rating cells
+      for (var j = 0; j < COMPETITORS.length; j++) {
+        const comp = COMPETITORS[j];
+        const rating = feature.ratings[comp.id] || 0;
+        scores[comp.id] += rating;
+
+        const cell = document.createElement('td');
+        cell.className = 'cmp-rating cmp-rating-' + rating;
+        if (comp.highlight) cell.classList.add('cmp-highlight');
+        cell.setAttribute('title', comp.name + ': ' + RATING_LABELS[rating]);
+        cell.setAttribute('aria-label', feature.name + ' - ' + comp.name + ': ' + RATING_LABELS[rating]);
+        cell.textContent = RATING_ICONS[rating];
+        row.appendChild(cell);
+      }
+
+      _tbody.appendChild(row);
+    }
+
+    // Update score displays
+    const maxPossible = filtered.length * 3;
+    for (var k = 0; k < COMPETITORS.length; k++) {
+      let id = COMPETITORS[k].id;
+      if (_scoreEls[id]) {
+        const pct = maxPossible > 0 ? Math.round(scores[id] / maxPossible * 100) : 0;
+        _scoreEls[id].textContent = pct + '%';
+      }
+    }
+
+    // Update summary
+    if (_summaryEl) {
+      const agentboxScore = maxPossible > 0 ? Math.round(scores.agentbox / maxPossible * 100) : 0;
+      let bestAlt = 0;
+      let bestAltName = '';
+      for (var m = 1; m < COMPETITORS.length; m++) {
+        let s = maxPossible > 0 ? Math.round(scores[COMPETITORS[m].id] / maxPossible * 100) : 0;
+        if (s > bestAlt) {
+          bestAlt = s;
+          bestAltName = COMPETITORS[m].name;
+        }
+      }
+      const diff = agentboxScore - bestAlt;
+      if (diff > 0) {
+        _summaryEl.textContent = 'AgentBox scores ' + diff + '% higher than the nearest alternative (' + bestAltName + ')';
+      } else {
+        _summaryEl.textContent = 'See how AgentBox compares across ' + filtered.length + ' features';
+      }
+    }
+  }
+
+  function setFilter(category) {
+    _activeCategory = category || 'all';
+    for (var i = 0; i < _filterBtns.length; i++) {
+      let active = _filterBtns[i].getAttribute('data-category') === _activeCategory;
+      _filterBtns[i].classList.toggle('active', active);
+      _filterBtns[i].setAttribute('aria-pressed', active ? 'true' : 'false');
+    }
+    _render();
+  }
+
+  function getScores() {
+    let filtered = _activeCategory === 'all'
+      ? FEATURES
+      : FEATURES.filter(function (f) { return f.cat === _activeCategory; });
+
+    const maxPossible = filtered.length * 3;
+    let result = {};
+    for (var i = 0; i < COMPETITORS.length; i++) {
+      let id = COMPETITORS[i].id;
+      let total = 0;
+      for (var j = 0; j < filtered.length; j++) {
+        total += filtered[j].ratings[id] || 0;
+      }
+      result[id] = maxPossible > 0 ? Math.round(total / maxPossible * 100) : 0;
+    }
+    return result;
+  }
+
+  function getActiveCategory() {
+    return _activeCategory;
+  }
+
+  return {
+    init: init,
+    setFilter: setFilter,
+    getScores: getScores,
+    getActiveCategory: getActiveCategory,
+    COMPETITORS: COMPETITORS,
+    CATEGORIES: CATEGORIES,
+    FEATURES: FEATURES,
+    RATING_LABELS: RATING_LABELS,
+    RATING_ICONS: RATING_ICONS
+  };
+})();
+
+
+/* === src/modules/accessibility-panel.js === */
+
+
+/* Accessibility Preferences Panel */
+var AccessibilityPanel = (function () {
+  'use strict';
+  const STORAGE_KEY = 'agentbox-a11y-prefs';
+  const DEFAULTS = { fontSize: 'medium', highContrast: false, reduceMotion: false, dyslexiaFont: false, focusIndicators: false, lineSpacing: 'normal' };
+  let _prefs = {};
+  let _panel = null;
+  let _trigger = null;
+  let _isOpen = false;
+
+  function load() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        _prefs = {};
+        for (var key in DEFAULTS) { if (DEFAULTS.hasOwnProperty(key)) { _prefs[key] = parsed.hasOwnProperty(key) ? parsed[key] : DEFAULTS[key]; } }
+        return;
+      }
+    } catch (e) { /* noop */ }
+    _prefs = {};
+    for (var k in DEFAULTS) { if (DEFAULTS.hasOwnProperty(k)) _prefs[k] = DEFAULTS[k]; }
+  }
+
+  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(_prefs)); } catch (e) { /* noop */ } }
+
+  function applyAll() {
+    let html = document.documentElement;
+    html.classList.remove('a11y-font-large', 'a11y-font-xlarge');
+    if (_prefs.fontSize === 'large') html.classList.add('a11y-font-large');
+    else if (_prefs.fontSize === 'xlarge') html.classList.add('a11y-font-xlarge');
+    html.classList.toggle('a11y-high-contrast', !!_prefs.highContrast);
+    html.classList.toggle('a11y-reduce-motion', !!_prefs.reduceMotion);
+    html.classList.toggle('a11y-dyslexia-font', !!_prefs.dyslexiaFont);
+    html.classList.toggle('a11y-focus-indicators', !!_prefs.focusIndicators);
+    html.classList.remove('a11y-spacing-wide', 'a11y-spacing-extra');
+    if (_prefs.lineSpacing === 'wide') html.classList.add('a11y-spacing-wide');
+    else if (_prefs.lineSpacing === 'extra') html.classList.add('a11y-spacing-extra');
+    if (_trigger) {
+      let hasChanges = false;
+      for (var key in DEFAULTS) { if (DEFAULTS.hasOwnProperty(key) && _prefs[key] !== DEFAULTS[key]) { hasChanges = true; break; } }
+      _trigger.classList.toggle('a11y-active', hasChanges);
+    }
+    updatePanelUI();
+  }
+
+  function createPanel() {
+    _panel = document.createElement('div');
+    _panel.className = 'a11y-panel';
+    _panel.id = 'a11yPanel';
+    _panel.setAttribute('role', 'dialog');
+    _panel.setAttribute('aria-label', 'Accessibility preferences');
+    _panel.setAttribute('aria-modal', 'false');
+    _panel.innerHTML =
+      '<div class="a11y-panel-header"><span class="a11y-panel-title"><span aria-hidden="true">\u2699\uFE0F</span> Accessibility</span><button class="a11y-panel-close" id="a11yClose" aria-label="Close accessibility panel">&times;</button></div>' +
+      '<div class="a11y-panel-body">' +
+      '<div class="a11y-group"><span class="a11y-group-label">Text Size</span><div class="a11y-segmented" id="a11yFontSize" role="radiogroup" aria-label="Text size"><button class="a11y-seg-btn" data-value="small" role="radio" aria-checked="false">A<span style="font-size:0.7em">\u2212</span></button><button class="a11y-seg-btn" data-value="medium" role="radio" aria-checked="false">A</button><button class="a11y-seg-btn" data-value="large" role="radio" aria-checked="false">A<span style="font-size:1.1em">+</span></button><button class="a11y-seg-btn" data-value="xlarge" role="radio" aria-checked="false">A<span style="font-size:1.3em">++</span></button></div></div>' +
+      '<div class="a11y-group"><span class="a11y-group-label">Display</span>' +
+      '<button class="a11y-toggle" id="a11yContrast" role="switch" aria-checked="false" aria-label="High contrast"><span class="a11y-toggle-text"><span class="a11y-toggle-icon" aria-hidden="true">\uD83D\uDD32</span> High contrast</span><span class="a11y-switch"></span></button>' +
+      '<button class="a11y-toggle" id="a11yMotion" role="switch" aria-checked="false" aria-label="Reduce motion"><span class="a11y-toggle-text"><span class="a11y-toggle-icon" aria-hidden="true">\u23F8\uFE0F</span> Reduce motion</span><span class="a11y-switch"></span></button>' +
+      '<button class="a11y-toggle" id="a11yDyslexia" role="switch" aria-checked="false" aria-label="Dyslexia-friendly font"><span class="a11y-toggle-text"><span class="a11y-toggle-icon" aria-hidden="true">\uD83D\uDD24</span> Dyslexia font</span><span class="a11y-switch"></span></button>' +
+      '<button class="a11y-toggle" id="a11yFocus" role="switch" aria-checked="false" aria-label="Enhanced focus indicators"><span class="a11y-toggle-text"><span class="a11y-toggle-icon" aria-hidden="true">\uD83C\uDFAF</span> Focus indicators</span><span class="a11y-switch"></span></button></div>' +
+      '<div class="a11y-group"><span class="a11y-group-label">Line Spacing</span><div class="a11y-segmented" id="a11ySpacing" role="radiogroup" aria-label="Line spacing"><button class="a11y-seg-btn" data-value="normal" role="radio" aria-checked="false">Normal</button><button class="a11y-seg-btn" data-value="wide" role="radio" aria-checked="false">Wide</button><button class="a11y-seg-btn" data-value="extra" role="radio" aria-checked="false">Extra</button></div></div>' +
+      '<button class="a11y-reset" id="a11yReset" aria-label="Reset all accessibility preferences">\u21A9 Reset to defaults</button></div>';
+    document.body.appendChild(_panel);
+    _panel.querySelector('#a11yClose').addEventListener('click', close);
+    const fontBtns = _panel.querySelectorAll('#a11yFontSize .a11y-seg-btn');
+    for (var i = 0; i < fontBtns.length; i++) { fontBtns[i].addEventListener('click', function (e) { _prefs.fontSize = e.currentTarget.getAttribute('data-value'); save(); applyAll(); }); }
+    _panel.querySelector('#a11yContrast').addEventListener('click', function () { _prefs.highContrast = !_prefs.highContrast; save(); applyAll(); });
+    _panel.querySelector('#a11yMotion').addEventListener('click', function () { _prefs.reduceMotion = !_prefs.reduceMotion; save(); applyAll(); });
+    _panel.querySelector('#a11yDyslexia').addEventListener('click', function () { _prefs.dyslexiaFont = !_prefs.dyslexiaFont; save(); applyAll(); });
+    _panel.querySelector('#a11yFocus').addEventListener('click', function () { _prefs.focusIndicators = !_prefs.focusIndicators; save(); applyAll(); });
+    const spaceBtns = _panel.querySelectorAll('#a11ySpacing .a11y-seg-btn');
+    for (var j = 0; j < spaceBtns.length; j++) { spaceBtns[j].addEventListener('click', function (e) { _prefs.lineSpacing = e.currentTarget.getAttribute('data-value'); save(); applyAll(); }); }
+    _panel.querySelector('#a11yReset').addEventListener('click', function () { for (var key in DEFAULTS) { if (DEFAULTS.hasOwnProperty(key)) _prefs[key] = DEFAULTS[key]; } save(); applyAll(); });
+    _panel.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); close(); _trigger.focus(); } });
+  }
+
+  function updatePanelUI() {
+    if (!_panel) return;
+    const fontBtns = _panel.querySelectorAll('#a11yFontSize .a11y-seg-btn');
+    for (var i = 0; i < fontBtns.length; i++) { var active = fontBtns[i].getAttribute('data-value') === _prefs.fontSize; fontBtns[i].classList.toggle('a11y-seg-active', active); fontBtns[i].setAttribute('aria-checked', active ? 'true' : 'false'); }
+    const toggles = [{ id: 'a11yContrast', key: 'highContrast' }, { id: 'a11yMotion', key: 'reduceMotion' }, { id: 'a11yDyslexia', key: 'dyslexiaFont' }, { id: 'a11yFocus', key: 'focusIndicators' }];
+    for (var j = 0; j < toggles.length; j++) { var el = _panel.querySelector('#' + toggles[j].id); if (el) el.setAttribute('aria-checked', _prefs[toggles[j].key] ? 'true' : 'false'); }
+    const spaceBtns = _panel.querySelectorAll('#a11ySpacing .a11y-seg-btn');
+    for (var k = 0; k < spaceBtns.length; k++) { var spActive = spaceBtns[k].getAttribute('data-value') === _prefs.lineSpacing; spaceBtns[k].classList.toggle('a11y-seg-active', spActive); spaceBtns[k].setAttribute('aria-checked', spActive ? 'true' : 'false'); }
+  }
+
+  function open() { if (!_panel) createPanel(); _isOpen = true; _panel.classList.add('a11y-panel-open'); _trigger.setAttribute('aria-expanded', 'true'); updatePanelUI(); var firstBtn = _panel.querySelector('.a11y-seg-btn, .a11y-toggle'); if (firstBtn) firstBtn.focus(); }
+  function close() { _isOpen = false; if (_panel) _panel.classList.remove('a11y-panel-open'); if (_trigger) _trigger.setAttribute('aria-expanded', 'false'); }
+  function toggle() { if (_isOpen) close(); else open(); }
+
+  function init() {
+    if (typeof document === 'undefined') return;
+    _trigger = document.getElementById('a11yTrigger');
+    if (!_trigger) return;
+    _trigger.setAttribute('aria-expanded', 'false');
+    _trigger.setAttribute('aria-controls', 'a11yPanel');
+    _trigger.addEventListener('click', toggle);
+    document.addEventListener('click', function (e) { if (_isOpen && _panel && !_panel.contains(e.target) && e.target !== _trigger && !_trigger.contains(e.target)) { close(); } });
+    load(); applyAll();
+  }
+
+  function destroy() { close(); if (_panel && _panel.parentNode) _panel.parentNode.removeChild(_panel); _panel = null; _isOpen = false; var html = document.documentElement; html.classList.remove('a11y-font-large', 'a11y-font-xlarge', 'a11y-high-contrast', 'a11y-reduce-motion', 'a11y-dyslexia-font', 'a11y-focus-indicators', 'a11y-spacing-wide', 'a11y-spacing-extra'); if (_trigger) _trigger.classList.remove('a11y-active'); }
+  function getPrefs() { var copy = {}; for (var key in _prefs) { if (_prefs.hasOwnProperty(key)) copy[key] = _prefs[key]; } return copy; }
+  function isOpen() { return _isOpen; }
+
+  return { init: init, open: open, close: close, toggle: toggle, destroy: destroy, getPrefs: getPrefs, isOpen: isOpen, DEFAULTS: DEFAULTS, STORAGE_KEY: STORAGE_KEY };
+})();
+
+
+/* === src/modules/success-stories.js === */
+var SuccessStories = (function () {
+  'use strict';
+
+  const STORIES = [
+    {
+      id: 'story-freelancer',
+      category: 'productivity',
+      title: 'From 3 hours to 20 minutes: daily admin automated',
+      persona: { name: 'Sarah K.', role: 'Freelance Designer', emoji: '🎨' },
+      problem: 'Spent 3 hours every morning sorting emails, scheduling meetings, and updating project trackers before actual design work could start.',
+      flow: [
+        { type: 'problem', text: 'Sarah opens her laptop at 9 AM. She has 47 emails, 3 calendar conflicts, and overdue invoices. Design work waits until noon.' },
+        { type: 'action', text: 'She tells AgentBox: "Check my morning — any fires?" The agent summarizes emails by priority, flags the calendar conflict, and drafts a follow-up for the overdue invoice.' },
+        { type: 'result', text: 'By 9:20 she is designing. The agent handles the invoice reminder and reschedules the conflict. Total admin time: 20 minutes.' }
+      ],
+      metrics: [
+        { value: '85%', label: 'less admin time' },
+        { value: '2.5h', label: 'saved daily' },
+        { value: '12', label: 'tasks automated' }
+      ],
+      highlight: { value: '85%', label: 'time saved' }
+    },
+    {
+      id: 'story-dev-debugging',
+      category: 'developer',
+      title: 'Screenshot debugging: paste error, get fix',
+      persona: { name: 'Marcus T.', role: 'Full-Stack Developer', emoji: '👨‍💻' },
+      problem: 'Constantly context-switching between code editor and Stack Overflow to debug errors, losing flow state each time.',
+      flow: [
+        { type: 'problem', text: 'Marcus hits a cryptic CORS error in his React app. He has tried 3 Stack Overflow answers but none match his exact setup.' },
+        { type: 'action', text: 'He screenshots the error and sends it to AgentBox. The agent reads the error, identifies the missing headers, and provides the exact nginx config fix.' },
+        { type: 'result', text: 'Fixed in 2 minutes without leaving his editor. The agent remembers his stack (React + nginx + Docker) from previous conversations.' }
+      ],
+      metrics: [
+        { value: '2min', label: 'to fix' },
+        { value: '0', label: 'tabs opened' },
+        { value: '100%', label: 'context retained' }
+      ],
+      highlight: { value: '2min', label: 'avg fix time' }
+    },
+    {
+      id: 'story-content-creator',
+      category: 'creative',
+      title: 'Content calendar on autopilot',
+      persona: { name: 'Priya M.', role: 'Content Creator', emoji: '✍️' },
+      problem: 'Managing content across 4 platforms with different formats, schedules, and audiences. Always missing posting windows.',
+      flow: [
+        { type: 'problem', text: 'Priya has a great video idea but needs to plan the YouTube description, Twitter thread, Instagram caption, and LinkedIn post — each with different tone and format.' },
+        { type: 'action', text: 'She describes the video concept to AgentBox and asks for cross-platform content. The agent generates all 4 versions, tailored to each platform\'s style, with relevant hashtags.' },
+        { type: 'result', text: 'All content ready in 5 minutes. She sets up reminders for each platform\'s optimal posting time. Engagement up 40% from consistent posting.' }
+      ],
+      metrics: [
+        { value: '4x', label: 'platforms covered' },
+        { value: '40%', label: 'more engagement' },
+        { value: '5min', label: 'content ready' }
+      ],
+      highlight: { value: '40%', label: 'engagement boost' }
+    },
+    {
+      id: 'story-startup',
+      category: 'business',
+      title: 'Solo founder runs ops through Telegram',
+      persona: { name: 'James L.', role: 'Startup Founder', emoji: '🚀' },
+      problem: 'Running a 1-person startup with customer support, sales follow-ups, and market research eating into product development time.',
+      flow: [
+        { type: 'problem', text: 'James has 15 unanswered customer emails, 3 sales leads going cold, and a competitor just launched a new feature. He has 8 hours of coding planned.' },
+        { type: 'action', text: 'He asks AgentBox to draft customer replies, summarize the competitor launch, and research the sales leads\' companies. Everything happens over Telegram between coding sessions.' },
+        { type: 'result', text: 'All customer emails answered by lunch. Competitor analysis ready for the team meeting. Sales leads get personalized follow-ups. James codes for 6 uninterrupted hours.' }
+      ],
+      metrics: [
+        { value: '6h', label: 'deep work' },
+        { value: '15', label: 'emails handled' },
+        { value: '$0', label: 'extra tools' }
+      ],
+      highlight: { value: '6h', label: 'focus time' }
+    },
+    {
+      id: 'story-researcher',
+      category: 'productivity',
+      title: 'Literature review in 1 day instead of 2 weeks',
+      persona: { name: 'Dr. Anika R.', role: 'PhD Researcher', emoji: '🔬' },
+      problem: 'Needed to review 50+ papers for a grant proposal with a tight deadline. Manual reading and note-taking would take 2 weeks.',
+      flow: [
+        { type: 'problem', text: 'Anika has 53 papers to review for her grant proposal. The deadline is in 5 days and she has not started the literature review section.' },
+        { type: 'action', text: 'She shares paper abstracts and key sections with AgentBox, asking for summaries, methodology comparisons, and gap analysis. The agent maintains context across all 53 papers.' },
+        { type: 'result', text: 'Complete literature review draft in 1 day. The agent identified 3 research gaps she had missed. Proposal submitted 2 days early.' }
+      ],
+      metrics: [
+        { value: '53', label: 'papers reviewed' },
+        { value: '1 day', label: 'vs 2 weeks' },
+        { value: '3', label: 'gaps found' }
+      ],
+      highlight: { value: '93%', label: 'time saved' }
+    },
+    {
+      id: 'story-devops',
+      category: 'developer',
+      title: 'Incident response at 3 AM — from bed',
+      persona: { name: 'Chen W.', role: 'DevOps Engineer', emoji: '🛠️' },
+      problem: 'On-call alerts at odd hours require opening laptops, VPNing in, and running diagnostic commands. Response time suffers.',
+      flow: [
+        { type: 'problem', text: 'Chen gets a PagerDuty alert at 3 AM: API latency spike. Normally he would need to open his laptop, connect to VPN, and SSH into the monitoring stack.' },
+        { type: 'action', text: 'He messages AgentBox from bed: "API latency alert — what do the last 30 min of metrics look like?" The agent searches his runbook and provides diagnostic steps with pre-formatted commands.' },
+        { type: 'result', text: 'Root cause identified (database connection pool exhaustion) and fix command ready — all from his phone. Total time: 8 minutes. Back to sleep by 3:10 AM.' }
+      ],
+      metrics: [
+        { value: '8min', label: 'to resolve' },
+        { value: '0', label: 'laptops opened' },
+        { value: '3AM', label: 'handled from bed' }
+      ],
+      highlight: { value: '8min', label: 'resolution' }
+    }
+  ];
+
+  let _activeFilter = 'all';
+
+  function init() {
+    let grid = document.getElementById('storiesGrid');
+    if (!grid) return;
+
+    renderCards(grid);
+    bindFilters();
+  }
+
+  function renderCards(grid) {
+    grid.innerHTML = '';
+    STORIES.forEach(function (story) {
+      const card = document.createElement('div');
+      card.className = 'story-card';
+      card.setAttribute('role', 'listitem');
+      card.setAttribute('data-category', story.category);
+      card.setAttribute('data-id', story.id);
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-expanded', 'false');
+
+      card.innerHTML =
+        '<div class="story-card-header">' +
+          '<span class="story-category-badge" data-cat="' + story.category + '">' + story.category + '</span>' +
+          '<div class="story-card-title">' + escapeHtml(story.title) + '</div>' +
+          '<div class="story-card-persona">' +
+            '<span class="story-persona-avatar">' + story.persona.emoji + '</span>' +
+            '<span>' + escapeHtml(story.persona.name) + ' · ' + escapeHtml(story.persona.role) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<p class="story-card-problem">' + escapeHtml(story.problem) + '</p>' +
+        '<div class="story-card-footer">' +
+          '<div class="story-metric">' +
+            '<span class="story-metric-value">' + escapeHtml(story.highlight.value) + '</span> ' +
+            '<span class="story-metric-label">' + escapeHtml(story.highlight.label) + '</span>' +
+          '</div>' +
+          '<span class="story-expand-icon" aria-hidden="true">▼</span>' +
+        '</div>' +
+        '<div class="story-detail">' +
+          '<div class="story-detail-inner">' +
+            renderFlow(story.flow) +
+            renderOutcomeStats(story.metrics) +
+          '</div>' +
+        '</div>';
+
+      card.addEventListener('click', function () { toggleCard(card); });
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCard(card); }
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  function renderFlow(steps) {
+    let html = '<div class="story-flow">';
+    const icons = { problem: '❌', action: '🤖', result: '✅' };
+    const dotClass = { problem: 'step-problem', action: 'step-action', result: 'step-result' };
+    const labelClass = { problem: 'label-problem', action: 'label-action', result: 'label-result' };
+    const labels = { problem: 'The Problem', action: 'AgentBox Steps In', result: 'The Result' };
+
+    steps.forEach(function (step) {
+      html +=
+        '<div class="story-flow-step">' +
+          '<div class="story-flow-dot ' + dotClass[step.type] + '">' + icons[step.type] + '</div>' +
+          '<div class="story-flow-line"></div>' +
+          '<div class="story-flow-content">' +
+            '<div class="story-flow-label ' + labelClass[step.type] + '">' + labels[step.type] + '</div>' +
+            '<div class="story-flow-text">' + escapeHtml(step.text) + '</div>' +
+          '</div>' +
+        '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function renderOutcomeStats(metrics) {
+    let html = '<div class="story-outcome-stats">';
+    metrics.forEach(function (m) {
+      html +=
+        '<div class="story-outcome-stat">' +
+          '<div class="story-outcome-number">' + escapeHtml(m.value) + '</div>' +
+          '<div class="story-outcome-desc">' + escapeHtml(m.label) + '</div>' +
+        '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function toggleCard(card) {
+    const expanded = card.classList.contains('story-expanded');
+    // Close all others
+    const cards = document.querySelectorAll('.story-card.story-expanded');
+    for (var i = 0; i < cards.length; i++) {
+      cards[i].classList.remove('story-expanded');
+      cards[i].setAttribute('aria-expanded', 'false');
+    }
+    if (!expanded) {
+      card.classList.add('story-expanded');
+      card.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  function bindFilters() {
+    const buttons = document.querySelectorAll('.stories-filter');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function () {
+        let cat = this.getAttribute('data-category');
+        _activeFilter = cat;
+
+        // Update active state
+        const all = document.querySelectorAll('.stories-filter');
+        for (var j = 0; j < all.length; j++) {
+          all[j].classList.remove('active');
+          all[j].setAttribute('aria-selected', 'false');
+        }
+        this.classList.add('active');
+        this.setAttribute('aria-selected', 'true');
+
+        filterCards(cat);
+      });
+    }
+  }
+
+  function filterCards(category) {
+    const cards = document.querySelectorAll('.story-card');
+    for (var i = 0; i < cards.length; i++) {
+      const cardCat = cards[i].getAttribute('data-category');
+      if (category === 'all' || cardCat === category) {
+        cards[i].classList.remove('story-hidden');
+      } else {
+        cards[i].classList.add('story-hidden');
+        cards[i].classList.remove('story-expanded');
+        cards[i].setAttribute('aria-expanded', 'false');
+      }
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  function getStories() { return STORIES.slice(); }
+  function getActiveFilter() { return _activeFilter; }
+
+  return { init: init, getStories: getStories, getActiveFilter: getActiveFilter, STORIES: STORIES };
+})();
+
+
+/* === src/modules/feature-board.js === */
+
+// ═══════════════════════════════════════════════════════════════════════
+//  Feature Request Board – vote on features, suggest new ones
+// ═══════════════════════════════════════════════════════════════════════
+
+var FeatureBoard = (function () {
+  "use strict";
+
+  const STORAGE_KEY = "agentbox_feature_votes";
+  const CUSTOM_KEY  = "agentbox_feature_custom";
+
+  // ── Seed features ──────────────────────────────────────────────
+  const SEED_FEATURES = [
+    {
+      id: "calendar-sync",
+      title: "Google Calendar integration",
+      description: "Automatically sync events and get proactive reminders before meetings.",
+      category: "integration",
+      status: "planned",
+      votes: 127,
+      createdAt: "2026-02-15"
+    },
+    {
+      id: "voice-messages",
+      title: "Voice message support",
+      description: "Send and receive voice messages — AgentBox transcribes and responds.",
+      category: "feature",
+      status: "building",
+      votes: 98,
+      createdAt: "2026-02-20"
+    },
+    {
+      id: "dark-mode",
+      title: "Dark mode for web dashboard",
+      description: "A proper dark theme for late-night productivity sessions.",
+      category: "ux",
+      status: "planned",
+      votes: 86,
+      createdAt: "2026-01-28"
+    },
+    {
+      id: "whatsapp-support",
+      title: "WhatsApp channel",
+      description: "Use AgentBox directly in WhatsApp, not just Telegram.",
+      category: "platform",
+      status: "new",
+      votes: 154,
+      createdAt: "2026-03-01"
+    },
+    {
+      id: "file-upload",
+      title: "Upload & analyze documents",
+      description: "Send PDFs, spreadsheets, or images for AgentBox to analyze and summarize.",
+      category: "feature",
+      status: "building",
+      votes: 112,
+      createdAt: "2026-02-10"
+    },
+    {
+      id: "slack-integration",
+      title: "Slack workspace integration",
+      description: "Add AgentBox as a Slack bot for team-wide access.",
+      category: "integration",
+      status: "new",
+      votes: 73,
+      createdAt: "2026-03-05"
+    },
+    {
+      id: "memory-export",
+      title: "Export conversation history",
+      description: "Download your full conversation history as JSON or PDF.",
+      category: "feature",
+      status: "shipped",
+      votes: 64,
+      createdAt: "2026-01-20"
+    },
+    {
+      id: "widgets",
+      title: "Home screen widgets",
+      description: "Quick-access widgets for iOS and Android to send messages without opening Telegram.",
+      category: "platform",
+      status: "new",
+      votes: 91,
+      createdAt: "2026-03-03"
+    },
+    {
+      id: "custom-personas",
+      title: "Custom agent personas",
+      description: "Create named personas with different tones and specializations.",
+      category: "feature",
+      status: "planned",
+      votes: 79,
+      createdAt: "2026-02-25"
+    },
+    {
+      id: "task-automation",
+      title: "Scheduled recurring tasks",
+      description: "Set up daily/weekly automated tasks — reports, summaries, check-ins.",
+      category: "feature",
+      status: "shipped",
+      votes: 143,
+      createdAt: "2026-01-15"
+    },
+    {
+      id: "multi-language",
+      title: "Multi-language UI",
+      description: "Support for Spanish, French, German, Japanese, and more.",
+      category: "ux",
+      status: "new",
+      votes: 56,
+      createdAt: "2026-03-06"
+    },
+    {
+      id: "api-access",
+      title: "Public REST API",
+      description: "Programmatic access to AgentBox for developers building integrations.",
+      category: "integration",
+      status: "planned",
+      votes: 68,
+      createdAt: "2026-02-18"
+    }
+  ];
+
+  let allFeatures = [];
+  let userVotes = Object.create(null);
+  let activeFilter = "all";
+
+  // ── Persistence ────────────────────────────────────────────────
+  function loadVotes() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return Object.create(null);
+      const parsed = JSON.parse(raw);
+      const safe = Object.create(null);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        for (var k in parsed) {
+          if (Object.prototype.hasOwnProperty.call(parsed, k)) safe[k] = !!parsed[k];
+        }
+      }
+      return safe;
+    } catch (e) { return Object.create(null); }
+  }
+  function saveVotes() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(userVotes)); } catch (e) { /* noop */ }
+  }
+  function loadCustom() {
+    try {
+      const raw = localStorage.getItem(CUSTOM_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      var safe = [];
+      for (var i = 0; i < parsed.length; i++) {
+        var item = parsed[i];
+        if (item && typeof item === 'object' && !Array.isArray(item) &&
+            typeof item.id === 'string' && typeof item.title === 'string') {
+          safe.push(item);
+        }
+      }
+      return safe;
+    } catch (e) { return []; }
+  }
+  function saveCustom(customs) {
+    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(customs)); } catch (e) { /* noop */ }
+  }
+
+  // ── Status helpers ─────────────────────────────────────────────
+  const STATUS_BADGES = {
+    planned:  { label: "Planned",  cls: "fb-badge-planned"  },
+    building: { label: "Building", cls: "fb-badge-building" },
+    shipped:  { label: "Shipped",  cls: "fb-badge-shipped"  },
+    "new":    { label: "New",      cls: "fb-badge-new"      }
+  };
+
+  const CATEGORY_ICONS = {
+    integration: "🔗",
+    feature:     "⚡",
+    ux:          "🎨",
+    platform:    "📱"
+  };
+
+  // ── Rendering ──────────────────────────────────────────────────
+  function buildCard(feat) {
+    const card = document.createElement("div");
+    card.className = "fb-card";
+    card.setAttribute("role", "listitem");
+    card.setAttribute("data-id", feat.id);
+
+    const voteCount = feat.votes + (userVotes[feat.id] ? 1 : 0);
+    const votedClass = userVotes[feat.id] ? " voted" : "";
+
+    const badge = STATUS_BADGES[feat.status] || STATUS_BADGES["new"];
+    const catIcon = CATEGORY_ICONS[feat.category] || "⚡";
+
+    card.innerHTML =
+      '<button class="fb-vote-btn' + votedClass + '" aria-label="Vote for ' + escapeHtml(feat.title) + '" data-id="' + feat.id + '">' +
+        '<span class="fb-vote-arrow">▲</span>' +
+        '<span class="fb-vote-count">' + voteCount + '</span>' +
+      '</button>' +
+      '<div class="fb-card-body">' +
+        '<div class="fb-card-header">' +
+          '<span class="fb-card-title">' + escapeHtml(feat.title) + '</span>' +
+          '<span class="fb-card-badge ' + badge.cls + '">' + badge.label + '</span>' +
+        '</div>' +
+        (feat.description ? '<div class="fb-card-desc">' + escapeHtml(feat.description) + '</div>' : '') +
+        '<div class="fb-card-meta">' +
+          '<span class="fb-category-tag">' + catIcon + ' ' + escapeHtml(feat.category) + '</span>' +
+          '<span>' + formatDate(feat.createdAt) + '</span>' +
+        '</div>' +
+      '</div>';
+
+    const voteBtn = card.querySelector(".fb-vote-btn");
+    voteBtn.addEventListener("click", function () { toggleVote(feat.id); });
+    return card;
+  }
+
+  function render() {
+    const list = document.getElementById("featureBoardList");
+    if (!list) return;
+    list.innerHTML = "";
+
+    let filtered = getFiltered();
+    // Sort: most votes first
+    filtered.sort(function (a, b) {
+      const va = a.votes + (userVotes[a.id] ? 1 : 0);
+      const vb = b.votes + (userVotes[b.id] ? 1 : 0);
+      return vb - va;
+    });
+
+    for (var i = 0; i < filtered.length; i++) {
+      list.appendChild(buildCard(filtered[i]));
+    }
+  }
+
+  function getFiltered() {
+    if (activeFilter === "all") return allFeatures.slice();
+    if (activeFilter === "popular") {
+      return allFeatures.slice().sort(function (a, b) {
+        var va = a.votes + (userVotes[a.id] ? 1 : 0);
+        var vb = b.votes + (userVotes[b.id] ? 1 : 0);
+        return vb - va;
+      }).slice(0, 6);
+    }
+    if (activeFilter === "new") {
+      return allFeatures.filter(function (f) { return f.status === "new"; });
+    }
+    if (activeFilter === "planned") {
+      return allFeatures.filter(function (f) { return f.status === "planned" || f.status === "building"; });
+    }
+    return allFeatures.slice();
+  }
+
+  // ── Voting ─────────────────────────────────────────────────────
+  function toggleVote(id) {
+    if (userVotes[id]) {
+      delete userVotes[id];
+    } else {
+      userVotes[id] = true;
+    }
+    saveVotes();
+    render();
+  }
+
+  // ── Suggest form ───────────────────────────────────────────────
+  function openSuggestForm() {
+    const form = document.getElementById("fbSuggestForm");
+    if (form) form.hidden = false;
+  }
+  function closeSuggestForm() {
+    const form = document.getElementById("fbSuggestForm");
+    if (form) form.hidden = true;
+  }
+  function submitSuggestion() {
+    const titleEl = document.getElementById("fbFormTitle");
+    const descEl  = document.getElementById("fbFormDesc");
+    const catEl   = document.getElementById("fbFormCategory");
+    if (!titleEl) return;
+
+    const title = titleEl.value.trim();
+    if (!title) {
+      titleEl.focus();
+      return;
+    }
+
+    const newFeat = {
+      id: "custom-" + Date.now(),
+      title: title,
+      description: descEl ? descEl.value.trim() : "",
+      category: catEl ? catEl.value : "feature",
+      status: "new",
+      votes: 1,
+      createdAt: new Date().toISOString().slice(0, 10)
+    };
+
+    allFeatures.unshift(newFeat);
+    userVotes[newFeat.id] = true;
+    saveVotes();
+
+    // Persist custom features
+    const customs = loadCustom();
+    customs.push(newFeat);
+    saveCustom(customs);
+
+    // Reset form
+    titleEl.value = "";
+    if (descEl) descEl.value = "";
+    closeSuggestForm();
+    activeFilter = "all";
+    updateFilterButtons();
+    render();
+    showToast("Thanks! Your idea has been added 🎉");
+  }
+
+  // ── Filters ────────────────────────────────────────────────────
+  function updateFilterButtons() {
+    const buttons = document.querySelectorAll(".fb-filter");
+    for (var i = 0; i < buttons.length; i++) {
+      const b = buttons[i];
+      let isActive = b.getAttribute("data-filter") === activeFilter;
+      b.classList.toggle("active", isActive);
+      b.setAttribute("aria-pressed", isActive ? "true" : "false");
+    }
+  }
+
+  // ── Toast ──────────────────────────────────────────────────────
+  function showToast(msg) {
+    let toast = document.getElementById("fbToast");
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.hidden = false;
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(function () { toast.hidden = true; }, 3000);
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────
+  function escapeHtml(str) {
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function formatDate(dateStr) {
+    try {
+      const d = new Date(dateStr + "T00:00:00");
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    } catch (e) { return dateStr; }
+  }
+
+  // ── Init ───────────────────────────────────────────────────────
+  function init() {
+    userVotes = loadVotes();
+
+    // Merge seed + custom features
+    allFeatures = SEED_FEATURES.slice();
+    const customs = loadCustom();
+    for (var i = 0; i < customs.length; i++) {
+      // Avoid duplicates
+      let exists = false;
+      for (var j = 0; j < allFeatures.length; j++) {
+        if (allFeatures[j].id === customs[i].id) { exists = true; break; }
+      }
+      if (!exists) allFeatures.push(customs[i]);
+    }
+
+    // Filter buttons
+    let filterBtns = document.querySelectorAll(".fb-filter");
+    for (var fi = 0; fi < filterBtns.length; fi++) {
+      filterBtns[fi].addEventListener("click", function () {
+        activeFilter = this.getAttribute("data-filter");
+        updateFilterButtons();
+        render();
+      });
+    }
+
+    // Suggest button
+    const suggestBtn = document.getElementById("fbSuggestBtn");
+    if (suggestBtn) suggestBtn.addEventListener("click", openSuggestForm);
+
+    // Form controls
+    let closeBtn  = document.getElementById("fbFormClose");
+    const backdrop  = document.getElementById("fbFormBackdrop");
+    const submitBtn = document.getElementById("fbFormSubmit");
+    if (closeBtn) closeBtn.addEventListener("click", closeSuggestForm);
+    if (backdrop) backdrop.addEventListener("click", closeSuggestForm);
+    if (submitBtn) submitBtn.addEventListener("click", submitSuggestion);
+
+    // Enter key submits
+    const titleInput = document.getElementById("fbFormTitle");
+    if (titleInput) {
+      titleInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); submitSuggestion(); }
+      });
+    }
+
+    render();
+  }
+
+  // ── Public API ─────────────────────────────────────────────────
+  return {
+    init: init,
+    getFeatures: function () { return allFeatures.slice(); },
+    getVotes: function () { return Object.assign({}, userVotes); },
+    getFilter: function () { return activeFilter; }
+  };
+})();
+
+
+/* === src/modules/aiglossary.js === */
+
+/* ================================================================
+ * AIGlossary — Searchable AI/agent terminology reference
+ * ================================================================ */
+var AIGlossary = (function () {
+  "use strict";
+
+  var TERMS = [
+    { term: "AI Agent", category: "Core", definition: "An autonomous software system that perceives its environment, makes decisions, and takes actions to achieve goals without continuous human guidance.", example: "AgentBox acts as your personal AI agent — it reads your messages, understands context, and takes action on your behalf.", related: ["Autonomy", "LLM", "Tool Use"] },
+    { term: "LLM", category: "Core", definition: "Large Language Model — a neural network trained on vast text data that can understand and generate human language. The brain behind modern AI agents.", example: "GPT-4, Claude, and Gemini are LLMs that power AI agents like AgentBox.", related: ["AI Agent", "Token", "Prompt"] },
+    { term: "Prompt", category: "Core", definition: "The text instruction or question you give to an AI system. Prompt quality directly affects output quality.", example: "\"Summarize my unread emails and flag anything urgent\" is a prompt you might send to AgentBox.", related: ["Prompt Engineering", "System Prompt", "LLM"] },
+    { term: "Token", category: "Core", definition: "The basic unit of text that LLMs process. A token is roughly 3-4 characters or ¾ of a word. Models have token limits for input and output.", example: "The sentence \"Hello, how are you?\" is about 6 tokens. AgentBox manages token usage so you don't have to worry about limits.", related: ["LLM", "Context Window"] },
+    { term: "Context Window", category: "Core", definition: "The maximum amount of text (measured in tokens) an LLM can process in a single interaction. Larger windows allow more conversation history and document analysis.", example: "With a 128K context window, AgentBox can analyze entire documents while keeping your full conversation history.", related: ["Token", "Memory", "LLM"] },
+    { term: "Prompt Engineering", category: "Techniques", definition: "The practice of crafting effective prompts to get better results from AI systems. Involves structuring instructions, providing examples, and setting constraints.", example: "Instead of asking \"write an email,\" prompt engineering would say \"write a professional 3-paragraph email declining a meeting, tone: polite but firm.\"", related: ["Prompt", "Few-Shot Learning", "Chain of Thought"] },
+    { term: "System Prompt", category: "Techniques", definition: "Hidden instructions that define an AI agent's personality, capabilities, and constraints. Users don't see these, but they shape every response.", example: "AgentBox's system prompt tells it to remember your preferences, be concise, and never share your data.", related: ["Prompt", "AI Agent", "Guardrails"] },
+    { term: "Few-Shot Learning", category: "Techniques", definition: "Providing a few examples in your prompt so the AI understands the pattern you want. Works without retraining the model.", example: "\"Categorize emails: 'Meeting at 3pm' → Calendar, 'Invoice attached' → Finance. Now categorize: 'Quarterly report due'\"", related: ["Prompt Engineering", "Zero-Shot"] },
+    { term: "Zero-Shot", category: "Techniques", definition: "Asking an AI to perform a task without any examples — relying entirely on its pre-trained knowledge.", example: "Asking AgentBox \"translate this to French\" without showing it any translation examples first.", related: ["Few-Shot Learning", "Prompt Engineering"] },
+    { term: "Chain of Thought", category: "Techniques", definition: "A prompting technique where the AI is asked to reason step-by-step before giving a final answer, improving accuracy on complex problems.", example: "\"Think through this step by step: If I invest $1000 at 7% annual return, how much do I have after 5 years?\"", related: ["Prompt Engineering", "Reasoning"] },
+    { term: "RAG", category: "Architecture", definition: "Retrieval-Augmented Generation — combining search/retrieval with AI generation. The AI first finds relevant documents, then uses them to create accurate, grounded responses.", example: "When you ask AgentBox about your schedule, it retrieves your calendar data first, then generates a natural language summary.", related: ["Grounding", "Hallucination", "Vector Database"] },
+    { term: "Tool Use", category: "Architecture", definition: "An AI agent's ability to call external tools and APIs — browsing the web, sending emails, running code, querying databases.", example: "AgentBox uses tool use to check your calendar, search the web, send messages, and control smart home devices.", related: ["AI Agent", "Function Calling", "API"] },
+    { term: "Function Calling", category: "Architecture", definition: "A structured way for LLMs to invoke specific functions with typed parameters. The model outputs a JSON function call instead of plain text.", example: "When you say \"set a reminder for 3pm,\" the LLM generates a structured call: {function: 'setReminder', time: '15:00'}.", related: ["Tool Use", "API", "AI Agent"] },
+    { term: "Memory", category: "Architecture", definition: "An AI agent's ability to retain and recall information across conversations. Short-term memory covers the current chat; long-term memory persists across sessions.", example: "AgentBox remembers your name, preferences, and past conversations — so you never repeat yourself.", related: ["Context Window", "AI Agent", "Vector Database"] },
+    { term: "Vector Database", category: "Architecture", definition: "A database that stores text as mathematical vectors (embeddings), enabling semantic similarity search. Powers memory and RAG systems.", example: "When AgentBox searches your notes, it uses vector similarity to find relevant content even if the exact words don't match.", related: ["RAG", "Embedding", "Memory"] },
+    { term: "Embedding", category: "Architecture", definition: "A numerical representation of text in high-dimensional space, where similar meanings are close together. Used for search, clustering, and recommendations.", example: "The sentences \"I'm happy\" and \"I'm joyful\" would have very similar embeddings, even though the words differ.", related: ["Vector Database", "Semantic Search"] },
+    { term: "Hallucination", category: "Safety", definition: "When an AI generates plausible-sounding but factually incorrect information. A key challenge in AI reliability.", example: "If asked about a fake company, an AI might confidently describe its \"history\" — that's hallucination. AgentBox mitigates this with grounding and source verification.", related: ["Grounding", "Guardrails", "RAG"] },
+    { term: "Guardrails", category: "Safety", definition: "Safety constraints and filters that prevent AI agents from generating harmful, biased, or off-topic content.", example: "AgentBox's guardrails prevent it from sharing your personal data, generating harmful content, or taking unauthorized actions.", related: ["System Prompt", "Alignment", "Hallucination"] },
+    { term: "Alignment", category: "Safety", definition: "The challenge of ensuring AI systems behave in ways that are helpful, harmless, and honest — matching human values and intentions.", example: "AgentBox is aligned to prioritize your privacy, give honest answers (including \"I don't know\"), and refuse harmful requests.", related: ["Guardrails", "RLHF"] },
+    { term: "Grounding", category: "Safety", definition: "Connecting AI responses to real, verifiable data sources to reduce hallucination and improve accuracy.", example: "When AgentBox answers questions about your finances, it's grounded in your actual account data — not guessing.", related: ["RAG", "Hallucination", "Tool Use"] },
+    { term: "RLHF", category: "Safety", definition: "Reinforcement Learning from Human Feedback — a training technique where humans rate AI outputs to teach the model which responses are better.", example: "RLHF is why modern AI assistants are helpful and polite — human trainers rewarded good behavior during training.", related: ["Alignment", "Fine-Tuning"] },
+    { term: "Fine-Tuning", category: "Training", definition: "Customizing a pre-trained model on specific data to improve performance for particular tasks or domains.", example: "A customer service AI might be fine-tuned on support tickets to better handle product-specific questions.", related: ["LLM", "RLHF", "Transfer Learning"] },
+    { term: "Transfer Learning", category: "Training", definition: "Using knowledge gained from one task to improve performance on a different but related task, without training from scratch.", example: "An LLM trained on general text can transfer that knowledge to understand medical literature without needing to retrain on all of medicine.", related: ["Fine-Tuning", "LLM"] },
+    { term: "Inference", category: "Operations", definition: "The process of running a trained AI model to generate outputs. Every time you send a message to an AI, that's an inference call.", example: "Each message you send to AgentBox triggers an inference call to the underlying LLM, which generates the response.", related: ["Token", "Latency", "LLM"] },
+    { term: "Latency", category: "Operations", definition: "The time delay between sending a request to an AI system and receiving the response. Lower latency means faster, more responsive interactions.", example: "AgentBox optimizes for low latency — most responses arrive in 1-3 seconds, even for complex queries.", related: ["Inference", "Streaming"] },
+    { term: "Streaming", category: "Operations", definition: "Delivering AI responses word-by-word as they're generated, rather than waiting for the complete response. Creates a more interactive experience.", example: "When AgentBox types out its response gradually instead of showing everything at once — that's streaming.", related: ["Latency", "Inference"] },
+    { term: "Autonomy", category: "Agents", definition: "The degree to which an AI agent can operate independently, making decisions and taking actions without human approval for each step.", example: "AgentBox can autonomously check your email, summarize key points, and draft replies — all without you asking for each step.", related: ["AI Agent", "Human-in-the-Loop"] },
+    { term: "Human-in-the-Loop", category: "Agents", definition: "A design pattern where critical decisions require human approval before the AI proceeds. Balances automation with oversight.", example: "AgentBox might draft an email automatically but wait for your approval before sending — that's human-in-the-loop.", related: ["Autonomy", "Guardrails", "AI Agent"] },
+    { term: "Multi-Agent", category: "Agents", definition: "A system where multiple specialized AI agents collaborate on complex tasks, each handling a different aspect of the work.", example: "A multi-agent setup might have one agent for research, another for writing, and a third for fact-checking — all coordinating together.", related: ["AI Agent", "Orchestration"] },
+    { term: "Orchestration", category: "Agents", definition: "Coordinating multiple AI components, tools, or agents to work together on complex workflows. The conductor of the AI orchestra.", example: "When AgentBox checks your calendar, finds a conflict, reschedules a meeting, and notifies attendees — that's orchestration.", related: ["Multi-Agent", "Tool Use", "Workflow"] },
+    { term: "Reasoning", category: "Agents", definition: "An AI's ability to logically analyze information, draw conclusions, and solve problems — going beyond simple pattern matching.", example: "When AgentBox notices you have back-to-back meetings with no lunch break and suggests rescheduling — that's reasoning.", related: ["Chain of Thought", "AI Agent"] },
+    { term: "Semantic Search", category: "Architecture", definition: "Search that understands meaning rather than just matching keywords. Uses embeddings to find conceptually similar content.", example: "Searching for \"ways to stay healthy\" also finds articles about \"fitness tips\" and \"nutrition advice\" — that's semantic search.", related: ["Embedding", "Vector Database", "RAG"] },
+    { term: "API", category: "Architecture", definition: "Application Programming Interface — a structured way for software systems to communicate. AI agents use APIs to connect to services like email, calendars, and databases.", example: "AgentBox connects to your tools through APIs — Gmail API for email, Google Calendar API for scheduling, etc.", related: ["Tool Use", "Function Calling", "Webhook"] },
+    { term: "Webhook", category: "Architecture", definition: "An automated notification sent from one service to another when a specific event occurs. Enables real-time reactions to events.", example: "A webhook can notify AgentBox when you receive a new email, so it can process it immediately instead of checking periodically.", related: ["API", "Orchestration"] },
+    { term: "Workflow", category: "Agents", definition: "A defined sequence of steps that an AI agent follows to accomplish a task. Can include branching logic, parallel execution, and error handling.", example: "A morning briefing workflow: check weather → scan emails → review calendar → summarize news → deliver report.", related: ["Orchestration", "Autonomy", "AI Agent"] }
+  ];
+
+  var activeCategory = "all";
+  var searchQuery = "";
+
+  function getCategories() {
+    var cats = {};
+    for (var i = 0; i < TERMS.length; i++) {
+      cats[TERMS[i].category] = (cats[TERMS[i].category] || 0) + 1;
+    }
+    return cats;
+  }
+
+  function filteredTerms() {
+    var q = searchQuery.toLowerCase();
+    var results = [];
+    for (var i = 0; i < TERMS.length; i++) {
+      var t = TERMS[i];
+      if (activeCategory !== "all" && t.category !== activeCategory) continue;
+      if (q) {
+        var hay = (t.term + " " + t.definition + " " + (t.related || []).join(" ")).toLowerCase();
+        if (hay.indexOf(q) === -1) continue;
+      }
+      results.push(t);
+    }
+    results.sort(function (a, b) { return a.term.localeCompare(b.term); });
+    return results;
+  }
+
+  function renderCategories() {
+    var el = document.getElementById("glossaryCategories");
+    if (!el) return;
+    var cats = getCategories();
+    var keys = Object.keys(cats).sort();
+    var html = '<button class="glossary-cat-btn' + (activeCategory === "all" ? " active" : "") + '" data-cat="all" role="tab" aria-selected="' + (activeCategory === "all") + '">All (' + TERMS.length + ')</button>';
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      var active = activeCategory === k;
+      html += '<button class="glossary-cat-btn' + (active ? " active" : "") + '" data-cat="' + k + '" role="tab" aria-selected="' + active + '">' + k + ' (' + cats[k] + ')</button>';
+    }
+    el.innerHTML = html;
+  }
+
+  function renderList() {
+    var el = document.getElementById("glossaryList");
+    var countEl = document.getElementById("glossaryCount");
+    if (!el) return;
+    var items = filteredTerms();
+    if (countEl) {
+      countEl.textContent = items.length + " term" + (items.length !== 1 ? "s" : "") + (activeCategory !== "all" ? " in " + activeCategory : "") + (searchQuery ? ' matching "' + searchQuery + '"' : "");
+    }
+    if (items.length === 0) {
+      el.innerHTML = '<div class="glossary-empty">No terms found. Try a different search or category.</div>';
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < items.length; i++) {
+      var t = items[i];
+      html += '<div class="glossary-card" role="listitem" data-term="' + t.term.replace(/"/g, '&quot;') + '">';
+      html += '<div class="glossary-card-header" tabindex="0" aria-expanded="false" role="button">';
+      html += '<span class="glossary-term">' + t.term + '</span>';
+      html += '<span class="glossary-badge">' + t.category + '</span>';
+      html += '<span class="glossary-toggle" aria-hidden="true">+</span>';
+      html += '</div>';
+      html += '<div class="glossary-card-body">';
+      html += '<div class="glossary-definition">' + t.definition + '</div>';
+      if (t.example) {
+        html += '<div class="glossary-example">\ud83d\udca1 ' + t.example + '</div>';
+      }
+      if (t.related && t.related.length) {
+        html += '<div class="glossary-related">Related: ';
+        for (var j = 0; j < t.related.length; j++) {
+          if (j > 0) html += ', ';
+          html += '<span class="glossary-related-link" data-jump="' + t.related[j].replace(/"/g, '&quot;') + '">' + t.related[j] + '</span>';
+        }
+        html += '</div>';
+      }
+      html += '</div></div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function toggleCard(header) {
+    var card = header.parentElement;
+    var wasOpen = card.classList.contains("open");
+    card.classList.toggle("open");
+    header.setAttribute("aria-expanded", !wasOpen);
+  }
+
+  function jumpToTerm(name) {
+    searchQuery = "";
+    activeCategory = "all";
+    var searchInput = document.getElementById("glossarySearch");
+    if (searchInput) searchInput.value = "";
+    renderCategories();
+    renderList();
+    var cards = document.querySelectorAll(".glossary-card");
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].getAttribute("data-term") === name) {
+        cards[i].classList.add("open");
+        var h = cards[i].querySelector(".glossary-card-header");
+        if (h) h.setAttribute("aria-expanded", "true");
+        if (typeof cards[i].scrollIntoView === "function") {
+          cards[i].scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        return;
+      }
+    }
+  }
+
+  function init() {
+    renderCategories();
+    renderList();
+
+    var searchInput = document.getElementById("glossarySearch");
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        searchQuery = this.value.trim();
+        renderList();
+      });
+    }
+
+    var catContainer = document.getElementById("glossaryCategories");
+    if (catContainer) {
+      catContainer.addEventListener("click", function (e) {
+        var btn = e.target.closest(".glossary-cat-btn");
+        if (!btn) return;
+        activeCategory = btn.getAttribute("data-cat");
+        renderCategories();
+        renderList();
+      });
+    }
+
+    var listContainer = document.getElementById("glossaryList");
+    if (listContainer) {
+      listContainer.addEventListener("click", function (e) {
+        var link = e.target.closest(".glossary-related-link");
+        if (link) {
+          jumpToTerm(link.getAttribute("data-jump"));
+          return;
+        }
+        var header = e.target.closest(".glossary-card-header");
+        if (header) toggleCard(header);
+      });
+      listContainer.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          var header = e.target.closest(".glossary-card-header");
+          if (header) { e.preventDefault(); toggleCard(header); }
+        }
+      });
+    }
+  }
+
+  return {
+    init: init,
+    getTerms: function () { return TERMS.slice(); },
+    getCategory: function () { return activeCategory; },
+    getQuery: function () { return searchQuery; },
+    jumpToTerm: jumpToTerm
+  };
+})();
+
+
+/* === src/modules/pipeline-builder.js === */
+
+
+/* ────────── Integration Pipeline Builder ────────── */
+var PipelineBuilder = (function () {
+  'use strict';
+
+  var INTEGRATIONS = [
+    { id: 'gmail',    name: 'Gmail',       icon: '📧', category: 'communication', desc: 'Read, draft, and send emails' },
+    { id: 'slack',    name: 'Slack',       icon: '💬', category: 'communication', desc: 'Send messages and monitor channels' },
+    { id: 'calendar', name: 'Calendar',    icon: '📅', category: 'productivity',  desc: 'Create events and check schedule' },
+    { id: 'notion',   name: 'Notion',      icon: '📝', category: 'productivity',  desc: 'Update pages and databases' },
+    { id: 'github',   name: 'GitHub',      icon: '🐙', category: 'developer',     desc: 'Manage issues, PRs, and repos' },
+    { id: 'jira',     name: 'Jira',        icon: '🎫', category: 'developer',     desc: 'Track and update tickets' },
+    { id: 'sheets',   name: 'Google Sheets',icon: '📊', category: 'data',         desc: 'Read and update spreadsheets' },
+    { id: 'drive',    name: 'Google Drive', icon: '📁', category: 'data',         desc: 'Search and organize files' },
+    { id: 'twitter',  name: 'Twitter/X',   icon: '🐦', category: 'social',       desc: 'Post tweets and monitor mentions' },
+    { id: 'linear',   name: 'Linear',      icon: '🔷', category: 'developer',     desc: 'Create and track issues' },
+    { id: 'discord',  name: 'Discord',     icon: '🎮', category: 'communication', desc: 'Send messages and manage servers' },
+    { id: 'telegram', name: 'Telegram',    icon: '✈️', category: 'communication', desc: 'Chat and manage bot commands' }
+  ];
+
+  var PIPELINES = {
+    'gmail+calendar':          { name: 'Email → Meeting', flow: 'AgentBox reads your emails, detects meeting requests, and creates calendar events automatically.' },
+    'gmail+slack':             { name: 'Email → Notify', flow: 'AgentBox monitors your inbox and sends Slack alerts for important emails.' },
+    'gmail+notion':            { name: 'Email → Notes', flow: 'AgentBox extracts action items from emails and creates Notion tasks.' },
+    'github+slack':            { name: 'Code → Notify', flow: 'AgentBox watches your repos for new PRs and issues, then posts summaries to Slack.' },
+    'github+jira':             { name: 'Code → Tickets', flow: 'AgentBox syncs GitHub issues with Jira tickets and updates statuses.' },
+    'github+linear':           { name: 'Code → Track', flow: 'AgentBox creates Linear issues from GitHub activity and keeps them in sync.' },
+    'calendar+slack':          { name: 'Schedule → Notify', flow: 'AgentBox sends Slack reminders before meetings and daily schedule summaries.' },
+    'calendar+notion':         { name: 'Schedule → Plan', flow: 'AgentBox creates Notion daily pages with your calendar events and prep notes.' },
+    'sheets+slack':            { name: 'Data → Alert', flow: 'AgentBox monitors spreadsheet changes and sends threshold alerts to Slack.' },
+    'sheets+gmail':            { name: 'Data → Report', flow: 'AgentBox generates weekly email reports from your spreadsheet data.' },
+    'drive+slack':             { name: 'Files → Share', flow: 'AgentBox watches Drive folders and notifies Slack when new files arrive.' },
+    'twitter+slack':           { name: 'Social → Monitor', flow: 'AgentBox tracks mentions and keywords, sending real-time Slack digests.' },
+    'twitter+notion':          { name: 'Social → Archive', flow: 'AgentBox archives important tweets and threads into your Notion database.' },
+    'discord+github':          { name: 'Community → Code', flow: 'AgentBox creates GitHub issues from Discord bug reports and feature requests.' },
+    'telegram+calendar':       { name: 'Chat → Schedule', flow: 'AgentBox lets you manage your calendar via natural language in Telegram.' },
+    'jira+slack':              { name: 'Tickets → Updates', flow: 'AgentBox posts Jira status changes and sprint progress to Slack channels.' },
+    'notion+slack':            { name: 'Docs → Sync', flow: 'AgentBox notifies your team on Slack when Notion docs are updated.' },
+    'gmail+sheets':            { name: 'Email → Data', flow: 'AgentBox extracts data from incoming emails and logs it into spreadsheets.' }
+  };
+
+  var selected = [];
+  var _section = null;
+
+  function section() {
+    if (!_section) _section = document.getElementById('pipelineSection');
+    return _section;
+  }
+
+  function init() {
+    if (!section()) return;
+    renderToolGrid();
+    updatePipeline();
+  }
+
+  function renderToolGrid() {
+    var grid = section().querySelector('.pipeline-tool-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    INTEGRATIONS.forEach(function (tool) {
+      var btn = document.createElement('button');
+      btn.className = 'pipeline-tool-btn';
+      btn.setAttribute('data-tool', tool.id);
+      btn.setAttribute('aria-pressed', 'false');
+      btn.setAttribute('role', 'switch');
+      btn.setAttribute('aria-label', 'Add ' + tool.name + ' to pipeline');
+      btn.setAttribute('title', tool.desc);
+      btn.innerHTML = '<span class="pipeline-tool-icon">' + tool.icon +
+        '</span><span class="pipeline-tool-name">' + tool.name + '</span>';
+      btn.addEventListener('click', function () { toggleTool(tool.id); });
+      grid.appendChild(btn);
+    });
+  }
+
+  function toggleTool(id) {
+    var idx = selected.indexOf(id);
+    if (idx >= 0) {
+      selected.splice(idx, 1);
+    } else {
+      if (selected.length >= 5) return; // max 5 tools
+      selected.push(id);
+    }
+    updateToolStates();
+    updatePipeline();
+  }
+
+  function updateToolStates() {
+    if (!section()) return;
+    var btns = section().querySelectorAll('.pipeline-tool-btn');
+    for (var i = 0; i < btns.length; i++) {
+      var toolId = btns[i].getAttribute('data-tool');
+      var isSelected = selected.indexOf(toolId) >= 0;
+      btns[i].classList.toggle('selected', isSelected);
+      btns[i].setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    }
+  }
+
+  function updatePipeline() {
+    var viz = section().querySelector('.pipeline-visualization');
+    var desc = section().querySelector('.pipeline-description');
+    var counter = section().querySelector('.pipeline-counter');
+    if (!viz || !desc) return;
+
+    if (counter) counter.textContent = selected.length + ' / 5 tools selected';
+
+    if (selected.length === 0) {
+      viz.innerHTML = '<p class="pipeline-empty">Select tools above to build your agent pipeline</p>';
+      desc.innerHTML = '';
+      return;
+    }
+
+    // Build visual pipeline
+    var html = '<div class="pipeline-flow">';
+    for (var i = 0; i < selected.length; i++) {
+      var tool = findTool(selected[i]);
+      if (!tool) continue;
+      html += '<div class="pipeline-node">';
+      html += '<span class="pipeline-node-icon">' + tool.icon + '</span>';
+      html += '<span class="pipeline-node-name">' + tool.name + '</span>';
+      html += '</div>';
+      if (i < selected.length - 1) {
+        html += '<div class="pipeline-arrow" aria-hidden="true">→</div>';
+      }
+    }
+    html += '</div>';
+
+    // AgentBox hub in center
+    html += '<div class="pipeline-hub">';
+    html += '<span class="pipeline-hub-icon">🤖</span>';
+    html += '<span class="pipeline-hub-label">AgentBox</span>';
+    html += '<span class="pipeline-hub-sub">connects everything</span>';
+    html += '</div>';
+
+    viz.innerHTML = html;
+
+    // Find matching pipelines
+    var matches = findPipelines();
+    if (matches.length === 0) {
+      desc.innerHTML = '<div class="pipeline-result"><p class="pipeline-generic">AgentBox can connect these tools and automate workflows between them. Add more tools to see specific pipeline recipes!</p></div>';
+    } else {
+      var descHtml = '<div class="pipeline-results-list">';
+      descHtml += '<h4 class="pipeline-results-title">🔗 ' + matches.length + ' automation' + (matches.length > 1 ? 's' : '') + ' available</h4>';
+      for (var m = 0; m < matches.length; m++) {
+        descHtml += '<div class="pipeline-result-card">';
+        descHtml += '<strong class="pipeline-result-name">' + matches[m].name + '</strong>';
+        descHtml += '<p class="pipeline-result-flow">' + matches[m].flow + '</p>';
+        descHtml += '</div>';
+      }
+      descHtml += '</div>';
+      desc.innerHTML = descHtml;
+    }
+  }
+
+  function findTool(id) {
+    for (var i = 0; i < INTEGRATIONS.length; i++) {
+      if (INTEGRATIONS[i].id === id) return INTEGRATIONS[i];
+    }
+    return null;
+  }
+
+  function findPipelines() {
+    var matches = [];
+    var keys = Object.keys(PIPELINES);
+    for (var k = 0; k < keys.length; k++) {
+      var parts = keys[k].split('+');
+      var allPresent = true;
+      for (var p = 0; p < parts.length; p++) {
+        if (selected.indexOf(parts[p]) < 0) { allPresent = false; break; }
+      }
+      if (allPresent) matches.push(PIPELINES[keys[k]]);
+    }
+    return matches;
+  }
+
+  function clearAll() {
+    selected = [];
+    updateToolStates();
+    updatePipeline();
+  }
+
+  return {
+    init: init,
+    toggle: toggleTool,
+    clear: clearAll,
+    getSelected: function () { return selected.slice(); },
+    getIntegrations: function () { return INTEGRATIONS.slice(); },
+    getPipelines: function () { return Object.assign({}, PIPELINES); }
+  };
+})();
+
+
+/* === src/modules/community-showcase.js === */
+
+// ──────────────────────────────────────────────────────────────
+//  Community Showcase  (IIFE)
+// ──────────────────────────────────────────────────────────────
+var CommunityShowcase = (function () {
+  "use strict";
+
+  var STORAGE_KEY = "agentbox_showcase_likes";
+
+  var CATEGORIES = ["All", "Productivity", "Developer", "Creative", "Business", "Research"];
+
+  var SHOWCASES = [
+    {
+      id: "sc-1", title: "Daily Standup Summarizer",
+      author: "Maya K.", category: "Productivity",
+      description: "Pulls Slack messages, JIRA updates, and GitHub commits from the last 24h and generates a concise standup summary for each team member. Runs every morning at 8:55 AM.",
+      tags: ["Slack", "JIRA", "GitHub"], likes: 142, date: "2026-02-28",
+      avatar: "MK"
+    },
+    {
+      id: "sc-2", title: "PR Review Copilot",
+      author: "Chen W.", category: "Developer",
+      description: "Watches for new pull requests, analyzes the diff for security issues, performance regressions, and style violations, then posts a detailed review comment within 2 minutes.",
+      tags: ["GitHub", "Code Review", "Security"], likes: 289, date: "2026-03-01",
+      avatar: "CW"
+    },
+    {
+      id: "sc-3", title: "Social Media Content Pipeline",
+      author: "Jordan R.", category: "Creative",
+      description: "Takes a blog post URL, generates 5 tweet variations, an Instagram caption, and a LinkedIn post. Stores drafts in Notion for review before publishing.",
+      tags: ["Social Media", "Notion", "Content"], likes: 198, date: "2026-02-20",
+      avatar: "JR"
+    },
+    {
+      id: "sc-4", title: "Customer Churn Early Warning",
+      author: "Priya S.", category: "Business",
+      description: "Monitors usage patterns across the customer base, flags accounts showing disengagement signals, and auto-drafts personalized re-engagement emails for the CS team.",
+      tags: ["Analytics", "Email", "CRM"], likes: 176, date: "2026-03-05",
+      avatar: "PS"
+    },
+    {
+      id: "sc-5", title: "Research Paper Digest",
+      author: "Alex T.", category: "Research",
+      description: "Scans arXiv daily for papers matching configured topics, generates 3-paragraph summaries with key findings, and compiles a weekly digest email with citation links.",
+      tags: ["arXiv", "Email", "NLP"], likes: 231, date: "2026-02-15",
+      avatar: "AT"
+    },
+    {
+      id: "sc-6", title: "Invoice Processing Agent",
+      author: "Sam D.", category: "Business",
+      description: "Extracts line items from PDF invoices via email attachment, matches against PO records in the ERP, flags discrepancies, and routes for approval based on amount thresholds.",
+      tags: ["Email", "PDF", "ERP"], likes: 164, date: "2026-03-03",
+      avatar: "SD"
+    },
+    {
+      id: "sc-7", title: "Codebase Documentation Bot",
+      author: "Rina P.", category: "Developer",
+      description: "Runs nightly over the repo, detects undocumented public functions, generates JSDoc/docstring stubs, and opens a single PR with all additions for review.",
+      tags: ["GitHub", "Documentation", "CI/CD"], likes: 215, date: "2026-02-22",
+      avatar: "RP"
+    },
+    {
+      id: "sc-8", title: "Meeting Notes & Action Items",
+      author: "Tom L.", category: "Productivity",
+      description: "Joins Google Meet, transcribes the conversation in real-time, identifies action items with owners, and posts structured notes to the team's Notion workspace within 5 minutes.",
+      tags: ["Google Meet", "Notion", "Transcription"], likes: 307, date: "2026-03-07",
+      avatar: "TL"
+    },
+    {
+      id: "sc-9", title: "Design Asset Organizer",
+      author: "Lena M.", category: "Creative",
+      description: "Watches a shared Figma project for new exports, auto-tags and categorizes assets by type and project, optimizes images, and syncs to the CDN with a generated manifest.",
+      tags: ["Figma", "CDN", "Image Processing"], likes: 123, date: "2026-02-18",
+      avatar: "LM"
+    },
+    {
+      id: "sc-10", title: "Experiment Tracker",
+      author: "David H.", category: "Research",
+      description: "Logs ML experiment parameters and metrics from training runs, generates comparison tables, alerts on new best results, and maintains a Markdown leaderboard in the repo.",
+      tags: ["ML", "GitHub", "Metrics"], likes: 187, date: "2026-03-02",
+      avatar: "DH"
+    }
+  ];
+
+  var _activeCategory = "All";
+  var _sortBy = "popular"; // "popular" | "newest"
+  var _likes = {};
+
+  function _loadLikes() {
+    try {
+      var stored = localStorage.getItem(STORAGE_KEY);
+      var parsed = stored ? JSON.parse(stored) : null;
+      _likes = Object.create(null);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        for (var k in parsed) {
+          if (Object.prototype.hasOwnProperty.call(parsed, k)) _likes[k] = !!parsed[k];
+        }
+      }
+    } catch (e) {
+      _likes = Object.create(null);
+    }
+  }
+
+  function _saveLikes() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(_likes));
+    } catch (e) { /* quota */ }
+  }
+
+  function _escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function _isLiked(id) {
+    return !!_likes[id];
+  }
+
+  function _toggleLike(id) {
+    if (_likes[id]) {
+      delete _likes[id];
+    } else {
+      _likes[id] = true;
+    }
+    _saveLikes();
+    _render();
+  }
+
+  function _getLikeCount(item) {
+    var base = item.likes || 0;
+    return _likes[item.id] ? base + 1 : base;
+  }
+
+  function _filtered() {
+    var items = SHOWCASES.slice();
+    if (_activeCategory !== "All") {
+      items = items.filter(function (s) { return s.category === _activeCategory; });
+    }
+    if (_sortBy === "popular") {
+      items.sort(function (a, b) { return _getLikeCount(b) - _getLikeCount(a); });
+    } else {
+      items.sort(function (a, b) { return b.date.localeCompare(a.date); });
+    }
+    return items;
+  }
+
+  function _renderCard(item) {
+    var liked = _isLiked(item.id);
+    var likeCount = _getLikeCount(item);
+    var tagsHtml = item.tags.map(function (t) {
+      return '<span class="showcase-tag">' + _escapeHtml(t) + '</span>';
+    }).join("");
+
+    return (
+      '<article class="showcase-card" data-id="' + item.id + '" data-category="' + item.category + '">' +
+        '<div class="showcase-card-header">' +
+          '<div class="showcase-avatar" aria-hidden="true">' + item.avatar + '</div>' +
+          '<div class="showcase-meta">' +
+            '<span class="showcase-author">' + _escapeHtml(item.author) + '</span>' +
+            '<span class="showcase-date">' + _formatDate(item.date) + '</span>' +
+          '</div>' +
+          '<span class="showcase-category-badge showcase-cat-' + item.category.toLowerCase() + '">' + _escapeHtml(item.category) + '</span>' +
+        '</div>' +
+        '<h3 class="showcase-title">' + _escapeHtml(item.title) + '</h3>' +
+        '<p class="showcase-desc">' + _escapeHtml(item.description) + '</p>' +
+        '<div class="showcase-tags">' + tagsHtml + '</div>' +
+        '<div class="showcase-footer">' +
+          '<button class="showcase-like-btn' + (liked ? ' liked' : '') + '" ' +
+            'aria-label="' + (liked ? 'Unlike' : 'Like') + ' ' + _escapeHtml(item.title) + '" ' +
+            'aria-pressed="' + liked + '" ' +
+            'data-id="' + item.id + '">' +
+            '<span class="showcase-heart" aria-hidden="true">' + (liked ? '\u2764\uFE0F' : '\u2661') + '</span> ' +
+            '<span class="showcase-like-count">' + likeCount + '</span>' +
+          '</button>' +
+        '</div>' +
+      '</article>'
+    );
+  }
+
+  function _formatDate(dateStr) {
+    var parts = dateStr.split("-");
+    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return months[parseInt(parts[1], 10) - 1] + " " + parseInt(parts[2], 10) + ", " + parts[0];
+  }
+
+  function _render() {
+    var grid = document.getElementById("showcaseGrid");
+    if (!grid) return;
+    var items = _filtered();
+    if (items.length === 0) {
+      grid.innerHTML = '<div class="showcase-empty">No projects in this category yet. Be the first to share!</div>';
+    } else {
+      grid.innerHTML = items.map(_renderCard).join("");
+    }
+
+    // Update like button listeners
+    var btns = grid.querySelectorAll(".showcase-like-btn");
+    for (var i = 0; i < btns.length; i++) {
+      (function (btn) {
+        btn.addEventListener("click", function () {
+          _toggleLike(btn.getAttribute("data-id"));
+        });
+      })(btns[i]);
+    }
+
+    // Update filter active states
+    var filters = document.querySelectorAll(".showcase-filter");
+    for (var j = 0; j < filters.length; j++) {
+      var f = filters[j];
+      var isActive = f.getAttribute("data-category") === _activeCategory;
+      if (isActive) {
+        f.classList.add("active");
+        f.setAttribute("aria-selected", "true");
+      } else {
+        f.classList.remove("active");
+        f.setAttribute("aria-selected", "false");
+      }
+    }
+
+    // Update sort button states
+    var sortBtns = document.querySelectorAll(".showcase-sort-btn");
+    for (var k = 0; k < sortBtns.length; k++) {
+      var sb = sortBtns[k];
+      var isSortActive = sb.getAttribute("data-sort") === _sortBy;
+      if (isSortActive) {
+        sb.classList.add("active");
+        sb.setAttribute("aria-pressed", "true");
+      } else {
+        sb.classList.remove("active");
+        sb.setAttribute("aria-pressed", "false");
+      }
+    }
+
+    // Update count
+    var countEl = document.getElementById("showcaseCount");
+    if (countEl) {
+      countEl.textContent = items.length + " project" + (items.length !== 1 ? "s" : "");
+    }
+  }
+
+  function _showSubmitModal() {
+    var existing = document.getElementById("showcaseModal");
+    if (existing) { existing.remove(); }
+
+    var overlay = document.createElement("div");
+    overlay.className = "showcase-modal-overlay";
+    overlay.id = "showcaseModal";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", "Submit your project");
+
+    overlay.innerHTML =
+      '<div class="showcase-modal">' +
+        '<button class="showcase-modal-close" aria-label="Close modal">&times;</button>' +
+        '<h3 class="showcase-modal-title">Share Your Project</h3>' +
+        '<p class="showcase-modal-subtitle">Show the community what you\'ve built with AgentBox</p>' +
+        '<form class="showcase-form" id="showcaseForm">' +
+          '<label class="showcase-label">Project Title *' +
+            '<input class="showcase-input" type="text" id="scTitle" required maxlength="60" placeholder="e.g. Daily Report Generator">' +
+          '</label>' +
+          '<label class="showcase-label">Your Name *' +
+            '<input class="showcase-input" type="text" id="scAuthor" required maxlength="30" placeholder="e.g. Jane D.">' +
+          '</label>' +
+          '<label class="showcase-label">Category *' +
+            '<select class="showcase-select" id="scCategory" required>' +
+              '<option value="">Select category...</option>' +
+              '<option value="Productivity">Productivity</option>' +
+              '<option value="Developer">Developer</option>' +
+              '<option value="Creative">Creative</option>' +
+              '<option value="Business">Business</option>' +
+              '<option value="Research">Research</option>' +
+            '</select>' +
+          '</label>' +
+          '<label class="showcase-label">Description *' +
+            '<textarea class="showcase-textarea" id="scDesc" required maxlength="300" rows="3" placeholder="What does your agent do? How does it help?"></textarea>' +
+          '</label>' +
+          '<label class="showcase-label">Tags (comma-separated)' +
+            '<input class="showcase-input" type="text" id="scTags" maxlength="100" placeholder="e.g. Slack, GitHub, Automation">' +
+          '</label>' +
+          '<button class="showcase-submit-btn" type="submit">Submit Project</button>' +
+        '</form>' +
+        '<div class="showcase-toast" id="showcaseToast" role="alert" aria-live="polite"></div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    // Close handlers
+    overlay.querySelector(".showcase-modal-close").addEventListener("click", _closeModal);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) _closeModal();
+    });
+
+    // Submit handler
+    document.getElementById("showcaseForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      _handleSubmit();
+    });
+
+    // Focus trap
+    var firstInput = overlay.querySelector("input");
+    if (firstInput) firstInput.focus();
+  }
+
+  function _closeModal() {
+    var modal = document.getElementById("showcaseModal");
+    if (modal) modal.remove();
+  }
+
+  function _handleSubmit() {
+    var title = document.getElementById("scTitle").value.trim();
+    var author = document.getElementById("scAuthor").value.trim();
+    var category = document.getElementById("scCategory").value;
+    var desc = document.getElementById("scDesc").value.trim();
+    var tagsRaw = document.getElementById("scTags").value.trim();
+
+    if (!title || !author || !category || !desc) return;
+
+    var tags = tagsRaw ? tagsRaw.split(",").map(function (t) { return t.trim(); }).filter(Boolean).slice(0, 5) : [];
+    var initials = author.split(" ").map(function (w) { return w[0] || ""; }).join("").toUpperCase().slice(0, 2);
+
+    var newItem = {
+      id: "sc-user-" + Date.now(),
+      title: title,
+      author: author,
+      category: category,
+      description: desc,
+      tags: tags,
+      likes: 0,
+      date: new Date().toISOString().slice(0, 10),
+      avatar: initials
+    };
+
+    SHOWCASES.unshift(newItem);
+
+    var toast = document.getElementById("showcaseToast");
+    if (toast) {
+      toast.textContent = "Project submitted! Thanks for sharing.";
+      toast.classList.add("visible");
+      setTimeout(function () { toast.classList.remove("visible"); }, 3000);
+    }
+
+    setTimeout(function () {
+      _closeModal();
+      _activeCategory = "All";
+      _sortBy = "newest";
+      _render();
+    }, 1500);
+  }
+
+  function init() {
+    var section = document.getElementById("showcaseSection");
+    if (!section) return;
+
+    _loadLikes();
+
+    // Bind category filters
+    var filters = section.querySelectorAll(".showcase-filter");
+    for (var i = 0; i < filters.length; i++) {
+      (function (f) {
+        f.addEventListener("click", function () {
+          _activeCategory = f.getAttribute("data-category");
+          _render();
+        });
+      })(filters[i]);
+    }
+
+    // Bind sort buttons
+    var sortBtns = section.querySelectorAll(".showcase-sort-btn");
+    for (var j = 0; j < sortBtns.length; j++) {
+      (function (sb) {
+        sb.addEventListener("click", function () {
+          _sortBy = sb.getAttribute("data-sort");
+          _render();
+        });
+      })(sortBtns[j]);
+    }
+
+    // Submit button
+    var submitBtn = document.getElementById("showcaseSubmitBtn");
+    if (submitBtn) {
+      submitBtn.addEventListener("click", _showSubmitModal);
+    }
+
+    _render();
+  }
+
+  return {
+    init: init,
+    filter: function (cat) { _activeCategory = cat; _render(); },
+    sort: function (by) { _sortBy = by; _render(); },
+    toggleLike: _toggleLike,
+    getShowcases: function () { return SHOWCASES.slice(); },
+    getLikedIds: function () { return Object.keys(_likes); },
+    showSubmitModal: _showSubmitModal,
+    closeModal: _closeModal
+  };
+})();
+
+
+/* === src/modules/section-minimap.js === */
+
+/* ── Section Mini-Map ── */
+var SectionMinimap = (function () {
+  var nav, track, tooltip;
+  var sections = [];
+  var dots = [];
+  var activeIdx = -1;
+  var scrollTicking = false;
+  var sectionOffsets = [];
+
+  /** Cache section offsets to avoid forced reflow on every scroll frame. */
+  function cacheOffsets() {
+    sectionOffsets = [];
+    for (var i = 0; i < sections.length; i++) {
+      sectionOffsets[i] = sections[i].el.offsetTop;
+    }
+  }
+
+  /** Section definitions — id to label mapping for the minimap dots. */
+  var SECTION_DEFS = [
+    { id: 'featuresSection', label: 'Features' },
+    { id: 'howItWorks', label: 'How It Works' },
+    { id: 'wizardSection', label: 'Wizard' },
+    { id: 'demoSection', label: 'Demo' },
+    { id: 'playgroundSection', label: 'Playground' },
+    { id: 'personalitySection', label: 'Personality' },
+    { id: 'promptGallerySection', label: 'Prompts' },
+    { id: 'beforeAfterSection', label: 'Before/After' },
+    { id: 'usecasesSection', label: 'Use Cases' },
+    { id: 'integrationsSection', label: 'Integrations' },
+    { id: 'comparisonSection', label: 'Compare' },
+    { id: 'calculatorSection', label: 'Calculator' },
+    { id: 'notificationSection', label: 'Preview' },
+    { id: 'trustSection', label: 'Trust' },
+    { id: 'storiesSection', label: 'Stories' },
+    { id: 'pricingSection', label: 'Pricing' },
+    { id: 'quizSection', label: 'Quiz' },
+    { id: 'roadmapSection', label: 'Roadmap' },
+    { id: 'statusSection', label: 'Status' },
+    { id: 'faqSection', label: 'FAQ' },
+    { id: 'glossarySection', label: 'Glossary' },
+    { id: 'growthTimelineSection', label: 'Journey' },
+    { id: 'feedbackSection', label: 'Feedback' },
+    { id: 'newsletterSection', label: 'Newsletter' }
+  ];
+
+  function init() {
+    nav = document.getElementById('sectionMinimap');
+    track = document.getElementById('minimapTrack');
+    tooltip = document.getElementById('minimapTooltip');
+    if (!nav || !track) return;
+
+    // Build dots only for sections that exist in the DOM
+    for (var i = 0; i < SECTION_DEFS.length; i++) {
+      var el = document.getElementById(SECTION_DEFS[i].id);
+      if (!el) continue;
+      sections.push({ el: el, label: SECTION_DEFS[i].label });
+      var dot = document.createElement('button');
+      dot.className = 'minimap-dot';
+      dot.setAttribute('aria-label', 'Go to ' + SECTION_DEFS[i].label);
+      dot.setAttribute('data-idx', dots.length);
+      dot.tabIndex = -1;
+      track.appendChild(dot);
+      dots.push(dot);
+    }
+
+    if (dots.length === 0) return;
+
+    // Click handler (delegated)
+    track.addEventListener('click', function (e) {
+      var btn = e.target.closest('.minimap-dot');
+      if (!btn) return;
+      var idx = parseInt(btn.getAttribute('data-idx'), 10);
+      if (idx >= 0 && idx < sections.length) {
+        sections[idx].el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+      }
+    });
+
+    // Tooltip on hover
+    track.addEventListener('mouseover', function (e) {
+      var btn = e.target.closest('.minimap-dot');
+      if (!btn || !tooltip) return;
+      var idx = parseInt(btn.getAttribute('data-idx'), 10);
+      if (idx >= 0 && idx < sections.length) {
+        tooltip.textContent = sections[idx].label;
+        var rect = btn.getBoundingClientRect();
+        tooltip.style.top = (rect.top + rect.height / 2 - 10) + 'px';
+        tooltip.classList.add('show');
+      }
+    });
+    track.addEventListener('mouseout', function (e) {
+      if (e.target.closest('.minimap-dot') && tooltip) {
+        tooltip.classList.remove('show');
+      }
+    });
+
+    // Cache offsets and listen for changes
+    cacheOffsets();
+    window.addEventListener('resize', cacheOffsets);
+
+    // Scroll listener
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  function onScroll() {
+    if (scrollTicking) return;
+    scrollTicking = true;
+    requestAnimationFrame(function () {
+      scrollTicking = false;
+      update();
+    });
+  }
+
+  function update() {
+    // Show minimap only after scrolling past the hero
+    var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    if (scrollY > 300) {
+      nav.classList.add('visible');
+    } else {
+      nav.classList.remove('visible');
+      return;
+    }
+
+    // Find active section — the one whose top is closest to viewport top
+    // Uses cached offsetTop values to avoid forced reflow per frame
+    var viewMid = scrollY + window.innerHeight * 0.35;
+    var bestIdx = 0;
+    var bestDist = Infinity;
+    for (var i = 0; i < sections.length; i++) {
+      var dist = Math.abs(sectionOffsets[i] - viewMid);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+
+    if (bestIdx !== activeIdx) {
+      if (activeIdx >= 0 && activeIdx < dots.length) {
+        dots[activeIdx].classList.remove('active');
+      }
+      dots[bestIdx].classList.add('active');
+      activeIdx = bestIdx;
+    }
+  }
+
+  return { init: init };
+})();
+
+
+/* === src/modules/help-chat-widget.js === */
+
+
+// ── Help Chat Widget ──────────────────────────────────────────────
+var HelpChatWidget = (function () {
+  'use strict';
+
+  var knowledgeBase = {
+    greeting: {
+      text: "Hi! 👋 I'm the AgentBox helper. What would you like to know?",
+      options: [
+        { label: "What is AgentBox?", key: "what" },
+        { label: "How does it work?", key: "how" },
+        { label: "What can it do?", key: "features" },
+        { label: "Pricing", key: "pricing" },
+        { label: "Privacy & Security", key: "privacy" },
+        { label: "Get started", key: "start" }
+      ]
+    },
+    what: {
+      text: "AgentBox is your personal AI assistant that lives right in Telegram. It remembers your preferences, searches the web, sets reminders, understands images, and helps you get things done — all from a chat interface you already use.",
+      options: [
+        { label: "How is it different?", key: "different" },
+        { label: "Who is it for?", key: "who" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    how: {
+      text: "Just start a chat with AgentBox on Telegram. Send it a message — it responds instantly. Over time it learns your context: your name, preferences, timezone, and more. No app to install, no signup forms.",
+      options: [
+        { label: "What can it do?", key: "features" },
+        { label: "Is it free?", key: "pricing" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    features: {
+      text: "AgentBox can:\n🧠 Remember your context & preferences\n🔍 Search the web for real-time info\n⏰ Set reminders & alarms\n📷 Understand images you send\n📝 Help with writing & brainstorming\n🌐 Translate languages\n📊 Analyze data\n…and much more!",
+      options: [
+        { label: "Show me examples", key: "examples" },
+        { label: "Pricing", key: "pricing" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    pricing: {
+      text: "AgentBox has a free tier with 20 messages/day — enough to try it out. Premium plans remove limits and add features like priority responses, longer memory, and advanced tools. Check the pricing section above for details!",
+      options: [
+        { label: "Start for free", key: "start" },
+        { label: "What's included free?", key: "free" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    privacy: {
+      text: "Your privacy matters. AgentBox:\n🔒 Encrypts all conversations\n🚫 Never sells your data\n🗑️ Lets you delete your data anytime\n👤 Doesn't share info between users\n\nWe only store what's needed to remember your preferences.",
+      options: [
+        { label: "Where is data stored?", key: "data" },
+        { label: "Can I delete everything?", key: "delete" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    start: {
+      text: "Getting started is easy! Just open Telegram and search for AgentBox, or click the \"Start on Telegram\" button on this page. You'll be chatting with your AI agent in seconds. 🚀",
+      options: [
+        { label: "Is it really free?", key: "pricing" },
+        { label: "What can it do?", key: "features" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    different: {
+      text: "Unlike generic chatbots, AgentBox:\n• Lives where you already chat (Telegram)\n• Remembers YOU across sessions\n• Has real tools (web search, reminders, images)\n• Gets smarter over time with your context\n• No app to download or account to create",
+      options: [
+        { label: "How does it work?", key: "how" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    who: {
+      text: "AgentBox is for anyone who wants an AI assistant without the friction:\n• Busy professionals who need quick answers\n• Students researching topics\n• Anyone who forgets reminders\n• People who want AI without learning new apps",
+      options: [
+        { label: "Get started", key: "start" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    examples: {
+      text: "Try asking things like:\n💡 \"Remind me to call mom at 6pm\"\n💡 \"What's the weather in Tokyo?\"\n💡 \"Summarize this article\" (paste a URL)\n💡 \"Help me draft a polite email to my boss\"\n💡 Send a photo and ask \"What's in this image?\"",
+      options: [
+        { label: "Get started", key: "start" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    free: {
+      text: "The free tier includes:\n✅ 20 messages per day\n✅ Web search\n✅ Reminders\n✅ Image understanding\n✅ Context memory (7 days)\n\nNo credit card required!",
+      options: [
+        { label: "Start for free", key: "start" },
+        { label: "Premium features?", key: "pricing" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    data: {
+      text: "Your data is stored on secure, encrypted servers. We use industry-standard encryption both in transit and at rest. Your conversations are isolated — no other user or staff member can access them without your explicit permission.",
+      options: [
+        { label: "Can I delete my data?", key: "delete" },
+        { label: "← Back", key: "privacy" }
+      ]
+    },
+    delete: {
+      text: "Yes! You can delete all your data at any time by sending /deleteall to AgentBox. This permanently removes your conversation history, preferences, and all stored context. It's irreversible, so use it when you're sure.",
+      options: [
+        { label: "Privacy overview", key: "privacy" },
+        { label: "← Back", key: "greeting" }
+      ]
+    },
+    fallback: {
+      text: "I'm not sure about that one! Here are some things I can help with:",
+      options: [
+        { label: "What is AgentBox?", key: "what" },
+        { label: "Features", key: "features" },
+        { label: "Pricing", key: "pricing" },
+        { label: "Get started", key: "start" }
+      ]
+    }
+  };
+
+  // Simple keyword matching for free-text input
+  var keywordMap = [
+    { keywords: ["price", "pricing", "cost", "pay", "plan", "subscription", "free", "premium"], key: "pricing" },
+    { keywords: ["feature", "can it", "what can", "capable", "ability", "do"], key: "features" },
+    { keywords: ["privacy", "private", "secure", "security", "encrypt", "data", "gdpr"], key: "privacy" },
+    { keywords: ["start", "begin", "signup", "sign up", "register", "try", "get started"], key: "start" },
+    { keywords: ["what is", "about", "agentbox", "explain"], key: "what" },
+    { keywords: ["how", "work", "setup", "install"], key: "how" },
+    { keywords: ["example", "demo", "show", "sample", "try"], key: "examples" },
+    { keywords: ["delete", "remove", "erase", "forget"], key: "delete" },
+    { keywords: ["different", "compare", "vs", "versus", "better"], key: "different" },
+    { keywords: ["who", "audience", "user"], key: "who" }
+  ];
+
+  function matchQuery(text) {
+    var lower = text.toLowerCase().trim();
+    for (var i = 0; i < keywordMap.length; i++) {
+      var kw = keywordMap[i].keywords;
+      for (var j = 0; j < kw.length; j++) {
+        if (lower.indexOf(kw[j]) !== -1) return keywordMap[i].key;
+      }
+    }
+    return "fallback";
+  }
+
+  function init() {
+    var fab = document.getElementById('helpChatFab');
+    var panel = document.getElementById('helpChatPanel');
+    var close = document.getElementById('helpChatClose');
+    var messages = document.getElementById('helpChatMessages');
+    var optionsContainer = document.getElementById('helpChatOptions');
+    var input = document.getElementById('helpChatInput');
+    var sendBtn = document.getElementById('helpChatSend');
+    var badge = document.getElementById('helpChatBadge');
+    var fabIcon = document.getElementById('helpChatFabIcon');
+
+    if (!fab || !panel) return;
+
+    var isOpen = false;
+    var hasOpened = false;
+
+    function addBubble(text, sender) {
+      var bubble = document.createElement('div');
+      bubble.className = 'help-chat-bubble ' + sender;
+      bubble.textContent = text;
+      messages.appendChild(bubble);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function showOptions(options) {
+      optionsContainer.innerHTML = '';
+      if (!options || !options.length) return;
+      options.forEach(function (opt) {
+        var btn = document.createElement('button');
+        btn.className = 'help-chat-option-btn';
+        btn.textContent = opt.label;
+        btn.setAttribute('data-key', opt.key);
+        btn.addEventListener('click', function () { handleOption(opt); });
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function handleOption(opt) {
+      addBubble(opt.label, 'user');
+      respond(opt.key);
+    }
+
+    function respond(key) {
+      var entry = knowledgeBase[key] || knowledgeBase.fallback;
+      setTimeout(function () {
+        addBubble(entry.text, 'bot');
+        showOptions(entry.options);
+      }, 300);
+    }
+
+    function handleUserInput() {
+      var text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      addBubble(text, 'user');
+      var key = matchQuery(text);
+      respond(key);
+    }
+
+    function toggle() {
+      isOpen = !isOpen;
+      panel.hidden = !isOpen;
+      fab.setAttribute('aria-expanded', String(isOpen));
+      fabIcon.textContent = isOpen ? '✕' : '💬';
+
+      if (isOpen && !hasOpened) {
+        hasOpened = true;
+        badge.hidden = true;
+        respond('greeting');
+      }
+
+      if (isOpen) {
+        input.focus();
+      }
+    }
+
+    fab.addEventListener('click', toggle);
+    close.addEventListener('click', function () {
+      if (isOpen) toggle();
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); handleUserInput(); }
+    });
+    sendBtn.addEventListener('click', handleUserInput);
+
+    // Close on Escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && isOpen) toggle();
+    });
+  }
+
+  return { init: init, knowledgeBase: knowledgeBase, matchQuery: matchQuery };
+})();
+
+
+/* === src/modules/share-card-generator.js === */
+
+/* ── Share Card Generator ── */
+var ShareCardGenerator = (function () {
+  'use strict';
+
+  var THEMES = {
+    gradient: { bg: ['#667eea', '#764ba2'], text: '#fff', sub: 'rgba(255,255,255,0.85)' },
+    ocean:    { bg: ['#2193b0', '#6dd5ed'], text: '#fff', sub: 'rgba(255,255,255,0.85)' },
+    sunset:   { bg: ['#f093fb', '#f5576c'], text: '#fff', sub: 'rgba(255,255,255,0.9)' },
+    forest:   { bg: ['#11998e', '#38ef7d'], text: '#fff', sub: 'rgba(255,255,255,0.85)' },
+    dark:     { bg: ['#1a1a2e', '#16213e'], text: '#eee', sub: 'rgba(200,200,220,0.8)' }
+  };
+
+  var FEATURES = {
+    memory:    { icon: '\uD83E\uDDE0', label: 'Memory' },
+    search:    { icon: '\uD83D\uDD0D', label: 'Web Search' },
+    reminders: { icon: '\u23F0',       label: 'Reminders' },
+    vision:    { icon: '\uD83D\uDCF8', label: 'Image Analysis' },
+    voice:     { icon: '\uD83C\uDFA4', label: 'Voice Messages' },
+    code:      { icon: '\uD83D\uDCBB', label: 'Code Help' }
+  };
+
+  var currentTheme = 'gradient';
+
+  function drawCard(canvas, data) {
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    var w = canvas.width, h = canvas.height;
+    var theme = THEMES[currentTheme] || THEMES.gradient;
+
+    // Background gradient
+    var grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, theme.bg[0]);
+    grad.addColorStop(1, theme.bg[1]);
+    ctx.fillStyle = grad;
+    roundRect(ctx, 0, 0, w, h, 20);
+    ctx.fill();
+
+    // Decorative circles
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(w - 60, 60, 100, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(80, h - 40, 70, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Logo + title
+    ctx.fillStyle = theme.text;
+    ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.textBaseline = 'top';
+    ctx.fillText('\uD83E\uDD16 AgentBox', 32, 28);
+
+    // User quote
+    var quote = data.quote || 'My AI assistant in Telegram!';
+    ctx.font = 'italic 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillStyle = theme.sub;
+    wrapText(ctx, '\u201C' + quote + '\u201D', 32, 80, w - 64, 24);
+
+    // Feature badge
+    var feat = FEATURES[data.feature] || FEATURES.memory;
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    roundRect(ctx, 32, 190, 180, 36, 18);
+    ctx.fill();
+    ctx.fillStyle = theme.text;
+    ctx.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText(feat.icon + '  Favorite: ' + feat.label, 46, 198);
+
+    // User info
+    ctx.fillStyle = theme.text;
+    ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText(data.name || 'AgentBox User', 32, 260);
+    if (data.role) {
+      ctx.fillStyle = theme.sub;
+      ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      ctx.fillText(data.role, 32, 284);
+    }
+
+    // Footer
+    ctx.fillStyle = theme.sub;
+    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('t.me/AgentBox11Bot', w - 32, h - 24);
+    ctx.textAlign = 'left';
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function wrapText(ctx, text, x, y, maxW, lineH) {
+    var words = text.split(' ');
+    var line = '';
+    for (var i = 0; i < words.length; i++) {
+      var test = line + words[i] + ' ';
+      if (ctx.measureText(test).width > maxW && i > 0) {
+        ctx.fillText(line.trim(), x, y);
+        line = words[i] + ' ';
+        y += lineH;
+      } else {
+        line = test;
+      }
+    }
+    ctx.fillText(line.trim(), x, y);
+  }
+
+  function init() {
+    var canvas = document.getElementById('shareCardCanvas');
+    var genBtn = document.getElementById('shareCardGenerate');
+    var dlBtn = document.getElementById('shareCardDownload');
+    var copyBtn = document.getElementById('shareCardCopy');
+    var actions = document.getElementById('shareCardActions');
+    var hint = canvas && canvas.parentElement.querySelector('.share-card-hint');
+    var themeBtns = document.getElementById('shareCardThemes');
+
+    if (!canvas || !genBtn) return;
+
+    // Draw placeholder
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#f0f0f0';
+    roundRect(ctx, 0, 0, canvas.width, canvas.height, 20);
+    ctx.fill();
+    ctx.fillStyle = '#bbb';
+    ctx.font = '16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Your card will appear here', canvas.width / 2, canvas.height / 2);
+    ctx.textAlign = 'left';
+
+    // Theme switcher
+    if (themeBtns) {
+      themeBtns.addEventListener('click', function (e) {
+        var btn = e.target.closest('.share-card-theme');
+        if (!btn) return;
+        var prev = themeBtns.querySelector('.active');
+        if (prev) prev.classList.remove('active');
+        btn.classList.add('active');
+        currentTheme = btn.getAttribute('data-theme');
+      });
+    }
+
+    genBtn.addEventListener('click', function () {
+      var data = {
+        name: document.getElementById('shareCardName').value.trim(),
+        role: document.getElementById('shareCardRole').value.trim(),
+        feature: document.getElementById('shareCardFeature').value,
+        quote: document.getElementById('shareCardQuote').value.trim()
+      };
+      drawCard(canvas, data);
+      if (actions) actions.hidden = false;
+      if (hint) hint.hidden = true;
+    });
+
+    if (dlBtn) {
+      dlBtn.addEventListener('click', function () {
+        var link = document.createElement('a');
+        link.download = 'agentbox-card.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function () {
+        canvas.toBlob(function (blob) {
+          if (!blob) return;
+          try {
+            navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]).then(function () {
+              copyBtn.textContent = '\u2705 Copied!';
+              setTimeout(function () { copyBtn.textContent = '\uD83D\uDCCB Copy to Clipboard'; }, 2000);
+            });
+          } catch (_e) {
+            copyBtn.textContent = 'Use Download instead';
+            setTimeout(function () { copyBtn.textContent = '\uD83D\uDCCB Copy to Clipboard'; }, 2000);
+          }
+        }, 'image/png');
+      });
+    }
+  }
+
+  return { init: init, drawCard: drawCard, THEMES: THEMES, FEATURES: FEATURES };
+})();
+
+
+/* === src/modules/speed-challenge.js === */
+
+
+// ── Speed Challenge ──────────────────────────────────────────────
+var SpeedChallenge = (function () {
+  'use strict';
+
+  var ANSWERS = {
+    "What's the capital of Bhutan?": "Thimphu is the capital of Bhutan.",
+    "Convert 72°F to Celsius": "72°F = 22.2°C",
+    "Who painted the Mona Lisa?": "Leonardo da Vinci painted the Mona Lisa (c. 1503–1519).",
+    "How many ounces in a gallon?": "There are 128 fluid ounces in a US gallon.",
+    "What year did the Berlin Wall fall?": "The Berlin Wall fell on November 9, 1989."
+  };
+
+  var TRADITIONAL_STEPS = [
+    { text: "Open browser", duration: 800 },
+    { text: "Navigate to search engine", duration: 1200 },
+    { text: "Type query", duration: 1500 },
+    { text: "Scan results", duration: 2000 },
+    { text: "Click a result", duration: 1000 },
+    { text: "Read the page", duration: 2500 },
+    { text: "Find the answer", duration: 1500 }
+  ];
+
+  var AGENT_STEPS = [
+    { text: "Send message", duration: 400 },
+    { text: "Processing...", duration: 800 },
+    { text: "Answer ready!", duration: 300 }
+  ];
+
+  var running = false;
+  var timers = [];
+
+  function init() {
+    var btns = document.querySelectorAll('.speed-prompt-btn');
+    var resetBtn = document.getElementById('speedResetBtn');
+    if (!btns.length) return;
+
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (running) return;
+        btns.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+        btn.setAttribute('aria-pressed', 'true');
+        startRace(btn.getAttribute('data-prompt'));
+      });
+    });
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () { resetRace(); });
+    }
+  }
+
+  function startRace(prompt) {
+    running = true;
+    var arena = document.getElementById('speedArena');
+    var result = document.getElementById('speedResult');
+    var resetBtn = document.getElementById('speedResetBtn');
+    var stepsT = document.getElementById('speedStepsTraditional');
+    var stepsA = document.getElementById('speedStepsAgent');
+    var timerT = document.getElementById('speedTimerTraditional');
+    var timerA = document.getElementById('speedTimerAgent');
+    var answerT = document.getElementById('speedAnswerTraditional');
+    var answerA = document.getElementById('speedAnswerAgent');
+
+    if (!arena) return;
+    arena.hidden = false;
+    if (result) { result.hidden = true; result.textContent = ''; }
+    if (resetBtn) resetBtn.hidden = true;
+    stepsT.innerHTML = '';
+    stepsA.innerHTML = '';
+    timerT.textContent = '0.0s';
+    timerA.textContent = '0.0s';
+    answerT.textContent = '';
+    answerA.textContent = '';
+
+    var answer = ANSWERS[prompt] || 'Answer found!';
+
+    // Build step elements
+    TRADITIONAL_STEPS.forEach(function (s) {
+      var el = document.createElement('div');
+      el.className = 'speed-step';
+      el.setAttribute('role', 'listitem');
+      el.textContent = s.text;
+      stepsT.appendChild(el);
+    });
+
+    AGENT_STEPS.forEach(function (s) {
+      var el = document.createElement('div');
+      el.className = 'speed-step';
+      el.setAttribute('role', 'listitem');
+      el.textContent = s.text;
+      stepsA.appendChild(el);
+    });
+
+    // Animate traditional lane
+    var tSteps = stepsT.querySelectorAll('.speed-step');
+    var aSteps = stepsA.querySelectorAll('.speed-step');
+    var tDelay = 0;
+    var tTotal = 0;
+    TRADITIONAL_STEPS.forEach(function (s) { tTotal += s.duration; });
+    var aTotal = 0;
+    AGENT_STEPS.forEach(function (s) { aTotal += s.duration; });
+
+    // Start timer animations
+    var tStart = Date.now();
+    var tTimerInterval = setInterval(function () {
+      var elapsed = (Date.now() - tStart) / 1000;
+      timerT.textContent = elapsed.toFixed(1) + 's';
+    }, 100);
+    timers.push(tTimerInterval);
+
+    var aTimerInterval = setInterval(function () {
+      var elapsed = (Date.now() - tStart) / 1000;
+      timerA.textContent = elapsed.toFixed(1) + 's';
+    }, 100);
+    timers.push(aTimerInterval);
+
+    // Animate traditional steps
+    TRADITIONAL_STEPS.forEach(function (step, i) {
+      // Add 'active' at the START of this step's duration
+      var tStart = setTimeout(function () {
+        tSteps[i].classList.add('active');
+        if (i > 0) {
+          tSteps[i - 1].classList.remove('active');
+          tSteps[i - 1].classList.add('done');
+        }
+      }, tDelay);
+      timers.push(tStart);
+      // Add 'done' at the END of this step's duration
+      var tEnd = setTimeout(function () {
+        tSteps[i].classList.remove('active');
+        tSteps[i].classList.add('done');
+      }, tDelay + step.duration);
+      timers.push(tEnd);
+      tDelay += step.duration;
+    });
+
+    // Traditional finish
+    var tFinish = setTimeout(function () {
+      clearInterval(tTimerInterval);
+      timerT.textContent = (tTotal / 1000).toFixed(1) + 's';
+      answerT.textContent = answer;
+      answerT.classList.add('visible');
+      checkDone();
+    }, tTotal);
+    timers.push(tFinish);
+
+    // Animate agent steps
+    var aDelay = 0;
+    AGENT_STEPS.forEach(function (step, i) {
+      // Add 'active' at the START of this step's duration
+      var aStart = setTimeout(function () {
+        aSteps[i].classList.add('active');
+        if (i > 0) {
+          aSteps[i - 1].classList.remove('active');
+          aSteps[i - 1].classList.add('done');
+        }
+      }, aDelay);
+      timers.push(aStart);
+      // Add 'done' at the END of this step's duration
+      var aEnd = setTimeout(function () {
+        aSteps[i].classList.remove('active');
+        aSteps[i].classList.add('done');
+      }, aDelay + step.duration);
+      timers.push(aEnd);
+      aDelay += step.duration;
+    });
+
+    // Agent finish
+    var agentDone = false;
+    var tradDone = false;
+    var aFinish = setTimeout(function () {
+      clearInterval(aTimerInterval);
+      timerA.textContent = (aTotal / 1000).toFixed(1) + 's';
+      answerA.textContent = answer;
+      answerA.classList.add('visible');
+      document.getElementById('speedLaneAgent').classList.add('winner');
+      checkDone();
+    }, aTotal);
+    timers.push(aFinish);
+
+    var checked = 0;
+    function checkDone() {
+      checked++;
+      if (checked < 2) return;
+      var speedup = (tTotal / aTotal).toFixed(1);
+      if (result) {
+        result.textContent = '🏆 AgentBox answered ' + speedup + 'x faster!';
+        result.hidden = false;
+      }
+      if (resetBtn) resetBtn.hidden = false;
+      running = false;
+    }
+  }
+
+  function resetRace() {
+    timers.forEach(function (t) { clearTimeout(t); clearInterval(t); });
+    timers = [];
+    running = false;
+
+    var arena = document.getElementById('speedArena');
+    var result = document.getElementById('speedResult');
+    var resetBtn = document.getElementById('speedResetBtn');
+    if (arena) arena.hidden = true;
+    if (result) result.hidden = true;
+    if (resetBtn) resetBtn.hidden = true;
+
+    var lane = document.getElementById('speedLaneAgent');
+    if (lane) lane.classList.remove('winner');
+
+    document.querySelectorAll('.speed-prompt-btn').forEach(function (b) {
+      b.setAttribute('aria-pressed', 'false');
+    });
+  }
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', function () { init(); });
+  }
+  if (typeof window !== 'undefined') { window.SpeedChallenge = SpeedChallenge; }
+
+  return {
+    init: init,
+    startRace: startRace,
+    resetRace: resetRace,
+    _ANSWERS: ANSWERS,
+    _TRADITIONAL_STEPS: TRADITIONAL_STEPS,
+    _AGENT_STEPS: AGENT_STEPS
+  };
+})();
+
+
+/* === src/modules/privacy-checkup.js === */
+
+// Privacy Checkup Module
+// ---------------------------------------------------------------------------
+
+var PrivacyCheckup = (function () {
+  'use strict';
+
+  var QUESTIONS = [
+    {
+      id: 'data_storage',
+      text: 'Are you concerned about where your conversation data is stored?',
+      options: ['Very concerned', 'Somewhat', 'Not really'],
+      weights: [3, 2, 1],
+      feature: {
+        title: 'Your Data Stays Yours',
+        desc: 'AgentBox processes conversations in real-time and stores memory only on your terms. You can view, edit, or delete your data anytime.',
+        icon: '🗄️'
+      }
+    },
+    {
+      id: 'third_party',
+      text: 'Do you worry about your data being shared with third parties?',
+      options: ['Absolutely', 'A little', 'Not concerned'],
+      weights: [3, 2, 1],
+      feature: {
+        title: 'Zero Third-Party Sharing',
+        desc: 'We never sell, share, or use your data for advertising. Your conversations are between you and your agent — period.',
+        icon: '🚫'
+      }
+    },
+    {
+      id: 'memory_control',
+      text: 'Is it important to you to control what the AI remembers about you?',
+      options: ['Critical', 'Nice to have', 'Don\'t mind'],
+      weights: [3, 2, 1],
+      feature: {
+        title: 'Full Memory Control',
+        desc: 'You decide what your agent remembers. Review stored memories, delete specific ones, or wipe everything with a single command.',
+        icon: '🧠'
+      }
+    },
+    {
+      id: 'encryption',
+      text: 'How important is end-to-end encryption for your messages?',
+      options: ['Essential', 'Preferred', 'Not a priority'],
+      weights: [3, 2, 1],
+      feature: {
+        title: 'Encrypted in Transit',
+        desc: 'All communication between you and AgentBox is encrypted. Messages travel through Telegram\'s encrypted infrastructure.',
+        icon: '🔐'
+      }
+    },
+    {
+      id: 'account_delete',
+      text: 'Do you want the ability to completely delete your account and all data?',
+      options: ['Must have', 'Would be nice', 'Not important'],
+      weights: [3, 2, 1],
+      feature: {
+        title: 'Complete Data Deletion',
+        desc: 'One command deletes everything — your account, memories, conversation history. No hidden backups, no retention tricks.',
+        icon: '🗑️'
+      }
+    },
+    {
+      id: 'transparency',
+      text: 'Do you value transparency about how AI models process your data?',
+      options: ['Very much', 'Somewhat', 'Not really'],
+      weights: [3, 2, 1],
+      feature: {
+        title: 'Open & Transparent',
+        desc: 'We document exactly which AI models power AgentBox, how they process data, and what happens at each step. No black boxes.',
+        icon: '👁️'
+      }
+    }
+  ];
+
+  var currentStep = 0;
+  var answers = [];
+
+  function init() {
+    var section = document.getElementById('privacyCheckupSection');
+    if (!section) return;
+    currentStep = 0;
+    answers = [];
+    renderQuestion();
+    var restartBtn = document.getElementById('privacyRestartBtn');
+    if (restartBtn) {
+      restartBtn.addEventListener('click', restart);
+    }
+  }
+
+  function renderQuestion() {
+    var q = QUESTIONS[currentStep];
+    var textEl = document.getElementById('privacyQuestionText');
+    var optionsEl = document.getElementById('privacyOptions');
+    var stepCounter = document.getElementById('privacyStepCounter');
+    var progressFill = document.getElementById('privacyProgressFill');
+    var card = document.getElementById('privacyQuestionCard');
+    var report = document.getElementById('privacyReport');
+
+    if (!textEl || !optionsEl) return;
+
+    if (card) card.hidden = false;
+    if (report) report.hidden = true;
+
+    textEl.textContent = q.text;
+    stepCounter.textContent = 'Question ' + (currentStep + 1) + ' of ' + QUESTIONS.length;
+    var pct = ((currentStep) / QUESTIONS.length) * 100;
+    progressFill.style.width = pct + '%';
+    var bar = progressFill.parentElement;
+    if (bar) bar.setAttribute('aria-valuenow', Math.round(pct));
+
+    optionsEl.innerHTML = '';
+    for (var i = 0; i < q.options.length; i++) {
+      var btn = document.createElement('button');
+      btn.className = 'privacy-option-btn';
+      btn.textContent = q.options[i];
+      btn.setAttribute('data-index', i);
+      btn.addEventListener('click', handleAnswer);
+      optionsEl.appendChild(btn);
+    }
+  }
+
+  function handleAnswer(e) {
+    var idx = parseInt(e.currentTarget.getAttribute('data-index'), 10);
+    answers.push({
+      questionId: QUESTIONS[currentStep].id,
+      optionIndex: idx,
+      weight: QUESTIONS[currentStep].weights[idx]
+    });
+
+    currentStep++;
+    if (currentStep < QUESTIONS.length) {
+      renderQuestion();
+    } else {
+      showReport();
+    }
+  }
+
+  function showReport() {
+    var card = document.getElementById('privacyQuestionCard');
+    var report = document.getElementById('privacyReport');
+    var stepCounter = document.getElementById('privacyStepCounter');
+    var progressFill = document.getElementById('privacyProgressFill');
+
+    if (card) card.hidden = true;
+    if (report) report.hidden = false;
+    if (stepCounter) stepCounter.textContent = 'Checkup Complete';
+    if (progressFill) {
+      progressFill.style.width = '100%';
+      var bar = progressFill.parentElement;
+      if (bar) bar.setAttribute('aria-valuenow', 100);
+    }
+
+    // Calculate concern level: higher weight = more concerned
+    var totalWeight = 0;
+    var maxWeight = QUESTIONS.length * 3;
+    for (var i = 0; i < answers.length; i++) {
+      totalWeight += answers[i].weight;
+    }
+
+    // Score: how well AgentBox addresses concerns (higher concern = more relevant features)
+    // Scale: 0-100 where 100 = "we address all your top concerns"
+    var score = Math.round((totalWeight / maxWeight) * 100);
+
+    var scoreEl = document.getElementById('privacyScoreValue');
+    if (scoreEl) {
+      animateScore(scoreEl, score);
+    }
+
+    var findingsEl = document.getElementById('privacyFindings');
+    if (!findingsEl) return;
+    findingsEl.innerHTML = '';
+
+    // Show features most relevant to user's concerns (highest weight first)
+    var sorted = answers.slice().sort(function (a, b) { return b.weight - a.weight; });
+
+    for (var j = 0; j < sorted.length; j++) {
+      var qIdx = -1;
+      for (var k = 0; k < QUESTIONS.length; k++) {
+        if (QUESTIONS[k].id === sorted[j].questionId) { qIdx = k; break; }
+      }
+      if (qIdx === -1) continue;
+      var q = QUESTIONS[qIdx];
+      var concern = sorted[j].weight;
+
+      var item = document.createElement('div');
+      item.className = 'privacy-finding-item';
+      item.setAttribute('role', 'listitem');
+      if (concern >= 3) {
+        item.classList.add('privacy-finding-high');
+      } else if (concern >= 2) {
+        item.classList.add('privacy-finding-medium');
+      } else {
+        item.classList.add('privacy-finding-low');
+      }
+
+      var badge = concern >= 3 ? '⚠️ High Priority' : concern >= 2 ? '📋 Noted' : '✅ Low Concern';
+      item.innerHTML =
+        '<div class="privacy-finding-header">' +
+          '<span class="privacy-finding-icon">' + q.feature.icon + '</span>' +
+          '<span class="privacy-finding-title">' + q.feature.title + '</span>' +
+          '<span class="privacy-finding-badge">' + badge + '</span>' +
+        '</div>' +
+        '<p class="privacy-finding-desc">' + q.feature.desc + '</p>';
+
+      findingsEl.appendChild(item);
+    }
+  }
+
+  function animateScore(el, target) {
+    var current = 0;
+    var step = Math.max(1, Math.floor(target / 30));
+    var timer = setInterval(function () {
+      current += step;
+      if (current >= target) {
+        current = target;
+        clearInterval(timer);
+      }
+      el.textContent = current;
+    }, 30);
+  }
+
+  function restart() {
+    currentStep = 0;
+    answers = [];
+    renderQuestion();
+  }
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', function () { init(); });
+  }
+  if (typeof window !== 'undefined') { window.PrivacyCheckup = PrivacyCheckup; }
+
+  return {
+    init: init,
+    restart: restart,
+    _QUESTIONS: QUESTIONS
+  };
+})();
+
+
+/* === src/modules/referral-program.js === */
+
+// ── Referral Program ─────────────────────────────────────────────
+var ReferralProgram = (function () {
+  'use strict';
+
+  var TIERS = [
+    { min: 0,  label: 'Starter',    icon: '🌱', color: '#6b7280', perk: 'Share your link to start earning' },
+    { min: 3,  label: 'Connector',  icon: '🔗', color: '#3b82f6', perk: '+10 bonus messages/day' },
+    { min: 10, label: 'Advocate',   icon: '⭐', color: '#8b5cf6', perk: '+25 messages/day + priority support' },
+    { min: 25, label: 'Champion',   icon: '🏆', color: '#f59e0b', perk: 'Unlimited messages for 1 month' },
+    { min: 50, label: 'Legend',     icon: '👑', color: '#ef4444', perk: 'Lifetime Pro + custom personality' }
+  ];
+
+  var MILESTONES = [3, 10, 25, 50, 100];
+
+  var state = {
+    handle: '',
+    referrals: 0,
+    link: '',
+    history: []
+  };
+
+  function init() {
+    var root = document.getElementById('referralProgramRoot');
+    if (!root) return;
+    render(root);
+  }
+
+  function getCurrentTier() {
+    var tier = TIERS[0];
+    for (var i = TIERS.length - 1; i >= 0; i--) {
+      if (state.referrals >= TIERS[i].min) {
+        tier = TIERS[i];
+        break;
+      }
+    }
+    return tier;
+  }
+
+  function getNextTier() {
+    for (var i = 0; i < TIERS.length; i++) {
+      if (state.referrals < TIERS[i].min) return TIERS[i];
+    }
+    return null;
+  }
+
+  function generateLink(handle) {
+    return 'https://t.me/AgentBoxBot?start=ref_' + handle.replace(/[^a-zA-Z0-9_]/g, '');
+  }
+
+  function simulateReferrals() {
+    var names = ['Alex', 'Jordan', 'Sam', 'Casey', 'Morgan', 'Riley', 'Taylor', 'Quinn', 'Avery', 'Drew',
+                 'Jamie', 'Skyler', 'Reese', 'Dakota', 'Sage', 'Finley', 'Rowan', 'Emery', 'Kai', 'Nico'];
+    var actions = ['signed up', 'started chatting', 'sent first message', 'joined via your link', 'activated their bot'];
+    var times = ['just now', '2 min ago', '15 min ago', '1 hour ago', '3 hours ago', 'yesterday', '2 days ago'];
+
+    var count = 3 + Math.floor(Math.random() * 8);
+    state.referrals = count;
+    state.history = [];
+
+    for (var i = 0; i < count; i++) {
+      state.history.push({
+        name: names[Math.floor(Math.random() * names.length)],
+        action: actions[Math.floor(Math.random() * actions.length)],
+        time: times[Math.min(i, times.length - 1)]
+      });
+    }
+  }
+
+  function render(root) {
+    root.innerHTML = buildHTML();
+    bindEvents(root);
+  }
+
+  function buildHTML() {
+    return '<div class="referral-container">' +
+      '<div class="referral-generate" id="referralGenerate">' +
+        '<p class="referral-intro">Invite friends to AgentBox and unlock rewards as they join. ' +
+        'Enter your Telegram handle to get your unique referral link.</p>' +
+        '<div class="referral-input-row">' +
+          '<span class="referral-at">@</span>' +
+          '<input type="text" class="referral-handle-input" id="referralHandleInput" ' +
+            'placeholder="your_telegram_handle" maxlength="32" ' +
+            'aria-label="Telegram handle" autocomplete="off">' +
+          '<button class="referral-gen-btn" id="referralGenBtn">Generate Link</button>' +
+        '</div>' +
+        '<p class="referral-handle-hint" id="referralHandleHint" aria-live="polite"></p>' +
+      '</div>' +
+
+      '<div class="referral-dashboard" id="referralDashboard" hidden>' +
+        '<div class="referral-link-card" id="referralLinkCard">' +
+          '<label class="referral-link-label">Your Referral Link</label>' +
+          '<div class="referral-link-row">' +
+            '<input type="text" class="referral-link-input" id="referralLinkInput" readonly aria-label="Referral link">' +
+            '<button class="referral-copy-btn" id="referralCopyBtn" aria-label="Copy link">📋 Copy</button>' +
+          '</div>' +
+          '<p class="referral-copy-status" id="referralCopyStatus" aria-live="polite"></p>' +
+        '</div>' +
+
+        '<div class="referral-stats-row">' +
+          '<div class="referral-stat-card">' +
+            '<span class="referral-stat-number" id="referralCount">0</span>' +
+            '<span class="referral-stat-label">Referrals</span>' +
+          '</div>' +
+          '<div class="referral-stat-card">' +
+            '<span class="referral-stat-number" id="referralTierIcon">🌱</span>' +
+            '<span class="referral-stat-label" id="referralTierLabel">Starter</span>' +
+          '</div>' +
+          '<div class="referral-stat-card">' +
+            '<span class="referral-stat-number" id="referralNextGoal">3</span>' +
+            '<span class="referral-stat-label">Next Milestone</span>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="referral-progress-section">' +
+          '<div class="referral-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="referralProgressBar">' +
+            '<div class="referral-progress-fill" id="referralProgressFill"></div>' +
+          '</div>' +
+          '<p class="referral-progress-text" id="referralProgressText"></p>' +
+        '</div>' +
+
+        buildTiersHTML() +
+
+        '<div class="referral-activity">' +
+          '<h3 class="referral-activity-title">📬 Recent Activity</h3>' +
+          '<div class="referral-activity-list" id="referralActivityList" role="list" aria-label="Referral activity"></div>' +
+        '</div>' +
+
+        '<button class="referral-simulate-btn" id="referralSimBtn">🎲 Simulate Referrals (Demo)</button>' +
+        '<button class="referral-reset-btn" id="referralResetBtn">↩️ Start Over</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function buildTiersHTML() {
+    var html = '<div class="referral-tiers"><h3 class="referral-tiers-title">🎁 Reward Tiers</h3><div class="referral-tiers-grid">';
+    for (var i = 0; i < TIERS.length; i++) {
+      var t = TIERS[i];
+      html += '<div class="referral-tier-card" data-tier="' + i + '">' +
+        '<span class="referral-tier-icon">' + t.icon + '</span>' +
+        '<span class="referral-tier-name">' + t.label + '</span>' +
+        '<span class="referral-tier-req">' + (t.min === 0 ? 'Start' : t.min + '+ referrals') + '</span>' +
+        '<span class="referral-tier-perk">' + t.perk + '</span>' +
+      '</div>';
+    }
+    html += '</div></div>';
+    return html;
+  }
+
+  function bindEvents(root) {
+    var genBtn = root.querySelector('#referralGenBtn');
+    var input = root.querySelector('#referralHandleInput');
+    var copyBtn = root.querySelector('#referralCopyBtn');
+    var simBtn = root.querySelector('#referralSimBtn');
+    var resetBtn = root.querySelector('#referralResetBtn');
+
+    genBtn.addEventListener('click', function () { onGenerate(root); });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') onGenerate(root);
+    });
+    copyBtn.addEventListener('click', function () { onCopy(root); });
+    simBtn.addEventListener('click', function () { onSimulate(root); });
+    resetBtn.addEventListener('click', function () { onReset(root); });
+  }
+
+  function onGenerate(root) {
+    var input = root.querySelector('#referralHandleInput');
+    var hint = root.querySelector('#referralHandleHint');
+    var handle = (input.value || '').trim().replace(/^@/, '');
+
+    if (!handle || handle.length < 3) {
+      hint.textContent = 'Please enter a valid Telegram handle (at least 3 characters)';
+      hint.className = 'referral-handle-hint referral-hint-error';
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(handle)) {
+      hint.textContent = 'Handle can only contain letters, numbers, and underscores';
+      hint.className = 'referral-handle-hint referral-hint-error';
+      return;
+    }
+
+    state.handle = handle;
+    state.link = generateLink(handle);
+    state.referrals = 0;
+    state.history = [];
+
+    root.querySelector('#referralGenerate').hidden = true;
+    root.querySelector('#referralDashboard').hidden = false;
+    root.querySelector('#referralLinkInput').value = state.link;
+
+    updateDashboard(root);
+  }
+
+  function onCopy(root) {
+    var linkInput = root.querySelector('#referralLinkInput');
+    var status = root.querySelector('#referralCopyStatus');
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(linkInput.value).then(function () {
+        status.textContent = '✅ Copied to clipboard!';
+        setTimeout(function () { status.textContent = ''; }, 2000);
+      });
+    } else {
+      linkInput.select();
+      document.execCommand('copy');
+      status.textContent = '✅ Copied!';
+      setTimeout(function () { status.textContent = ''; }, 2000);
+    }
+  }
+
+  function onSimulate(root) {
+    simulateReferrals();
+    updateDashboard(root);
+    animateReferralCount(root);
+  }
+
+  function onReset(root) {
+    state = { handle: '', referrals: 0, link: '', history: [] };
+    root.querySelector('#referralGenerate').hidden = false;
+    root.querySelector('#referralDashboard').hidden = true;
+    root.querySelector('#referralHandleInput').value = '';
+    root.querySelector('#referralHandleHint').textContent = '';
+  }
+
+  function updateDashboard(root) {
+    var tier = getCurrentTier();
+    var next = getNextTier();
+
+    root.querySelector('#referralCount').textContent = state.referrals;
+    root.querySelector('#referralTierIcon').textContent = tier.icon;
+    root.querySelector('#referralTierLabel').textContent = tier.label;
+
+    if (next) {
+      root.querySelector('#referralNextGoal').textContent = next.min;
+      var progress = Math.min(100, Math.round((state.referrals / next.min) * 100));
+      root.querySelector('#referralProgressFill').style.width = progress + '%';
+      root.querySelector('#referralProgressBar').setAttribute('aria-valuenow', progress);
+      root.querySelector('#referralProgressText').textContent =
+        state.referrals + ' / ' + next.min + ' referrals to ' + next.label + ' ' + next.icon;
+    } else {
+      root.querySelector('#referralNextGoal').textContent = '🎉';
+      root.querySelector('#referralProgressFill').style.width = '100%';
+      root.querySelector('#referralProgressBar').setAttribute('aria-valuenow', 100);
+      root.querySelector('#referralProgressText').textContent = 'You\'ve reached the highest tier! 👑';
+    }
+
+    // Highlight current tier
+    var tierCards = root.querySelectorAll('.referral-tier-card');
+    tierCards.forEach(function (card) {
+      var idx = parseInt(card.getAttribute('data-tier'), 10);
+      card.classList.toggle('referral-tier-active', state.referrals >= TIERS[idx].min);
+      card.classList.toggle('referral-tier-current', TIERS[idx] === tier);
+    });
+
+    // Activity list
+    var list = root.querySelector('#referralActivityList');
+    if (state.history.length === 0) {
+      list.innerHTML = '<div class="referral-activity-empty">No referrals yet — share your link to get started!</div>';
+    } else {
+      var html = '';
+      for (var i = 0; i < state.history.length; i++) {
+        var h = state.history[i];
+        html += '<div class="referral-activity-item" role="listitem">' +
+          '<span class="referral-activity-avatar">👤</span>' +
+          '<span class="referral-activity-text"><strong>' + h.name + '</strong> ' + h.action + '</span>' +
+          '<span class="referral-activity-time">' + h.time + '</span>' +
+        '</div>';
+      }
+      list.innerHTML = html;
+    }
+  }
+
+  function animateReferralCount(root) {
+    var el = root.querySelector('#referralCount');
+    var target = state.referrals;
+    var current = 0;
+    var step = Math.max(1, Math.floor(target / 20));
+    var interval = setInterval(function () {
+      current = Math.min(current + step, target);
+      el.textContent = current;
+      if (current >= target) clearInterval(interval);
+    }, 50);
+  }
+
+  return { init: init };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ReferralProgram;
+}
+
+
+/* === src/modules/init.js === */
+// Workflow Builder init
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof WorkflowBuilder !== 'undefined') { WorkflowBuilder.init('workflowBuilderRoot'); }
+    if (typeof CapabilityRadar !== 'undefined') { CapabilityRadar.init('capabilityRadarRoot'); }
+    if (typeof SetupChecklist !== 'undefined') { SetupChecklist.init('setupChecklistRoot'); }
+    if (typeof ReferralProgram !== 'undefined') { ReferralProgram.init(); }
+  });
+}
+
+
+/* === src/benchmarks.js === */
+'use strict';
+
+/**
+ * Agent Benchmarks — Interactive performance comparison dashboard.
+ *
+ * Shows animated bar charts comparing AgentBox vs raw AI chat across
+ * real-world task categories: memory, integrations, efficiency, context.
+ * Users can filter by category and hover for details.
+ */
+(function initBenchmarks() {
+    // ── Benchmark data ──────────────────────────────────────────
+    var BENCHMARKS = [
+        {
+            id: 'recall-personal',
+            task: 'Recall personal preferences',
+            category: 'memory',
+            description: 'Remember dietary restrictions, timezone, preferred communication style across sessions',
+            agentbox: 97,
+            rawAi: 0,
+            unit: 'accuracy %',
+            insight: 'Raw AI starts fresh every conversation — your preferences are lost'
+        },
+        {
+            id: 'follow-up',
+            task: 'Follow-up on previous conversations',
+            category: 'memory',
+            description: 'Continue a discussion from yesterday without re-explaining context',
+            agentbox: 94,
+            rawAi: 0,
+            unit: 'success rate %',
+            insight: 'AgentBox remembers your conversation history across sessions'
+        },
+        {
+            id: 'calendar-check',
+            task: 'Check schedule & create events',
+            category: 'integration',
+            description: 'Query Google Calendar, find free slots, create events with correct details',
+            agentbox: 96,
+            rawAi: 12,
+            unit: 'task completion %',
+            insight: 'Raw AI can only suggest — AgentBox actually reads and writes your calendar'
+        },
+        {
+            id: 'email-summary',
+            task: 'Summarize unread emails',
+            category: 'integration',
+            description: 'Read Gmail inbox, identify important messages, extract action items',
+            agentbox: 93,
+            rawAi: 8,
+            unit: 'task completion %',
+            insight: 'AgentBox connects directly to Gmail — no copy-pasting needed'
+        },
+        {
+            id: 'web-search',
+            task: 'Answer with current information',
+            category: 'integration',
+            description: 'Search the web for real-time data (weather, news, prices)',
+            agentbox: 91,
+            rawAi: 42,
+            unit: 'accuracy %',
+            insight: 'AgentBox searches the web live; raw AI relies on training data cutoff'
+        },
+        {
+            id: 'multi-step',
+            task: 'Multi-step task completion',
+            category: 'efficiency',
+            description: '"Check my calendar, find a free slot this week, and set a reminder 1hr before"',
+            agentbox: 89,
+            rawAi: 5,
+            unit: 'completion %',
+            insight: 'Chaining calendar lookup → slot finding → reminder creation in one message'
+        },
+        {
+            id: 'response-time',
+            task: 'Average response time',
+            category: 'efficiency',
+            description: 'Time from message sent to complete response received',
+            agentbox: 92,
+            rawAi: 85,
+            unit: 'speed score',
+            insight: 'Both are fast, but AgentBox includes tool execution in its response time'
+        },
+        {
+            id: 'reminder-accuracy',
+            task: 'Reminder & notification delivery',
+            category: 'efficiency',
+            description: 'Set reminders that actually fire at the right time in the right timezone',
+            agentbox: 98,
+            rawAi: 3,
+            unit: 'delivery rate %',
+            insight: 'Raw AI cannot send proactive notifications — AgentBox can'
+        },
+        {
+            id: 'tone-adapt',
+            task: 'Adapt to user communication style',
+            category: 'context',
+            description: 'Match formality, emoji usage, verbosity to user preferences over time',
+            agentbox: 90,
+            rawAi: 45,
+            unit: 'match score %',
+            insight: 'AgentBox learns your style over weeks; raw AI guesses from system prompts'
+        },
+        {
+            id: 'project-context',
+            task: 'Maintain project context',
+            category: 'context',
+            description: 'Track an ongoing project across multiple conversations (deadlines, decisions, blockers)',
+            agentbox: 92,
+            rawAi: 0,
+            unit: 'retention %',
+            insight: 'AgentBox maintains structured memory of your projects'
+        },
+        {
+            id: 'name-recognition',
+            task: 'Recognize people & relationships',
+            category: 'context',
+            description: 'Remember who "Mom", "my boss Sarah", "the dentist" refers to',
+            agentbox: 95,
+            rawAi: 0,
+            unit: 'accuracy %',
+            insight: 'AgentBox builds a contact graph from your conversations'
+        },
+        {
+            id: 'habit-tracking',
+            task: 'Track habits & routines',
+            category: 'context',
+            description: '"How many days have I meditated this week?" — answer from conversation history',
+            agentbox: 88,
+            rawAi: 0,
+            unit: 'accuracy %',
+            insight: 'AgentBox can extract patterns from your message history'
+        },
+    ];
+
+    // ── Helpers ─────────────────────────────────────────────────
+
+    function esc(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function catLabel(cat) {
+        var labels = {
+            memory: '🧠 Memory',
+            integration: '🔌 Integrations',
+            efficiency: '⚡ Efficiency',
+            context: '🎯 Context'
+        };
+        return labels[cat] || cat;
+    }
+
+    function catColor(cat) {
+        var colors = {
+            memory: '#a78bfa',
+            integration: '#34d399',
+            efficiency: '#fbbf24',
+            context: '#60a5fa'
+        };
+        return colors[cat] || '#888';
+    }
+
+    // ── Rendering ───────────────────────────────────────────────
+
+    function renderChart(filter) {
+        var chartEl = document.getElementById('benchmarkChart');
+        var summaryEl = document.getElementById('benchmarkSummary');
+        if (!chartEl || !summaryEl) return;
+
+        var filtered = filter === 'all'
+            ? BENCHMARKS
+            : BENCHMARKS.filter(function(b) { return b.category === filter; });
+
+        // Calculate summary stats
+        var avgAgent = 0;
+        var avgRaw = 0;
+        for (var i = 0; i < filtered.length; i++) {
+            avgAgent += filtered[i].agentbox;
+            avgRaw += filtered[i].rawAi;
+        }
+        avgAgent = filtered.length ? Math.round(avgAgent / filtered.length) : 0;
+        avgRaw = filtered.length ? Math.round(avgRaw / filtered.length) : 0;
+        var advantage = avgAgent - avgRaw;
+
+        // Build chart HTML
+        var html = '';
+        for (var j = 0; j < filtered.length; j++) {
+            var b = filtered[j];
+            html += '<div class="bench-row" data-bench-id="' + b.id + '">' +
+                '<div class="bench-label">' +
+                    '<span class="bench-task">' + esc(b.task) + '</span>' +
+                    '<span class="bench-cat-tag" style="color:' + catColor(b.category) + '">' + catLabel(b.category) + '</span>' +
+                '</div>' +
+                '<div class="bench-bars">' +
+                    '<div class="bench-bar-row">' +
+                        '<span class="bench-bar-label">AgentBox</span>' +
+                        '<div class="bench-bar-track">' +
+                            '<div class="bench-bar agentbox-bar" style="width:0%" data-target="' + b.agentbox + '">' +
+                                '<span class="bench-bar-value">' + b.agentbox + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="bench-bar-row">' +
+                        '<span class="bench-bar-label">Raw AI</span>' +
+                        '<div class="bench-bar-track">' +
+                            '<div class="bench-bar raw-bar" style="width:0%" data-target="' + b.rawAi + '">' +
+                                '<span class="bench-bar-value">' + b.rawAi + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="bench-insight">' +
+                    '<span class="bench-insight-icon">💡</span>' +
+                    '<span class="bench-insight-text">' + esc(b.insight) + '</span>' +
+                '</div>' +
+            '</div>';
+        }
+
+        chartEl.innerHTML = html;
+
+        // Summary
+        summaryEl.innerHTML =
+            '<div class="bench-summary-card">' +
+                '<div class="bench-summary-stat">' +
+                    '<span class="bench-summary-number agentbox-color">' + avgAgent + '%</span>' +
+                    '<span class="bench-summary-label">AgentBox avg</span>' +
+                '</div>' +
+                '<div class="bench-summary-stat">' +
+                    '<span class="bench-summary-number raw-color">' + avgRaw + '%</span>' +
+                    '<span class="bench-summary-label">Raw AI avg</span>' +
+                '</div>' +
+                '<div class="bench-summary-stat">' +
+                    '<span class="bench-summary-number advantage-color">+' + advantage + '%</span>' +
+                    '<span class="bench-summary-label">AgentBox advantage</span>' +
+                '</div>' +
+            '</div>';
+
+        // Animate bars after a brief delay
+        requestAnimationFrame(function() {
+            setTimeout(animateBars, 50);
+        });
+    }
+
+    function animateBars() {
+        var bars = document.querySelectorAll('.bench-bar[data-target]');
+        for (var i = 0; i < bars.length; i++) {
+            (function(bar) {
+                var target = parseInt(bar.getAttribute('data-target'), 10);
+                bar.style.width = target + '%';
+            })(bars[i]);
+        }
+    }
+
+    // ── Intersection Observer for scroll-triggered animation ────
+
+    function setupScrollAnimation() {
+        if (typeof IntersectionObserver === 'undefined') {
+            animateBars();
+            return;
+        }
+
+        var section = document.getElementById('benchmarkSection');
+        if (!section) return;
+
+        var hasAnimated = false;
+        var observer = new IntersectionObserver(function(entries) {
+            for (var i = 0; i < entries.length; i++) {
+                if (entries[i].isIntersecting && !hasAnimated) {
+                    hasAnimated = true;
+                    animateBars();
+                    observer.disconnect();
+                }
+            }
+        }, { threshold: 0.2 });
+
+        observer.observe(section);
+    }
+
+    // ── Filter buttons ──────────────────────────────────────────
+
+    function setupFilters() {
+        var buttons = document.querySelectorAll('.benchmark-filter');
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener('click', function() {
+                var cat = this.getAttribute('data-bench-cat');
+                // Update active state
+                for (var j = 0; j < buttons.length; j++) {
+                    buttons[j].classList.remove('active');
+                    buttons[j].setAttribute('aria-selected', 'false');
+                }
+                this.classList.add('active');
+                this.setAttribute('aria-selected', 'true');
+
+                renderChart(cat);
+            });
+        }
+    }
+
+    // ── Init ────────────────────────────────────────────────────
+
+    function init() {
+        var section = document.getElementById('benchmarkSection');
+        if (!section) return;
+
+        renderChart('all');
+        setupFilters();
+        setupScrollAnimation();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+
+
+/* === src/command-reference.js === */
+// ---------------------------------------------------------------------------
+// Command Reference - Interactive searchable command cheat sheet
+// ---------------------------------------------------------------------------
+// Categorized commands with examples, descriptions, and copy-to-clipboard.
+// Users can search, filter by category, and expand for usage examples.
+
+var CommandReference = (function () {
+  'use strict';
+
+  var CATEGORIES = [
+    { id: 'memory', label: 'Memory', icon: '🧠', color: '#9b59b6' },
+    { id: 'search', label: 'Search & Web', icon: '🔍', color: '#3498db' },
+    { id: 'productivity', label: 'Productivity', icon: '⚡', color: '#f39c12' },
+    { id: 'media', label: 'Images & Media', icon: '📸', color: '#e74c3c' },
+    { id: 'settings', label: 'Settings', icon: '⚙️', color: '#2ecc71' },
+    { id: 'advanced', label: 'Advanced', icon: '🔧', color: '#1abc9c' }
+  ];
+
+  var COMMANDS = [
+    {
+      command: 'remember',
+      syntax: 'Remember that [fact]',
+      category: 'memory',
+      description: 'Store a fact, preference, or piece of context for future conversations.',
+      examples: [
+        'Remember that I prefer dark roast coffee',
+        'Remember my meeting is every Tuesday at 3pm',
+        'Remember that my dog\'s name is Max'
+      ],
+      tips: 'Your agent keeps these permanently. Use "What do you remember about me?" to review.'
+    },
+    {
+      command: 'forget',
+      syntax: 'Forget [fact]',
+      category: 'memory',
+      description: 'Remove a previously stored memory or preference.',
+      examples: [
+        'Forget my old address',
+        'Forget that I like tea — I switched to coffee'
+      ],
+      tips: 'Specific requests work better than vague ones.'
+    },
+    {
+      command: 'recall',
+      syntax: 'What do you remember / know about [topic]?',
+      category: 'memory',
+      description: 'Ask your agent to recall stored context about a topic.',
+      examples: [
+        'What do you remember about my work projects?',
+        'What do you know about my preferences?'
+      ],
+      tips: 'Great for checking what context your agent has before a conversation.'
+    },
+    {
+      command: 'search',
+      syntax: 'Search for [query]',
+      category: 'search',
+      description: 'Search the web and get a summarized answer with sources.',
+      examples: [
+        'Search for the latest SpaceX launch',
+        'What\'s the weather in Tokyo right now?',
+        'Find the best restaurants near Pike Place Market'
+      ],
+      tips: 'You don\'t need to say "search" — just ask naturally and it\'ll search when needed.'
+    },
+    {
+      command: 'summarize-url',
+      syntax: 'Summarize [URL]',
+      category: 'search',
+      description: 'Fetch a webpage and provide a concise summary.',
+      examples: [
+        'Summarize https://example.com/article',
+        'TL;DR this link: https://blog.example.com/post'
+      ],
+      tips: 'Works with articles, blog posts, documentation pages, and more.'
+    },
+    {
+      command: 'remind',
+      syntax: 'Remind me [when] to [task]',
+      category: 'productivity',
+      description: 'Set a reminder that will ping you at the specified time.',
+      examples: [
+        'Remind me in 30 minutes to check the oven',
+        'Remind me tomorrow at 9am to call the dentist',
+        'Remind me every Monday to submit the report'
+      ],
+      tips: 'Supports relative times, specific dates, and recurring schedules.'
+    },
+    {
+      command: 'draft',
+      syntax: 'Draft [type] about [topic]',
+      category: 'productivity',
+      description: 'Generate a draft email, message, post, or document.',
+      examples: [
+        'Draft an email to my boss about taking Friday off',
+        'Draft a LinkedIn post about our product launch',
+        'Draft a thank-you message for the interview'
+      ],
+      tips: 'Specify tone (formal, casual, friendly) for better results.'
+    },
+    {
+      command: 'list',
+      syntax: 'Add [item] to my [list name]',
+      category: 'productivity',
+      description: 'Manage lists — grocery, todo, reading, or any custom list.',
+      examples: [
+        'Add milk and eggs to my grocery list',
+        'Show my todo list',
+        'Remove "buy flowers" from my shopping list'
+      ],
+      tips: 'Create any named list. Say "show my lists" to see all of them.'
+    },
+    {
+      command: 'analyze-image',
+      syntax: '[Send an image] What is this?',
+      category: 'media',
+      description: 'Send a photo and ask questions about it — identify objects, read text, describe scenes.',
+      examples: [
+        'What plant is this? [+ photo]',
+        'Read the text in this screenshot [+ photo]',
+        'How many calories in this meal? [+ photo]'
+      ],
+      tips: 'Just send the photo with your question in the same message or the next one.'
+    },
+    {
+      command: 'generate-image',
+      syntax: 'Generate an image of [description]',
+      category: 'media',
+      description: 'Create AI-generated images from text descriptions.',
+      examples: [
+        'Generate an image of a sunset over mountains',
+        'Create a logo for a coffee shop called "Bean There"',
+        'Draw a cartoon cat wearing a top hat'
+      ],
+      tips: 'Be specific with style, colors, and composition for better results.'
+    },
+    {
+      command: 'translate',
+      syntax: 'Translate [text] to [language]',
+      category: 'advanced',
+      description: 'Translate text between languages with context awareness.',
+      examples: [
+        'Translate "Where is the train station?" to Japanese',
+        'How do you say "thank you" in Korean?',
+        'Translate this menu [+ photo] to English'
+      ],
+      tips: 'Combines with image analysis — send a photo of foreign text to translate it.'
+    },
+    {
+      command: 'code',
+      syntax: 'Write code to [task] / Explain this code',
+      category: 'advanced',
+      description: 'Generate, explain, debug, or review code in any language.',
+      examples: [
+        'Write a Python script to rename files in a folder',
+        'Explain this SQL query',
+        'Find the bug in this function'
+      ],
+      tips: 'Specify the programming language for more accurate results.'
+    },
+    {
+      command: 'persona',
+      syntax: 'Set your personality to [style]',
+      category: 'settings',
+      description: 'Adjust how your agent communicates — formal, casual, concise, verbose, etc.',
+      examples: [
+        'Be more concise in your replies',
+        'Use a professional tone',
+        'Talk to me like a friend'
+      ],
+      tips: 'Your agent remembers personality preferences across sessions.'
+    },
+    {
+      command: 'reset',
+      syntax: 'Reset / Start fresh',
+      category: 'settings',
+      description: 'Clear conversation context and start a new session.',
+      examples: [
+        'Start fresh',
+        'New conversation',
+        'Clear context'
+      ],
+      tips: 'This clears the current conversation but keeps your stored memories.'
+    },
+    {
+      command: 'export',
+      syntax: 'Export my [data]',
+      category: 'settings',
+      description: 'Export your conversation history, memories, or lists.',
+      examples: [
+        'Export our conversation',
+        'Export my memories',
+        'Download my todo list'
+      ],
+      tips: 'Data is yours — export anytime.'
+    }
+  ];
+
+  // ---- State ----
+  var state = {
+    searchQuery: '',
+    activeCategory: 'all',
+    expandedCommand: null
+  };
+
+  // ---- Helpers ----
+
+  function escapeHTML(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  function getCategoryById(id) {
+    for (var i = 0; i < CATEGORIES.length; i++) {
+      if (CATEGORIES[i].id === id) return CATEGORIES[i];
+    }
+    return null;
+  }
+
+  function filterCommands() {
+    var q = state.searchQuery.toLowerCase();
+    return COMMANDS.filter(function (cmd) {
+      var matchesCategory = state.activeCategory === 'all' || cmd.category === state.activeCategory;
+      if (!matchesCategory) return false;
+      if (!q) return true;
+      return (
+        cmd.command.toLowerCase().indexOf(q) !== -1 ||
+        cmd.syntax.toLowerCase().indexOf(q) !== -1 ||
+        cmd.description.toLowerCase().indexOf(q) !== -1 ||
+        cmd.examples.some(function (ex) { return ex.toLowerCase().indexOf(q) !== -1; })
+      );
+    });
+  }
+
+  // ---- Rendering ----
+
+  function renderCategoryFilters() {
+    var html = '<button class="cmdref-cat-btn cmdref-cat-active" data-cat="all">All</button>';
+    CATEGORIES.forEach(function (cat) {
+      html += '<button class="cmdref-cat-btn" data-cat="' + cat.id + '">' +
+        cat.icon + ' ' + escapeHTML(cat.label) + '</button>';
+    });
+    return html;
+  }
+
+  function renderCommandCard(cmd, isExpanded) {
+    var cat = getCategoryById(cmd.category);
+    var expandedClass = isExpanded ? ' cmdref-card-expanded' : '';
+    var html = '<div class="cmdref-card' + expandedClass + '" data-cmd="' + cmd.command + '">';
+    html += '<div class="cmdref-card-header">';
+    html += '<div class="cmdref-card-left">';
+    html += '<span class="cmdref-cat-badge" style="background:' + cat.color + '">' + cat.icon + '</span>';
+    html += '<div class="cmdref-card-title">';
+    html += '<code class="cmdref-syntax">' + escapeHTML(cmd.syntax) + '</code>';
+    html += '<p class="cmdref-desc">' + escapeHTML(cmd.description) + '</p>';
+    html += '</div></div>';
+    html += '<button class="cmdref-expand-btn" aria-label="' + (isExpanded ? 'Collapse' : 'Expand') + '">' +
+      (isExpanded ? '▲' : '▼') + '</button>';
+    html += '</div>';
+
+    if (isExpanded) {
+      html += '<div class="cmdref-card-body">';
+      html += '<div class="cmdref-examples">';
+      html += '<h4>Examples</h4>';
+      cmd.examples.forEach(function (ex) {
+        html += '<div class="cmdref-example">';
+        html += '<code>' + escapeHTML(ex) + '</code>';
+        html += '<button class="cmdref-copy-btn" data-copy="' + escapeHTML(ex) + '" title="Copy to clipboard">📋</button>';
+        html += '</div>';
+      });
+      html += '</div>';
+      if (cmd.tips) {
+        html += '<div class="cmdref-tips"><strong>💡 Tip:</strong> ' + escapeHTML(cmd.tips) + '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function render(container) {
+    var filtered = filterCommands();
+    var html = '<div class="cmdref-search-row">';
+    html += '<input type="text" class="cmdref-search" placeholder="Search commands..." value="' +
+      escapeHTML(state.searchQuery) + '" aria-label="Search commands">';
+    html += '<span class="cmdref-count">' + filtered.length + ' command' + (filtered.length !== 1 ? 's' : '') + '</span>';
+    html += '</div>';
+    html += '<div class="cmdref-categories">' + renderCategoryFilters() + '</div>';
+    html += '<div class="cmdref-list">';
+    if (filtered.length === 0) {
+      html += '<div class="cmdref-empty">No commands match your search. Try a different term.</div>';
+    } else {
+      filtered.forEach(function (cmd) {
+        html += renderCommandCard(cmd, state.expandedCommand === cmd.command);
+      });
+    }
+    html += '</div>';
+    container.innerHTML = html;
+    bindEvents(container);
+  }
+
+  // ---- Events ----
+
+  function bindEvents(container) {
+    var searchInput = container.querySelector('.cmdref-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', function (e) {
+        state.searchQuery = e.target.value;
+        render(container);
+        // Re-focus and restore cursor
+        var newInput = container.querySelector('.cmdref-search');
+        if (newInput) {
+          newInput.focus();
+          newInput.setSelectionRange(state.searchQuery.length, state.searchQuery.length);
+        }
+      });
+    }
+
+    var catBtns = container.querySelectorAll('.cmdref-cat-btn');
+    catBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state.activeCategory = btn.getAttribute('data-cat');
+        state.expandedCommand = null;
+        render(container);
+      });
+    });
+
+    var cards = container.querySelectorAll('.cmdref-card');
+    cards.forEach(function (card) {
+      var header = card.querySelector('.cmdref-card-header');
+      if (header) {
+        header.addEventListener('click', function (e) {
+          if (e.target.classList.contains('cmdref-copy-btn')) return;
+          var cmd = card.getAttribute('data-cmd');
+          state.expandedCommand = state.expandedCommand === cmd ? null : cmd;
+          render(container);
+        });
+      }
+    });
+
+    var copyBtns = container.querySelectorAll('.cmdref-copy-btn');
+    copyBtns.forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var text = btn.getAttribute('data-copy');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            btn.textContent = '✅';
+            setTimeout(function () { btn.textContent = '📋'; }, 1500);
+          });
+        } else {
+          // Fallback
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          btn.textContent = '✅';
+          setTimeout(function () { btn.textContent = '📋'; }, 1500);
+        }
+      });
+    });
+  }
+
+  // ---- Init ----
+
+  function init() {
+    var container = document.getElementById('commandRefContent');
+    if (!container) return;
+    render(container);
+  }
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  }
+
+  return {
+    init: init,
+    COMMANDS: COMMANDS,
+    CATEGORIES: CATEGORIES,
+    filterCommands: filterCommands,
+    _state: state
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = CommandReference;
+}
+
+
+/* === src/role-demo-picker.js === */
+// ---------------------------------------------------------------------------
+// Role Demo Picker - Personalized role-based AgentBox demo conversations
+// ---------------------------------------------------------------------------
+// Users select their job role and see a simulated chat conversation showing
+// how AgentBox helps in that specific role. Each role has 3 example exchanges.
+
+var RoleDemoPicker = (function () {
+  'use strict';
+
+  var ROLES = [
+    {
+      id: 'marketing',
+      label: 'Marketing',
+      icon: '📣',
+      description: 'Campaign automation, content scheduling, analytics summaries',
+      conversation: [
+        { role: 'user', text: 'Draft 3 social media posts for our product launch next Tuesday' },
+        { role: 'agent', text: 'Here are 3 posts tailored for LinkedIn, Twitter, and Instagram — each with platform-specific formatting, hashtags, and a CTA. Want me to schedule them?' },
+        { role: 'user', text: 'Yes, schedule LinkedIn for 9am, Twitter for noon, Instagram for 5pm' },
+        { role: 'agent', text: 'Done! All 3 are scheduled. I\'ve also set up a reminder to check engagement metrics 24 hours after each post goes live. 📊' }
+      ]
+    },
+    {
+      id: 'engineering',
+      label: 'Engineering',
+      icon: '⚙️',
+      description: 'Code reviews, deployment checks, incident triage',
+      conversation: [
+        { role: 'user', text: 'Summarize the 12 PRs opened this week and flag any with failing CI' },
+        { role: 'agent', text: '3 PRs have failing CI: #247 (lint errors), #251 (test timeout), #253 (type mismatch). The other 9 are green. Want a detailed breakdown?' },
+        { role: 'user', text: 'Auto-assign reviewers based on code ownership for the green ones' },
+        { role: 'agent', text: 'Assigned! 6 PRs got primary reviewers from CODEOWNERS, 3 needed fallback assignment based on recent commit history. All reviewers notified via Slack.' }
+      ]
+    },
+    {
+      id: 'sales',
+      label: 'Sales',
+      icon: '💼',
+      description: 'Lead research, meeting prep, follow-up drafts',
+      conversation: [
+        { role: 'user', text: 'I have a call with Acme Corp in 30 minutes. Prep me.' },
+        { role: 'agent', text: 'Acme Corp: Series B ($42M), 200 employees, using Salesforce + HubSpot. Your last touchpoint was a demo 3 weeks ago. Key decision-maker: VP of Ops. They mentioned integration concerns.' },
+        { role: 'user', text: 'Draft a follow-up email addressing their integration concerns' },
+        { role: 'agent', text: 'Done — the email highlights our native Salesforce connector, includes a case study from a similar company, and proposes a technical deep-dive call. Ready to review before sending.' }
+      ]
+    },
+    {
+      id: 'support',
+      label: 'Support',
+      icon: '🎧',
+      description: 'Ticket triage, knowledge base, customer context',
+      conversation: [
+        { role: 'user', text: 'Show me high-priority tickets from the last 4 hours' },
+        { role: 'agent', text: '5 high-priority tickets: 2 are billing issues (similar root cause), 2 are API timeouts (likely related to the deploy at 2pm), 1 is an access request. Want me to group-respond to the billing ones?' },
+        { role: 'user', text: 'Yes, and escalate the API timeout tickets to engineering' },
+        { role: 'agent', text: 'Billing tickets responded with the known-issue template + ETA. API tickets escalated to #eng-oncall with timeline context and affected customer details attached.' }
+      ]
+    },
+    {
+      id: 'executive',
+      label: 'Executive',
+      icon: '📈',
+      description: 'Briefings, report generation, meeting summaries',
+      conversation: [
+        { role: 'user', text: 'Give me a 60-second briefing for the board meeting at 2pm' },
+        { role: 'agent', text: 'Revenue up 18% QoQ. Churn dropped to 3.2%. Product launched 2 major features. Engineering hired 4, 2 offers pending. One risk flag: enterprise deal with DataFlow Inc. stalled — legal reviewing contract terms.' },
+        { role: 'user', text: 'Summarize yesterday\'s all-hands meeting — I had to leave early' },
+        { role: 'agent', text: 'Key items: Q2 OKRs finalized (you\'re listed as sponsor for the enterprise expansion goal), new PTO policy starts March 1, and the design team demoed the dashboard redesign — positive reception, shipping in 3 weeks.' }
+      ]
+    },
+    {
+      id: 'hr',
+      label: 'HR & People',
+      icon: '👥',
+      description: 'Onboarding, scheduling, policy lookups',
+      conversation: [
+        { role: 'user', text: 'We have 3 new hires starting Monday. Is their onboarding ready?' },
+        { role: 'agent', text: 'Checked all 3: laptops provisioned ✓, accounts created ✓, buddy assigned ✓. One gap: Jamie Chen\'s background check is still pending — I\'ve flagged it to the vendor for expedite.' },
+        { role: 'user', text: 'Schedule their welcome meetings with their managers' },
+        { role: 'agent', text: 'All 3 welcome meetings booked for Monday 10am with respective managers. Calendar invites sent with onboarding doc links and first-week agenda attached.' }
+      ]
+    }
+  ];
+
+  var _container = null;
+  var _activeRole = null;
+  var _chatArea = null;
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  function init() {
+    _container = document.getElementById('rolePickerSection');
+    if (!_container) return;
+
+    var roleGrid = _container.querySelector('.role-picker-grid');
+    var chatWrap = _container.querySelector('.role-picker-chat');
+    _chatArea = chatWrap ? chatWrap.querySelector('.role-chat-messages') : null;
+
+    if (!roleGrid) return;
+
+    var buttons = roleGrid.querySelectorAll('.role-picker-btn');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function () {
+        selectRole(this.getAttribute('data-role'));
+      });
+    }
+
+    // Select first role by default
+    selectRole(ROLES[0].id);
+  }
+
+  function selectRole(roleId) {
+    var role = null;
+    for (var i = 0; i < ROLES.length; i++) {
+      if (ROLES[i].id === roleId) { role = ROLES[i]; break; }
+    }
+    if (!role) return;
+    _activeRole = roleId;
+
+    // Update button states
+    if (_container) {
+      var buttons = _container.querySelectorAll('.role-picker-btn');
+      for (var i = 0; i < buttons.length; i++) {
+        var btn = buttons[i];
+        if (btn.getAttribute('data-role') === roleId) {
+          btn.classList.add('active');
+          btn.setAttribute('aria-pressed', 'true');
+        } else {
+          btn.classList.remove('active');
+          btn.setAttribute('aria-pressed', 'false');
+        }
+      }
+    }
+
+    // Render conversation
+    renderChat(role);
+  }
+
+  function renderChat(role) {
+    if (!_chatArea) return;
+
+    // Clear existing
+    while (_chatArea.firstChild) _chatArea.removeChild(_chatArea.firstChild);
+
+    // Role header
+    var header = document.createElement('div');
+    header.className = 'role-chat-header';
+    header.textContent = role.icon + ' ' + role.label + ' — ' + role.description;
+    _chatArea.appendChild(header);
+
+    // Messages
+    for (var i = 0; i < role.conversation.length; i++) {
+      var msg = role.conversation[i];
+      var bubble = document.createElement('div');
+      bubble.className = 'role-chat-bubble role-chat-' + msg.role;
+      bubble.setAttribute('role', 'listitem');
+
+      var label = document.createElement('span');
+      label.className = 'role-chat-label';
+      label.textContent = msg.role === 'user' ? 'You' : 'AgentBox';
+
+      var text = document.createElement('span');
+      text.className = 'role-chat-text';
+      text.textContent = msg.text;
+
+      bubble.appendChild(label);
+      bubble.appendChild(text);
+      _chatArea.appendChild(bubble);
+    }
+  }
+
+  function getActiveRole() {
+    return _activeRole;
+  }
+
+  function getRoles() {
+    return ROLES.slice();
+  }
+
+  return {
+    init: init,
+    selectRole: selectRole,
+    getActiveRole: getActiveRole,
+    getRoles: getRoles,
+    _ROLES: ROLES
+  };
+})();
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function () { RoleDemoPicker.init(); });
+}
+if (typeof window !== 'undefined') { window.RoleDemoPicker = RoleDemoPicker; }
+
+
+/* === src/migration-guide.js === */
+'use strict';
+
+/**
+ * Migration Guide — Interactive platform comparison & migration helper.
+ *
+ * Shows concept mappings between popular AI agent frameworks and AgentBox,
+ * with code translation examples, migration checklists, and effort
+ * estimation. Helps users coming from LangChain, AutoGPT, CrewAI, or
+ * custom solutions understand how their existing patterns map to AgentBox.
+ *
+ * DOM target: #migration-guide
+ */
+(function initMigrationGuide() {
+    // ── Platform data ───────────────────────────────────────────
+
+    var PLATFORMS = [
+        {
+            id: 'langchain',
+            name: 'LangChain',
+            icon: '\u{1F9E9}',
+            color: '#2D9CDB',
+            tagline: 'Popular Python/JS framework for LLM chains',
+            concepts: [
+                { theirs: 'Chain', ours: 'Task Pipeline', note: 'AgentBox pipelines are declarative and auto-retry on failure' },
+                { theirs: 'Agent', ours: 'Agent', note: 'Both use tool-calling agents; AgentBox adds persistent memory' },
+                { theirs: 'Tool', ours: 'Skill', note: 'AgentBox skills are hot-reloadable and sandboxed' },
+                { theirs: 'Memory (BufferMemory)', ours: 'Session Memory', note: 'AgentBox memory persists across restarts — no manual wiring' },
+                { theirs: 'VectorStore', ours: 'Knowledge Base', note: 'Built-in, no Pinecone/Weaviate setup required' },
+                { theirs: 'OutputParser', ours: 'Response Schema', note: 'Declarative JSON schemas with auto-validation' },
+                { theirs: 'Callback', ours: 'Webhook / Event', note: 'Native webhook support with retry and dead-letter queues' },
+                { theirs: 'Hub Prompt', ours: 'Prompt Library', note: 'Version-controlled prompts with A/B testing built in' },
+            ],
+            migration: [
+                { step: 'Export your chain definitions to JSON', effort: 'low' },
+                { step: 'Map Tools to AgentBox Skills (most are built-in)', effort: 'low' },
+                { step: 'Move prompts to the Prompt Library', effort: 'low' },
+                { step: 'Replace BufferMemory with native session memory (automatic)', effort: 'none' },
+                { step: 'Set up vector store migration if using RAG', effort: 'medium' },
+                { step: 'Update API calls to use AgentBox REST endpoints', effort: 'medium' },
+                { step: 'Configure webhooks to replace LangChain callbacks', effort: 'low' },
+                { step: 'Run parallel testing with both systems', effort: 'medium' },
+            ],
+            beforeCode: '# LangChain\nfrom langchain.chains import LLMChain\nfrom langchain.memory import ConversationBufferMemory\n\nmemory = ConversationBufferMemory()\nchain = LLMChain(\n    llm=ChatOpenAI(),\n    prompt=prompt_template,\n    memory=memory\n)\nresult = chain.run("Plan my week")',
+            afterCode: '# AgentBox\n# Memory is automatic — no setup needed\nresult = agent.run("Plan my week")\n# Session history, tool calls, and context\n# are all persisted automatically',
+        },
+        {
+            id: 'autogpt',
+            name: 'AutoGPT',
+            icon: '\u{1F916}',
+            color: '#7B61FF',
+            tagline: 'Autonomous AI agent with self-prompting',
+            concepts: [
+                { theirs: 'Workspace', ours: 'Workspace', note: 'Both use persistent file workspaces; AgentBox adds git integration' },
+                { theirs: 'Plugin', ours: 'Skill', note: 'AgentBox skills are curated and security-reviewed' },
+                { theirs: 'AI Config', ours: 'Agent Config (YAML)', note: 'Simpler config with hot-reload' },
+                { theirs: 'Continuous Mode', ours: 'Autonomous Mode', note: 'AgentBox adds budget limits and safety guardrails' },
+                { theirs: 'Memory (Pinecone)', ours: 'Built-in Memory', note: 'No external vector DB needed' },
+                { theirs: 'Command', ours: 'Tool / Skill', note: 'Same concept, better sandboxing' },
+            ],
+            migration: [
+                { step: 'Export your AI config settings', effort: 'low' },
+                { step: 'Map plugins to AgentBox skills', effort: 'medium' },
+                { step: 'Migrate workspace files (direct copy)', effort: 'low' },
+                { step: 'Configure safety limits (token budget, action allowlist)', effort: 'low' },
+                { step: 'Set up persistent memory (automatic in AgentBox)', effort: 'none' },
+                { step: 'Test autonomous task execution with guardrails', effort: 'medium' },
+            ],
+            beforeCode: '# AutoGPT ai_settings.yaml\nai_name: MyAgent\nai_role: Research Assistant\nai_goals:\n  - Search the web for information\n  - Summarize findings\n  - Save results to files\nplugins:\n  - AutoGPTWebSearch\n  - AutoGPTFileOps',
+            afterCode: '# AgentBox config.yaml\nname: MyAgent\nmodel: gpt-4\nskills:\n  - web-search  # built-in\n  - file-ops    # built-in\nsafety:\n  max_tokens_per_turn: 4000\n  require_approval: destructive',
+        },
+        {
+            id: 'crewai',
+            name: 'CrewAI',
+            icon: '\u{1F465}',
+            color: '#FF6B6B',
+            tagline: 'Multi-agent orchestration framework',
+            concepts: [
+                { theirs: 'Crew', ours: 'Agent Team', note: 'AgentBox teams auto-coordinate via shared context' },
+                { theirs: 'Agent (role)', ours: 'Agent Profile', note: 'Define personality, skills, and constraints per agent' },
+                { theirs: 'Task', ours: 'Task', note: 'Direct equivalent with added dependency tracking' },
+                { theirs: 'Process (sequential/hierarchical)', ours: 'Orchestration Mode', note: 'AgentBox adds parallel and consensus modes' },
+                { theirs: 'Delegation', ours: 'Sub-agent Spawn', note: 'Dynamic spawning with resource limits' },
+                { theirs: 'Tool', ours: 'Skill', note: 'Same concept; AgentBox skills are shareable across agents' },
+            ],
+            migration: [
+                { step: 'Map your Crew roles to Agent Profiles', effort: 'low' },
+                { step: 'Convert Task definitions to AgentBox task format', effort: 'low' },
+                { step: 'Choose orchestration mode (sequential, parallel, hierarchical)', effort: 'low' },
+                { step: 'Map tools to built-in skills', effort: 'medium' },
+                { step: 'Configure inter-agent communication channels', effort: 'medium' },
+                { step: 'Set up shared knowledge base for team context', effort: 'medium' },
+                { step: 'Test multi-agent workflows end-to-end', effort: 'medium' },
+            ],
+            beforeCode: '# CrewAI\nfrom crewai import Agent, Task, Crew\n\nresearcher = Agent(\n    role="Researcher",\n    goal="Find accurate info",\n    tools=[search_tool]\n)\nwriter = Agent(\n    role="Writer",\n    goal="Write clear summaries"\n)\ncrew = Crew(\n    agents=[researcher, writer],\n    tasks=[research_task, write_task],\n    process=Process.sequential\n)\nresult = crew.kickoff()',
+            afterCode: '# AgentBox\n# Agents auto-coordinate via shared context\nagent.team([\n    {"role": "researcher", "skills": ["web-search"]},\n    {"role": "writer"}\n])\nresult = agent.run(\n    "Research and write a summary",\n    mode="sequential"\n)',
+        },
+        {
+            id: 'custom',
+            name: 'Custom / DIY',
+            icon: '\u{1F527}',
+            color: '#F2994A',
+            tagline: 'Hand-rolled LLM integration with API calls',
+            concepts: [
+                { theirs: 'API wrapper', ours: 'Built-in provider', note: 'AgentBox handles API keys, retry, fallback automatically' },
+                { theirs: 'Prompt template strings', ours: 'Prompt Library', note: 'Version-controlled with variables and testing' },
+                { theirs: 'JSON.parse() on output', ours: 'Response Schema', note: 'Guaranteed structured output with validation' },
+                { theirs: 'Chat history array', ours: 'Session Memory', note: 'Persistent, searchable, with automatic summarization' },
+                { theirs: 'Cron job / webhook', ours: 'Scheduled Tasks', note: 'Built-in scheduler with retry and monitoring' },
+                { theirs: 'console.log debugging', ours: 'Observability Dashboard', note: 'Full tracing, cost tracking, and replay' },
+            ],
+            migration: [
+                { step: 'Identify which LLM providers you use', effort: 'low' },
+                { step: 'Move prompt templates to Prompt Library', effort: 'low' },
+                { step: 'Replace API wrappers with AgentBox provider config', effort: 'medium' },
+                { step: 'Migrate conversation history to session format', effort: 'medium' },
+                { step: 'Convert cron jobs to AgentBox scheduled tasks', effort: 'low' },
+                { step: 'Set up observability (automatic with AgentBox)', effort: 'none' },
+                { step: 'Remove custom retry/error handling code', effort: 'low' },
+            ],
+            beforeCode: '// Custom integration\nconst response = await fetch(\n  "https://api.openai.com/v1/chat/completions",\n  {\n    method: "POST",\n    headers: {\n      "Authorization": `Bearer ${API_KEY}`,\n      "Content-Type": "application/json"\n    },\n    body: JSON.stringify({\n      model: "gpt-4",\n      messages: chatHistory,\n      temperature: 0.7\n    })\n  }\n);\nconst data = await response.json();\n// Hope it\'s valid JSON...\nconst result = JSON.parse(\n  data.choices[0].message.content\n);',
+            afterCode: '// AgentBox\nconst result = await agent.run(\n  "Analyze this data",\n  {\n    schema: { summary: "string", score: "number" },\n    // Structured output guaranteed\n    // Retry, fallback, caching built-in\n    // Full observability automatic\n  }\n);',
+        },
+    ];
+
+    var EFFORT_META = {
+        none: { label: 'Automatic', color: '#27AE60', icon: '\u2705' },
+        low: { label: 'Easy', color: '#2D9CDB', icon: '\u{1F7E2}' },
+        medium: { label: 'Moderate', color: '#F2994A', icon: '\u{1F7E1}' },
+        high: { label: 'Complex', color: '#EB5757', icon: '\u{1F534}' },
+    };
+
+    // ── State ────────────────────────────────────────────────────
+
+    var selectedPlatform = null;
+    var checkedSteps = {};
+
+    // ── Render ───────────────────────────────────────────────────
+
+    function render() {
+        var el = document.getElementById('migration-guide');
+        if (!el) return;
+
+        var html = '<div class="mg-container">';
+        html += '<h2 class="mg-title">Migration Guide</h2>';
+        html += '<p class="mg-subtitle">Coming from another platform? See how your existing patterns map to AgentBox.</p>';
+
+        // Platform selector cards
+        html += '<div class="mg-platforms">';
+        PLATFORMS.forEach(function (p) {
+            var active = selectedPlatform === p.id ? ' mg-platform-active' : '';
+            html += '<button class="mg-platform-card' + active + '" data-platform="' + p.id + '" style="--platform-color: ' + p.color + '">';
+            html += '<span class="mg-platform-icon">' + p.icon + '</span>';
+            html += '<span class="mg-platform-name">' + p.name + '</span>';
+            html += '<span class="mg-platform-tag">' + p.tagline + '</span>';
+            html += '</button>';
+        });
+        html += '</div>';
+
+        // Detail view
+        if (selectedPlatform) {
+            var platform = PLATFORMS.find(function (p) { return p.id === selectedPlatform; });
+            if (platform) {
+                html += renderPlatformDetail(platform);
+            }
+        }
+
+        html += '</div>';
+        el.innerHTML = html;
+        bindEvents(el);
+    }
+
+    function renderPlatformDetail(platform) {
+        var html = '<div class="mg-detail" style="--platform-color: ' + platform.color + '">';
+
+        // Concept mapping table
+        html += '<div class="mg-section">';
+        html += '<h3 class="mg-section-title">' + platform.icon + ' ' + platform.name + ' \u2192 AgentBox Concept Map</h3>';
+        html += '<div class="mg-concept-grid">';
+        html += '<div class="mg-concept-header"><span>Their Concept</span><span></span><span>AgentBox Equivalent</span></div>';
+        platform.concepts.forEach(function (c) {
+            html += '<div class="mg-concept-row">';
+            html += '<div class="mg-concept-theirs">' + escapeHtml(c.theirs) + '</div>';
+            html += '<div class="mg-concept-arrow">\u2192</div>';
+            html += '<div class="mg-concept-ours">' + escapeHtml(c.ours) + '</div>';
+            html += '<div class="mg-concept-note">' + escapeHtml(c.note) + '</div>';
+            html += '</div>';
+        });
+        html += '</div></div>';
+
+        // Code comparison
+        html += '<div class="mg-section">';
+        html += '<h3 class="mg-section-title">Code Comparison</h3>';
+        html += '<div class="mg-code-compare">';
+        html += '<div class="mg-code-panel mg-code-before">';
+        html += '<div class="mg-code-label" style="background: ' + platform.color + '">' + platform.name + '</div>';
+        html += '<pre class="mg-code">' + escapeHtml(platform.beforeCode) + '</pre>';
+        html += '</div>';
+        html += '<div class="mg-code-panel mg-code-after">';
+        html += '<div class="mg-code-label" style="background: #27AE60">AgentBox</div>';
+        html += '<pre class="mg-code">' + escapeHtml(platform.afterCode) + '</pre>';
+        html += '</div>';
+        html += '</div></div>';
+
+        // Migration checklist
+        var stepKey = platform.id;
+        if (!checkedSteps[stepKey]) checkedSteps[stepKey] = {};
+
+        var completed = 0;
+        platform.migration.forEach(function (s, i) {
+            if (checkedSteps[stepKey][i]) completed++;
+        });
+        var totalSteps = platform.migration.length;
+        var pct = totalSteps > 0 ? Math.round((completed / totalSteps) * 100) : 0;
+
+        html += '<div class="mg-section">';
+        html += '<h3 class="mg-section-title">Migration Checklist</h3>';
+        html += '<div class="mg-progress-bar"><div class="mg-progress-fill" style="width: ' + pct + '%; background: ' + platform.color + '"></div></div>';
+        html += '<div class="mg-progress-label">' + completed + '/' + totalSteps + ' steps complete (' + pct + '%)</div>';
+        html += '<div class="mg-checklist">';
+        platform.migration.forEach(function (s, i) {
+            var checked = checkedSteps[stepKey] && checkedSteps[stepKey][i];
+            var effortMeta = EFFORT_META[s.effort] || EFFORT_META.medium;
+            html += '<label class="mg-check-item' + (checked ? ' mg-checked' : '') + '">';
+            html += '<input type="checkbox" data-platform="' + platform.id + '" data-step="' + i + '"' + (checked ? ' checked' : '') + '>';
+            html += '<span class="mg-check-text">' + escapeHtml(s.step) + '</span>';
+            html += '<span class="mg-effort-badge" style="background: ' + effortMeta.color + '22; color: ' + effortMeta.color + '; border: 1px solid ' + effortMeta.color + '44">' + effortMeta.icon + ' ' + effortMeta.label + '</span>';
+            html += '</label>';
+        });
+        html += '</div></div>';
+
+        // Effort summary
+        var effortCounts = { none: 0, low: 0, medium: 0, high: 0 };
+        platform.migration.forEach(function (s) { effortCounts[s.effort]++; });
+        var totalEffort = effortCounts.none * 0 + effortCounts.low * 1 + effortCounts.medium * 3 + effortCounts.high * 5;
+        var effortLabel = totalEffort <= 5 ? 'Straightforward' : totalEffort <= 12 ? 'Moderate' : 'Complex';
+
+        html += '<div class="mg-section mg-effort-summary">';
+        html += '<h3 class="mg-section-title">Effort Estimate</h3>';
+        html += '<div class="mg-effort-grid">';
+        Object.keys(EFFORT_META).forEach(function (key) {
+            if (effortCounts[key] > 0) {
+                var m = EFFORT_META[key];
+                html += '<div class="mg-effort-card" style="border-color: ' + m.color + '">';
+                html += '<div class="mg-effort-count">' + effortCounts[key] + '</div>';
+                html += '<div class="mg-effort-type">' + m.icon + ' ' + m.label + '</div>';
+                html += '</div>';
+            }
+        });
+        html += '</div>';
+        html += '<div class="mg-effort-verdict">Overall migration complexity: <strong>' + effortLabel + '</strong></div>';
+        html += '</div>';
+
+        html += '</div>';
+        return html;
+    }
+
+    // ── Events ──────────────────────────────────────────────────
+
+    function bindEvents(container) {
+        var cards = container.querySelectorAll('.mg-platform-card');
+        cards.forEach(function (card) {
+            card.addEventListener('click', function () {
+                var pid = this.getAttribute('data-platform');
+                selectedPlatform = selectedPlatform === pid ? null : pid;
+                render();
+            });
+        });
+
+        var checks = container.querySelectorAll('.mg-checklist input[type="checkbox"]');
+        checks.forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                var pid = this.getAttribute('data-platform');
+                var step = parseInt(this.getAttribute('data-step'), 10);
+                if (!checkedSteps[pid]) checkedSteps[pid] = {};
+                checkedSteps[pid][step] = this.checked;
+                render();
+            });
+        });
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    // ── Styles ──────────────────────────────────────────────────
+
+    function injectStyles() {
+        if (document.getElementById('mg-styles')) return;
+        var style = document.createElement('style');
+        style.id = 'mg-styles';
+        style.textContent = [
+            '.mg-container { max-width: 960px; margin: 0 auto; padding: 2rem 1rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }',
+            '.mg-title { font-size: 2rem; font-weight: 800; text-align: center; margin-bottom: 0.5rem; }',
+            '.mg-subtitle { text-align: center; color: #888; margin-bottom: 2rem; font-size: 1.1rem; }',
+            '.mg-platforms { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }',
+            '.mg-platform-card { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; padding: 1.2rem 1rem; border: 2px solid #333; border-radius: 12px; background: #1a1a2e; cursor: pointer; transition: all 0.2s; text-align: center; }',
+            '.mg-platform-card:hover { border-color: var(--platform-color); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }',
+            '.mg-platform-active { border-color: var(--platform-color) !important; background: #1a1a2e; box-shadow: 0 0 20px color-mix(in srgb, var(--platform-color) 30%, transparent); }',
+            '.mg-platform-icon { font-size: 2rem; }',
+            '.mg-platform-name { font-weight: 700; font-size: 1.1rem; color: #eee; }',
+            '.mg-platform-tag { font-size: 0.75rem; color: #999; line-height: 1.3; }',
+            '.mg-detail { margin-top: 1.5rem; }',
+            '.mg-section { background: #16213e; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #333; }',
+            '.mg-section-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; color: #eee; }',
+            '.mg-concept-grid { display: flex; flex-direction: column; gap: 0.5rem; }',
+            '.mg-concept-header { display: grid; grid-template-columns: 1fr 30px 1fr; font-size: 0.8rem; color: #888; font-weight: 600; text-transform: uppercase; padding: 0 0.5rem 0.5rem; border-bottom: 1px solid #333; }',
+            '.mg-concept-row { display: grid; grid-template-columns: 1fr 30px 1fr; align-items: center; padding: 0.6rem 0.5rem; border-radius: 8px; position: relative; }',
+            '.mg-concept-row:hover { background: #1a1a3e; }',
+            '.mg-concept-theirs { color: #ccc; font-weight: 500; }',
+            '.mg-concept-arrow { text-align: center; color: var(--platform-color); font-weight: 700; }',
+            '.mg-concept-ours { color: #27AE60; font-weight: 600; }',
+            '.mg-concept-note { grid-column: 1 / -1; font-size: 0.8rem; color: #888; padding-left: 0.5rem; margin-top: 0.2rem; }',
+            '.mg-code-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }',
+            '@media (max-width: 700px) { .mg-code-compare { grid-template-columns: 1fr; } }',
+            '.mg-code-panel { border-radius: 8px; overflow: hidden; border: 1px solid #333; }',
+            '.mg-code-label { padding: 0.4rem 0.8rem; font-size: 0.8rem; font-weight: 600; color: #fff; text-align: center; }',
+            '.mg-code { margin: 0; padding: 1rem; background: #0d1117; color: #c9d1d9; font-size: 0.82rem; line-height: 1.5; overflow-x: auto; white-space: pre; font-family: "Fira Code", "Consolas", monospace; }',
+            '.mg-progress-bar { height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem; }',
+            '.mg-progress-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }',
+            '.mg-progress-label { font-size: 0.85rem; color: #aaa; margin-bottom: 1rem; }',
+            '.mg-checklist { display: flex; flex-direction: column; gap: 0.5rem; }',
+            '.mg-check-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.8rem; border-radius: 8px; cursor: pointer; transition: background 0.2s; }',
+            '.mg-check-item:hover { background: #1a1a3e; }',
+            '.mg-checked { opacity: 0.6; }',
+            '.mg-checked .mg-check-text { text-decoration: line-through; }',
+            '.mg-check-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--platform-color); cursor: pointer; flex-shrink: 0; }',
+            '.mg-check-text { flex: 1; color: #ddd; font-size: 0.95rem; }',
+            '.mg-effort-badge { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 20px; font-weight: 600; white-space: nowrap; }',
+            '.mg-effort-grid { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap; }',
+            '.mg-effort-card { text-align: center; padding: 0.8rem 1.5rem; border-radius: 10px; border: 2px solid; background: #1a1a2e; }',
+            '.mg-effort-count { font-size: 1.8rem; font-weight: 800; color: #eee; }',
+            '.mg-effort-type { font-size: 0.85rem; color: #aaa; }',
+            '.mg-effort-verdict { text-align: center; color: #ccc; font-size: 1rem; }',
+        ].join('\n');
+        document.head.appendChild(style);
+    }
+
+    // ── Init ────────────────────────────────────────────────────
+
+    if (typeof document !== 'undefined') {
+        injectStyles();
+        render();
+    }
+
+    // ── Exports for testing ─────────────────────────────────────
+
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = {
+            PLATFORMS: PLATFORMS,
+            EFFORT_META: EFFORT_META,
+            _test: {
+                getSelectedPlatform: function () { return selectedPlatform; },
+                setSelectedPlatform: function (id) { selectedPlatform = id; },
+                getCheckedSteps: function () { return checkedSteps; },
+                setCheckedSteps: function (s) { checkedSteps = s; },
+                render: render,
+                renderPlatformDetail: renderPlatformDetail,
+                escapeHtml: escapeHtml,
+            },
+        };
+    }
+})();
+
+
+/* === src/workflow-builder.js === */
+// ---------------------------------------------------------------------------
+// Workflow Builder - Visual workflow composer for AgentBox automations
+// ---------------------------------------------------------------------------
+// Users create multi-step workflows by adding action nodes (remind, search,
+// summarize, schedule, analyze, etc.), connecting them in sequence, and
+// exporting the result as AgentBox commands or a shareable JSON config.
+
+var WorkflowBuilder = (function () {
+  'use strict';
+
+  // Available action types with metadata
+  var ACTION_TYPES = [
+    { id: 'trigger', label: 'Trigger', icon: '⚡', color: '#fbbf24', description: 'Start the workflow (time, keyword, or event)', fields: [
+      { name: 'type', label: 'Trigger Type', type: 'select', options: ['Schedule (cron)', 'Keyword match', 'New email', 'Calendar event', 'Manual'] },
+      { name: 'value', label: 'Value', type: 'text', placeholder: 'e.g. every Monday 9am' }
+    ]},
+    { id: 'search', label: 'Web Search', icon: '🔍', color: '#00d4ff', description: 'Search the web for information', fields: [
+      { name: 'query', label: 'Search Query', type: 'text', placeholder: 'e.g. latest AI news' },
+      { name: 'count', label: 'Results', type: 'select', options: ['3', '5', '10'] }
+    ]},
+    { id: 'summarize', label: 'Summarize', icon: '📝', color: '#7b2cbf', description: 'Summarize text or search results', fields: [
+      { name: 'style', label: 'Style', type: 'select', options: ['Brief (1-2 lines)', 'Detailed', 'Bullet points', 'Executive summary'] },
+      { name: 'maxLength', label: 'Max Length', type: 'select', options: ['50 words', '100 words', '200 words'] }
+    ]},
+    { id: 'remind', label: 'Reminder', icon: '🔔', color: '#4ade80', description: 'Set a reminder or notification', fields: [
+      { name: 'message', label: 'Message', type: 'text', placeholder: 'What to remind about' },
+      { name: 'when', label: 'When', type: 'text', placeholder: 'e.g. in 30 minutes, tomorrow 9am' }
+    ]},
+    { id: 'analyze', label: 'Analyze', icon: '📊', color: '#ef4444', description: 'Analyze data or content', fields: [
+      { name: 'type', label: 'Analysis Type', type: 'select', options: ['Sentiment', 'Key themes', 'Comparison', 'Trend detection'] },
+      { name: 'input', label: 'Input Source', type: 'select', options: ['Previous step output', 'Paste text', 'URL'] }
+    ]},
+    { id: 'compose', label: 'Compose', icon: '✍️', color: '#a78bfa', description: 'Draft a message, email, or post', fields: [
+      { name: 'format', label: 'Format', type: 'select', options: ['Email', 'Social post', 'Slack message', 'Report'] },
+      { name: 'tone', label: 'Tone', type: 'select', options: ['Professional', 'Casual', 'Formal', 'Friendly'] }
+    ]},
+    { id: 'condition', label: 'Condition', icon: '🔀', color: '#f472b6', description: 'Branch based on a condition', fields: [
+      { name: 'check', label: 'If', type: 'text', placeholder: 'e.g. results contain "urgent"' },
+      { name: 'otherwise', label: 'Otherwise', type: 'select', options: ['Skip next step', 'Stop workflow', 'Go to step...'] }
+    ]},
+    { id: 'save', label: 'Save/Export', icon: '💾', color: '#22d3ee', description: 'Save output to notes or export', fields: [
+      { name: 'destination', label: 'Save To', type: 'select', options: ['Notes', 'File', 'Clipboard', 'Send to chat'] },
+      { name: 'format', label: 'Format', type: 'select', options: ['Plain text', 'Markdown', 'JSON', 'CSV'] }
+    ]}
+  ];
+
+  // Preset workflow templates
+  var PRESETS = [
+    {
+      name: 'Morning Briefing',
+      icon: '☀️',
+      description: 'Daily news summary + calendar + weather',
+      steps: [
+        { actionId: 'trigger', config: { type: 'Schedule (cron)', value: 'every day 8am' } },
+        { actionId: 'search', config: { query: 'top news today', count: '5' } },
+        { actionId: 'summarize', config: { style: 'Bullet points', maxLength: '200 words' } },
+        { actionId: 'compose', config: { format: 'Slack message', tone: 'Casual' } },
+        { actionId: 'save', config: { destination: 'Send to chat', format: 'Markdown' } }
+      ]
+    },
+    {
+      name: 'Research Pipeline',
+      icon: '🔬',
+      description: 'Search → analyze → summarize → save',
+      steps: [
+        { actionId: 'trigger', config: { type: 'Manual', value: '' } },
+        { actionId: 'search', config: { query: '', count: '10' } },
+        { actionId: 'analyze', config: { type: 'Key themes', input: 'Previous step output' } },
+        { actionId: 'summarize', config: { style: 'Executive summary', maxLength: '200 words' } },
+        { actionId: 'save', config: { destination: 'Notes', format: 'Markdown' } }
+      ]
+    },
+    {
+      name: 'Content Monitor',
+      icon: '👁️',
+      description: 'Watch for topics and alert when found',
+      steps: [
+        { actionId: 'trigger', config: { type: 'Schedule (cron)', value: 'every 2 hours' } },
+        { actionId: 'search', config: { query: '', count: '5' } },
+        { actionId: 'condition', config: { check: 'new results found', otherwise: 'Stop workflow' } },
+        { actionId: 'summarize', config: { style: 'Brief (1-2 lines)', maxLength: '50 words' } },
+        { actionId: 'remind', config: { message: 'New content detected!', when: 'now' } }
+      ]
+    },
+    {
+      name: 'Weekly Report',
+      icon: '📋',
+      description: 'Compile and format weekly metrics',
+      steps: [
+        { actionId: 'trigger', config: { type: 'Schedule (cron)', value: 'every Friday 5pm' } },
+        { actionId: 'analyze', config: { type: 'Trend detection', input: 'Previous step output' } },
+        { actionId: 'summarize', config: { style: 'Executive summary', maxLength: '200 words' } },
+        { actionId: 'compose', config: { format: 'Email', tone: 'Professional' } },
+        { actionId: 'save', config: { destination: 'Send to chat', format: 'Markdown' } }
+      ]
+    }
+  ];
+
+  // ── State ──
+  var steps = [];
+  var selectedStep = -1;
+  var dragIndex = -1;
+
+  // ── Helpers ──
+
+  /**
+   * Looks up an action type definition by its unique identifier.
+   * @param {string} id - The action type identifier (e.g. 'trigger', 'search').
+   * @returns {Object|null} The action type object or null if not found.
+   */
+  function getActionType(id) {
+    for (var i = 0; i < ACTION_TYPES.length; i++) {
+      if (ACTION_TYPES[i].id === id) return ACTION_TYPES[i];
+    }
+    return null;
+  }
+
+  /**
+   * Generates a unique step identifier using a timestamp and random suffix.
+   * @returns {string} A unique step id (e.g. 'step_1710576000000_a3f2x').
+   */
+  function generateId() {
+    return 'step_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+  }
+
+  // ── Core Logic ──
+  /**
+   * Appends a new step to the workflow with the given action type and optional configuration.
+   * Automatically selects the new step and re-renders the UI.
+   * @param {string} actionId - The action type identifier to add.
+   * @param {Object} [config={}] - Initial configuration values for the step's fields.
+   * @returns {Object|null} The created step object, or null if the action type is invalid.
+   */
+  function addStep(actionId, config) {
+    var action = getActionType(actionId);
+    if (!action) return null;
+    var step = {
+      id: generateId(),
+      actionId: actionId,
+      config: config || {}
+    };
+    steps.push(step);
+    selectedStep = steps.length - 1;
+    render();
+    return step;
+  }
+
+  /**
+   * Removes a step from the workflow at the given index and re-renders.
+   * @param {number} index - Zero-based index of the step to remove.
+   */
+  function removeStep(index) {
+    if (index < 0 || index >= steps.length) return;
+    steps.splice(index, 1);
+    if (selectedStep >= steps.length) selectedStep = steps.length - 1;
+    render();
+  }
+
+  /**
+   * Moves a step from one position to another, enabling drag-and-drop reordering.
+   * @param {number} fromIndex - Current zero-based index of the step.
+   * @param {number} toIndex - Target zero-based index to move the step to.
+   */
+  function moveStep(fromIndex, toIndex) {
+    if (fromIndex < 0 || fromIndex >= steps.length) return;
+    if (toIndex < 0 || toIndex >= steps.length) return;
+    var item = steps.splice(fromIndex, 1)[0];
+    steps.splice(toIndex, 0, item);
+    selectedStep = toIndex;
+    render();
+  }
+
+  /**
+   * Updates a single configuration field on a workflow step.
+   * @param {number} index - Zero-based index of the step to update.
+   * @param {string} field - The field name to set.
+   * @param {string} value - The new value for the field.
+   */
+  function updateStepConfig(index, field, value) {
+    if (index < 0 || index >= steps.length) return;
+    steps[index].config[field] = value;
+  }
+
+  /**
+   * Loads a preset workflow template, replacing all current steps.
+   * @param {number} presetIndex - Index into the PRESETS array.
+   */
+  function loadPreset(presetIndex) {
+    var preset = PRESETS[presetIndex];
+    if (!preset) return;
+    steps = [];
+    for (var i = 0; i < preset.steps.length; i++) {
+      var s = preset.steps[i];
+      steps.push({
+        id: generateId(),
+        actionId: s.actionId,
+        config: Object.assign({}, s.config)
+      });
+    }
+    selectedStep = 0;
+    render();
+  }
+
+  /**
+   * Removes all steps from the workflow and resets selection.
+   */
+  function clearWorkflow() {
+    steps = [];
+    selectedStep = -1;
+    render();
+  }
+
+  // ── Export ──
+  /**
+   * Exports the current workflow as a human-readable command string with
+   * per-step breakdowns and a single-line quick command for pasting into AgentBox.
+   * @returns {string} Formatted markdown-style command text.
+   */
+  function exportAsCommands() {
+    if (steps.length === 0) return '# No steps in workflow';
+    var lines = ['# AgentBox Workflow', '# Generated by Workflow Builder', ''];
+    for (var i = 0; i < steps.length; i++) {
+      var s = steps[i];
+      var action = getActionType(s.actionId);
+      lines.push('## Step ' + (i + 1) + ': ' + action.label);
+      var keys = Object.keys(s.config);
+      for (var k = 0; k < keys.length; k++) {
+        if (s.config[keys[k]]) {
+          lines.push('  ' + keys[k] + ': ' + s.config[keys[k]]);
+        }
+      }
+      lines.push('');
+    }
+    // Produce a Telegram-style command string
+    lines.push('---');
+    lines.push('# Quick command (paste to AgentBox):');
+    var cmd = steps.map(function (s) {
+      var a = getActionType(s.actionId);
+      var parts = [a.label.toLowerCase()];
+      var keys = Object.keys(s.config);
+      for (var k = 0; k < keys.length; k++) {
+        if (s.config[keys[k]]) parts.push(s.config[keys[k]]);
+      }
+      return parts.join(' ');
+    }).join(' → ');
+    lines.push(cmd);
+    return lines.join('\n');
+  }
+
+  /**
+   * Serializes the current workflow to a JSON string for persistence or sharing.
+   * @returns {string} Pretty-printed JSON representation of the workflow.
+   */
+  function exportAsJSON() {
+    return JSON.stringify({
+      name: 'My Workflow',
+      created: new Date().toISOString(),
+      steps: steps.map(function (s) {
+        return { action: s.actionId, config: s.config };
+      })
+    }, null, 2);
+  }
+
+  /**
+   * Imports a workflow from a JSON string, replacing all current steps.
+   * Invalid action types in the JSON are silently skipped.
+   * @param {string} jsonStr - JSON string previously produced by exportAsJSON.
+   * @returns {boolean} True if import succeeded, false on parse error or invalid format.
+   */
+  function importFromJSON(jsonStr) {
+    try {
+      var data = JSON.parse(jsonStr);
+      if (!data.steps || !Array.isArray(data.steps)) return false;
+      steps = [];
+      for (var i = 0; i < data.steps.length; i++) {
+        var s = data.steps[i];
+        if (getActionType(s.action)) {
+          steps.push({ id: generateId(), actionId: s.action, config: s.config || {} });
+        }
+      }
+      selectedStep = steps.length > 0 ? 0 : -1;
+      render();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ── Render ──
+  /**
+   * Renders the entire workflow builder UI into the DOM container,
+   * including the preset bar, action palette, flow canvas, config panel, and toolbar.
+   */
+  function render() {
+    var container = document.getElementById('workflowBuilderRoot');
+    if (!container) return;
+
+    var html = '';
+
+    // Presets bar
+    html += '<div class="wb-presets">';
+    html += '<span class="wb-presets-label">Templates:</span>';
+    for (var p = 0; p < PRESETS.length; p++) {
+      html += '<button class="wb-preset-btn" data-preset="' + p + '" title="' + PRESETS[p].description + '">' + PRESETS[p].icon + ' ' + PRESETS[p].name + '</button>';
+    }
+    html += '</div>';
+
+    // Main layout: palette + canvas + config
+    html += '<div class="wb-layout">';
+
+    // Action palette
+    html += '<div class="wb-palette">';
+    html += '<h4 class="wb-palette-title">Actions</h4>';
+    for (var a = 0; a < ACTION_TYPES.length; a++) {
+      var at = ACTION_TYPES[a];
+      html += '<button class="wb-action-btn" data-action="' + at.id + '" style="--action-color:' + at.color + '" title="' + at.description + '">';
+      html += '<span class="wb-action-icon">' + at.icon + '</span>';
+      html += '<span class="wb-action-label">' + at.label + '</span>';
+      html += '</button>';
+    }
+    html += '</div>';
+
+    // Canvas (flow diagram)
+    html += '<div class="wb-canvas">';
+    if (steps.length === 0) {
+      html += '<div class="wb-empty">';
+      html += '<div class="wb-empty-icon">🔧</div>';
+      html += '<div class="wb-empty-text">Click an action or pick a template to start building</div>';
+      html += '</div>';
+    } else {
+      html += '<div class="wb-flow">';
+      for (var i = 0; i < steps.length; i++) {
+        var step = steps[i];
+        var action = getActionType(step.actionId);
+        var isSelected = i === selectedStep;
+        html += '<div class="wb-node' + (isSelected ? ' wb-node-selected' : '') + '" data-index="' + i + '" draggable="true" style="--node-color:' + action.color + '">';
+        html += '<div class="wb-node-header">';
+        html += '<span class="wb-node-num">' + (i + 1) + '</span>';
+        html += '<span class="wb-node-icon">' + action.icon + '</span>';
+        html += '<span class="wb-node-label">' + action.label + '</span>';
+        html += '<button class="wb-node-remove" data-remove="' + i + '" title="Remove step">✕</button>';
+        html += '</div>';
+        // Show config summary
+        var configSummary = [];
+        var keys = Object.keys(step.config);
+        for (var k = 0; k < keys.length; k++) {
+          if (step.config[keys[k]]) {
+            var val = step.config[keys[k]];
+            if (val.length > 30) val = val.substring(0, 27) + '...';
+            configSummary.push(val);
+          }
+        }
+        if (configSummary.length > 0) {
+          html += '<div class="wb-node-summary">' + configSummary.join(' · ') + '</div>';
+        }
+        html += '</div>';
+        if (i < steps.length - 1) {
+          html += '<div class="wb-connector"><svg width="24" height="32" viewBox="0 0 24 32"><path d="M12 0 L12 24 L6 18 M12 24 L18 18" stroke="var(--color-text-muted)" stroke-width="2" fill="none"/></svg></div>';
+        }
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+
+    // Config panel
+    html += '<div class="wb-config">';
+    if (selectedStep >= 0 && selectedStep < steps.length) {
+      var selStep = steps[selectedStep];
+      var selAction = getActionType(selStep.actionId);
+      html += '<h4 class="wb-config-title">' + selAction.icon + ' ' + selAction.label + ' — Step ' + (selectedStep + 1) + '</h4>';
+      html += '<p class="wb-config-desc">' + selAction.description + '</p>';
+      for (var f = 0; f < selAction.fields.length; f++) {
+        var field = selAction.fields[f];
+        var val = selStep.config[field.name] || '';
+        html += '<label class="wb-field-label">' + field.label + '</label>';
+        if (field.type === 'select') {
+          html += '<select class="wb-field-input" data-field="' + field.name + '">';
+          for (var o = 0; o < field.options.length; o++) {
+            html += '<option' + (val === field.options[o] ? ' selected' : '') + '>' + field.options[o] + '</option>';
+          }
+          html += '</select>';
+        } else {
+          html += '<input type="text" class="wb-field-input" data-field="' + field.name + '" value="' + val.replace(/"/g, '&quot;') + '" placeholder="' + (field.placeholder || '') + '">';
+        }
+      }
+      // Move buttons
+      html += '<div class="wb-move-btns">';
+      html += '<button class="wb-move-btn" data-move="up"' + (selectedStep === 0 ? ' disabled' : '') + '>↑ Move Up</button>';
+      html += '<button class="wb-move-btn" data-move="down"' + (selectedStep === steps.length - 1 ? ' disabled' : '') + '>↓ Move Down</button>';
+      html += '</div>';
+    } else {
+      html += '<div class="wb-config-empty">Select a step to configure</div>';
+    }
+    html += '</div>';
+
+    html += '</div>'; // end wb-layout
+
+    // Toolbar
+    html += '<div class="wb-toolbar">';
+    html += '<span class="wb-step-count">' + steps.length + ' step' + (steps.length !== 1 ? 's' : '') + '</span>';
+    html += '<button class="wb-toolbar-btn wb-export-cmd" ' + (steps.length === 0 ? 'disabled' : '') + '>📋 Export Commands</button>';
+    html += '<button class="wb-toolbar-btn wb-export-json" ' + (steps.length === 0 ? 'disabled' : '') + '>💾 Export JSON</button>';
+    html += '<button class="wb-toolbar-btn wb-import-json">📂 Import JSON</button>';
+    html += '<button class="wb-toolbar-btn wb-clear" ' + (steps.length === 0 ? 'disabled' : '') + '>🗑️ Clear</button>';
+    html += '</div>';
+
+    // Hidden import area
+    html += '<textarea class="wb-import-area" id="wbImportArea" style="display:none" placeholder="Paste workflow JSON here..."></textarea>';
+
+    container.innerHTML = html;
+    bindEvents(container);
+  }
+
+  /**
+   * Attaches event listeners to all interactive elements within the rendered UI,
+   * including preset buttons, action palette, node selection/drag, config fields, and toolbar actions.
+   * @param {HTMLElement} container - The root DOM element containing the rendered workflow builder.
+   */
+  function bindEvents(container) {
+    // Preset buttons
+    var presetBtns = container.querySelectorAll('.wb-preset-btn');
+    for (var i = 0; i < presetBtns.length; i++) {
+      presetBtns[i].addEventListener('click', function () {
+        loadPreset(parseInt(this.getAttribute('data-preset'), 10));
+      });
+    }
+
+    // Action buttons
+    var actionBtns = container.querySelectorAll('.wb-action-btn');
+    for (var i = 0; i < actionBtns.length; i++) {
+      actionBtns[i].addEventListener('click', function () {
+        addStep(this.getAttribute('data-action'));
+      });
+    }
+
+    // Node selection
+    var nodes = container.querySelectorAll('.wb-node');
+    for (var i = 0; i < nodes.length; i++) {
+      (function (node) {
+        node.addEventListener('click', function (e) {
+          if (e.target.classList.contains('wb-node-remove')) return;
+          selectedStep = parseInt(node.getAttribute('data-index'), 10);
+          render();
+        });
+        // Drag and drop
+        node.addEventListener('dragstart', function (e) {
+          dragIndex = parseInt(node.getAttribute('data-index'), 10);
+          e.dataTransfer.effectAllowed = 'move';
+          node.classList.add('wb-dragging');
+        });
+        node.addEventListener('dragend', function () {
+          dragIndex = -1;
+          node.classList.remove('wb-dragging');
+        });
+        node.addEventListener('dragover', function (e) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+        });
+        node.addEventListener('drop', function (e) {
+          e.preventDefault();
+          var toIndex = parseInt(node.getAttribute('data-index'), 10);
+          if (dragIndex >= 0 && dragIndex !== toIndex) {
+            moveStep(dragIndex, toIndex);
+          }
+        });
+      })(nodes[i]);
+    }
+
+    // Remove buttons
+    var removeBtns = container.querySelectorAll('.wb-node-remove');
+    for (var i = 0; i < removeBtns.length; i++) {
+      removeBtns[i].addEventListener('click', function (e) {
+        e.stopPropagation();
+        removeStep(parseInt(this.getAttribute('data-remove'), 10));
+      });
+    }
+
+    // Config fields
+    var fields = container.querySelectorAll('.wb-field-input');
+    for (var i = 0; i < fields.length; i++) {
+      (function (field) {
+        var eventType = field.tagName === 'SELECT' ? 'change' : 'input';
+        field.addEventListener(eventType, function () {
+          updateStepConfig(selectedStep, field.getAttribute('data-field'), field.value);
+          // Update summary without full re-render
+          var node = container.querySelector('.wb-node[data-index="' + selectedStep + '"]');
+          if (node) {
+            var summaryEl = node.querySelector('.wb-node-summary');
+            var s = steps[selectedStep];
+            var parts = [];
+            var keys = Object.keys(s.config);
+            for (var k = 0; k < keys.length; k++) {
+              if (s.config[keys[k]]) {
+                var v = s.config[keys[k]];
+                if (v.length > 30) v = v.substring(0, 27) + '...';
+                parts.push(v);
+              }
+            }
+            if (summaryEl) {
+              summaryEl.textContent = parts.join(' · ');
+            } else if (parts.length > 0) {
+              render(); // Need full re-render to add summary div
+            }
+          }
+        });
+      })(fields[i]);
+    }
+
+    // Move buttons
+    var moveBtns = container.querySelectorAll('.wb-move-btn');
+    for (var i = 0; i < moveBtns.length; i++) {
+      moveBtns[i].addEventListener('click', function () {
+        var dir = this.getAttribute('data-move');
+        if (dir === 'up') moveStep(selectedStep, selectedStep - 1);
+        else moveStep(selectedStep, selectedStep + 1);
+      });
+    }
+
+    // Export commands
+    var exportCmd = container.querySelector('.wb-export-cmd');
+    if (exportCmd) exportCmd.addEventListener('click', function () {
+      var text = exportAsCommands();
+      copyToClipboard(text);
+      this.textContent = '✅ Copied!';
+      var btn = this;
+      setTimeout(function () { btn.textContent = '📋 Export Commands'; }, 2000);
+    });
+
+    // Export JSON
+    var exportJson = container.querySelector('.wb-export-json');
+    if (exportJson) exportJson.addEventListener('click', function () {
+      var text = exportAsJSON();
+      copyToClipboard(text);
+      this.textContent = '✅ Copied!';
+      var btn = this;
+      setTimeout(function () { btn.textContent = '💾 Export JSON'; }, 2000);
+    });
+
+    // Import JSON
+    var importBtn = container.querySelector('.wb-import-json');
+    var importArea = container.querySelector('#wbImportArea');
+    if (importBtn && importArea) {
+      importBtn.addEventListener('click', function () {
+        if (importArea.style.display === 'none') {
+          importArea.style.display = 'block';
+          importArea.focus();
+        } else {
+          var ok = importFromJSON(importArea.value);
+          if (!ok) {
+            importArea.style.borderColor = 'var(--color-danger)';
+            setTimeout(function () { importArea.style.borderColor = ''; }, 1500);
+          }
+          importArea.style.display = 'none';
+          importArea.value = '';
+        }
+      });
+    }
+
+    // Clear
+    var clearBtn = container.querySelector('.wb-clear');
+    if (clearBtn) clearBtn.addEventListener('click', clearWorkflow);
+  }
+
+  /**
+   * Copies text to the clipboard using the Clipboard API with a fallback
+   * to a hidden textarea and execCommand for older browsers.
+   * @param {string} text - The text to copy.
+   */
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  }
+
+  // ── Init ──
+  /**
+   * Initializes the workflow builder by performing the first render into the specified DOM element.
+   * @param {string} [rootId='workflowBuilderRoot'] - The id of the container element.
+   */
+  function init(rootId) {
+    var root = document.getElementById(rootId || 'workflowBuilderRoot');
+    if (!root) return;
+    render();
+  }
+
+  // ── Public API ──
+  return {
+    init: init,
+    addStep: addStep,
+    removeStep: removeStep,
+    moveStep: moveStep,
+    clearWorkflow: clearWorkflow,
+    loadPreset: loadPreset,
+    exportAsCommands: exportAsCommands,
+    exportAsJSON: exportAsJSON,
+    importFromJSON: importFromJSON,
+    getSteps: function () { return steps.slice(); },
+    ACTION_TYPES: ACTION_TYPES,
+    PRESETS: PRESETS
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = WorkflowBuilder;
+}
+
+
+/* === src/modules/setup-checklist.js === */
+// ---------------------------------------------------------------------------
+// Setup Checklist — Interactive onboarding progress tracker
+// ---------------------------------------------------------------------------
+var SetupChecklist = (function () {
+  'use strict';
+
+  var STORAGE_KEY = 'agentbox_setup_checklist';
+
+  var STEPS = [
+    {
+      id: 'install_telegram',
+      title: 'Install Telegram',
+      icon: '📱',
+      detail: 'Download Telegram from <a href="https://telegram.org/apps" target="_blank" rel="noopener">telegram.org/apps</a> on your phone, desktop, or use the web version.',
+      tip: 'AgentBox works on all Telegram platforms — mobile, desktop, and web.'
+    },
+    {
+      id: 'find_bot',
+      title: 'Find @AgentBoxBot',
+      icon: '🔍',
+      detail: 'Open Telegram and search for <strong>@AgentBoxBot</strong> in the search bar, or <a href="https://t.me/AgentBoxBot" target="_blank" rel="noopener">click here</a> to open it directly.',
+      tip: 'Look for the verified bot with the 🤖 icon.'
+    },
+    {
+      id: 'send_start',
+      title: 'Send /start',
+      icon: '🚀',
+      detail: 'Tap the <strong>Start</strong> button or type <code>/start</code> to activate your agent. It will greet you and set up your profile.',
+      tip: 'Your agent begins learning about you from the first message!'
+    },
+    {
+      id: 'set_name',
+      title: 'Set your name',
+      icon: '👤',
+      detail: 'Tell your agent your name so it can address you personally. Just say something like <em>"My name is Alex"</em> or use <code>/setname Alex</code>.',
+      tip: 'You can change this anytime — your agent adapts.'
+    },
+    {
+      id: 'first_question',
+      title: 'Ask your first question',
+      icon: '💬',
+      detail: 'Try asking anything — a factual question, help drafting a message, or a recommendation. For example: <em>"What\'s a good recipe for pasta?"</em>',
+      tip: 'Your agent can search the web, do math, write code, and much more.'
+    },
+    {
+      id: 'try_reminder',
+      title: 'Set a reminder',
+      icon: '⏰',
+      detail: 'Test the reminder feature: <code>/remind 10m Check the oven</code> or just say <em>"Remind me in 30 minutes to call Mom"</em>.',
+      tip: 'Natural language works too — no strict format needed.'
+    },
+    {
+      id: 'explore_commands',
+      title: 'Explore commands',
+      icon: '📋',
+      detail: 'Type <code>/help</code> to see all available commands, or check the <a href="#commandRefSection">Commands Reference</a> section on this page.',
+      tip: 'Most things work with natural language — commands are just shortcuts.'
+    },
+    {
+      id: 'share_friend',
+      title: 'Share with a friend',
+      icon: '🎉',
+      detail: 'Love it? Share AgentBox with someone! Forward them the bot link: <strong>t.me/AgentBoxBot</strong>',
+      tip: 'Each person gets their own private agent with separate memory.'
+    }
+  ];
+
+  var root = null;
+  var saved = {};
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    } catch (e) { /* quota */ }
+  }
+
+  function completedCount() {
+    var n = 0;
+    for (var i = 0; i < STEPS.length; i++) {
+      if (saved[STEPS[i].id]) n++;
+    }
+    return n;
+  }
+
+  function renderProgress() {
+    var bar = root.querySelector('.setup-progress-fill');
+    var label = root.querySelector('.setup-progress-label');
+    var done = completedCount();
+    var pct = Math.round((done / STEPS.length) * 100);
+    if (bar) bar.style.width = pct + '%';
+    if (label) label.textContent = done + ' of ' + STEPS.length + ' complete';
+
+    var congrats = root.querySelector('.setup-congrats');
+    if (congrats) {
+      congrats.hidden = done < STEPS.length;
+    }
+  }
+
+  function toggleStep(stepId) {
+    saved[stepId] = !saved[stepId];
+    save();
+
+    var item = root.querySelector('[data-step="' + stepId + '"]');
+    if (item) {
+      item.classList.toggle('completed', !!saved[stepId]);
+      var cb = item.querySelector('.setup-checkbox');
+      if (cb) {
+        cb.setAttribute('aria-checked', String(!!saved[stepId]));
+        cb.textContent = saved[stepId] ? '✅' : '⬜';
+      }
+    }
+    renderProgress();
+  }
+
+  function toggleDetail(stepId) {
+    var item = root.querySelector('[data-step="' + stepId + '"]');
+    if (!item) return;
+    var detail = item.querySelector('.setup-step-detail');
+    var expanded = item.classList.toggle('expanded');
+    if (detail) {
+      detail.hidden = !expanded;
+      detail.setAttribute('aria-hidden', String(!expanded));
+    }
+    var arrow = item.querySelector('.setup-expand-arrow');
+    if (arrow) arrow.textContent = expanded ? '▾' : '▸';
+  }
+
+  function resetAll() {
+    saved = {};
+    save();
+    var items = root.querySelectorAll('.setup-step-item');
+    for (var i = 0; i < items.length; i++) {
+      items[i].classList.remove('completed');
+      var cb = items[i].querySelector('.setup-checkbox');
+      if (cb) { cb.setAttribute('aria-checked', 'false'); cb.textContent = '⬜'; }
+    }
+    renderProgress();
+  }
+
+  function render() {
+    var html = '';
+    html += '<div class="setup-progress-bar"><div class="setup-progress-fill"></div></div>';
+    html += '<p class="setup-progress-label"></p>';
+
+    html += '<ol class="setup-steps-list">';
+    for (var i = 0; i < STEPS.length; i++) {
+      var s = STEPS[i];
+      var done = !!saved[s.id];
+      html += '<li class="setup-step-item' + (done ? ' completed' : '') + '" data-step="' + s.id + '">';
+      html += '<div class="setup-step-header">';
+      html += '<span class="setup-checkbox" role="checkbox" aria-checked="' + done + '" tabindex="0" aria-label="Mark ' + s.title + ' as complete">' + (done ? '✅' : '⬜') + '</span>';
+      html += '<span class="setup-step-icon">' + s.icon + '</span>';
+      html += '<span class="setup-step-title">' + s.title + '</span>';
+      html += '<span class="setup-expand-arrow" aria-hidden="true">▸</span>';
+      html += '</div>';
+      html += '<div class="setup-step-detail" hidden aria-hidden="true">';
+      html += '<p>' + s.detail + '</p>';
+      html += '<p class="setup-step-tip">💡 <em>' + s.tip + '</em></p>';
+      html += '</div>';
+      html += '</li>';
+    }
+    html += '</ol>';
+
+    html += '<div class="setup-congrats" hidden>🎊 <strong>You\'re all set!</strong> Your AgentBox agent is ready to go. Enjoy!</div>';
+    html += '<button class="setup-reset-btn" aria-label="Reset checklist progress">Reset progress</button>';
+
+    root.innerHTML = html;
+    renderProgress();
+
+    // Event delegation
+    root.addEventListener('click', function (e) {
+      var cb = e.target.closest('.setup-checkbox');
+      if (cb) {
+        var step = cb.closest('.setup-step-item');
+        if (step) toggleStep(step.dataset.step);
+        return;
+      }
+      var reset = e.target.closest('.setup-reset-btn');
+      if (reset) { resetAll(); return; }
+      var header = e.target.closest('.setup-step-header');
+      if (header && !e.target.closest('.setup-checkbox')) {
+        var item = header.closest('.setup-step-item');
+        if (item) toggleDetail(item.dataset.step);
+      }
+    });
+
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        var cb = e.target.closest('.setup-checkbox');
+        if (cb) {
+          e.preventDefault();
+          var step = cb.closest('.setup-step-item');
+          if (step) toggleStep(step.dataset.step);
+        }
+      }
+    });
+  }
+
+  function init(containerId) {
+    root = typeof document !== 'undefined' ? document.getElementById(containerId || 'setupChecklistRoot') : null;
+    if (!root) return;
+    saved = load();
+    render();
+  }
+
+  return { init: init, STEPS: STEPS };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = SetupChecklist;
+}
+
+
+/* === src/capability-radar.js === */
+/**
+ * Capability Radar Chart — interactive radar/spider chart comparing
+ * AgentBox capabilities across dimensions vs competitors.
+ * Renders on a <canvas> with hover tooltips and animated drawing.
+ */
+var CapabilityRadar = (function () {
+  'use strict';
+
+  var DIMENSIONS = [
+    { key: 'memory',       label: 'Memory',        icon: '🧠' },
+    { key: 'search',       label: 'Web Search',     icon: '🔍' },
+    { key: 'scheduling',   label: 'Scheduling',     icon: '⏰' },
+    { key: 'vision',       label: 'Vision',         icon: '📷' },
+    { key: 'voice',        label: 'Voice',          icon: '🎤' },
+    { key: 'integrations', label: 'Integrations',   icon: '🔗' },
+    { key: 'privacy',      label: 'Privacy',        icon: '🔒' },
+    { key: 'personality',  label: 'Personality',    icon: '🎭' }
+  ];
+
+  var AGENTS = [
+    {
+      name: 'AgentBox',
+      color: 'rgba(99, 102, 241, 1)',
+      fill:  'rgba(99, 102, 241, 0.25)',
+      scores: { memory: 95, search: 90, scheduling: 92, vision: 88, voice: 85, integrations: 80, privacy: 95, personality: 90 }
+    },
+    {
+      name: 'ChatGPT',
+      color: 'rgba(16, 163, 127, 1)',
+      fill:  'rgba(16, 163, 127, 0.15)',
+      scores: { memory: 40, search: 75, scheduling: 20, vision: 85, voice: 70, integrations: 50, privacy: 55, personality: 45 }
+    },
+    {
+      name: 'Google Gemini',
+      color: 'rgba(234, 67, 53, 1)',
+      fill:  'rgba(234, 67, 53, 0.15)',
+      scores: { memory: 30, search: 85, scheduling: 35, vision: 80, voice: 60, integrations: 60, privacy: 50, personality: 30 }
+    },
+    {
+      name: 'Claude',
+      color: 'rgba(204, 133, 63, 1)',
+      fill:  'rgba(204, 133, 63, 0.15)',
+      scores: { memory: 35, search: 30, scheduling: 10, vision: 75, voice: 20, integrations: 30, privacy: 70, personality: 60 }
+    }
+  ];
+
+  var canvas, ctx, container, tooltip, legend, animProgress, animFrame;
+  var activeAgents, hoveredDim;
+
+  function init(rootId) {
+    var root = typeof rootId === 'string' ? document.getElementById(rootId) : rootId;
+    if (!root) return;
+
+    root.innerHTML = '';
+
+    // Legend with toggles
+    legend = document.createElement('div');
+    legend.className = 'radar-legend';
+    legend.setAttribute('role', 'group');
+    legend.setAttribute('aria-label', 'Toggle agents');
+
+    activeAgents = {};
+    AGENTS.forEach(function (agent) {
+      activeAgents[agent.name] = true;
+      var btn = document.createElement('button');
+      btn.className = 'radar-legend-btn active';
+      btn.setAttribute('aria-pressed', 'true');
+      btn.style.borderColor = agent.color;
+      btn.innerHTML = '<span class="radar-legend-dot" style="background:' + agent.color + '"></span>' + agent.name;
+      btn.addEventListener('click', function () {
+        activeAgents[agent.name] = !activeAgents[agent.name];
+        btn.classList.toggle('active', activeAgents[agent.name]);
+        btn.setAttribute('aria-pressed', String(activeAgents[agent.name]));
+        draw(1);
+      });
+      legend.appendChild(btn);
+    });
+    root.appendChild(legend);
+
+    // Canvas container
+    container = document.createElement('div');
+    container.className = 'radar-canvas-wrap';
+    root.appendChild(container);
+
+    canvas = document.createElement('canvas');
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', 'Capability radar chart comparing AgentBox with competitors');
+    container.appendChild(canvas);
+
+    // Tooltip
+    tooltip = document.createElement('div');
+    tooltip.className = 'radar-tooltip';
+    tooltip.hidden = true;
+    container.appendChild(tooltip);
+
+    // Dimension detail
+    var detail = document.createElement('div');
+    detail.className = 'radar-detail';
+    detail.id = 'radarDetail';
+    detail.setAttribute('aria-live', 'polite');
+    root.appendChild(detail);
+
+    resize();
+    animate();
+
+    canvas.addEventListener('mousemove', onMouse);
+    canvas.addEventListener('mouseleave', function () {
+      hoveredDim = null;
+      tooltip.hidden = true;
+      draw(1);
+    });
+    canvas.addEventListener('click', onClick);
+    window.addEventListener('resize', function () { resize(); draw(1); });
+  }
+
+  function resize() {
+    var w = container.clientWidth;
+    var size = Math.min(w, 500);
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function animate() {
+    animProgress = 0;
+    var start = null;
+    var duration = typeof prefersReducedMotion !== 'undefined' && prefersReducedMotion ? 0 : 800;
+
+    function step(ts) {
+      if (!start) start = ts;
+      var elapsed = ts - start;
+      animProgress = duration === 0 ? 1 : Math.min(elapsed / duration, 1);
+      draw(animProgress);
+      if (animProgress < 1) {
+        animFrame = requestAnimationFrame(step);
+      }
+    }
+    if (animFrame) cancelAnimationFrame(animFrame);
+    animFrame = requestAnimationFrame(step);
+  }
+
+  function draw(progress) {
+    var w = parseFloat(canvas.style.width);
+    var h = parseFloat(canvas.style.height);
+    var cx = w / 2;
+    var cy = h / 2;
+    var R = Math.min(cx, cy) * 0.75;
+    var n = DIMENSIONS.length;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Grid rings
+    var rings = [0.2, 0.4, 0.6, 0.8, 1.0];
+    rings.forEach(function (r) {
+      ctx.beginPath();
+      for (var i = 0; i <= n; i++) {
+        var angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+        var x = cx + Math.cos(angle) * R * r;
+        var y = cy + Math.sin(angle) * R * r;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = 'rgba(150,150,150,0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    // Axis lines + labels
+    for (var i = 0; i < n; i++) {
+      var angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+      var x = cx + Math.cos(angle) * R;
+      var y = cy + Math.sin(angle) * R;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = 'rgba(150,150,150,0.15)';
+      ctx.stroke();
+
+      // Label
+      var lx = cx + Math.cos(angle) * (R + 22);
+      var ly = cy + Math.sin(angle) * (R + 22);
+      ctx.fillStyle = hoveredDim === i ? 'rgba(99,102,241,1)' : getComputedStyle(canvas).color || '#666';
+      ctx.font = (hoveredDim === i ? 'bold ' : '') + '11px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(DIMENSIONS[i].icon + ' ' + DIMENSIONS[i].label, lx, ly);
+    }
+
+    // Data polygons
+    AGENTS.forEach(function (agent) {
+      if (!activeAgents[agent.name]) return;
+      ctx.beginPath();
+      for (var i = 0; i <= n; i++) {
+        var idx = i % n;
+        var angle = (Math.PI * 2 / n) * idx - Math.PI / 2;
+        var val = (agent.scores[DIMENSIONS[idx].key] / 100) * progress;
+        var x = cx + Math.cos(angle) * R * val;
+        var y = cy + Math.sin(angle) * R * val;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = agent.fill;
+      ctx.fill();
+      ctx.strokeStyle = agent.color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Dots
+      for (var i = 0; i < n; i++) {
+        var angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+        var val = (agent.scores[DIMENSIONS[i].key] / 100) * progress;
+        var x = cx + Math.cos(angle) * R * val;
+        var y = cy + Math.sin(angle) * R * val;
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = agent.color;
+        ctx.fill();
+      }
+    });
+  }
+
+  function getDimAt(mx, my) {
+    var w = parseFloat(canvas.style.width);
+    var h = parseFloat(canvas.style.height);
+    var cx = w / 2;
+    var cy = h / 2;
+    var R = Math.min(cx, cy) * 0.75;
+    var n = DIMENSIONS.length;
+
+    for (var i = 0; i < n; i++) {
+      var angle = (Math.PI * 2 / n) * i - Math.PI / 2;
+      var lx = cx + Math.cos(angle) * (R + 22);
+      var ly = cy + Math.sin(angle) * (R + 22);
+      var dx = mx - lx;
+      var dy = my - ly;
+      if (Math.sqrt(dx * dx + dy * dy) < 30) return i;
+    }
+    return null;
+  }
+
+  function onMouse(e) {
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    var dim = getDimAt(mx, my);
+
+    if (dim !== null && dim !== hoveredDim) {
+      hoveredDim = dim;
+      var d = DIMENSIONS[dim];
+      var lines = ['<strong>' + d.icon + ' ' + d.label + '</strong>'];
+      AGENTS.forEach(function (a) {
+        if (activeAgents[a.name]) {
+          lines.push('<span style="color:' + a.color + '">' + a.name + ': ' + a.scores[d.key] + '/100</span>');
+        }
+      });
+      tooltip.innerHTML = lines.join('<br>');
+      tooltip.hidden = false;
+      tooltip.style.left = mx + 'px';
+      tooltip.style.top = (my - 10) + 'px';
+      draw(1);
+    } else if (dim === null) {
+      hoveredDim = null;
+      tooltip.hidden = true;
+      draw(1);
+    }
+  }
+
+  function onClick(e) {
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    var dim = getDimAt(mx, my);
+    var detail = document.getElementById('radarDetail');
+    if (!detail) return;
+
+    if (dim === null) { detail.innerHTML = ''; return; }
+
+    var d = DIMENSIONS[dim];
+    var html = '<h4>' + d.icon + ' ' + d.label + ' — Detailed Comparison</h4><div class="radar-bars">';
+    AGENTS.slice().sort(function (a, b) { return b.scores[d.key] - a.scores[d.key]; }).forEach(function (a) {
+      var score = a.scores[d.key];
+      html += '<div class="radar-bar-row">' +
+        '<span class="radar-bar-name" style="color:' + a.color + '">' + a.name + '</span>' +
+        '<div class="radar-bar-track"><div class="radar-bar-fill" style="width:' + score + '%;background:' + a.color + '"></div></div>' +
+        '<span class="radar-bar-val">' + score + '</span></div>';
+    });
+    html += '</div>';
+    detail.innerHTML = html;
+  }
+
+  // Test helper
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { init: init, DIMENSIONS: DIMENSIONS, AGENTS: AGENTS };
+  }
+  if (typeof window !== 'undefined') { window.CapabilityRadar = { init: init, DIMENSIONS: DIMENSIONS, AGENTS: AGENTS }; }
+
+  return { init: init, DIMENSIONS: DIMENSIONS, AGENTS: AGENTS };
+})();
+

@@ -15,7 +15,8 @@
   "scripts": {
     "test": "jest --verbose",
     "test:coverage": "jest --verbose --coverage",
-    "start": "npx serve .",
+    "build": "node build.js",
+    "start": "npm run build && npx serve .",
     "prepublishOnly": "npm test"
   },
   "engines": {
