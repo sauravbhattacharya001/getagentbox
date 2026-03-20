@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Contact & Support</title>
+    <meta name="description" content="Get help with AgentBox. Submit a support ticket, browse common solutions, or connect with the community.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --red: #d63031;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            border-bottom: 1px solid var(--border);
+        }
+        .header a.back {
+            display: inline-block;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+        .header a.back:hover { text-decoration: underline; }
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        /* Quick Help Cards */
+        .quick-help {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+        .quick-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .quick-card:hover {
+            border-color: var(--accent);
+            background: var(--surface-2);
+            transform: translateY(-2px);
+        }
+        .quick-card .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .quick-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .quick-card p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .section-desc {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        /* Ticket Form */
+        .ticket-form {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-bottom: 48px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        .form-group label .required {
+            color: var(--red);
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent);
+        }
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .form-group select {
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+        .form-group .hint {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+        .form-group .char-count {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        /* Attachment area */
+        .attachment-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 24px;
+            text-align: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .attachment-area:hover {
+            border-color: var(--accent);
+            color: var(--accent-light);
+        }
+        .attachment-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .attachment-area .icon { font-size: 1.5rem; margin-bottom: 6px; }
+        .attachment-list {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .attachment-chip {
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .attachment-chip .remove {
+            cursor: pointer;
+            color: var(--text-muted);
+            font-weight: bold;
+        }
+        .attachment-chip .remove:hover { color: var(--red); }
+
+        /* Submit Button */
+        .submit-btn {
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .submit-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Success message */
+        .success-msg {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .success-msg.show { display: block; }
+        .success-msg .checkmark {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .success-msg h3 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+        .success-msg p { color: var(--text-muted); }
+        .success-msg .ticket-id {
+            display: inline-block;
+            background: var(--accent-bg);
+            color: var(--accent);
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-top: 12px;
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
+        /* Common Solutions */
+        .solutions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+        .solution-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .solution-card:hover {
+            border-color: var(--accent);
+        }
+        .solution-card h4 {
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .solution-card p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .solution-card .steps {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .solution-card .steps ol {
+            padding-left: 18px;
+        }
+        .solution-card .steps li {
+            margin-bottom: 6px;
+        }
+        .solution-card.expanded .steps { display: block; }
+
+        /* Community Links */
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+        .community-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+        .community-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .community-card .icon { font-size: 1.8rem; margin-bottom: 8px; }
+        .community-card h4 { font-size: 0.95rem; margin-bottom: 4px; }
+        .community-card p { color: var(--text-muted); font-size: 0.8rem; }
+
+        /* Response Time Badges */
+        .response-times {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 48px;
+            justify-content: center;
+        }
+        .rt-badge {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 24px;
+            text-align: center;
+            min-width: 140px;
+        }
+        .rt-badge .time {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .rt-badge .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="index.html" class="back">← Back to AgentBox</a>
+    <h1>📬 Contact & Support</h1>
+    <p>Need help? Submit a ticket, browse common solutions, or connect with our community.</p>
+</div>
+
+<div class="container">
+
+    <!-- Response Times -->
+    <div class="response-times">
+        <div class="rt-badge">
+            <div class="time">&lt; 4h</div>
+            <div class="label">Critical Issues</div>
+        </div>
+        <div class="rt-badge">
+            <div class="time">&lt; 24h</div>
+            <div class="label">General Support</div>
+        </div>
+        <div class="rt-badge">
+            <div class="time">&lt; 48h</div>
+            <div class="label">Feature Requests</div>
+        </div>
+        <div class="rt-badge">
+            <div class="time">99.9%</div>
+            <div class="label">Satisfaction Rate</div>
+        </div>
+    </div>
+
+    <!-- Quick Help -->
+    <div class="quick-help">
+        <a href="faq.html" class="quick-card">
+            <div class="icon">❓</div>
+            <h3>FAQ</h3>
+            <p>Browse common questions</p>
+        </a>
+        <a href="https://t.me/AgentBox11Bot" class="quick-card" target="_blank" rel="noopener noreferrer">
+            <div class="icon">💬</div>
+            <h3>Telegram Bot</h3>
+            <p>Chat directly with AgentBox</p>
+        </a>
+        <a href="uptime-history.html" class="quick-card">
+            <div class="icon">📊</div>
+            <h3>System Status</h3>
+            <p>Check service uptime</p>
+        </a>
+        <a href="docs/index.html" class="quick-card">
+            <div class="icon">📖</div>
+            <h3>Documentation</h3>
+            <p>API reference & guides</p>
+        </a>
+    </div>
+
+    <!-- Common Solutions -->
+    <h2 class="section-title">🔧 Common Solutions</h2>
+    <p class="section-desc">Click a topic to expand step-by-step instructions.</p>
+    <div class="solutions-grid">
+        <div class="solution-card" onclick="this.classList.toggle('expanded')">
+            <h4>🤖 Bot Not Responding</h4>
+            <p>AgentBox isn't replying to your messages</p>
+            <div class="steps">
+                <ol>
+                    <li>Check <a href="uptime-history.html">system status</a> for outages</li>
+                    <li>Send <code>/start</code> to reinitialize the bot</li>
+                    <li>Clear your Telegram cache (Settings → Data & Storage)</li>
+                    <li>Try sending a simple message like "Hello"</li>
+                    <li>If still not working, submit a ticket below</li>
+                </ol>
+            </div>
+        </div>
+        <div class="solution-card" onclick="this.classList.toggle('expanded')">
+            <h4>🧠 Memory Issues</h4>
+            <p>Bot forgot something or remembers wrong info</p>
+            <div class="steps">
+                <ol>
+                    <li>Send <code>/memory</code> to view what AgentBox remembers</li>
+                    <li>Use <code>/forget [topic]</code> to remove specific memories</li>
+                    <li>Use <code>/reset</code> to clear all conversation history</li>
+                    <li>Note: memory improves with more conversations</li>
+                </ol>
+            </div>
+        </div>
+        <div class="solution-card" onclick="this.classList.toggle('expanded')">
+            <h4>⏰ Reminder Not Firing</h4>
+            <p>Scheduled reminder didn't arrive</p>
+            <div class="steps">
+                <ol>
+                    <li>Check your timezone setting with <code>/settings</code></li>
+                    <li>Ensure Telegram notifications are enabled for the bot</li>
+                    <li>Try setting a test reminder: "Remind me in 1 minute to test"</li>
+                    <li>Use <code>/reminders</code> to list all pending reminders</li>
+                </ol>
+            </div>
+        </div>
+        <div class="solution-card" onclick="this.classList.toggle('expanded')">
+            <h4>📷 Image Analysis Failed</h4>
+            <p>Bot can't analyze your image or photo</p>
+            <div class="steps">
+                <ol>
+                    <li>Ensure the image is under 20MB</li>
+                    <li>Send as a photo, not a file/document</li>
+                    <li>Try re-sending with a clear question about the image</li>
+                    <li>Supported formats: JPG, PNG, GIF, WEBP</li>
+                </ol>
+            </div>
+        </div>
+        <div class="solution-card" onclick="this.classList.toggle('expanded')">
+            <h4>💳 Billing Questions</h4>
+            <p>Free tier limits, upgrades, or payment issues</p>
+            <div class="steps">
+                <ol>
+                    <li>Free tier: 20 messages/day, resets at midnight UTC</li>
+                    <li>Check usage with <code>/usage</code></li>
+                    <li>Upgrade anytime with <code>/upgrade</code></li>
+                    <li>For payment issues, submit a ticket with your Telegram username</li>
+                </ol>
+            </div>
+        </div>
+        <div class="solution-card" onclick="this.classList.toggle('expanded')">
+            <h4>🔒 Privacy & Data</h4>
+            <p>Questions about your data and privacy</p>
+            <div class="steps">
+                <ol>
+                    <li>Your data is isolated — no one else can access it</li>
+                    <li>Use <code>/export</code> to download all your data</li>
+                    <li>Use <code>/delete-account</code> to permanently delete everything</li>
+                    <li>See our <a href="privacy.html">Privacy Center</a> for full details</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Ticket Form -->
+    <h2 class="section-title">📝 Submit a Support Ticket</h2>
+    <p class="section-desc">Can't find what you need? Send us a message and we'll get back to you.</p>
+
+    <div class="ticket-form" id="ticketForm">
+        <div class="form-content">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Name <span class="required">*</span></label>
+                    <input type="text" id="name" placeholder="Your name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email <span class="required">*</span></label>
+                    <input type="email" id="email" placeholder="you@example.com" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Category <span class="required">*</span></label>
+                    <select id="category">
+                        <option value="">Select a category...</option>
+                        <option value="bug">🐛 Bug Report</option>
+                        <option value="billing">💳 Billing & Payments</option>
+                        <option value="feature">💡 Feature Request</option>
+                        <option value="account">👤 Account Issue</option>
+                        <option value="api">🔌 API & Integration</option>
+                        <option value="other">📋 Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select id="priority">
+                        <option value="low">🟢 Low — Not urgent</option>
+                        <option value="medium" selected>🟡 Medium — Normal</option>
+                        <option value="high">🟠 High — Blocking me</option>
+                        <option value="critical">🔴 Critical — Service down</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Subject <span class="required">*</span></label>
+                <input type="text" id="subject" placeholder="Brief description of your issue" maxlength="120">
+                <div class="char-count"><span id="subjectCount">0</span>/120</div>
+            </div>
+
+            <div class="form-group">
+                <label>Description <span class="required">*</span></label>
+                <textarea id="description" placeholder="Please describe your issue in detail. Include steps to reproduce, expected vs actual behavior, and your Telegram username if relevant." maxlength="2000"></textarea>
+                <div class="char-count"><span id="descCount">0</span>/2000</div>
+            </div>
+
+            <div class="form-group">
+                <label>Attachments</label>
+                <div class="attachment-area" id="attachmentArea">
+                    <input type="file" id="fileInput" multiple accept="image/*,.pdf,.txt,.log">
+                    <div class="icon">📎</div>
+                    <div>Drop files here or click to upload</div>
+                    <div style="font-size: 0.8rem; margin-top: 4px;">Images, PDFs, logs — up to 5MB each</div>
+                </div>
+                <div class="attachment-list" id="attachmentList"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Telegram Username</label>
+                <input type="text" id="telegram" placeholder="@yourusername (optional, helps us find your account)">
+                <div class="hint">Include this if your issue is related to your bot conversations</div>
+            </div>
+
+            <button class="submit-btn" id="submitBtn" onclick="submitTicket()">Submit Ticket</button>
+        </div>
+
+        <div class="success-msg" id="successMsg">
+            <div class="checkmark">✅</div>
+            <h3>Ticket Submitted!</h3>
+            <p>We've received your request and will respond within the estimated timeframe.</p>
+            <div class="ticket-id" id="ticketId">AG-000000</div>
+            <p style="margin-top: 16px; font-size: 0.85rem;">A confirmation has been noted. You can reference this ticket ID in follow-up messages.</p>
+            <button class="submit-btn" style="margin-top: 20px; max-width: 200px; margin-left: auto; margin-right: auto; display: block;" onclick="resetForm()">Submit Another</button>
+        </div>
+    </div>
+
+    <!-- Community -->
+    <h2 class="section-title">🌐 Community & Resources</h2>
+    <p class="section-desc">Connect with other AgentBox users and stay updated.</p>
+    <div class="community-grid">
+        <a href="https://github.com/sauravbhattacharya001/getagentbox/issues" class="community-card" target="_blank" rel="noopener noreferrer">
+            <div class="icon">🐙</div>
+            <h4>GitHub Issues</h4>
+            <p>Report bugs & track features</p>
+        </a>
+        <a href="https://github.com/sauravbhattacharya001/getagentbox/discussions" class="community-card" target="_blank" rel="noopener noreferrer">
+            <div class="icon">💬</div>
+            <h4>Discussions</h4>
+            <p>Ask questions & share tips</p>
+        </a>
+        <a href="updates.html" class="community-card">
+            <div class="icon">📰</div>
+            <h4>Product Updates</h4>
+            <p>Latest features & changes</p>
+        </a>
+        <a href="https://github.com/sauravbhattacharya001/getagentbox" class="community-card" target="_blank" rel="noopener noreferrer">
+            <div class="icon">⭐</div>
+            <h4>Star on GitHub</h4>
+            <p>Support the project</p>
+        </a>
+    </div>
+
+</div>
+
+<div class="footer">
+    <a href="index.html">AgentBox</a> · <a href="faq.html">FAQ</a> · <a href="privacy.html">Privacy</a> · <a href="uptime-history.html">Status</a>
+    <br><br>
+    © AgentBox. Built by <a href="https://github.com/sauravbhattacharya001" target="_blank" rel="noopener noreferrer">Saurav Bhattacharya</a>
+</div>
+
+<script>
+    // Character counters
+    document.getElementById('subject').addEventListener('input', function() {
+        document.getElementById('subjectCount').textContent = this.value.length;
+    });
+    document.getElementById('description').addEventListener('input', function() {
+        document.getElementById('descCount').textContent = this.value.length;
+    });
+
+    // File attachments
+    const files = [];
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        for (const file of e.target.files) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`${file.name} is too large (max 5MB)`);
+                continue;
+            }
+            if (files.length >= 5) {
+                alert('Maximum 5 attachments');
+                break;
+            }
+            files.push(file);
+        }
+        renderAttachments();
+        this.value = '';
+    });
+
+    function renderAttachments() {
+        const list = document.getElementById('attachmentList');
+        list.innerHTML = files.map((f, i) =>
+            `<div class="attachment-chip">
+                📄 ${f.name} (${(f.size / 1024).toFixed(0)}KB)
+                <span class="remove" onclick="removeFile(${i})">×</span>
+            </div>`
+        ).join('');
+    }
+
+    function removeFile(index) {
+        files.splice(index, 1);
+        renderAttachments();
+    }
+
+    // Form validation
+    function validateForm() {
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const category = document.getElementById('category').value;
+        const subject = document.getElementById('subject').value.trim();
+        const description = document.getElementById('description').value.trim();
+
+        if (!name) return 'Please enter your name';
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Please enter a valid email';
+        if (!category) return 'Please select a category';
+        if (!subject) return 'Please enter a subject';
+        if (subject.length < 5) return 'Subject must be at least 5 characters';
+        if (!description) return 'Please describe your issue';
+        if (description.length < 20) return 'Description must be at least 20 characters';
+        return null;
+    }
+
+    // Generate ticket ID
+    function generateTicketId() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let id = 'AG-';
+        for (let i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+        return id;
+    }
+
+    // Submit
+    function submitTicket() {
+        const error = validateForm();
+        if (error) {
+            alert(error);
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+
+        // Simulate submission (this is a static site — in production, would POST to API)
+        setTimeout(() => {
+            const ticketId = generateTicketId();
+            document.getElementById('ticketId').textContent = ticketId;
+
+            // Save to localStorage for reference
+            const tickets = JSON.parse(localStorage.getItem('agentbox-tickets') || '[]');
+            tickets.push({
+                id: ticketId,
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                category: document.getElementById('category').value,
+                priority: document.getElementById('priority').value,
+                subject: document.getElementById('subject').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                telegram: document.getElementById('telegram').value.trim(),
+                attachments: files.map(f => f.name),
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('agentbox-tickets', JSON.stringify(tickets));
+
+            // Show success
+            document.querySelector('.form-content').style.display = 'none';
+            document.getElementById('successMsg').classList.add('show');
+        }, 1200);
+    }
+
+    function resetForm() {
+        document.querySelector('.form-content').style.display = 'block';
+        document.getElementById('successMsg').classList.remove('show');
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('category').value = '';
+        document.getElementById('priority').value = 'medium';
+        document.getElementById('subject').value = '';
+        document.getElementById('description').value = '';
+        document.getElementById('telegram').value = '';
+        document.getElementById('subjectCount').textContent = '0';
+        document.getElementById('descCount').textContent = '0';
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = 'Submit Ticket';
+        files.length = 0;
+        renderAttachments();
+    }
+</script>
+
+</body>
+</html>
