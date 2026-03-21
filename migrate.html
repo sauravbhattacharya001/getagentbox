@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Migration Guide</title>
+    <meta name="description" content="Switch to AgentBox from ChatGPT, Google Assistant, Alexa, Siri, or other AI assistants. Interactive migration wizard with feature mapping and setup steps.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #282828;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-alt: #646cff;
+            --purple: #7b2cbf;
+            --green: #4ade80;
+            --yellow: #fbbf24;
+            --red: #ef4444;
+            --orange: #fb923c;
+            --green-bg: rgba(74,222,128,0.15);
+            --yellow-bg: rgba(251,191,36,0.15);
+            --red-bg: rgba(239,68,68,0.15);
+        }
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --surface-3: #e8e8e8;
+            --border: #ddd;
+            --text: #1a1a1a;
+            --text-muted: #666;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .top-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .top-bar a { color: var(--accent); text-decoration: none; font-weight: 600; }
+        .top-bar a:hover { text-decoration: underline; }
+        .theme-btn {
+            background: var(--surface-2); border: 1px solid var(--border);
+            color: var(--text); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 14px;
+        }
+        .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+        h1 { font-size: 2.4rem; margin-bottom: 8px; }
+        h1 span { color: var(--accent); }
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; }
+        h2 { font-size: 1.4rem; margin-bottom: 16px; }
+        h3 { font-size: 1.1rem; margin-bottom: 12px; }
+
+        /* Source selector */
+        .source-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px; margin-bottom: 40px;
+        }
+        .source-card {
+            background: var(--surface); border: 2px solid var(--border);
+            border-radius: 12px; padding: 20px; text-align: center;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .source-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .source-card.selected { border-color: var(--accent); background: rgba(0,212,255,0.08); }
+        .source-card .icon { font-size: 2rem; margin-bottom: 8px; }
+        .source-card .name { font-weight: 600; }
+        .source-card .desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+        /* Feature comparison */
+        .comparison-section { display: none; margin-bottom: 40px; }
+        .comparison-section.visible { display: block; }
+        .comp-table {
+            width: 100%; border-collapse: collapse;
+            background: var(--surface); border-radius: 12px; overflow: hidden;
+        }
+        .comp-table th, .comp-table td {
+            padding: 12px 16px; text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .comp-table th {
+            background: var(--surface-2); font-weight: 600;
+            font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted);
+        }
+        .comp-table tr:last-child td { border-bottom: none; }
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600;
+        }
+        .badge-yes { background: var(--green-bg); color: var(--green); }
+        .badge-no { background: var(--red-bg); color: var(--red); }
+        .badge-partial { background: var(--yellow-bg); color: var(--yellow); }
+        .badge-better { background: rgba(0,212,255,0.15); color: var(--accent); }
+
+        /* Migration steps */
+        .steps-section { display: none; margin-bottom: 40px; }
+        .steps-section.visible { display: block; }
+        .step {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; margin-bottom: 12px;
+            position: relative; padding-left: 60px;
+        }
+        .step-num {
+            position: absolute; left: 16px; top: 20px;
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--accent); color: #000; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .step.completed .step-num { background: var(--green); }
+        .step-title { font-weight: 600; margin-bottom: 4px; }
+        .step-desc { color: var(--text-muted); font-size: 0.9rem; }
+        .step-check {
+            position: absolute; right: 16px; top: 20px;
+            width: 28px; height: 28px; border-radius: 6px;
+            border: 2px solid var(--border); background: transparent;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: transparent; font-size: 16px; transition: all 0.2s;
+        }
+        .step.completed .step-check { background: var(--green); border-color: var(--green); color: #000; }
+
+        /* Progress bar */
+        .progress-bar {
+            height: 8px; background: var(--surface-2); border-radius: 4px;
+            margin-bottom: 24px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, var(--accent), var(--green));
+            border-radius: 4px; transition: width 0.4s ease; width: 0%;
+        }
+        .progress-text { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+
+        /* Tips */
+        .tip-box {
+            background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+            border-radius: 12px; padding: 16px 20px; margin-top: 16px;
+        }
+        .tip-box .tip-title { font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+        .tip-box p { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* Export */
+        .export-section { display: none; margin-bottom: 40px; }
+        .export-section.visible { display: block; }
+        .export-area {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; font-family: monospace;
+            font-size: 0.85rem; white-space: pre-wrap; max-height: 300px;
+            overflow-y: auto; color: var(--text-muted);
+        }
+        .btn {
+            padding: 10px 20px; border-radius: 8px; border: none;
+            font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
+        }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { opacity: 0.85; }
+        .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--surface-3); }
+        .btn-row { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+
+        /* What you gain/lose */
+        .gain-lose { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+        .gain-box, .lose-box {
+            background: var(--surface); border-radius: 12px; padding: 16px;
+            border: 1px solid var(--border);
+        }
+        .gain-box h3 { color: var(--green); }
+        .lose-box h3 { color: var(--yellow); }
+        .gain-lose li { margin: 6px 0; font-size: 0.9rem; color: var(--text-muted); list-style: none; }
+        .gain-lose li::before { margin-right: 8px; }
+        .gain-box li::before { content: "✅"; }
+        .lose-box li::before { content: "⚠️"; }
+
+        @media (max-width: 640px) {
+            h1 { font-size: 1.8rem; }
+            .source-grid { grid-template-columns: repeat(2, 1fr); }
+            .gain-lose { grid-template-columns: 1fr; }
+            .step { padding-left: 52px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html">🤖 AgentBox</a>
+        <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">☀️ Light</button>
+    </div>
+
+    <div class="container">
+        <h1>Switch to <span>AgentBox</span></h1>
+        <p class="subtitle">Select where you're coming from and we'll show you exactly what changes, what's better, and how to set up.</p>
+
+        <h2>Where are you migrating from?</h2>
+        <div class="source-grid" id="sourceGrid">
+            <div class="source-card" data-source="chatgpt">
+                <div class="icon">💬</div>
+                <div class="name">ChatGPT</div>
+                <div class="desc">OpenAI's assistant</div>
+            </div>
+            <div class="source-card" data-source="google">
+                <div class="icon">🔮</div>
+                <div class="name">Google Gemini</div>
+                <div class="desc">Google's AI assistant</div>
+            </div>
+            <div class="source-card" data-source="alexa">
+                <div class="icon">🔵</div>
+                <div class="name">Alexa</div>
+                <div class="desc">Amazon voice assistant</div>
+            </div>
+            <div class="source-card" data-source="siri">
+                <div class="icon">🍎</div>
+                <div class="name">Siri</div>
+                <div class="desc">Apple's assistant</div>
+            </div>
+            <div class="source-card" data-source="claude">
+                <div class="icon">🧠</div>
+                <div class="name">Claude</div>
+                <div class="desc">Anthropic's AI</div>
+            </div>
+            <div class="source-card" data-source="copilot">
+                <div class="icon">✈️</div>
+                <div class="name">Copilot</div>
+                <div class="desc">Microsoft's assistant</div>
+            </div>
+        </div>
+
+        <div class="comparison-section" id="compSection">
+            <h2>Feature Comparison: <span id="compSourceName"></span> vs AgentBox</h2>
+            <table class="comp-table">
+                <thead>
+                    <tr><th>Feature</th><th id="compSourceCol">Source</th><th>AgentBox</th></tr>
+                </thead>
+                <tbody id="compBody"></tbody>
+            </table>
+
+            <div class="gain-lose" id="gainLose"></div>
+
+            <div class="tip-box" id="tipBox" style="display:none">
+                <div class="tip-title">💡 Pro Tip</div>
+                <p id="tipText"></p>
+            </div>
+        </div>
+
+        <div class="steps-section" id="stepsSection">
+            <h2>Migration Steps</h2>
+            <div class="progress-text"><span id="progressCount">0</span> of <span id="progressTotal">0</span> steps completed</div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div id="stepsContainer"></div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" id="resetBtn">Reset Progress</button>
+                <button class="btn btn-primary" id="exportBtn">Export Checklist</button>
+            </div>
+        </div>
+
+        <div class="export-section" id="exportSection">
+            <h2>📋 Your Migration Checklist</h2>
+            <div class="export-area" id="exportArea"></div>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="copyBtn">Copy to Clipboard</button>
+                <button class="btn btn-secondary" id="closeExportBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        'use strict';
+
+        const DATA = {
+            chatgpt: {
+                name: 'ChatGPT',
+                features: [
+                    { name: 'Conversational AI', source: 'yes', agentbox: 'yes' },
+                    { name: 'Long-term Memory', source: 'partial', agentbox: 'better', note: 'AgentBox remembers across sessions by default' },
+                    { name: 'Web Search', source: 'yes', agentbox: 'yes' },
+                    { name: 'Image Understanding', source: 'yes', agentbox: 'yes' },
+                    { name: 'Code Execution', source: 'yes', agentbox: 'partial' },
+                    { name: 'Voice Interaction', source: 'yes', agentbox: 'yes' },
+                    { name: 'Telegram Native', source: 'no', agentbox: 'better', note: 'Lives in Telegram — no extra app' },
+                    { name: 'Reminders & Scheduling', source: 'partial', agentbox: 'better' },
+                    { name: 'Custom Personality', source: 'partial', agentbox: 'better' },
+                    { name: 'File Uploads', source: 'yes', agentbox: 'yes' },
+                    { name: 'Multi-model Support', source: 'no', agentbox: 'yes' },
+                    { name: 'Privacy / Local Data', source: 'partial', agentbox: 'better' },
+                ],
+                gains: [
+                    'Always in Telegram — no app switching',
+                    'Persistent memory that actually works',
+                    'Customizable personality & tone',
+                    'Reminders and proactive check-ins',
+                    'Free 20 messages/day tier',
+                ],
+                loses: [
+                    'No built-in code sandbox (yet)',
+                    'No DALL·E image generation',
+                    'Smaller plugin ecosystem',
+                ],
+                tip: 'Export your ChatGPT conversation history from Settings → Data Controls, then share key context with AgentBox in your first conversation so it learns your preferences faster.',
+                steps: [
+                    { title: 'Export ChatGPT data', desc: 'Go to Settings → Data Controls → Export Data in ChatGPT. Save the zip for reference.' },
+                    { title: 'Start AgentBox on Telegram', desc: 'Search for @AgentBoxBot on Telegram and tap Start.' },
+                    { title: 'Set your preferences', desc: 'Tell AgentBox your name, timezone, and how you like responses (concise, detailed, casual, etc.).' },
+                    { title: 'Share key context', desc: 'Paste important info from your ChatGPT history: projects, preferences, recurring tasks.' },
+                    { title: 'Set up reminders', desc: 'Migrate any recurring reminders by telling AgentBox about them.' },
+                    { title: 'Try a real task', desc: 'Ask AgentBox something you\'d normally ask ChatGPT. Compare the experience.' },
+                    { title: 'Customize personality', desc: 'Use /personality to adjust tone, verbosity, and style to your liking.' },
+                ],
+            },
+            google: {
+                name: 'Google Gemini',
+                features: [
+                    { name: 'Conversational AI', source: 'yes', agentbox: 'yes' },
+                    { name: 'Long-term Memory', source: 'partial', agentbox: 'better' },
+                    { name: 'Web Search', source: 'better', agentbox: 'yes', note: 'Google has deeper search integration' },
+                    { name: 'Image Understanding', source: 'yes', agentbox: 'yes' },
+                    { name: 'Google Workspace Integration', source: 'yes', agentbox: 'no' },
+                    { name: 'Telegram Native', source: 'no', agentbox: 'better' },
+                    { name: 'Reminders', source: 'yes', agentbox: 'yes' },
+                    { name: 'Custom Personality', source: 'no', agentbox: 'better' },
+                    { name: 'Multi-model Support', source: 'no', agentbox: 'yes' },
+                    { name: 'Privacy Focus', source: 'partial', agentbox: 'better' },
+                ],
+                gains: [
+                    'No Google account required',
+                    'Your data isn\'t used for ad targeting',
+                    'Works in Telegram — your existing chat app',
+                    'Deeper personalization and memory',
+                ],
+                loses: [
+                    'No Google Workspace (Docs/Sheets/Calendar) integration',
+                    'Google\'s search is still more comprehensive',
+                ],
+                tip: 'If you relied on Gemini for Google Calendar/Docs integration, keep Gemini for those tasks and use AgentBox as your primary conversational assistant.',
+                steps: [
+                    { title: 'Note your common uses', desc: 'List what you typically ask Gemini — search, writing, analysis, etc.' },
+                    { title: 'Start AgentBox on Telegram', desc: 'Search for @AgentBoxBot on Telegram and tap Start.' },
+                    { title: 'Set your preferences', desc: 'Tell AgentBox your name, timezone, and preferred response style.' },
+                    { title: 'Test search capabilities', desc: 'Try the same searches you\'d do in Gemini. AgentBox searches the web too.' },
+                    { title: 'Set up memory', desc: 'Share recurring topics, projects, and preferences so AgentBox remembers.' },
+                    { title: 'Try image analysis', desc: 'Send a photo and ask AgentBox about it — it handles images natively.' },
+                ],
+            },
+            alexa: {
+                name: 'Alexa',
+                features: [
+                    { name: 'Conversational AI', source: 'partial', agentbox: 'better' },
+                    { name: 'Long-term Memory', source: 'no', agentbox: 'better' },
+                    { name: 'Smart Home Control', source: 'yes', agentbox: 'no' },
+                    { name: 'Music/Media Control', source: 'yes', agentbox: 'no' },
+                    { name: 'Shopping', source: 'yes', agentbox: 'no' },
+                    { name: 'Reminders & Timers', source: 'yes', agentbox: 'yes' },
+                    { name: 'General Knowledge', source: 'partial', agentbox: 'better' },
+                    { name: 'Writing Assistance', source: 'no', agentbox: 'better' },
+                    { name: 'Code Help', source: 'no', agentbox: 'better' },
+                    { name: 'Custom Personality', source: 'no', agentbox: 'better' },
+                    { name: 'Web Search', source: 'partial', agentbox: 'better' },
+                ],
+                gains: [
+                    'Actually intelligent conversations (not scripted)',
+                    'Remembers your context across conversations',
+                    'Can write, analyze, code, and reason',
+                    'Works anywhere via Telegram — not just at home',
+                ],
+                loses: [
+                    'No smart home device control',
+                    'No music/media playback',
+                    'No Amazon shopping integration',
+                    'Not voice-first (text primary, voice secondary)',
+                ],
+                tip: 'AgentBox and Alexa serve different purposes. Keep Alexa for smart home and media, use AgentBox for everything that requires real intelligence.',
+                steps: [
+                    { title: 'Identify your Alexa tasks', desc: 'Split into two lists: smart home/media (keep Alexa) vs. questions/knowledge (move to AgentBox).' },
+                    { title: 'Start AgentBox on Telegram', desc: 'Search for @AgentBoxBot on Telegram and tap Start.' },
+                    { title: 'Set your preferences', desc: 'Tell AgentBox your name, timezone, and how you like responses.' },
+                    { title: 'Migrate reminders', desc: 'Tell AgentBox about your recurring reminders and routines.' },
+                    { title: 'Test Q&A quality', desc: 'Ask AgentBox the same questions you\'d ask Alexa. Notice the difference.' },
+                ],
+            },
+            siri: {
+                name: 'Siri',
+                features: [
+                    { name: 'Conversational AI', source: 'partial', agentbox: 'better' },
+                    { name: 'Long-term Memory', source: 'no', agentbox: 'better' },
+                    { name: 'Device Control', source: 'yes', agentbox: 'no' },
+                    { name: 'Apple Ecosystem', source: 'yes', agentbox: 'no' },
+                    { name: 'Reminders', source: 'yes', agentbox: 'yes' },
+                    { name: 'Web Search', source: 'partial', agentbox: 'better' },
+                    { name: 'Writing Assistance', source: 'no', agentbox: 'better' },
+                    { name: 'Custom Personality', source: 'no', agentbox: 'better' },
+                    { name: 'Deep Analysis', source: 'no', agentbox: 'better' },
+                    { name: 'Image Understanding', source: 'no', agentbox: 'yes' },
+                ],
+                gains: [
+                    'Actually understands complex questions',
+                    'Persistent memory across conversations',
+                    'Creative writing, analysis, and coding help',
+                    'Customizable personality',
+                ],
+                loses: [
+                    'No Apple device control (HomeKit, shortcuts)',
+                    'No hands-free "Hey Siri" activation',
+                    'Not embedded in iOS system-wide',
+                ],
+                tip: 'Keep Siri for quick device actions (timers, calls, HomeKit). Use AgentBox via Telegram for anything requiring thought.',
+                steps: [
+                    { title: 'List your Siri uses', desc: 'Split into device actions (keep Siri) vs. knowledge tasks (move to AgentBox).' },
+                    { title: 'Start AgentBox on Telegram', desc: 'Search for @AgentBoxBot on Telegram and tap Start.' },
+                    { title: 'Set your preferences', desc: 'Tell AgentBox your name, timezone, and response preferences.' },
+                    { title: 'Test complex questions', desc: 'Ask something Siri struggles with. See the difference in quality.' },
+                    { title: 'Build context', desc: 'Share your interests, projects, and recurring needs with AgentBox.' },
+                ],
+            },
+            claude: {
+                name: 'Claude',
+                features: [
+                    { name: 'Conversational AI', source: 'yes', agentbox: 'yes' },
+                    { name: 'Long-term Memory', source: 'partial', agentbox: 'better' },
+                    { name: 'Web Search', source: 'yes', agentbox: 'yes' },
+                    { name: 'Long Document Analysis', source: 'better', agentbox: 'yes', note: 'Claude has larger context windows' },
+                    { name: 'Telegram Native', source: 'no', agentbox: 'better' },
+                    { name: 'Reminders', source: 'no', agentbox: 'better' },
+                    { name: 'Custom Personality', source: 'partial', agentbox: 'better' },
+                    { name: 'Proactive Check-ins', source: 'no', agentbox: 'better' },
+                    { name: 'Image Understanding', source: 'yes', agentbox: 'yes' },
+                    { name: 'Artifacts/Projects', source: 'yes', agentbox: 'partial' },
+                    { name: 'Multi-model Support', source: 'no', agentbox: 'yes' },
+                ],
+                gains: [
+                    'Lives in Telegram — no separate app',
+                    'Proactive reminders and check-ins',
+                    'Persistent memory by default',
+                    'Can switch between AI models',
+                ],
+                loses: [
+                    'No Artifacts (interactive code previews)',
+                    'Smaller context window for huge documents',
+                    'No Projects feature (yet)',
+                ],
+                tip: 'If you use Claude\'s Artifacts for code prototyping, you may want to keep it for that. AgentBox excels as a persistent daily assistant.',
+                steps: [
+                    { title: 'Export key conversations', desc: 'Copy important conversations from Claude that contain useful context.' },
+                    { title: 'Start AgentBox on Telegram', desc: 'Search for @AgentBoxBot on Telegram and tap Start.' },
+                    { title: 'Set your preferences', desc: 'Tell AgentBox your communication style preferences.' },
+                    { title: 'Share context', desc: 'Paste key project info, preferences, and recurring topics.' },
+                    { title: 'Set up reminders', desc: 'Configure any recurring tasks or check-ins you need.' },
+                    { title: 'Explore model options', desc: 'Try different AI models via AgentBox to find your preference.' },
+                ],
+            },
+            copilot: {
+                name: 'Microsoft Copilot',
+                features: [
+                    { name: 'Conversational AI', source: 'yes', agentbox: 'yes' },
+                    { name: 'Long-term Memory', source: 'partial', agentbox: 'better' },
+                    { name: 'Web Search', source: 'better', agentbox: 'yes', note: 'Bing integration is strong' },
+                    { name: 'Office Integration', source: 'yes', agentbox: 'no' },
+                    { name: 'Image Generation', source: 'yes', agentbox: 'no' },
+                    { name: 'Telegram Native', source: 'no', agentbox: 'better' },
+                    { name: 'Reminders', source: 'no', agentbox: 'better' },
+                    { name: 'Custom Personality', source: 'no', agentbox: 'better' },
+                    { name: 'Privacy Focus', source: 'partial', agentbox: 'better' },
+                    { name: 'Multi-model Support', source: 'no', agentbox: 'yes' },
+                ],
+                gains: [
+                    'Not tied to Microsoft ecosystem',
+                    'Persistent memory that learns you',
+                    'Customizable personality & tone',
+                    'Works in Telegram — no Edge/Windows required',
+                ],
+                loses: [
+                    'No Microsoft 365 integration',
+                    'No DALL·E image generation',
+                    'Bing\'s search citations are more detailed',
+                ],
+                tip: 'If you use Copilot mainly for Office document help, keep it for that. AgentBox is better as an always-available personal assistant.',
+                steps: [
+                    { title: 'Note your Copilot habits', desc: 'List what you use Copilot for — search, writing, Office, image gen.' },
+                    { title: 'Start AgentBox on Telegram', desc: 'Search for @AgentBoxBot on Telegram and tap Start.' },
+                    { title: 'Set your preferences', desc: 'Tell AgentBox your name, timezone, and preferred style.' },
+                    { title: 'Test search quality', desc: 'Compare web search results between Copilot and AgentBox.' },
+                    { title: 'Build your memory', desc: 'Share projects, preferences, and context so AgentBox knows you.' },
+                    { title: 'Set up daily routines', desc: 'Configure reminders, check-ins, and proactive features.' },
+                ],
+            },
+        };
+
+        let selectedSource = null;
+        let stepProgress = {};
+
+        // Theme
+        const themeBtn = document.getElementById('themeBtn');
+        let dark = localStorage.getItem('migrate-theme') !== 'light';
+        function applyTheme() {
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            themeBtn.textContent = dark ? '☀️ Light' : '🌙 Dark';
+        }
+        applyTheme();
+        themeBtn.addEventListener('click', () => { dark = !dark; localStorage.setItem('migrate-theme', dark ? 'dark' : 'light'); applyTheme(); });
+
+        // Load progress
+        try { stepProgress = JSON.parse(localStorage.getItem('migrate-progress') || '{}'); } catch(e) {}
+
+        // Source selection
+        document.getElementById('sourceGrid').addEventListener('click', e => {
+            const card = e.target.closest('.source-card');
+            if (!card) return;
+            document.querySelectorAll('.source-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedSource = card.dataset.source;
+            renderComparison();
+            renderSteps();
+        });
+
+        function badgeHTML(val) {
+            const labels = { yes: '✓ Yes', no: '✗ No', partial: '~ Partial', better: '★ Better' };
+            return '<span class="badge badge-' + val + '">' + (labels[val] || val) + '</span>';
+        }
+
+        function renderComparison() {
+            const d = DATA[selectedSource];
+            if (!d) return;
+            document.getElementById('compSection').classList.add('visible');
+            document.getElementById('compSourceName').textContent = d.name;
+            document.getElementById('compSourceCol').textContent = d.name;
+
+            let rows = '';
+            d.features.forEach(f => {
+                rows += '<tr><td>' + f.name + (f.note ? ' <small style="color:var(--text-muted)">(' + f.note + ')</small>' : '') +
+                    '</td><td>' + badgeHTML(f.source) + '</td><td>' + badgeHTML(f.agentbox) + '</td></tr>';
+            });
+            document.getElementById('compBody').innerHTML = rows;
+
+            let gl = '<div class="gain-box"><h3>🎉 What You Gain</h3><ul>';
+            d.gains.forEach(g => gl += '<li>' + g + '</li>');
+            gl += '</ul></div><div class="lose-box"><h3>⚡ Trade-offs</h3><ul>';
+            d.loses.forEach(l => gl += '<li>' + l + '</li>');
+            gl += '</ul></div>';
+            document.getElementById('gainLose').innerHTML = gl;
+
+            if (d.tip) {
+                document.getElementById('tipBox').style.display = 'block';
+                document.getElementById('tipText').textContent = d.tip;
+            }
+        }
+
+        function renderSteps() {
+            const d = DATA[selectedSource];
+            if (!d) return;
+            const section = document.getElementById('stepsSection');
+            section.classList.add('visible');
+            const container = document.getElementById('stepsContainer');
+            const key = selectedSource;
+            if (!stepProgress[key]) stepProgress[key] = [];
+
+            let html = '';
+            d.steps.forEach((s, i) => {
+                const done = stepProgress[key].includes(i);
+                html += '<div class="step' + (done ? ' completed' : '') + '" data-idx="' + i + '">' +
+                    '<div class="step-num">' + (i + 1) + '</div>' +
+                    '<button class="step-check" aria-label="Mark step ' + (i+1) + ' complete">' + (done ? '✓' : '') + '</button>' +
+                    '<div class="step-title">' + s.title + '</div>' +
+                    '<div class="step-desc">' + s.desc + '</div></div>';
+            });
+            container.innerHTML = html;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const d = DATA[selectedSource];
+            if (!d) return;
+            const key = selectedSource;
+            const done = (stepProgress[key] || []).length;
+            const total = d.steps.length;
+            document.getElementById('progressCount').textContent = done;
+            document.getElementById('progressTotal').textContent = total;
+            document.getElementById('progressFill').style.width = (total ? (done/total*100) : 0) + '%';
+        }
+
+        document.getElementById('stepsContainer').addEventListener('click', e => {
+            const btn = e.target.closest('.step-check');
+            if (!btn) return;
+            const step = btn.closest('.step');
+            const idx = parseInt(step.dataset.idx);
+            const key = selectedSource;
+            if (!stepProgress[key]) stepProgress[key] = [];
+            const pos = stepProgress[key].indexOf(idx);
+            if (pos >= 0) {
+                stepProgress[key].splice(pos, 1);
+                step.classList.remove('completed');
+                btn.textContent = '';
+            } else {
+                stepProgress[key].push(idx);
+                step.classList.add('completed');
+                btn.textContent = '✓';
+            }
+            localStorage.setItem('migrate-progress', JSON.stringify(stepProgress));
+            updateProgress();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (!selectedSource) return;
+            stepProgress[selectedSource] = [];
+            localStorage.setItem('migrate-progress', JSON.stringify(stepProgress));
+            renderSteps();
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const d = DATA[selectedSource];
+            if (!d) return;
+            const key = selectedSource;
+            let text = 'AgentBox Migration Checklist — from ' + d.name + '\n' + '='.repeat(50) + '\n\n';
+            d.steps.forEach((s, i) => {
+                const done = (stepProgress[key] || []).includes(i);
+                text += (done ? '[x]' : '[ ]') + ' ' + (i+1) + '. ' + s.title + '\n   ' + s.desc + '\n\n';
+            });
+            text += '\nWhat You Gain:\n';
+            d.gains.forEach(g => text += '  ✅ ' + g + '\n');
+            text += '\nTrade-offs:\n';
+            d.loses.forEach(l => text += '  ⚠️ ' + l + '\n');
+            if (d.tip) text += '\n💡 Tip: ' + d.tip + '\n';
+
+            document.getElementById('exportArea').textContent = text;
+            document.getElementById('exportSection').classList.add('visible');
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const text = document.getElementById('exportArea').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                document.getElementById('copyBtn').textContent = '✓ Copied!';
+                setTimeout(() => document.getElementById('copyBtn').textContent = 'Copy to Clipboard', 2000);
+            });
+        });
+
+        document.getElementById('closeExportBtn').addEventListener('click', () => {
+            document.getElementById('exportSection').classList.remove('visible');
+        });
+
+        // Auto-select from URL hash
+        const hash = location.hash.replace('#', '');
+        if (DATA[hash]) {
+            document.querySelector('[data-source="' + hash + '"]').click();
+        }
+    })();
+    </script>
+</body>
+</html>
