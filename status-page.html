@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Status — AgentBox</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#12121a;--card:#1a1a2e;--border:#2a2a4a;--text:#e0e0f0;--muted:#8888aa;--accent:#6c5ce7;--accent2:#a29bfe;--green:#00b894;--orange:#fdcb6e;--red:#e17055;--blue:#74b9ff}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--accent2);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Nav */
+.top-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);background:var(--surface)}
+.top-nav .logo{font-size:1.2rem;font-weight:700;color:var(--text)}
+.top-nav .logo span{margin-right:6px}
+.top-nav .back{color:var(--muted);font-size:.9rem}
+
+/* Hero banner */
+.status-banner{text-align:center;padding:48px 20px 36px}
+.status-banner .indicator{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:40px;font-size:1.15rem;font-weight:600;margin-bottom:16px}
+.status-banner .indicator.operational{background:rgba(0,184,148,.12);color:var(--green);border:1px solid rgba(0,184,148,.3)}
+.status-banner .indicator.degraded{background:rgba(253,203,110,.12);color:var(--orange);border:1px solid rgba(253,203,110,.3)}
+.status-banner .indicator.outage{background:rgba(225,112,85,.12);color:var(--red);border:1px solid rgba(225,112,85,.3)}
+.status-banner .indicator .dot{width:12px;height:12px;border-radius:50%;animation:pulse 2s infinite}
+.indicator.operational .dot{background:var(--green)}
+.indicator.degraded .dot{background:var(--orange)}
+.indicator.outage .dot{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.status-banner .updated{color:var(--muted);font-size:.85rem;margin-top:8px}
+
+.container{max-width:800px;margin:0 auto;padding:0 20px 60px}
+
+/* Component list */
+.section-title{font-size:1.1rem;font-weight:600;margin:32px 0 14px;color:var(--text)}
+.component-list{display:flex;flex-direction:column;gap:2px}
+.component{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--card);border:1px solid var(--border);transition:background .2s}
+.component:first-child{border-radius:12px 12px 0 0}
+.component:last-child{border-radius:0 0 12px 12px}
+.component:only-child{border-radius:12px}
+.component:hover{background:#1e1e38}
+.component .name{font-weight:500}
+.component .badge{padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600}
+.badge.operational{background:rgba(0,184,148,.15);color:var(--green)}
+.badge.degraded{background:rgba(253,203,110,.15);color:var(--orange)}
+.badge.outage{background:rgba(225,112,85,.15);color:var(--red)}
+.badge.maintenance{background:rgba(116,185,255,.15);color:var(--blue)}
+
+/* Uptime bars */
+.uptime-section{margin-top:36px}
+.uptime-row{margin-bottom:20px}
+.uptime-row .label{display:flex;justify-content:space-between;margin-bottom:6px;font-size:.85rem}
+.uptime-row .label .name{color:var(--text)}
+.uptime-row .label .pct{color:var(--green);font-weight:600}
+.uptime-bar{display:flex;gap:2px;height:28px}
+.uptime-bar .day{flex:1;border-radius:3px;position:relative;cursor:pointer;transition:transform .15s}
+.uptime-bar .day:hover{transform:scaleY(1.3)}
+.uptime-bar .day.up{background:var(--green)}
+.uptime-bar .day.partial{background:var(--orange)}
+.uptime-bar .day.down{background:var(--red)}
+.uptime-bar .day.no-data{background:var(--border)}
+.uptime-legend{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:4px}
+
+/* Incidents */
+.incidents{margin-top:40px}
+.incident{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:12px}
+.incident .inc-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px}
+.incident .inc-title{font-weight:600;font-size:1rem}
+.incident .inc-date{color:var(--muted);font-size:.8rem}
+.incident .inc-badge{padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600;margin-left:10px}
+.inc-badge.resolved{background:rgba(0,184,148,.15);color:var(--green)}
+.inc-badge.investigating{background:rgba(253,203,110,.15);color:var(--orange)}
+.inc-badge.identified{background:rgba(116,185,255,.15);color:var(--blue)}
+.incident .inc-updates{margin-top:10px;padding-left:16px;border-left:2px solid var(--border)}
+.incident .inc-update{margin-bottom:8px;font-size:.9rem;color:var(--muted)}
+.incident .inc-update .time{font-weight:600;color:var(--text);margin-right:6px}
+
+/* Subscribe */
+.subscribe-box{text-align:center;margin-top:40px;padding:32px;background:var(--card);border:1px solid var(--border);border-radius:14px}
+.subscribe-box h3{margin-bottom:8px}
+.subscribe-box p{color:var(--muted);font-size:.9rem;margin-bottom:16px}
+.subscribe-box .sub-form{display:flex;gap:8px;max-width:400px;margin:0 auto}
+.subscribe-box input{flex:1;padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.9rem;outline:none}
+.subscribe-box input:focus{border-color:var(--accent)}
+.subscribe-box button{padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-weight:600;cursor:pointer;transition:background .2s}
+.subscribe-box button:hover{background:var(--accent2)}
+.subscribe-box .success-msg{display:none;color:var(--green);margin-top:10px;font-size:.9rem}
+
+@media(max-width:600px){
+  .top-nav{padding:12px 16px}
+  .status-banner{padding:32px 16px 24px}
+  .uptime-bar .day{height:20px}
+  .subscribe-box .sub-form{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="logo"><span>🤖</span>AgentBox</a>
+  <a href="index.html" class="back">← Back to Home</a>
+</nav>
+
+<div class="status-banner" id="statusBanner">
+  <div class="indicator operational" id="overallIndicator">
+    <span class="dot"></span>
+    <span id="overallText">All Systems Operational</span>
+  </div>
+  <div class="updated" id="lastUpdated">Last updated just now</div>
+</div>
+
+<div class="container">
+  <div class="section-title">Core Services</div>
+  <div class="component-list" id="coreServices"></div>
+
+  <div class="section-title">Infrastructure</div>
+  <div class="component-list" id="infraServices"></div>
+
+  <div class="uptime-section">
+    <div class="section-title">Uptime — Last 90 Days</div>
+    <div id="uptimeBars"></div>
+  </div>
+
+  <div class="incidents">
+    <div class="section-title">Recent Incidents</div>
+    <div id="incidentList"></div>
+  </div>
+
+  <div class="subscribe-box">
+    <h3>📬 Get Notified</h3>
+    <p>Subscribe to status updates and incident notifications.</p>
+    <div class="sub-form">
+      <input type="email" id="subEmail" placeholder="you@example.com" aria-label="Email for status updates">
+      <button id="subBtn">Subscribe</button>
+    </div>
+    <div class="success-msg" id="subSuccess">✓ Subscribed! You'll receive status updates.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const coreComponents = [
+    {name:'Telegram Bot',status:'operational'},
+    {name:'AI Engine (GPT-4o)',status:'operational'},
+    {name:'Memory & Context Store',status:'operational'},
+    {name:'Web Search',status:'operational'},
+    {name:'Image Understanding',status:'operational'},
+    {name:'Reminders & Scheduling',status:'operational'},
+    {name:'Voice Messages',status:'operational'}
+  ];
+  const infraComponents = [
+    {name:'API Gateway',status:'operational'},
+    {name:'Database Cluster',status:'operational'},
+    {name:'CDN & Static Assets',status:'operational'},
+    {name:'Authentication',status:'operational'},
+    {name:'Webhook Delivery',status:'operational'}
+  ];
+
+  const incidents = [
+    {
+      title:'Elevated latency on AI Engine',
+      date:'Mar 18, 2026',
+      status:'resolved',
+      updates:[
+        {time:'14:32 UTC',text:'Resolved — Response times back to normal.'},
+        {time:'13:45 UTC',text:'Identified — Upstream provider experiencing high load.'},
+        {time:'13:20 UTC',text:'Investigating — Users reporting slow responses.'}
+      ]
+    },
+    {
+      title:'Webhook delivery delays',
+      date:'Mar 12, 2026',
+      status:'resolved',
+      updates:[
+        {time:'09:10 UTC',text:'Resolved — Queue cleared, all webhooks delivered.'},
+        {time:'08:30 UTC',text:'Investigating — Some Telegram messages delayed by ~2 min.'}
+      ]
+    },
+    {
+      title:'Scheduled maintenance — Database migration',
+      date:'Mar 5, 2026',
+      status:'resolved',
+      updates:[
+        {time:'06:00 UTC',text:'Completed — All services restored. No data loss.'},
+        {time:'04:00 UTC',text:'Started — Brief downtime expected for 1-2 hours.'}
+      ]
+    }
+  ];
+
+  function renderComponents(list,containerId){
+    const c=document.getElementById(containerId);
+    c.innerHTML=list.map(s=>`<div class="component"><span class="name">${s.name}</span><span class="badge ${s.status}">${s.status.charAt(0).toUpperCase()+s.status.slice(1)}</span></div>`).join('');
+  }
+  renderComponents(coreComponents,'coreServices');
+  renderComponents(infraComponents,'infraServices');
+
+  // Overall status
+  const allStatuses=[...coreComponents,...infraComponents].map(c=>c.status);
+  const indicator=document.getElementById('overallIndicator');
+  const overallText=document.getElementById('overallText');
+  if(allStatuses.includes('outage')){indicator.className='indicator outage';overallText.textContent='Major Outage';}
+  else if(allStatuses.includes('degraded')){indicator.className='indicator degraded';overallText.textContent='Degraded Performance';}
+
+  // Uptime bars
+  const uptimeServices=['Telegram Bot','AI Engine','API Gateway'];
+  const barsEl=document.getElementById('uptimeBars');
+  uptimeServices.forEach(name=>{
+    const days=[];
+    for(let i=89;i>=0;i--){
+      const r=Math.random();
+      days.push(r>.985?'down':r>.97?'partial':'up');
+    }
+    const upCount=days.filter(d=>d==='up').length;
+    const partialCount=days.filter(d=>d==='partial').length;
+    const pct=((upCount+partialCount*0.5)/90*100).toFixed(2);
+    const row=document.createElement('div');
+    row.className='uptime-row';
+    row.innerHTML=`<div class="label"><span class="name">${name}</span><span class="pct">${pct}%</span></div><div class="uptime-bar">${days.map((d,i)=>{const date=new Date();date.setDate(date.getDate()-(89-i));return`<div class="day ${d}" title="${date.toLocaleDateString()}: ${d}"></div>`;}).join('')}</div><div class="uptime-legend"><span>90 days ago</span><span>Today</span></div>`;
+    barsEl.appendChild(row);
+  });
+
+  // Incidents
+  const incEl=document.getElementById('incidentList');
+  if(incidents.length===0){incEl.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">No recent incidents 🎉</p>';}
+  else{
+    incEl.innerHTML=incidents.map(inc=>`<div class="incident"><div class="inc-header"><span class="inc-title">${inc.title}<span class="inc-badge ${inc.status}">${inc.status.charAt(0).toUpperCase()+inc.status.slice(1)}</span></span><span class="inc-date">${inc.date}</span></div><div class="inc-updates">${inc.updates.map(u=>`<div class="inc-update"><span class="time">${u.time}</span>${u.text}</div>`).join('')}</div></div>`).join('');
+  }
+
+  // Subscribe
+  document.getElementById('subBtn').addEventListener('click',function(){
+    const email=document.getElementById('subEmail').value.trim();
+    if(email&&email.includes('@')){
+      document.getElementById('subSuccess').style.display='block';
+      document.getElementById('subEmail').value='';
+      localStorage.setItem('agentbox-status-sub',email);
+    }
+  });
+
+  // Last updated time
+  document.getElementById('lastUpdated').textContent='Last updated '+new Date().toLocaleString();
+})();
+</script>
+</body>
+</html>
