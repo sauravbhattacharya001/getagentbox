@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Press Kit</title>
+    <meta name="description" content="AgentBox press kit — brand assets, color palette, logos, and media guidelines for press, partners, and content creators.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --green: #00b894;
+            --blue: #0984e3;
+            --cyan: #00d4ff;
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --border: #ddd;
+            --text: #1a1a1a;
+            --text-muted: #666;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-bar a { color: var(--accent-light); text-decoration: none; font-weight: 600; }
+        .top-bar a:hover { text-decoration: underline; }
+
+        .theme-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--cyan), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin: 2.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+        }
+
+        .card h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Color swatches */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .swatch {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .swatch-color {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .swatch-label {
+            background: var(--surface);
+            padding: 0.6rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .swatch-label code {
+            color: var(--accent-light);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        /* Logo preview */
+        .logo-preview {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .logo-box {
+            width: 200px;
+            height: 200px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .logo-box.dark { background: #1a1a2e; }
+        .logo-box.light { background: #ffffff; }
+
+        .logo-box span.label {
+            position: absolute;
+            bottom: 8px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Boilerplate */
+        .boilerplate {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .boilerplate p {
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
+        /* Guidelines */
+        .do-dont {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .do-list, .dont-list {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.2rem;
+            border: 1px solid var(--border);
+        }
+
+        .do-list h4 { color: var(--green); margin-bottom: 0.5rem; }
+        .dont-list h4 { color: #ef4444; margin-bottom: 0.5rem; }
+
+        .do-list li, .dont-list li {
+            list-style: none;
+            padding: 0.3rem 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .do-list li::before { content: "✓ "; color: var(--green); font-weight: bold; }
+        .dont-list li::before { content: "✗ "; color: #ef4444; font-weight: bold; }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            text-align: center;
+        }
+
+        .stat .num {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--cyan), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat .desc {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        /* Contact */
+        .contact-card {
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(0, 212, 255, 0.1));
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .contact-card h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+        .contact-card p { color: var(--text-muted); }
+        .contact-card a { color: var(--accent-light); }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .do-dont { grid-template-columns: 1fr; }
+            .logo-preview { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html">← Back to AgentBox</a>
+        <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+    </div>
+
+    <div class="container">
+        <h1>📦 Press Kit</h1>
+        <p class="subtitle">Everything journalists, bloggers, partners, and content creators need to write about AgentBox.</p>
+
+        <!-- Quick Facts -->
+        <h2>📊 Quick Facts</h2>
+        <div class="stats-row">
+            <div class="stat">
+                <div class="num">2024</div>
+                <div class="desc">Year Founded</div>
+            </div>
+            <div class="stat">
+                <div class="num">Telegram</div>
+                <div class="desc">Primary Platform</div>
+            </div>
+            <div class="stat">
+                <div class="num">20/day</div>
+                <div class="desc">Free Messages</div>
+            </div>
+            <div class="stat">
+                <div class="num">AI-First</div>
+                <div class="desc">Architecture</div>
+            </div>
+        </div>
+
+        <!-- Boilerplate -->
+        <h2>📝 Company Boilerplate</h2>
+
+        <h3 style="margin-top:1rem; font-size:1rem; color:var(--text-muted);">Short (1 sentence)</h3>
+        <div class="boilerplate" id="boilerShort">
+            <button class="copy-btn" onclick="copyText('boilerShort')">Copy</button>
+            <p>AgentBox is a personal AI assistant that lives in Telegram — it remembers you, learns your preferences, and helps you get things done with 20 free messages per day.</p>
+        </div>
+
+        <h3 style="margin-top:1rem; font-size:1rem; color:var(--text-muted);">Medium (1 paragraph)</h3>
+        <div class="boilerplate" id="boilerMedium">
+            <button class="copy-btn" onclick="copyText('boilerMedium')">Copy</button>
+            <p>AgentBox is an AI-powered personal assistant that lives right inside Telegram. Unlike traditional chatbots, AgentBox remembers context across conversations, learns your preferences over time, and integrates with your daily workflow. It can search the web, set reminders, analyze images, generate content, and much more — all through natural conversation. With a generous free tier of 20 messages per day, AgentBox makes personal AI accessible to everyone.</p>
+        </div>
+
+        <h3 style="margin-top:1rem; font-size:1rem; color:var(--text-muted);">Full (press release style)</h3>
+        <div class="boilerplate" id="boilerFull">
+            <button class="copy-btn" onclick="copyText('boilerFull')">Copy</button>
+            <p>AgentBox is redefining what a personal AI assistant can be. Built natively for Telegram, AgentBox combines persistent memory, web search, image understanding, reminders, and content generation into a single conversational interface that feels natural and effortless. Unlike one-shot AI tools, AgentBox maintains context across sessions, building a personalized understanding of each user's needs and preferences. The platform offers a free tier with 20 messages per day, making cutting-edge AI assistance available to anyone with a Telegram account. Whether you need help drafting emails, researching topics, managing your schedule, or just having an intelligent conversation, AgentBox is always just a message away.</p>
+        </div>
+
+        <!-- Brand Colors -->
+        <h2>🎨 Brand Colors</h2>
+        <p style="color:var(--text-muted); margin-bottom:1rem;">Our core color palette. Use these consistently when referencing AgentBox.</p>
+
+        <div class="color-grid">
+            <div class="swatch">
+                <div class="swatch-color" style="background:#00d4ff; color:#000;">Aa</div>
+                <div class="swatch-label">Primary Cyan<br><code>#00d4ff</code></div>
+            </div>
+            <div class="swatch">
+                <div class="swatch-color" style="background:#6c5ce7; color:#fff;">Aa</div>
+                <div class="swatch-label">Accent Purple<br><code>#6c5ce7</code></div>
+            </div>
+            <div class="swatch">
+                <div class="swatch-color" style="background:#a29bfe; color:#000;">Aa</div>
+                <div class="swatch-label">Light Purple<br><code>#a29bfe</code></div>
+            </div>
+            <div class="swatch">
+                <div class="swatch-color" style="background:#1a1a2e; color:#fff;">Aa</div>
+                <div class="swatch-label">Deep Navy<br><code>#1a1a2e</code></div>
+            </div>
+            <div class="swatch">
+                <div class="swatch-color" style="background:#00b894; color:#000;">Aa</div>
+                <div class="swatch-label">Success Green<br><code>#00b894</code></div>
+            </div>
+            <div class="swatch">
+                <div class="swatch-color" style="background:#ffffff; color:#000; border-bottom:1px solid #ddd;">Aa</div>
+                <div class="swatch-label">White<br><code>#ffffff</code></div>
+            </div>
+        </div>
+
+        <!-- Logo -->
+        <h2>🤖 Logo</h2>
+        <p style="color:var(--text-muted); margin-bottom:1rem;">The AgentBox logo mark and wordmark for different backgrounds.</p>
+
+        <div class="logo-preview">
+            <div class="logo-box dark">
+                🤖
+                <span class="label">On dark</span>
+            </div>
+            <div class="logo-box light">
+                🤖
+                <span class="label">On light</span>
+            </div>
+        </div>
+
+        <p style="color:var(--text-muted); margin-top:1rem; font-size:0.9rem;">
+            The logo uses the robot emoji (🤖) as a recognizable mark paired with the "AgentBox" wordmark.
+            When using the full wordmark, maintain the camelCase styling: <strong>AgentBox</strong> (not "Agentbox" or "AGENTBOX").
+        </p>
+
+        <!-- Brand Guidelines -->
+        <h2>📐 Brand Usage Guidelines</h2>
+        <div class="do-dont">
+            <div class="do-list">
+                <h4>✅ Do</h4>
+                <ul>
+                    <li>Use "AgentBox" with capital A and B</li>
+                    <li>Use our brand colors faithfully</li>
+                    <li>Give the logo adequate spacing</li>
+                    <li>Describe us as "AI assistant for Telegram"</li>
+                    <li>Link to getagentbox.com when mentioning us</li>
+                    <li>Use the robot emoji 🤖 as our icon</li>
+                </ul>
+            </div>
+            <div class="dont-list">
+                <h4>❌ Don't</h4>
+                <ul>
+                    <li>Write "Agentbox", "agentbox", or "AGENTBOX"</li>
+                    <li>Alter the logo colors or proportions</li>
+                    <li>Use our brand to imply endorsement</li>
+                    <li>Place the logo on busy backgrounds</li>
+                    <li>Describe us as "just a chatbot"</li>
+                    <li>Crop or rotate the logo mark</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Key Features -->
+        <h2>✨ Key Features for Coverage</h2>
+        <div class="card-grid">
+            <div class="card">
+                <h3>🧠 Persistent Memory</h3>
+                <p>Remembers context and preferences across conversations — learns who you are over time.</p>
+            </div>
+            <div class="card">
+                <h3>🔍 Web Search</h3>
+                <p>Real-time web search built in. Get current information without leaving the chat.</p>
+            </div>
+            <div class="card">
+                <h3>📸 Image Understanding</h3>
+                <p>Send photos and get intelligent analysis — from identifying objects to reading text in images.</p>
+            </div>
+            <div class="card">
+                <h3>⏰ Smart Reminders</h3>
+                <p>Set reminders in natural language. "Remind me to call the dentist tomorrow at 3pm."</p>
+            </div>
+            <div class="card">
+                <h3>✍️ Content Generation</h3>
+                <p>Draft emails, write summaries, brainstorm ideas, create social media posts.</p>
+            </div>
+            <div class="card">
+                <h3>💬 Natural Conversation</h3>
+                <p>No commands to memorize. Just talk naturally and AgentBox understands.</p>
+            </div>
+        </div>
+
+        <!-- Media Contact -->
+        <div class="contact-card">
+            <h3>📬 Media Inquiries</h3>
+            <p>For press inquiries, interviews, or partnership opportunities:</p>
+            <p style="margin-top:0.5rem;"><a href="mailto:press@getagentbox.com">press@getagentbox.com</a></p>
+        </div>
+
+        <p style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin-top:2rem;">
+            Last updated: March 2026 · <a href="index.html" style="color:var(--accent-light);">Back to AgentBox</a>
+        </p>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            document.querySelector('.theme-btn').textContent = next === 'light' ? '☀️' : '🌙';
+            localStorage.setItem('theme', next);
+        }
+
+        function copyText(id) {
+            const el = document.getElementById(id);
+            const text = el.querySelector('p').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = el.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            });
+        }
+
+        // Restore theme
+        const saved = localStorage.getItem('theme');
+        if (saved) {
+            document.documentElement.setAttribute('data-theme', saved);
+            document.querySelector('.theme-btn').textContent = saved === 'light' ? '☀️' : '🌙';
+        }
+    </script>
+</body>
+</html>
