@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Feature Voting Board</title>
+    <meta name="description" content="Vote on upcoming AgentBox features and suggest your own ideas. Shape the future of your AI agent.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --orange-bg: #e1705522;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --red: #d63031;
+            --red-bg: #d6303122;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --surface-3: #e8e8e8;
+            --border: #ddd;
+            --text: #1a1a1a;
+            --text-muted: #666;
+            --accent-bg: #00d4ff20;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .top-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .top-bar a { color: var(--accent); text-decoration: none; font-weight: 600; }
+        .top-bar a:hover { text-decoration: underline; }
+        .theme-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+        h1 { font-size: 2rem; margin-bottom: 8px; }
+        .subtitle { color: var(--text-muted); margin-bottom: 32px; font-size: 1.05rem; }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card .num { font-size: 1.6rem; font-weight: 700; }
+        .stat-card .label { color: var(--text-muted); font-size: .85rem; }
+
+        .controls {
+            display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
+        }
+        .controls input, .controls select {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-size: .95rem;
+        }
+        .controls input { flex: 1; min-width: 200px; }
+        .controls select { min-width: 140px; }
+
+        .tabs {
+            display: flex; gap: 4px; margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 10px 18px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: .95rem;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            transition: .2s;
+        }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        .feature-list { display: flex; flex-direction: column; gap: 12px; }
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            display: flex;
+            gap: 16px;
+            transition: border-color .2s;
+        }
+        .feature-card:hover { border-color: var(--accent); }
+        .vote-col {
+            display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 50px;
+        }
+        .vote-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            width: 40px; height: 32px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+            transition: .2s;
+        }
+        .vote-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .vote-btn.voted { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+        .vote-count { font-size: 1.2rem; font-weight: 700; }
+        .feature-body { flex: 1; min-width: 0; }
+        .feature-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; }
+        .feature-desc { color: var(--text-muted); font-size: .9rem; margin-bottom: 8px; }
+        .feature-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .tag {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: .75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .tag-planned { background: var(--accent-bg); color: var(--accent); }
+        .tag-popular { background: var(--yellow-bg); color: var(--yellow); }
+        .tag-new { background: var(--green-bg); color: var(--green); }
+        .tag-reviewing { background: var(--purple-bg); color: var(--purple); }
+        .tag-shipped { background: var(--green-bg); color: var(--green); }
+        .tag-declined { background: var(--red-bg); color: var(--red); }
+        .cat-badge {
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+        .comments-count {
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+
+        /* Submit modal */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.6);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            width: 90%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal h2 { margin-bottom: 16px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: .9rem; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: .95rem;
+            font-family: inherit;
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .btn-row { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-size: .95rem;
+            font-weight: 600;
+            transition: .2s;
+        }
+        .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); }
+        .btn-primary:hover { opacity: .9; }
+        .btn-ghost { background: transparent; color: var(--text); }
+        .btn-ghost:hover { background: var(--surface-2); }
+        .btn-submit-idea {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 10px 22px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            cursor: pointer;
+            font-size: .95rem;
+        }
+        .btn-submit-idea:hover { opacity: .9; }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+        /* Comment thread */
+        .comment-section {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .comment-section.open { display: block; }
+        .comment {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: .88rem;
+        }
+        .comment:last-child { border-bottom: none; }
+        .comment-author { font-weight: 600; color: var(--accent); }
+        .comment-text { color: var(--text-muted); margin-top: 2px; }
+        .comment-input-row { display: flex; gap: 8px; margin-top: 8px; }
+        .comment-input-row input { flex: 1; }
+        .comment-input-row button {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.5rem; }
+            .feature-card { flex-direction: column; gap: 10px; }
+            .vote-col { flex-direction: row; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html">🤖 AgentBox</a>
+        <div style="display:flex;gap:10px;align-items:center;">
+            <a href="index.html">Home</a>
+            <a href="faq.html">FAQ</a>
+            <a href="updates.html">Updates</a>
+            <button class="theme-btn" id="themeToggle" title="Toggle theme">☀️</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>🗳️ Feature Voting Board</h1>
+        <p class="subtitle">Vote on what we build next. Suggest ideas. Shape AgentBox together.</p>
+
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card"><div class="num" id="statTotal">0</div><div class="label">Features</div></div>
+            <div class="stat-card"><div class="num" id="statVotes">0</div><div class="label">Total Votes</div></div>
+            <div class="stat-card"><div class="num" id="statShipped">0</div><div class="label">Shipped</div></div>
+            <div class="stat-card"><div class="num" id="statYourVotes">0</div><div class="label">Your Votes</div></div>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Search features...">
+            <select id="categoryFilter">
+                <option value="all">All Categories</option>
+                <option value="ai">AI & Intelligence</option>
+                <option value="integrations">Integrations</option>
+                <option value="ux">User Experience</option>
+                <option value="productivity">Productivity</option>
+                <option value="privacy">Privacy & Security</option>
+                <option value="fun">Fun & Social</option>
+            </select>
+            <select id="sortSelect">
+                <option value="votes">Most Voted</option>
+                <option value="newest">Newest</option>
+                <option value="comments">Most Discussed</option>
+            </select>
+            <button class="btn-submit-idea" id="openSubmitBtn">+ Suggest Idea</button>
+        </div>
+
+        <div class="tabs" id="statusTabs">
+            <button class="tab active" data-status="all">All</button>
+            <button class="tab" data-status="planned">🎯 Planned</button>
+            <button class="tab" data-status="reviewing">🔍 Reviewing</button>
+            <button class="tab" data-status="shipped">✅ Shipped</button>
+            <button class="tab" data-status="declined">❌ Declined</button>
+        </div>
+
+        <div class="feature-list" id="featureList"></div>
+    </div>
+
+    <!-- Submit Modal -->
+    <div class="modal-overlay" id="submitModal">
+        <div class="modal">
+            <h2>💡 Suggest a Feature</h2>
+            <div class="form-group">
+                <label>Feature Title *</label>
+                <input type="text" id="ideaTitle" placeholder="Short, descriptive title" maxlength="80">
+            </div>
+            <div class="form-group">
+                <label>Description *</label>
+                <textarea id="ideaDesc" placeholder="Explain the feature and why it's useful..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="ideaCategory">
+                    <option value="ai">AI & Intelligence</option>
+                    <option value="integrations">Integrations</option>
+                    <option value="ux">User Experience</option>
+                    <option value="productivity">Productivity</option>
+                    <option value="privacy">Privacy & Security</option>
+                    <option value="fun">Fun & Social</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Your Name (optional)</label>
+                <input type="text" id="ideaAuthor" placeholder="Anonymous" maxlength="30">
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-ghost" id="closeModalBtn">Cancel</button>
+                <button class="btn btn-primary" id="submitIdeaBtn">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        // Theme
+        const theme = localStorage.getItem('ab-theme') || 'dark';
+        if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        const themeBtn = document.getElementById('themeToggle');
+        themeBtn.textContent = theme === 'light' ? '🌙' : '☀️';
+        themeBtn.addEventListener('click', () => {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            document.documentElement.setAttribute('data-theme', isLight ? '' : 'light');
+            localStorage.setItem('ab-theme', isLight ? 'dark' : 'light');
+            themeBtn.textContent = isLight ? '☀️' : '🌙';
+        });
+
+        // Seed data
+        const SEED_FEATURES = [
+            { id: 1, title: "Voice Message Understanding", desc: "Let AgentBox transcribe and respond to voice messages directly in Telegram chats.", category: "ai", status: "planned", votes: 187, comments: [
+                { author: "Sarah K.", text: "This would be amazing for hands-free use!" },
+                { author: "Dev Team", text: "On our Q2 roadmap. Whisper integration incoming." }
+            ]},
+            { id: 2, title: "Google Calendar Integration", desc: "Sync with Google Calendar to create events, check availability, and get smart reminders.", category: "integrations", status: "planned", votes: 156, comments: [
+                { author: "Mike R.", text: "Please add Outlook support too!" }
+            ]},
+            { id: 3, title: "Custom Personality Presets", desc: "Save and switch between different personality configurations — professional, casual, creative, etc.", category: "ux", status: "shipped", votes: 142, comments: [
+                { author: "AgentBox", text: "Shipped in v2.4! Check /personality command." }
+            ]},
+            { id: 4, title: "Pomodoro & Focus Timer", desc: "Built-in focus timer with Pomodoro technique, session tracking, and productivity stats.", category: "productivity", status: "reviewing", votes: 98, comments: []},
+            { id: 5, title: "End-to-End Encryption Option", desc: "Allow users to enable E2E encryption for sensitive conversations with their agent.", category: "privacy", status: "reviewing", votes: 134, comments: [
+                { author: "Alex M.", text: "Essential for enterprise adoption." },
+                { author: "CTO", text: "We're evaluating Signal Protocol integration." }
+            ]},
+            { id: 6, title: "Conversation Branching", desc: "Fork a conversation at any point to explore different approaches without losing the original thread.", category: "ai", status: "planned", votes: 89, comments: []},
+            { id: 7, title: "Spotify Now Playing Integration", desc: "Share what you're listening to and get music recommendations based on mood and context.", category: "fun", status: "reviewing", votes: 67, comments: [
+                { author: "Jamie L.", text: "Would love playlist generation too!" }
+            ]},
+            { id: 8, title: "Daily Digest Email", desc: "Get a summary of your agent interactions delivered to your inbox each morning.", category: "productivity", status: "planned", votes: 112, comments: []},
+            { id: 9, title: "Multi-Language Support", desc: "Automatically detect and respond in the user's preferred language with seamless switching.", category: "ai", status: "shipped", votes: 201, comments: [
+                { author: "AgentBox", text: "Live now! 40+ languages supported." }
+            ]},
+            { id: 10, title: "Shared Agent Spaces", desc: "Invite friends to a group chat with your agent for collaborative sessions.", category: "fun", status: "planned", votes: 78, comments: []},
+            { id: 11, title: "Habit Tracker", desc: "Track daily habits with streaks, reminders, and weekly progress reports from your agent.", category: "productivity", status: "reviewing", votes: 91, comments: []},
+            { id: 12, title: "API Webhooks", desc: "Trigger agent actions from external services via webhooks — connect anything.", category: "integrations", status: "planned", votes: 145, comments: [
+                { author: "Dev", text: "IFTTT and Zapier would be game changers." }
+            ]},
+            { id: 13, title: "Conversation Export as PDF", desc: "Export any conversation as a formatted PDF for archiving or sharing.", category: "ux", status: "shipped", votes: 76, comments: []},
+            { id: 14, title: "Smart Reply Suggestions", desc: "Offer quick reply buttons based on conversation context for faster interaction.", category: "ai", status: "declined", votes: 45, comments: [
+                { author: "Product", text: "Conflicts with our philosophy of natural conversation. May revisit later." }
+            ]},
+            { id: 15, title: "Location-Aware Reminders", desc: "Set reminders that trigger when you arrive at or leave a specific location.", category: "productivity", status: "reviewing", votes: 103, comments: []}
+        ];
+
+        const STORAGE_KEY = 'ab-voting-data';
+        const VOTES_KEY = 'ab-user-votes';
+
+        function loadFeatures() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try { return JSON.parse(stored); } catch(e) {}
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_FEATURES));
+            return [...SEED_FEATURES];
+        }
+
+        function saveFeatures(features) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(features));
+        }
+
+        function loadVotes() {
+            try { return JSON.parse(localStorage.getItem(VOTES_KEY) || '{}'); } catch(e) { return {}; }
+        }
+        function saveVotes(v) { localStorage.setItem(VOTES_KEY, JSON.stringify(v)); }
+
+        let features = loadFeatures();
+        let userVotes = loadVotes();
+        let currentStatus = 'all';
+        let currentCategory = 'all';
+        let currentSort = 'votes';
+        let searchQuery = '';
+
+        const CATEGORY_LABELS = {
+            ai: '🧠 AI & Intelligence',
+            integrations: '🔌 Integrations',
+            ux: '🎨 User Experience',
+            productivity: '⚡ Productivity',
+            privacy: '🔒 Privacy & Security',
+            fun: '🎉 Fun & Social'
+        };
+
+        function updateStats() {
+            document.getElementById('statTotal').textContent = features.length;
+            document.getElementById('statVotes').textContent = features.reduce((s, f) => s + f.votes, 0);
+            document.getElementById('statShipped').textContent = features.filter(f => f.status === 'shipped').length;
+            document.getElementById('statYourVotes').textContent = Object.keys(userVotes).filter(k => userVotes[k]).length;
+        }
+
+        function renderFeatures() {
+            let filtered = features.filter(f => {
+                if (currentStatus !== 'all' && f.status !== currentStatus) return false;
+                if (currentCategory !== 'all' && f.category !== currentCategory) return false;
+                if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    return f.title.toLowerCase().includes(q) || f.desc.toLowerCase().includes(q);
+                }
+                return true;
+            });
+
+            if (currentSort === 'votes') filtered.sort((a, b) => b.votes - a.votes);
+            else if (currentSort === 'newest') filtered.sort((a, b) => b.id - a.id);
+            else if (currentSort === 'comments') filtered.sort((a, b) => b.comments.length - a.comments.length);
+
+            const list = document.getElementById('featureList');
+            if (!filtered.length) {
+                list.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>No features match your filters.</p></div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(f => {
+                const voted = userVotes[f.id];
+                const statusTag = f.status === 'planned' ? '<span class="tag tag-planned">Planned</span>' :
+                    f.status === 'reviewing' ? '<span class="tag tag-reviewing">Reviewing</span>' :
+                    f.status === 'shipped' ? '<span class="tag tag-shipped">Shipped</span>' :
+                    f.status === 'declined' ? '<span class="tag tag-declined">Declined</span>' : '';
+                const isPopular = f.votes >= 100;
+                const isNew = f.id >= features.length - 2;
+                const extraTags = (isPopular ? ' <span class="tag tag-popular">🔥 Popular</span>' : '') +
+                    (isNew && f.status !== 'shipped' && f.status !== 'declined' ? ' <span class="tag tag-new">New</span>' : '');
+
+                const commentsHtml = f.comments.map(c =>
+                    `<div class="comment"><span class="comment-author">${esc(c.author)}</span><div class="comment-text">${esc(c.text)}</div></div>`
+                ).join('');
+
+                return `<div class="feature-card" data-id="${f.id}">
+                    <div class="vote-col">
+                        <button class="vote-btn ${voted ? 'voted' : ''}" data-id="${f.id}" title="Vote">▲</button>
+                        <span class="vote-count">${f.votes}</span>
+                    </div>
+                    <div class="feature-body">
+                        <div class="feature-title">${esc(f.title)}</div>
+                        <div class="feature-desc">${esc(f.desc)}</div>
+                        <div class="feature-meta">
+                            ${statusTag}${extraTags}
+                            <span class="cat-badge">${CATEGORY_LABELS[f.category] || f.category}</span>
+                            <span class="comments-count" style="cursor:pointer" data-toggle="${f.id}">💬 ${f.comments.length}</span>
+                        </div>
+                        <div class="comment-section" id="comments-${f.id}">
+                            ${commentsHtml}
+                            <div class="comment-input-row">
+                                <input type="text" placeholder="Add a comment..." id="cInput-${f.id}" maxlength="200">
+                                <button data-comment="${f.id}">Post</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            updateStats();
+        }
+
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        // Event delegation
+        document.getElementById('featureList').addEventListener('click', e => {
+            const voteBtn = e.target.closest('.vote-btn');
+            if (voteBtn) {
+                const id = parseInt(voteBtn.dataset.id);
+                const f = features.find(f => f.id === id);
+                if (!f) return;
+                if (userVotes[id]) {
+                    f.votes--;
+                    delete userVotes[id];
+                } else {
+                    f.votes++;
+                    userVotes[id] = true;
+                }
+                saveFeatures(features);
+                saveVotes(userVotes);
+                renderFeatures();
+                return;
+            }
+
+            const toggle = e.target.closest('[data-toggle]');
+            if (toggle) {
+                const id = toggle.dataset.toggle;
+                const sec = document.getElementById('comments-' + id);
+                if (sec) sec.classList.toggle('open');
+                return;
+            }
+
+            const commentBtn = e.target.closest('[data-comment]');
+            if (commentBtn) {
+                const id = parseInt(commentBtn.dataset.comment);
+                const input = document.getElementById('cInput-' + id);
+                const text = (input.value || '').trim();
+                if (!text) return;
+                const f = features.find(f => f.id === id);
+                if (!f) return;
+                f.comments.push({ author: 'You', text });
+                input.value = '';
+                saveFeatures(features);
+                renderFeatures();
+                // Re-open the comment section
+                const sec = document.getElementById('comments-' + id);
+                if (sec) sec.classList.add('open');
+                return;
+            }
+        });
+
+        // Tabs
+        document.getElementById('statusTabs').addEventListener('click', e => {
+            const tab = e.target.closest('.tab');
+            if (!tab) return;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentStatus = tab.dataset.status;
+            renderFeatures();
+        });
+
+        // Filters
+        document.getElementById('searchInput').addEventListener('input', e => {
+            searchQuery = e.target.value;
+            renderFeatures();
+        });
+        document.getElementById('categoryFilter').addEventListener('change', e => {
+            currentCategory = e.target.value;
+            renderFeatures();
+        });
+        document.getElementById('sortSelect').addEventListener('change', e => {
+            currentSort = e.target.value;
+            renderFeatures();
+        });
+
+        // Submit modal
+        const modal = document.getElementById('submitModal');
+        document.getElementById('openSubmitBtn').addEventListener('click', () => modal.classList.add('open'));
+        document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.remove('open'));
+        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+        document.getElementById('submitIdeaBtn').addEventListener('click', () => {
+            const title = document.getElementById('ideaTitle').value.trim();
+            const desc = document.getElementById('ideaDesc').value.trim();
+            const category = document.getElementById('ideaCategory').value;
+            const author = document.getElementById('ideaAuthor').value.trim() || 'Anonymous';
+            if (!title || !desc) { alert('Please fill in title and description.'); return; }
+
+            const newId = Math.max(...features.map(f => f.id), 0) + 1;
+            features.unshift({
+                id: newId,
+                title,
+                desc,
+                category,
+                status: 'reviewing',
+                votes: 1,
+                comments: [{ author, text: 'Submitted this idea!' }]
+            });
+            userVotes[newId] = true;
+            saveFeatures(features);
+            saveVotes(userVotes);
+            modal.classList.remove('open');
+            document.getElementById('ideaTitle').value = '';
+            document.getElementById('ideaDesc').value = '';
+            document.getElementById('ideaAuthor').value = '';
+            renderFeatures();
+        });
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') modal.classList.remove('open');
+        });
+
+        renderFeatures();
+    })();
+    </script>
+</body>
+</html>
