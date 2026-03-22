@@ -151,15 +151,18 @@ var CommunityShowcase = (function () {
       return '<span class="showcase-tag">' + _escapeHtml(t) + '</span>';
     }).join("");
 
+    var safeId = _escapeHtml(item.id);
+    var safeCat = _escapeHtml(item.category);
+
     return (
-      '<article class="showcase-card" data-id="' + item.id + '" data-category="' + item.category + '">' +
+      '<article class="showcase-card" data-id="' + safeId + '" data-category="' + safeCat + '">' +
         '<div class="showcase-card-header">' +
           '<div class="showcase-avatar" aria-hidden="true">' + _escapeHtml(item.avatar) + '</div>' +
           '<div class="showcase-meta">' +
             '<span class="showcase-author">' + _escapeHtml(item.author) + '</span>' +
             '<span class="showcase-date">' + _formatDate(item.date) + '</span>' +
           '</div>' +
-          '<span class="showcase-category-badge showcase-cat-' + item.category.toLowerCase() + '">' + _escapeHtml(item.category) + '</span>' +
+          '<span class="showcase-category-badge showcase-cat-' + safeCat.toLowerCase() + '">' + _escapeHtml(item.category) + '</span>' +
         '</div>' +
         '<h3 class="showcase-title">' + _escapeHtml(item.title) + '</h3>' +
         '<p class="showcase-desc">' + _escapeHtml(item.description) + '</p>' +
@@ -168,7 +171,7 @@ var CommunityShowcase = (function () {
           '<button class="showcase-like-btn' + (liked ? ' liked' : '') + '" ' +
             'aria-label="' + (liked ? 'Unlike' : 'Like') + ' ' + _escapeHtml(item.title) + '" ' +
             'aria-pressed="' + liked + '" ' +
-            'data-id="' + item.id + '">' +
+            'data-id="' + safeId + '">' +
             '<span class="showcase-heart" aria-hidden="true">' + (liked ? '\u2764\uFE0F' : '\u2661') + '</span> ' +
             '<span class="showcase-like-count">' + likeCount + '</span>' +
           '</button>' +
