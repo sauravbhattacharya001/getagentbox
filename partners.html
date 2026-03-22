@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Partner Program</title>
+    <meta name="description" content="Join the AgentBox Partner Program. Earn commissions, get priority support, and grow your business with AI-powered Telegram agents.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --gold: #f0c040;
+            --gold-bg: #f0c04022;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            border-bottom: 1px solid var(--border);
+        }
+        .header a.back {
+            display: inline-block;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+        .header a.back:hover { text-decoration: underline; }
+        .header h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Benefits Grid */
+        .benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+        .benefit-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            transition: border-color 0.2s;
+        }
+        .benefit-card:hover {
+            border-color: var(--accent);
+        }
+        .benefit-card .icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+        .benefit-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .benefit-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Tiers */
+        .tiers-title {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 32px;
+        }
+        .tiers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+        .tier-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .tier-card.featured {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.1);
+        }
+        .tier-card .badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--accent-bg);
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .tier-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+        .tier-card .commission {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin: 12px 0;
+        }
+        .tier-card .commission span {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        .tier-card ul {
+            list-style: none;
+            margin-top: 16px;
+        }
+        .tier-card ul li {
+            padding: 6px 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .tier-card ul li::before {
+            content: '✓ ';
+            color: var(--green);
+            font-weight: 700;
+        }
+        .tier-card .requirement {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* How it Works */
+        .how-title {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 32px;
+        }
+        .steps {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 60px;
+            flex-wrap: wrap;
+        }
+        .step {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            padding: 24px;
+        }
+        .step .num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent-bg);
+            color: var(--accent);
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .step h4 {
+            margin-bottom: 8px;
+        }
+        .step p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Commission Calculator */
+        .calc-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            margin-bottom: 60px;
+        }
+        .calc-section h2 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+        }
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+        .calc-input label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .calc-input input, .calc-input select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+        }
+        .calc-input input:focus, .calc-input select:focus {
+            border-color: var(--accent);
+        }
+        .calc-result {
+            background: var(--surface-2);
+            border-radius: var(--radius-sm);
+            padding: 24px;
+            text-align: center;
+        }
+        .calc-result .amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+        .calc-result .period {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .calc-result .breakdown {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* FAQ */
+        .faq-title {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+        .faq-list {
+            max-width: 700px;
+            margin: 0 auto 60px;
+        }
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+        }
+        .faq-q {
+            padding: 16px 0;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .faq-q::after {
+            content: '+';
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+        .faq-q.open::after {
+            content: '−';
+        }
+        .faq-a {
+            display: none;
+            padding: 0 0 16px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+        .faq-a.show { display: block; }
+
+        /* CTA */
+        .cta {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            margin-bottom: 40px;
+        }
+        .cta h2 {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+        }
+        .cta p {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+        .cta a.btn {
+            display: inline-block;
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+            padding: 14px 36px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+        .cta a.btn:hover { opacity: 0.85; }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+        }
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        @media (max-width: 700px) {
+            .header h1 { font-size: 1.8rem; }
+            .calc-grid { grid-template-columns: 1fr; }
+            .tiers { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html" class="back">← Back to AgentBox</a>
+        <h1>🤝 Partner Program</h1>
+        <p>Earn recurring commissions by helping businesses and creators get their own AI agent on Telegram.</p>
+    </div>
+
+    <div class="container">
+        <!-- Benefits -->
+        <div class="benefits">
+            <div class="benefit-card">
+                <div class="icon">💰</div>
+                <h3>Recurring Revenue</h3>
+                <p>Earn monthly commissions for every customer you refer — for as long as they stay subscribed.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="icon">🎯</div>
+                <h3>Co-Marketing</h3>
+                <p>Get featured in our partner directory, joint case studies, and co-branded landing pages.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="icon">🛠️</div>
+                <h3>Technical Support</h3>
+                <p>Priority access to our team for onboarding, custom integrations, and troubleshooting.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="icon">📚</div>
+                <h3>Sales Resources</h3>
+                <p>Pitch decks, demo accounts, battle cards, and objection-handling guides ready to use.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="icon">🏷️</div>
+                <h3>White-Label Option</h3>
+                <p>Gold partners can offer AgentBox under their own brand with custom domain and styling.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="icon">📊</div>
+                <h3>Partner Dashboard</h3>
+                <p>Track referrals, conversions, commissions, and payouts in real time from your dashboard.</p>
+            </div>
+        </div>
+
+        <!-- Tiers -->
+        <h2 class="tiers-title">Partner Tiers</h2>
+        <div class="tiers">
+            <div class="tier-card">
+                <h3>🥉 Affiliate</h3>
+                <div class="commission">15% <span>recurring</span></div>
+                <ul>
+                    <li>Unique referral link</li>
+                    <li>Partner dashboard access</li>
+                    <li>Email support</li>
+                    <li>Monthly payout (min $50)</li>
+                    <li>Marketing asset kit</li>
+                </ul>
+                <div class="requirement">Open to everyone — no minimum referrals</div>
+            </div>
+            <div class="tier-card featured">
+                <span class="badge">Most Popular</span>
+                <h3>🥈 Agency</h3>
+                <div class="commission">25% <span>recurring</span></div>
+                <ul>
+                    <li>Everything in Affiliate</li>
+                    <li>Dedicated partner manager</li>
+                    <li>Co-branded landing pages</li>
+                    <li>Priority support queue</li>
+                    <li>Quarterly strategy calls</li>
+                    <li>Demo environment access</li>
+                </ul>
+                <div class="requirement">Requires 10+ active referrals or agency verification</div>
+            </div>
+            <div class="tier-card">
+                <h3>🥇 Gold</h3>
+                <div class="commission">35% <span>recurring</span></div>
+                <ul>
+                    <li>Everything in Agency</li>
+                    <li>White-label option</li>
+                    <li>Custom API integration support</li>
+                    <li>Early access to new features</li>
+                    <li>Joint go-to-market campaigns</li>
+                    <li>Annual partner summit invite</li>
+                </ul>
+                <div class="requirement">Requires 50+ active referrals and revenue review</div>
+            </div>
+        </div>
+
+        <!-- How it Works -->
+        <h2 class="how-title">How It Works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="num">1</div>
+                <h4>Apply</h4>
+                <p>Fill out the form below. We review applications within 48 hours.</p>
+            </div>
+            <div class="step">
+                <div class="num">2</div>
+                <h4>Get Your Link</h4>
+                <p>Receive your unique referral link and access to partner resources.</p>
+            </div>
+            <div class="step">
+                <div class="num">3</div>
+                <h4>Share & Earn</h4>
+                <p>Share with your audience. Every paid signup earns you recurring commission.</p>
+            </div>
+            <div class="step">
+                <div class="num">4</div>
+                <h4>Get Paid</h4>
+                <p>Monthly payouts via bank transfer, PayPal, or crypto. Your choice.</p>
+            </div>
+        </div>
+
+        <!-- Commission Calculator -->
+        <div class="calc-section">
+            <h2>💵 Commission Calculator</h2>
+            <div class="calc-grid">
+                <div>
+                    <div class="calc-input" style="margin-bottom: 16px;">
+                        <label for="calcTier">Your Tier</label>
+                        <select id="calcTier">
+                            <option value="15">Affiliate (15%)</option>
+                            <option value="25" selected>Agency (25%)</option>
+                            <option value="35">Gold (35%)</option>
+                        </select>
+                    </div>
+                    <div class="calc-input" style="margin-bottom: 16px;">
+                        <label for="calcReferrals">Monthly New Referrals</label>
+                        <input type="number" id="calcReferrals" value="10" min="1" max="1000">
+                    </div>
+                    <div class="calc-input">
+                        <label for="calcAvgPlan">Avg. Plan Price ($/mo)</label>
+                        <input type="number" id="calcAvgPlan" value="19" min="5" max="200">
+                    </div>
+                </div>
+                <div class="calc-result">
+                    <div class="period">Estimated Monthly Earnings</div>
+                    <div class="amount" id="calcMonthly">$47.50</div>
+                    <div class="breakdown" id="calcBreakdown">10 referrals × $19 × 25%</div>
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <div class="period">After 12 Months (cumulative)</div>
+                        <div class="amount" id="calcYearly" style="font-size: 1.8rem; color: var(--accent);">$3,705.00</div>
+                        <div class="breakdown" id="calcYearlyBreak">With 90% retention, compounding referrals</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <h2 class="faq-title">Frequently Asked Questions</h2>
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">How long does cookie tracking last?</div>
+                <div class="faq-a">Our referral cookies last 90 days. If someone clicks your link and signs up within 90 days, you get the commission — even if they close the tab and come back later.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">When do commissions start?</div>
+                <div class="faq-a">Commissions start from the first paid invoice. Free trial periods don't count, but once a customer converts to paid, you earn from day one.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">Can I refer myself?</div>
+                <div class="faq-a">No. Self-referrals are not eligible for commissions. Our system detects duplicate accounts automatically.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">What counts as an "active" referral for tier upgrades?</div>
+                <div class="faq-a">A referral is "active" if they have a paid subscription that has been active for at least 30 days. Churned or cancelled customers don't count toward your tier qualification.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">Is there a cap on earnings?</div>
+                <div class="faq-a">No cap. You earn recurring commissions for every active customer you refer, with no upper limit. Some of our top partners earn over $5,000/month.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">Can agencies white-label AgentBox for their clients?</div>
+                <div class="faq-a">Yes — Gold partners can access the white-label program. This lets you offer AgentBox under your own brand with custom domain, colors, and logo. Contact your partner manager for setup.</div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta">
+            <h2>Ready to Partner Up?</h2>
+            <p>Join hundreds of agencies and creators already earning with AgentBox.</p>
+            <a href="mailto:partners@getagentbox.com?subject=Partner%20Program%20Application" class="btn">Apply Now →</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><a href="index.html">Home</a> · <a href="faq.html">FAQ</a> · <a href="contact.html">Contact</a> · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a></p>
+        <p style="margin-top: 8px;">© 2026 AgentBox. All rights reserved.</p>
+    </div>
+
+    <script>
+        function toggleFaq(el) {
+            el.classList.toggle('open');
+            el.nextElementSibling.classList.toggle('show');
+        }
+
+        // Commission Calculator
+        function updateCalc() {
+            const tier = parseInt(document.getElementById('calcTier').value);
+            const refs = parseInt(document.getElementById('calcReferrals').value) || 0;
+            const price = parseFloat(document.getElementById('calcAvgPlan').value) || 0;
+            const monthly = refs * price * (tier / 100);
+            document.getElementById('calcMonthly').textContent = '$' + monthly.toFixed(2);
+            document.getElementById('calcBreakdown').textContent = refs + ' referrals × $' + price + ' × ' + tier + '%';
+
+            // 12-month projection with 90% retention, compounding
+            let total = 0;
+            let active = 0;
+            for (let m = 1; m <= 12; m++) {
+                active = active * 0.9 + refs;
+                total += active * price * (tier / 100);
+            }
+            document.getElementById('calcYearly').textContent = '$' + total.toFixed(2);
+            document.getElementById('calcYearlyBreak').textContent = 'With 90% retention, compounding referrals';
+        }
+
+        document.getElementById('calcTier').addEventListener('change', updateCalc);
+        document.getElementById('calcReferrals').addEventListener('input', updateCalc);
+        document.getElementById('calcAvgPlan').addEventListener('input', updateCalc);
+        updateCalc();
+    </script>
+</body>
+</html>
