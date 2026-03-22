@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Careers - AgentBox</title>
+    <meta name="description" content="Join the AgentBox team. We're building the future of personal AI agents. See open positions and what it's like to work with us.">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .careers-hero {
+            text-align: center;
+            padding: 6rem 2rem 4rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .careers-hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+        }
+        .careers-hero p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .careers-values {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+        .value-card {
+            background: var(--card-bg, #f8f9fa);
+            border: 1px solid var(--border-color, #e0e0e0);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+        .value-card .value-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.8rem;
+        }
+        .value-card h3 {
+            margin-bottom: 0.5rem;
+        }
+        .value-card p {
+            opacity: 0.75;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .careers-section {
+            max-width: 900px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+        .careers-section h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--card-bg, #f8f9fa);
+            border-radius: 10px;
+            border: 1px solid var(--border-color, #e0e0e0);
+        }
+        .benefit-item .benefit-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .benefit-item h4 {
+            margin: 0 0 0.25rem;
+            font-size: 0.95rem;
+        }
+        .benefit-item p {
+            margin: 0;
+            font-size: 0.85rem;
+            opacity: 0.75;
+        }
+
+        .job-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .job-card {
+            background: var(--card-bg, #f8f9fa);
+            border: 1px solid var(--border-color, #e0e0e0);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            cursor: pointer;
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        .job-card:hover {
+            border-color: var(--accent, #6c5ce7);
+            box-shadow: 0 4px 20px rgba(108, 92, 231, 0.12);
+        }
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .job-header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+        }
+        .job-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .job-tag {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.7rem;
+            border-radius: 20px;
+            background: var(--accent, #6c5ce7);
+            color: #fff;
+            font-weight: 500;
+        }
+        .job-tag.location {
+            background: var(--tag-bg, #dfe6e9);
+            color: var(--text-color, #2d3436);
+        }
+        .job-description {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+        .job-details {
+            display: none;
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border-color, #e0e0e0);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+        .job-details.open {
+            display: block;
+        }
+        .job-details h4 {
+            margin: 1rem 0 0.5rem;
+        }
+        .job-details ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+        .job-details li {
+            margin-bottom: 0.35rem;
+        }
+        .job-toggle {
+            display: inline-block;
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--accent, #6c5ce7);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .careers-cta {
+            text-align: center;
+            padding: 4rem 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .careers-cta h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        .careers-cta p {
+            opacity: 0.75;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .careers-cta a.cta-btn {
+            display: inline-block;
+            padding: 0.9rem 2.5rem;
+            background: var(--accent, #6c5ce7);
+            color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+        .careers-cta a.cta-btn:hover {
+            opacity: 0.85;
+        }
+
+        .dept-filter {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .dept-filter button {
+            padding: 0.4rem 1.1rem;
+            border: 1px solid var(--border-color, #e0e0e0);
+            border-radius: 20px;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-color, #2d3436);
+            transition: all 0.2s;
+        }
+        .dept-filter button.active,
+        .dept-filter button:hover {
+            background: var(--accent, #6c5ce7);
+            color: #fff;
+            border-color: var(--accent, #6c5ce7);
+        }
+
+        .footer-note {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0.6;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="site-nav" id="siteNav" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo" aria-label="Back to home">🤖 AgentBox</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Toggle theme">
+                <span class="theme-icon" id="themeIcon">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <main>
+        <section class="careers-hero">
+            <h1>Build the Future of AI Agents</h1>
+            <p>We're a small, remote-first team making personal AI accessible to everyone through Telegram. We move fast, think deeply, and care about craft.</p>
+        </section>
+
+        <section class="careers-values" aria-label="Our values">
+            <div class="value-card">
+                <div class="value-emoji">🚀</div>
+                <h3>Ship Fast</h3>
+                <p>We prefer shipping and iterating over planning forever. Real users beat hypothetical ones.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-emoji">🧠</div>
+                <h3>Think Deep</h3>
+                <p>AI is nuanced. We invest time understanding problems before writing code.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-emoji">🌍</div>
+                <h3>Remote First</h3>
+                <p>Work from anywhere. We care about results, not where your desk is.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-emoji">🤝</div>
+                <h3>Trust & Autonomy</h3>
+                <p>No micromanagement. You own your work end-to-end and we trust your judgment.</p>
+            </div>
+        </section>
+
+        <section class="careers-section" aria-label="Benefits">
+            <h2>Why AgentBox?</h2>
+            <div class="benefits-grid">
+                <div class="benefit-item">
+                    <span class="benefit-icon">💰</span>
+                    <div>
+                        <h4>Competitive Pay</h4>
+                        <p>Market-rate compensation with equity</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">🏖️</span>
+                    <div>
+                        <h4>Flexible PTO</h4>
+                        <p>Take the time you need to recharge</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">🖥️</span>
+                    <div>
+                        <h4>Setup Budget</h4>
+                        <p>$3,000 for your home office setup</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">📚</span>
+                    <div>
+                        <h4>Learning Budget</h4>
+                        <p>$1,500/year for courses, books, conferences</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">⏰</span>
+                    <div>
+                        <h4>Async by Default</h4>
+                        <p>Minimal meetings, maximum deep work</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">🤖</span>
+                    <div>
+                        <h4>AI-First Tooling</h4>
+                        <p>Dogfood our own product — AI assists your daily work</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="careers-section" aria-label="Open positions">
+            <h2>Open Positions</h2>
+            <div class="dept-filter" aria-label="Filter by department">
+                <button class="active" data-dept="all">All</button>
+                <button data-dept="engineering">Engineering</button>
+                <button data-dept="ai">AI / ML</button>
+                <button data-dept="design">Design</button>
+                <button data-dept="growth">Growth</button>
+            </div>
+            <div class="job-list" id="jobList">
+                <div class="job-card" data-dept="engineering">
+                    <div class="job-header">
+                        <h3>Senior Backend Engineer</h3>
+                        <div class="job-tags">
+                            <span class="job-tag">Engineering</span>
+                            <span class="job-tag location">Remote</span>
+                        </div>
+                    </div>
+                    <p class="job-description">Design and scale the infrastructure powering thousands of AI agents. You'll work on message routing, memory systems, and real-time agent orchestration.</p>
+                    <span class="job-toggle" role="button" tabindex="0" aria-expanded="false">View details ↓</span>
+                    <div class="job-details">
+                        <h4>What you'll do</h4>
+                        <ul>
+                            <li>Build and maintain the agent runtime and message pipeline</li>
+                            <li>Design scalable memory and context systems</li>
+                            <li>Optimize latency for real-time Telegram interactions</li>
+                            <li>Build monitoring, alerting, and observability tooling</li>
+                        </ul>
+                        <h4>What we're looking for</h4>
+                        <ul>
+                            <li>5+ years backend experience (Node.js, Python, or Go)</li>
+                            <li>Experience with message queues, event-driven architectures</li>
+                            <li>Familiarity with LLM APIs and prompt engineering</li>
+                            <li>Strong opinions on system design, loosely held</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="job-card" data-dept="ai">
+                    <div class="job-header">
+                        <h3>AI Engineer</h3>
+                        <div class="job-tags">
+                            <span class="job-tag">AI / ML</span>
+                            <span class="job-tag location">Remote</span>
+                        </div>
+                    </div>
+                    <p class="job-description">Make our agents smarter. Work on memory retrieval, tool use, multi-step reasoning, and personality tuning to create AI that feels genuinely helpful.</p>
+                    <span class="job-toggle" role="button" tabindex="0" aria-expanded="false">View details ↓</span>
+                    <div class="job-details">
+                        <h4>What you'll do</h4>
+                        <ul>
+                            <li>Design and improve agent memory and retrieval systems</li>
+                            <li>Build evaluation frameworks for agent quality</li>
+                            <li>Experiment with fine-tuning, RAG, and tool-use patterns</li>
+                            <li>Develop safety guardrails and content filtering</li>
+                        </ul>
+                        <h4>What we're looking for</h4>
+                        <ul>
+                            <li>Strong understanding of LLMs, embeddings, and retrieval</li>
+                            <li>Experience building AI-powered products (not just research)</li>
+                            <li>Comfort with rapid experimentation and shipping</li>
+                            <li>Bonus: experience with agent frameworks or chatbot systems</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="job-card" data-dept="design">
+                    <div class="job-header">
+                        <h3>Product Designer</h3>
+                        <div class="job-tags">
+                            <span class="job-tag">Design</span>
+                            <span class="job-tag location">Remote</span>
+                        </div>
+                    </div>
+                    <p class="job-description">Shape how people interact with AI through conversation. Design the web dashboard, onboarding flows, and the visual identity of AgentBox.</p>
+                    <span class="job-toggle" role="button" tabindex="0" aria-expanded="false">View details ↓</span>
+                    <div class="job-details">
+                        <h4>What you'll do</h4>
+                        <ul>
+                            <li>Design the web dashboard and configuration UIs</li>
+                            <li>Create onboarding experiences that feel effortless</li>
+                            <li>Define the visual language and component library</li>
+                            <li>Conduct user research and iterate on feedback</li>
+                        </ul>
+                        <h4>What we're looking for</h4>
+                        <ul>
+                            <li>3+ years product design experience (B2C or developer tools)</li>
+                            <li>Strong portfolio showing end-to-end design process</li>
+                            <li>Proficiency in Figma and modern design systems</li>
+                            <li>Interest in conversational UI and AI interaction patterns</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="job-card" data-dept="engineering">
+                    <div class="job-header">
+                        <h3>Frontend Engineer</h3>
+                        <div class="job-tags">
+                            <span class="job-tag">Engineering</span>
+                            <span class="job-tag location">Remote</span>
+                        </div>
+                    </div>
+                    <p class="job-description">Build the web experiences that let users configure, monitor, and interact with their AI agents. Performance and accessibility matter.</p>
+                    <span class="job-toggle" role="button" tabindex="0" aria-expanded="false">View details ↓</span>
+                    <div class="job-details">
+                        <h4>What you'll do</h4>
+                        <ul>
+                            <li>Build and maintain the AgentBox web dashboard</li>
+                            <li>Create real-time agent monitoring visualizations</li>
+                            <li>Implement responsive, accessible interfaces</li>
+                            <li>Optimize bundle size and performance</li>
+                        </ul>
+                        <h4>What we're looking for</h4>
+                        <ul>
+                            <li>3+ years frontend experience (React, Vue, or Svelte)</li>
+                            <li>Strong CSS skills and eye for detail</li>
+                            <li>Experience with real-time data (WebSockets, SSE)</li>
+                            <li>Care about accessibility and web standards</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="job-card" data-dept="growth">
+                    <div class="job-header">
+                        <h3>Growth & Community Lead</h3>
+                        <div class="job-tags">
+                            <span class="job-tag">Growth</span>
+                            <span class="job-tag location">Remote</span>
+                        </div>
+                    </div>
+                    <p class="job-description">Grow AgentBox from early adopters to mainstream. Build community, create content, and develop partnerships that drive organic growth.</p>
+                    <span class="job-toggle" role="button" tabindex="0" aria-expanded="false">View details ↓</span>
+                    <div class="job-details">
+                        <h4>What you'll do</h4>
+                        <ul>
+                            <li>Build and nurture the AgentBox user community</li>
+                            <li>Create compelling content (blog posts, tutorials, demos)</li>
+                            <li>Develop partnerships with Telegram communities and creators</li>
+                            <li>Run experiments to improve activation and retention</li>
+                        </ul>
+                        <h4>What we're looking for</h4>
+                        <ul>
+                            <li>Experience growing developer or consumer tech communities</li>
+                            <li>Strong writing skills and content creation ability</li>
+                            <li>Data-driven approach to growth experiments</li>
+                            <li>Genuine enthusiasm for AI and messaging platforms</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="careers-cta">
+            <h2>Don't See Your Role?</h2>
+            <p>We're always looking for exceptional people. If you're passionate about AI agents and think you'd be a great fit, reach out anyway.</p>
+            <a href="mailto:careers@getagentbox.com" class="cta-btn">Send Us a Note</a>
+        </section>
+
+        <p class="footer-note">Built by <a href="https://github.com/sauravbhattacharya001" target="_blank" rel="noopener noreferrer">Saurav Bhattacharya</a> · <a href="index.html">Home</a> · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a></p>
+    </main>
+
+    <script>
+        // Theme toggle
+        (function() {
+            const toggle = document.getElementById('themeToggle');
+            const icon = document.getElementById('themeIcon');
+            const saved = localStorage.getItem('agentbox-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.classList.add('dark');
+                icon.textContent = '🌙';
+            }
+            toggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark');
+                const isDark = document.body.classList.contains('dark');
+                icon.textContent = isDark ? '🌙' : '☀️';
+                localStorage.setItem('agentbox-theme', isDark ? 'dark' : 'light');
+            });
+        })();
+
+        // Department filter
+        (function() {
+            const buttons = document.querySelectorAll('.dept-filter button');
+            const cards = document.querySelectorAll('.job-card');
+            buttons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    buttons.forEach(function(b) { b.classList.remove('active'); });
+                    btn.classList.add('active');
+                    const dept = btn.getAttribute('data-dept');
+                    cards.forEach(function(card) {
+                        if (dept === 'all' || card.getAttribute('data-dept') === dept) {
+                            card.style.display = '';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        })();
+
+        // Job detail toggle
+        (function() {
+            var toggles = document.querySelectorAll('.job-toggle');
+            toggles.forEach(function(t) {
+                t.addEventListener('click', function() {
+                    var details = t.nextElementSibling;
+                    var isOpen = details.classList.toggle('open');
+                    t.textContent = isOpen ? 'Hide details ↑' : 'View details ↓';
+                    t.setAttribute('aria-expanded', isOpen);
+                });
+                t.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        t.click();
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
