@@ -676,11 +676,17 @@
         this.value = '';
     });
 
+    function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
     function renderAttachments() {
         const list = document.getElementById('attachmentList');
         list.innerHTML = files.map((f, i) =>
             `<div class="attachment-chip">
-                📄 ${f.name} (${(f.size / 1024).toFixed(0)}KB)
+                📄 ${escapeHtml(f.name)} (${(f.size / 1024).toFixed(0)}KB)
                 <span class="remove" onclick="removeFile(${i})">×</span>
             </div>`
         ).join('');
