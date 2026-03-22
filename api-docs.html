@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - API Documentation</title>
+    <meta name="description" content="AgentBox REST API documentation. Integrate AI agent capabilities into your apps with simple API calls.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --red: #d63031;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            border-bottom: 1px solid var(--border);
+        }
+        .header a.back {
+            display: inline-block;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+        .header a.back:hover { text-decoration: underline; }
+        .header h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; }
+        .header p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+        .header .badge {
+            display: inline-block;
+            background: var(--accent-bg);
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+
+        /* Sidebar TOC */
+        .api-layout { display: flex; gap: 40px; max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        .api-sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        .api-sidebar h3 { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 12px; }
+        .api-sidebar a {
+            display: block;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-left: 2px solid var(--border);
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .api-sidebar a:hover, .api-sidebar a.active {
+            color: var(--accent);
+            border-left-color: var(--accent);
+            background: var(--accent-bg);
+        }
+        .api-main { flex: 1; min-width: 0; }
+
+        @media (max-width: 768px) {
+            .api-layout { flex-direction: column; }
+            .api-sidebar { width: 100%; position: static; display: flex; flex-wrap: wrap; gap: 4px; }
+            .api-sidebar a { border-left: none; border-bottom: 2px solid var(--border); padding: 6px 10px; }
+        }
+
+        /* Endpoint cards */
+        .endpoint {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: monospace;
+        }
+        .method-get { background: #00b89433; color: var(--green); }
+        .method-post { background: #00d4ff22; color: var(--accent); }
+        .method-put { background: #fdcb6e33; color: var(--yellow); }
+        .method-delete { background: #d6303133; color: var(--red); }
+        .endpoint-path { font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 0.95rem; color: var(--text); }
+        .endpoint-body { padding: 20px; }
+        .endpoint-body p { color: var(--text-muted); margin-bottom: 16px; font-size: 0.95rem; }
+
+        /* Code blocks */
+        pre {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        code { font-family: 'SF Mono', Monaco, Consolas, monospace; }
+        pre code { color: var(--text); }
+        .code-label {
+            display: inline-block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .copy-btn {
+            float: right;
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+        /* Param tables */
+        .param-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+        .param-table th {
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .param-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        .param-name { font-family: monospace; color: var(--accent); font-weight: 600; }
+        .param-type { color: var(--purple); font-size: 0.8rem; }
+        .param-required {
+            display: inline-block;
+            background: #d6303122;
+            color: var(--red);
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .param-optional {
+            display: inline-block;
+            background: var(--surface-3);
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Auth section */
+        .auth-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        .auth-box h2 { font-size: 1.2rem; margin-bottom: 12px; }
+
+        /* Rate limit */
+        .rate-limit {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .rate-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            text-align: center;
+        }
+        .rate-card .plan { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
+        .rate-card .limit { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+        .rate-card .unit { font-size: 0.8rem; color: var(--text-muted); }
+
+        h2 { font-size: 1.4rem; margin-bottom: 16px; padding-top: 20px; }
+        h3 { font-size: 1.1rem; margin-bottom: 12px; color: var(--text); }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="index.html" class="back">← Back to AgentBox</a>
+    <h1>📡 API Documentation</h1>
+    <p>Integrate AgentBox AI capabilities into your applications with our REST API.</p>
+    <span class="badge">v1 — REST + JSON</span>
+</div>
+
+<div class="api-layout">
+    <nav class="api-sidebar">
+        <h3>On This Page</h3>
+        <a href="#auth">Authentication</a>
+        <a href="#rate-limits">Rate Limits</a>
+        <a href="#send-message">Send Message</a>
+        <a href="#get-conversation">Get Conversation</a>
+        <a href="#list-conversations">List Conversations</a>
+        <a href="#create-memory">Create Memory</a>
+        <a href="#list-memories">List Memories</a>
+        <a href="#get-usage">Get Usage</a>
+        <a href="#webhooks">Webhooks</a>
+        <a href="#errors">Error Handling</a>
+        <a href="#sdks">SDKs & Libraries</a>
+    </nav>
+
+    <main class="api-main">
+
+        <!-- Auth -->
+        <section id="auth">
+            <div class="auth-box">
+                <h2>🔑 Authentication</h2>
+                <p style="color: var(--text-muted); margin-bottom: 16px;">
+                    All API requests require a Bearer token. Get your API key from the
+                    <a href="#" style="color: var(--accent);">AgentBox Dashboard</a>.
+                </p>
+                <div class="code-label">Header</div>
+                <pre><code>Authorization: Bearer ab_live_xxxxxxxxxxxxxxxxxxxx</code></pre>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">
+                    ⚠️ Keep your API key secret. Never expose it in client-side code. Use environment variables or a secrets manager.
+                </p>
+            </div>
+        </section>
+
+        <!-- Base URL -->
+        <div class="auth-box">
+            <h3>Base URL</h3>
+            <pre><code>https://api.getagentbox.com/v1</code></pre>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">All endpoints below are relative to this base URL.</p>
+        </div>
+
+        <!-- Rate Limits -->
+        <section id="rate-limits">
+            <h2>⏱️ Rate Limits</h2>
+            <div class="rate-limit">
+                <div class="rate-card">
+                    <div class="plan">Free</div>
+                    <div class="limit">20</div>
+                    <div class="unit">requests / day</div>
+                </div>
+                <div class="rate-card">
+                    <div class="plan">Pro</div>
+                    <div class="limit">1,000</div>
+                    <div class="unit">requests / hour</div>
+                </div>
+                <div class="rate-card">
+                    <div class="plan">Enterprise</div>
+                    <div class="limit">Custom</div>
+                    <div class="unit">contact sales</div>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 32px;">
+                Rate limit headers are included in every response:
+                <code style="color: var(--accent);">X-RateLimit-Limit</code>,
+                <code style="color: var(--accent);">X-RateLimit-Remaining</code>,
+                <code style="color: var(--accent);">X-RateLimit-Reset</code>
+            </p>
+        </section>
+
+        <!-- POST /messages -->
+        <section id="send-message">
+            <h2>Endpoints</h2>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/messages</span>
+                </div>
+                <div class="endpoint-body">
+                    <p>Send a message to your AI agent and get a response. Supports text, images, and file attachments.</p>
+
+                    <h3>Parameters</h3>
+                    <table class="param-table">
+                        <thead><tr><th>Name</th><th>Type</th><th></th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="param-name">message</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-required">required</span></td>
+                                <td>The message text to send</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">conversation_id</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td>Continue an existing conversation. Omit to start new.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">attachments</span></td>
+                                <td><span class="param-type">array</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td>Array of base64-encoded files with <code>type</code> and <code>data</code> fields</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">stream</span></td>
+                                <td><span class="param-type">boolean</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td>Enable Server-Sent Events streaming (default: false)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-label">Request</div>
+                    <pre><code>curl -X POST https://api.getagentbox.com/v1/messages \
+  -H "Authorization: Bearer ab_live_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "What meetings do I have tomorrow?",
+    "conversation_id": "conv_abc123"
+  }'</code></pre>
+
+                    <div class="code-label">Response — 200 OK</div>
+                    <pre><code>{
+  "id": "msg_7f3k9x",
+  "conversation_id": "conv_abc123",
+  "role": "assistant",
+  "content": "You have 2 meetings tomorrow:\n• 10:00 AM — Team standup\n• 2:00 PM — Design review with Sarah",
+  "tokens_used": 142,
+  "created_at": "2026-03-22T15:30:00Z"
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- GET /conversations/:id -->
+        <section id="get-conversation">
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/conversations/{id}</span>
+                </div>
+                <div class="endpoint-body">
+                    <p>Retrieve a full conversation with all messages.</p>
+
+                    <div class="code-label">Request</div>
+                    <pre><code>curl https://api.getagentbox.com/v1/conversations/conv_abc123 \
+  -H "Authorization: Bearer ab_live_xxx"</code></pre>
+
+                    <div class="code-label">Response — 200 OK</div>
+                    <pre><code>{
+  "id": "conv_abc123",
+  "created_at": "2026-03-20T09:00:00Z",
+  "message_count": 14,
+  "messages": [
+    {
+      "id": "msg_1a2b3c",
+      "role": "user",
+      "content": "Remind me about the dentist appointment",
+      "created_at": "2026-03-20T09:00:00Z"
+    },
+    {
+      "id": "msg_4d5e6f",
+      "role": "assistant",
+      "content": "Done! I'll remind you about your dentist appointment.",
+      "created_at": "2026-03-20T09:00:01Z"
+    }
+  ]
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- GET /conversations -->
+        <section id="list-conversations">
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/conversations</span>
+                </div>
+                <div class="endpoint-body">
+                    <p>List all conversations, sorted by most recent. Supports pagination.</p>
+
+                    <h3>Query Parameters</h3>
+                    <table class="param-table">
+                        <thead><tr><th>Name</th><th>Type</th><th></th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="param-name">limit</span></td>
+                                <td><span class="param-type">integer</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td>Number of results (default: 20, max: 100)</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">cursor</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td>Pagination cursor from previous response</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-label">Response — 200 OK</div>
+                    <pre><code>{
+  "data": [
+    {
+      "id": "conv_abc123",
+      "last_message": "You have 2 meetings tomorrow...",
+      "message_count": 14,
+      "updated_at": "2026-03-22T15:30:00Z"
+    }
+  ],
+  "has_more": true,
+  "next_cursor": "cur_xyz789"
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- POST /memories -->
+        <section id="create-memory">
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/memories</span>
+                </div>
+                <div class="endpoint-body">
+                    <p>Store a memory that the agent will reference in future conversations.</p>
+
+                    <table class="param-table">
+                        <thead><tr><th>Name</th><th>Type</th><th></th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="param-name">content</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-required">required</span></td>
+                                <td>The memory to store (e.g. "User prefers dark mode")</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">category</span></td>
+                                <td><span class="param-type">string</span></td>
+                                <td><span class="param-optional">optional</span></td>
+                                <td>Category tag: <code>preference</code>, <code>fact</code>, <code>reminder</code>, <code>context</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-label">Request</div>
+                    <pre><code>curl -X POST https://api.getagentbox.com/v1/memories \
+  -H "Authorization: Bearer ab_live_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "User is vegetarian and allergic to nuts",
+    "category": "preference"
+  }'</code></pre>
+
+                    <div class="code-label">Response — 201 Created</div>
+                    <pre><code>{
+  "id": "mem_9g8h7i",
+  "content": "User is vegetarian and allergic to nuts",
+  "category": "preference",
+  "created_at": "2026-03-22T16:00:00Z"
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- GET /memories -->
+        <section id="list-memories">
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/memories</span>
+                </div>
+                <div class="endpoint-body">
+                    <p>List all stored memories for the authenticated user. Filter by category.</p>
+
+                    <div class="code-label">Request</div>
+                    <pre><code>curl "https://api.getagentbox.com/v1/memories?category=preference" \
+  -H "Authorization: Bearer ab_live_xxx"</code></pre>
+
+                    <div class="code-label">Response — 200 OK</div>
+                    <pre><code>{
+  "data": [
+    {
+      "id": "mem_9g8h7i",
+      "content": "User is vegetarian and allergic to nuts",
+      "category": "preference",
+      "created_at": "2026-03-22T16:00:00Z"
+    }
+  ],
+  "total": 1
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- GET /usage -->
+        <section id="get-usage">
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/usage</span>
+                </div>
+                <div class="endpoint-body">
+                    <p>Get your current billing period usage stats.</p>
+
+                    <div class="code-label">Response — 200 OK</div>
+                    <pre><code>{
+  "plan": "pro",
+  "period_start": "2026-03-01T00:00:00Z",
+  "period_end": "2026-03-31T23:59:59Z",
+  "messages_sent": 847,
+  "messages_limit": null,
+  "tokens_used": 124580,
+  "api_calls": 312,
+  "api_calls_limit": 24000
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Webhooks -->
+        <section id="webhooks">
+            <div class="auth-box">
+                <h2>🔔 Webhooks</h2>
+                <p style="color: var(--text-muted); margin-bottom: 16px;">
+                    Receive real-time notifications when events occur. Configure webhook URLs in your dashboard.
+                </p>
+
+                <h3>Available Events</h3>
+                <table class="param-table">
+                    <thead><tr><th>Event</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="param-name">message.created</span></td><td>New message in a conversation</td></tr>
+                        <tr><td><span class="param-name">conversation.created</span></td><td>New conversation started</td></tr>
+                        <tr><td><span class="param-name">memory.created</span></td><td>New memory stored</td></tr>
+                        <tr><td><span class="param-name">reminder.triggered</span></td><td>A scheduled reminder fired</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="code-label">Webhook Payload</div>
+                <pre><code>{
+  "event": "message.created",
+  "timestamp": "2026-03-22T15:30:00Z",
+  "data": {
+    "id": "msg_7f3k9x",
+    "conversation_id": "conv_abc123",
+    "role": "assistant",
+    "content": "You have 2 meetings tomorrow..."
+  }
+}</code></pre>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 12px;">
+                    Webhook requests include an <code style="color: var(--accent);">X-AgentBox-Signature</code> header for verification.
+                    Validate using HMAC-SHA256 with your webhook secret.
+                </p>
+            </div>
+        </section>
+
+        <!-- Error Handling -->
+        <section id="errors">
+            <h2>⚠️ Error Handling</h2>
+            <p style="color: var(--text-muted); margin-bottom: 16px;">All errors follow a consistent format:</p>
+            <pre><code>{
+  "error": {
+    "code": "rate_limit_exceeded",
+    "message": "You've exceeded your hourly rate limit. Try again in 42 seconds.",
+    "retry_after": 42
+  }
+}</code></pre>
+
+            <table class="param-table" style="margin-top: 16px;">
+                <thead><tr><th>Status</th><th>Code</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td>400</td><td><span class="param-name">invalid_request</span></td><td>Missing or invalid parameters</td></tr>
+                    <tr><td>401</td><td><span class="param-name">unauthorized</span></td><td>Invalid or missing API key</td></tr>
+                    <tr><td>403</td><td><span class="param-name">forbidden</span></td><td>API key lacks required permissions</td></tr>
+                    <tr><td>404</td><td><span class="param-name">not_found</span></td><td>Resource doesn't exist</td></tr>
+                    <tr><td>429</td><td><span class="param-name">rate_limit_exceeded</span></td><td>Too many requests</td></tr>
+                    <tr><td>500</td><td><span class="param-name">internal_error</span></td><td>Something went wrong on our end</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- SDKs -->
+        <section id="sdks" style="margin-top: 32px; margin-bottom: 60px;">
+            <h2>📦 SDKs & Libraries</h2>
+            <div class="rate-limit">
+                <div class="rate-card">
+                    <div class="limit" style="font-size: 2rem;">🐍</div>
+                    <div class="plan" style="margin-top: 8px; font-weight: 600; color: var(--text);">Python</div>
+                    <pre style="margin-top: 12px; margin-bottom: 0; text-align: left;"><code>pip install agentbox</code></pre>
+                </div>
+                <div class="rate-card">
+                    <div class="limit" style="font-size: 2rem;">📦</div>
+                    <div class="plan" style="margin-top: 8px; font-weight: 600; color: var(--text);">Node.js</div>
+                    <pre style="margin-top: 12px; margin-bottom: 0; text-align: left;"><code>npm i @agentbox/sdk</code></pre>
+                </div>
+                <div class="rate-card">
+                    <div class="limit" style="font-size: 2rem;">💎</div>
+                    <div class="plan" style="margin-top: 8px; font-weight: 600; color: var(--text);">Ruby</div>
+                    <pre style="margin-top: 12px; margin-bottom: 0; text-align: left;"><code>gem install agentbox</code></pre>
+                </div>
+            </div>
+
+            <div class="auth-box">
+                <h3>Quick Start — Python</h3>
+                <pre style="margin-top: 12px; margin-bottom: 0;"><code>from agentbox import AgentBox
+
+client = AgentBox(api_key="ab_live_xxx")
+
+response = client.messages.send(
+    message="Summarize my unread emails",
+    conversation_id="conv_abc123"  # optional
+)
+
+print(response.content)</code></pre>
+            </div>
+
+            <div class="auth-box">
+                <h3>Quick Start — Node.js</h3>
+                <pre style="margin-top: 12px; margin-bottom: 0;"><code>import { AgentBox } from '@agentbox/sdk';
+
+const client = new AgentBox({ apiKey: 'ab_live_xxx' });
+
+const response = await client.messages.send({
+  message: 'Summarize my unread emails',
+  conversationId: 'conv_abc123'
+});
+
+console.log(response.content);</code></pre>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<div class="footer">
+    <p>🤖 AgentBox API v1 · <a href="index.html">Home</a> · <a href="status-page.html">Status</a> · <a href="contact.html">Support</a></p>
+</div>
+
+</body>
+</html>
+</code></pre>
