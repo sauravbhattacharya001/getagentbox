@@ -642,10 +642,11 @@
             document.getElementById('exportSection').classList.remove('visible');
         });
 
-        // Auto-select from URL hash
+        // Auto-select from URL hash (sanitized to prevent selector injection)
         const hash = location.hash.replace('#', '');
         if (DATA[hash]) {
-            document.querySelector('[data-source="' + hash + '"]').click();
+            const btn = document.querySelector('[data-source="' + CSS.escape(hash) + '"]');
+            if (btn) btn.click();
         }
     })();
     </script>

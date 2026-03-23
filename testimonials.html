@@ -391,24 +391,30 @@
 
         totalReviewsEl.textContent = TESTIMONIALS.length;
 
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
         function createCard(t, idx) {
             const card = document.createElement('div');
             card.className = 'card';
-            const starStr = '★'.repeat(t.stars) + '☆'.repeat(5 - t.stars);
-            const tagClass = t.category === 'developer' ? 'dev' : t.category;
+            const starStr = '★'.repeat(Math.max(0, Math.min(5, t.stars))) + '☆'.repeat(5 - Math.max(0, Math.min(5, t.stars)));
+            const tagClass = t.category === 'developer' ? 'dev' : escapeHtml(t.category);
             const votedClass = voted.has(idx) ? ' voted' : '';
             const helpfulCount = voted.has(idx) ? t.helpful + 1 : t.helpful;
             card.innerHTML =
                 '<div class="card-header">' +
-                    '<div class="avatar" style="background:' + t.color + '">' + t.avatar + '</div>' +
-                    '<div class="user-info"><div class="user-name">' + t.name + '</div><div class="user-role">' + t.role + '</div></div>' +
+                    '<div class="avatar" style="background:' + escapeHtml(t.color) + '">' + escapeHtml(t.avatar) + '</div>' +
+                    '<div class="user-info"><div class="user-name">' + escapeHtml(t.name) + '</div><div class="user-role">' + escapeHtml(t.role) + '</div></div>' +
                     '<div class="stars">' + starStr + '</div>' +
                 '</div>' +
-                '<div class="card-body">"' + t.text + '"</div>' +
+                '<div class="card-body">"' + escapeHtml(t.text) + '"</div>' +
                 '<div class="card-footer">' +
-                    '<span class="tag ' + tagClass + '">' + t.category + '</span>' +
+                    '<span class="tag ' + escapeHtml(tagClass) + '">' + escapeHtml(t.category) + '</span>' +
                     '<span class="helpful' + votedClass + '" data-idx="' + idx + '">👍 ' + helpfulCount + ' helpful</span>' +
-                    '<span class="date">' + t.date + '</span>' +
+                    '<span class="date">' + escapeHtml(t.date) + '</span>' +
                 '</div>';
             return card;
         }
