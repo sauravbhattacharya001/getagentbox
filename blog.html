@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'; worker-src 'none';">
+    <title>Blog - AgentBox</title>
+    <meta name="description" content="Tips, tutorials, and updates from the AgentBox team. Learn how to get the most out of your AI agent on Telegram.">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .blog-hero {
+            text-align: center;
+            padding: 6rem 2rem 3rem;
+            background: linear-gradient(135deg, var(--color-bg) 0%, rgba(0, 212, 255, 0.05) 100%);
+        }
+        .blog-hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .blog-hero p {
+            color: var(--color-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .blog-filters {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 1.5rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .blog-filter-btn {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .blog-filter-btn:hover,
+        .blog-filter-btn.active {
+            background: var(--color-primary);
+            color: #000;
+            border-color: var(--color-primary);
+        }
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1rem 2rem 4rem;
+        }
+        .blog-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .blog-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+        .blog-card-img {
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+        .blog-card-img.tutorial { background: linear-gradient(135deg, #00d4ff22, #00d4ff08); }
+        .blog-card-img.update { background: linear-gradient(135deg, #ff6b3522, #ff6b3508); }
+        .blog-card-img.guide { background: linear-gradient(135deg, #a855f722, #a855f708); }
+        .blog-card-img.story { background: linear-gradient(135deg, #22c55e22, #22c55e08); }
+        .blog-card-body {
+            padding: 1.25rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .blog-card-meta {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--color-muted);
+        }
+        .blog-card-tag {
+            background: var(--color-primary);
+            color: #000;
+            padding: 0.15rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .blog-card h2 {
+            font-size: 1.15rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        .blog-card p {
+            color: var(--color-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            flex: 1;
+        }
+        .blog-card-footer {
+            padding-top: 0.75rem;
+            margin-top: 0.75rem;
+            border-top: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--color-muted);
+        }
+        .blog-read-more {
+            color: var(--color-primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .blog-read-more:hover {
+            text-decoration: underline;
+        }
+        .blog-newsletter {
+            max-width: 600px;
+            margin: 0 auto 4rem;
+            text-align: center;
+            padding: 2.5rem 2rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+        }
+        .blog-newsletter h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .blog-newsletter p {
+            color: var(--color-muted);
+            margin-bottom: 1.25rem;
+        }
+        .blog-newsletter-form {
+            display: flex;
+            gap: 0.5rem;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        .blog-newsletter-form input {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-size: 0.9rem;
+        }
+        .blog-newsletter-form button {
+            padding: 0.6rem 1.25rem;
+            background: var(--color-primary);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .blog-newsletter-form button:hover {
+            opacity: 0.85;
+        }
+        .back-link {
+            display: inline-block;
+            padding: 1.5rem 2rem;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .blog-hero h1 { font-size: 2rem; }
+            .blog-grid { grid-template-columns: 1fr; }
+            .blog-newsletter-form { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to AgentBox</a>
+
+    <section class="blog-hero">
+        <h1>📝 Blog</h1>
+        <p>Tips, tutorials, and updates to help you get the most out of your AI agent.</p>
+    </section>
+
+    <div class="blog-filters">
+        <button class="blog-filter-btn active" data-filter="all">All</button>
+        <button class="blog-filter-btn" data-filter="tutorial">Tutorials</button>
+        <button class="blog-filter-btn" data-filter="update">Updates</button>
+        <button class="blog-filter-btn" data-filter="guide">Guides</button>
+        <button class="blog-filter-btn" data-filter="story">Stories</button>
+    </div>
+
+    <div class="blog-grid" id="blogGrid">
+        <article class="blog-card" data-category="tutorial">
+            <div class="blog-card-img tutorial">🚀</div>
+            <div class="blog-card-body">
+                <div class="blog-card-meta">
+                    <span class="blog-card-tag">Tutorial</span>
+                    <span>Mar 20, 2026</span>
+                    <span>5 min read</span>
+                </div>
+                <h2>Getting Started: Your First 10 Minutes with AgentBox</h2>
+                <p>A quick-start walkthrough covering setup, your first conversation, and three features most people miss on day one.</p>
+                <div class="blog-card-footer">
+                    <span>By the AgentBox Team</span>
+                    <a href="#" class="blog-read-more">Read →</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="blog-card" data-category="update">
+            <div class="blog-card-img update">🔔</div>
+            <div class="blog-card-body">
+                <div class="blog-card-meta">
+                    <span class="blog-card-tag">Update</span>
+                    <span>Mar 15, 2026</span>
+                    <span>3 min read</span>
+                </div>
+                <h2>What's New: Memory Improvements & Faster Responses</h2>
+                <p>We shipped long-term memory upgrades, 40% faster response times, and a new /recap command. Here's the full breakdown.</p>
+                <div class="blog-card-footer">
+                    <span>By the AgentBox Team</span>
+                    <a href="#" class="blog-read-more">Read →</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="blog-card" data-category="guide">
+            <div class="blog-card-img guide">🧠</div>
+            <div class="blog-card-body">
+                <div class="blog-card-meta">
+                    <span class="blog-card-tag">Guide</span>
+                    <span>Mar 10, 2026</span>
+                    <span>8 min read</span>
+                </div>
+                <h2>Advanced Prompting: How to Get Better Answers Every Time</h2>
+                <p>Learn the prompting patterns that power users rely on — context stacking, role setting, and iterative refinement.</p>
+                <div class="blog-card-footer">
+                    <span>By the AgentBox Team</span>
+                    <a href="#" class="blog-read-more">Read →</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="blog-card" data-category="story">
+            <div class="blog-card-img story">💡</div>
+            <div class="blog-card-body">
+                <div class="blog-card-meta">
+                    <span class="blog-card-tag">Story</span>
+                    <span>Mar 5, 2026</span>
+                    <span>4 min read</span>
+                </div>
+                <h2>How a Freelancer Uses AgentBox to Save 2 Hours a Day</h2>
+                <p>Maria manages clients, invoices, and deadlines — all through Telegram. Here's her workflow and the prompts she uses.</p>
+                <div class="blog-card-footer">
+                    <span>By the AgentBox Team</span>
+                    <a href="#" class="blog-read-more">Read →</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="blog-card" data-category="tutorial">
+            <div class="blog-card-img tutorial">🔗</div>
+            <div class="blog-card-body">
+                <div class="blog-card-meta">
+                    <span class="blog-card-tag">Tutorial</span>
+                    <span>Feb 28, 2026</span>
+                    <span>6 min read</span>
+                </div>
+                <h2>Connecting AgentBox to Your Calendar and Reminders</h2>
+                <p>Step-by-step guide to setting up calendar sync, daily briefings, and smart reminders that actually work.</p>
+                <div class="blog-card-footer">
+                    <span>By the AgentBox Team</span>
+                    <a href="#" class="blog-read-more">Read →</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="blog-card" data-category="guide">
+            <div class="blog-card-img guide">🔒</div>
+            <div class="blog-card-body">
+                <div class="blog-card-meta">
+                    <span class="blog-card-tag">Guide</span>
+                    <span>Feb 20, 2026</span>
+                    <span>7 min read</span>
+                </div>
+                <h2>Privacy & Security: How AgentBox Handles Your Data</h2>
+                <p>A transparent look at our data architecture, encryption, retention policies, and what we'll never do with your conversations.</p>
+                <div class="blog-card-footer">
+                    <span>By the AgentBox Team</span>
+                    <a href="#" class="blog-read-more">Read →</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="blog-card" data-category="update">
+            <div class="blog-card-img update">⚡</div>
+            <div class="blog-card-body">
+                <div class="blog-card-meta">
+                    <span class="blog-card-tag">Update</span>
+                    <span>Feb 14, 2026</span>
+                    <span>3 min read</span>
+                </div>
+                <h2>Image Understanding is Here: Send Photos, Get Answers</h2>
+                <p>AgentBox can now analyze images — read receipts, identify plants, extract text from screenshots, and more.</p>
+                <div class="blog-card-footer">
+                    <span>By the AgentBox Team</span>
+                    <a href="#" class="blog-read-more">Read →</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="blog-card" data-category="story">
+            <div class="blog-card-img story">🎓</div>
+            <div class="blog-card-body">
+                <div class="blog-card-meta">
+                    <span class="blog-card-tag">Story</span>
+                    <span>Feb 7, 2026</span>
+                    <span>5 min read</span>
+                </div>
+                <h2>Study Smarter: A Student's Guide to AgentBox</h2>
+                <p>From flashcard generation to research summaries — how students are using AgentBox to study more effectively.</p>
+                <div class="blog-card-footer">
+                    <span>By the AgentBox Team</span>
+                    <a href="#" class="blog-read-more">Read →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <section class="blog-newsletter">
+        <h2>📬 Stay in the Loop</h2>
+        <p>Get new posts and product updates delivered to your inbox. No spam, unsubscribe anytime.</p>
+        <div class="blog-newsletter-form">
+            <input type="email" placeholder="you@example.com" aria-label="Email address" disabled>
+            <button type="button" disabled title="Coming soon">Subscribe</button>
+        </div>
+        <p style="font-size:0.75rem; color: var(--color-muted); margin-top: 0.75rem;">Newsletter coming soon!</p>
+    </section>
+
+    <script>
+        // Category filter
+        document.querySelectorAll('.blog-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.blog-filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('.blog-card').forEach(card => {
+                    card.style.display = (filter === 'all' || card.dataset.category === filter) ? '' : 'none';
+                });
+            });
+        });
+
+        // Theme detection
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
+</body>
+</html>
