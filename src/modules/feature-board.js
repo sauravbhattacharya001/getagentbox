@@ -127,41 +127,34 @@ var FeatureBoard = (function () {
 
   // ── Persistence ────────────────────────────────────────────────
   function loadVotes() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return Object.create(null);
-      const parsed = JSON.parse(raw);
-      const safe = Object.create(null);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        for (var k in parsed) {
-          if (Object.prototype.hasOwnProperty.call(parsed, k)) safe[k] = !!parsed[k];
-        }
+    const parsed = StorageUtil.getJSON(STORAGE_KEY, null);
+    const safe = Object.create(null);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      for (var k in parsed) {
+        if (Object.prototype.hasOwnProperty.call(parsed, k)) safe[k] = !!parsed[k];
       }
-      return safe;
-    } catch (e) { return Object.create(null); }
+    }
+    return safe;
   }
   function saveVotes() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(userVotes)); } catch (e) { /* noop */ }
+    StorageUtil.setJSON(STORAGE_KEY, userVotes);
   }
   function loadCustom() {
-    try {
-      const raw = localStorage.getItem(CUSTOM_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return [];
-      var safe = [];
-      for (var i = 0; i < parsed.length; i++) {
-        var item = parsed[i];
-        if (item && typeof item === 'object' && !Array.isArray(item) &&
-            typeof item.id === 'string' && typeof item.title === 'string') {
-          safe.push(item);
-        }
+    const parsed = StorageUtil.getJSON(CUSTOM_KEY, []);
+    if (!Array.isArray(parsed)) return [];
+    var safe = [];
+    for (var i = 0; i < parsed.length; i++) {
+      var item = parsed[i];
+      if (item && typeof item === 'object' && !Array.isArray(item) &&
+          typeof item.id === 'string' && typeof item.title === 'string') {
+        safe.push(item);
       }
-      return safe;
-    } catch (e) { return []; }
+        }
+    }
+    return safe;
   }
   function saveCustom(customs) {
-    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(customs)); } catch (e) { /* noop */ }
+    StorageUtil.setJSON(CUSTOM_KEY, customs);
   }
 
   // ── Status helpers ─────────────────────────────────────────────

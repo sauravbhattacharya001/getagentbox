@@ -1,5 +1,124 @@
 /* Auto-generated bundle — do not edit directly. Run: npm run build */
 
+/* === src/modules/storage.js === */
+// ---------------------------------------------------------------------------
+// Shared localStorage Utility
+// ---------------------------------------------------------------------------
+/**
+ * Safe localStorage wrapper that handles private browsing, quota errors,
+ * and SSR/non-browser environments. All modules should use this instead
+ * of raw localStorage access to avoid duplicated try/catch blocks.
+ *
+ * @example
+ *   var prefs = StorageUtil.getJSON('agentbox_prefs', {});
+ *   prefs.theme = 'dark';
+ *   StorageUtil.setJSON('agentbox_prefs', prefs);
+ */
+/* exported StorageUtil */
+var StorageUtil = (function () {
+  'use strict';
+
+  /**
+   * Check if localStorage is available and functional.
+   * Caches the result after the first probe.
+   * @returns {boolean}
+   */
+  var _available = null;
+  function isAvailable() {
+    if (_available !== null) return _available;
+    try {
+      var key = '__agentbox_storage_probe__';
+      localStorage.setItem(key, '1');
+      localStorage.removeItem(key);
+      _available = true;
+    } catch (e) {
+      _available = false;
+    }
+    return _available;
+  }
+
+  /**
+   * Get a raw string value from localStorage.
+   * @param {string} key
+   * @param {string} [fallback='']
+   * @returns {string}
+   */
+  function get(key, fallback) {
+    if (!isAvailable()) return arguments.length > 1 ? fallback : '';
+    try {
+      var val = localStorage.getItem(key);
+      return val !== null ? val : (arguments.length > 1 ? fallback : '');
+    } catch (e) {
+      return arguments.length > 1 ? fallback : '';
+    }
+  }
+
+  /**
+   * Set a raw string value in localStorage.
+   * @param {string} key
+   * @param {string} value
+   * @returns {boolean} true if successful
+   */
+  function set(key, value) {
+    if (!isAvailable()) return false;
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Get and parse a JSON value from localStorage.
+   * @param {string} key
+   * @param {*} fallback - Returned on missing key or parse error
+   * @returns {*}
+   */
+  function getJSON(key, fallback) {
+    var raw = get(key, null);
+    if (raw === null) return fallback;
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  /**
+   * Serialize and store a JSON value in localStorage.
+   * @param {string} key
+   * @param {*} value
+   * @returns {boolean} true if successful
+   */
+  function setJSON(key, value) {
+    try {
+      return set(key, JSON.stringify(value));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Remove a key from localStorage.
+   * @param {string} key
+   */
+  function remove(key) {
+    if (!isAvailable()) return;
+    try { localStorage.removeItem(key); } catch (e) { /* noop */ }
+  }
+
+  return {
+    isAvailable: isAvailable,
+    get: get,
+    set: set,
+    getJSON: getJSON,
+    setJSON: setJSON,
+    remove: remove
+  };
+})();
+
+
 /* === src/modules/globals.js === */
 /**
  * AgentBox Landing Page - Interactive Components
@@ -1503,9 +1622,7 @@ var Newsletter = (function () {
 
       setTimeout(function () {
         subs.push(email);
-        try {
-          localStorage.setItem('agentbox_newsletter', JSON.stringify(subs));
-        } catch (_) { /* ignore */ }
+        StorageUtil.setJSON('agentbox_newsletter', subs);
 
         showStatus(status, 'You\'re in! Welcome aboard. 🚀', 'success');
         btn.textContent = 'Subscribed ✓';
@@ -1533,19 +1650,14 @@ var Newsletter = (function () {
   }
 
   function getSubscribers() {
-    try {
-      const data = localStorage.getItem('agentbox_newsletter');
-      if (!data) return [];
-      const parsed = JSON.parse(data);
-      // Validate: must be an array of strings (email addresses)
-      if (!Array.isArray(parsed)) return [];
-      const safe = [];
-      for (var i = 0; i < parsed.length; i++) {
-        if (typeof parsed[i] === 'string') safe.push(parsed[i]);
-      }
-      return safe;
-    } catch (_) {
-      return [];
+    const parsed = StorageUtil.getJSON('agentbox_newsletter', []);
+    // Validate: must be an array of strings (email addresses)
+    if (!Array.isArray(parsed)) return [];
+    const safe = [];
+    for (var i = 0; i < parsed.length; i++) {
+      if (typeof parsed[i] === 'string') safe.push(parsed[i]);
+    }
+    return safe;
     }
   }
 
@@ -1751,17 +1863,12 @@ var Roadmap = (function () {
           };
         }
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (_) {
-      /* localStorage unavailable */
+      StorageUtil.setJSON(STORAGE_KEY, data);
     }
   }
 
   function restoreVotes() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
+      const parsed = StorageUtil.getJSON(STORAGE_KEY, null);
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
       // Rebuild as prototype-safe map with validated entries
       const data = Object.create(null);
@@ -1789,9 +1896,6 @@ var Roadmap = (function () {
           btn.setAttribute('aria-pressed', 'true');
         }
       }
-    } catch (_) {
-      /* localStorage unavailable or corrupted */
-    }
   }
 
   return {
@@ -2557,13 +2661,11 @@ var ThemeToggle = (function () {
     icon = document.getElementById('themeIcon');
     if (!btn) return;
 
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'light') {
-        document.body.classList.add('light-mode');
-        if (icon) icon.textContent = '🌙';
-      }
-    } catch (e) { /* localStorage unavailable (private browsing) */ }
+    const saved = StorageUtil.get(STORAGE_KEY, null);
+    if (saved === 'light') {
+      document.body.classList.add('light-mode');
+      if (icon) icon.textContent = '🌙';
+    }
 
     btn.addEventListener('click', toggle);
   }
@@ -2571,7 +2673,7 @@ var ThemeToggle = (function () {
   function toggle() {
     const isLight = document.body.classList.toggle('light-mode');
     if (icon) icon.textContent = isLight ? '🌙' : '☀️';
-    try { localStorage.setItem(STORAGE_KEY, isLight ? 'light' : 'dark'); } catch (e) { /* private browsing */ }
+    StorageUtil.set(STORAGE_KEY, isLight ? 'light' : 'dark');
   }
 
   return { init: init };
@@ -3954,7 +4056,7 @@ var FeatureTour = (function () {
     destroyOverlay();
 
     // Mark as completed
-    try { localStorage.setItem(STORAGE_KEY, 'true'); } catch (e) { /* private browsing */ }
+    try { StorageUtil.set(STORAGE_KEY, 'true'); } catch (e) { /* private browsing */ }
   }
 
   function onKeyDown(e) {
@@ -3974,12 +4076,12 @@ var FeatureTour = (function () {
 
   /** Whether the user has completed the tour before. */
   function hasCompleted() {
-    try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch (e) { return false; }
+    try { return StorageUtil.get(STORAGE_KEY) === 'true'; } catch (e) { return false; }
   }
 
   /** Reset the completed flag (for testing or re-prompting). */
   function reset() {
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* noop */ }
+    try { StorageUtil.remove(STORAGE_KEY); } catch (e) { /* noop */ }
   }
 
   // ── Init: bind trigger button ────────────────────────────────────
@@ -5937,20 +6039,17 @@ var AccessibilityPanel = (function () {
   let _isOpen = false;
 
   function load() {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        _prefs = {};
-        for (var key in DEFAULTS) { if (DEFAULTS.hasOwnProperty(key)) { _prefs[key] = parsed.hasOwnProperty(key) ? parsed[key] : DEFAULTS[key]; } }
-        return;
-      }
-    } catch (e) { /* noop */ }
+    const parsed = StorageUtil.getJSON(STORAGE_KEY, null);
+    if (parsed) {
+      _prefs = {};
+      for (var key in DEFAULTS) { if (DEFAULTS.hasOwnProperty(key)) { _prefs[key] = parsed.hasOwnProperty(key) ? parsed[key] : DEFAULTS[key]; } }
+      return;
+    }
     _prefs = {};
     for (var k in DEFAULTS) { if (DEFAULTS.hasOwnProperty(k)) _prefs[k] = DEFAULTS[k]; }
   }
 
-  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(_prefs)); } catch (e) { /* noop */ } }
+  function save() { StorageUtil.setJSON(STORAGE_KEY, _prefs); }
 
   function applyAll() {
     let html = document.documentElement;
@@ -6433,41 +6532,34 @@ var FeatureBoard = (function () {
 
   // ── Persistence ────────────────────────────────────────────────
   function loadVotes() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return Object.create(null);
-      const parsed = JSON.parse(raw);
-      const safe = Object.create(null);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        for (var k in parsed) {
-          if (Object.prototype.hasOwnProperty.call(parsed, k)) safe[k] = !!parsed[k];
-        }
+    const parsed = StorageUtil.getJSON(STORAGE_KEY, null);
+    const safe = Object.create(null);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      for (var k in parsed) {
+        if (Object.prototype.hasOwnProperty.call(parsed, k)) safe[k] = !!parsed[k];
       }
-      return safe;
-    } catch (e) { return Object.create(null); }
+    }
+    return safe;
   }
   function saveVotes() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(userVotes)); } catch (e) { /* noop */ }
+    StorageUtil.setJSON(STORAGE_KEY, userVotes);
   }
   function loadCustom() {
-    try {
-      const raw = localStorage.getItem(CUSTOM_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return [];
-      var safe = [];
-      for (var i = 0; i < parsed.length; i++) {
-        var item = parsed[i];
-        if (item && typeof item === 'object' && !Array.isArray(item) &&
-            typeof item.id === 'string' && typeof item.title === 'string') {
-          safe.push(item);
-        }
+    const parsed = StorageUtil.getJSON(CUSTOM_KEY, []);
+    if (!Array.isArray(parsed)) return [];
+    var safe = [];
+    for (var i = 0; i < parsed.length; i++) {
+      var item = parsed[i];
+      if (item && typeof item === 'object' && !Array.isArray(item) &&
+          typeof item.id === 'string' && typeof item.title === 'string') {
+        safe.push(item);
       }
-      return safe;
-    } catch (e) { return []; }
+        }
+    }
+    return safe;
   }
   function saveCustom(customs) {
-    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(customs)); } catch (e) { /* noop */ }
+    StorageUtil.setJSON(CUSTOM_KEY, customs);
   }
 
   // ── Status helpers ─────────────────────────────────────────────
@@ -7266,14 +7358,14 @@ var CommunityShowcase = (function () {
     }).join("");
 
     return (
-      '<article class="showcase-card" data-id="' + item.id + '" data-category="' + item.category + '">' +
+      '<article class="showcase-card" data-id="' + _escapeHtml(item.id) + '" data-category="' + _escapeHtml(item.category) + '">' +
         '<div class="showcase-card-header">' +
           '<div class="showcase-avatar" aria-hidden="true">' + _escapeHtml(item.avatar) + '</div>' +
           '<div class="showcase-meta">' +
             '<span class="showcase-author">' + _escapeHtml(item.author) + '</span>' +
             '<span class="showcase-date">' + _formatDate(item.date) + '</span>' +
           '</div>' +
-          '<span class="showcase-category-badge showcase-cat-' + item.category.toLowerCase() + '">' + _escapeHtml(item.category) + '</span>' +
+          '<span class="showcase-category-badge showcase-cat-' + _escapeHtml(item.category.toLowerCase()) + '">' + _escapeHtml(item.category) + '</span>' +
         '</div>' +
         '<h3 class="showcase-title">' + _escapeHtml(item.title) + '</h3>' +
         '<p class="showcase-desc">' + _escapeHtml(item.description) + '</p>' +
@@ -7282,7 +7374,7 @@ var CommunityShowcase = (function () {
           '<button class="showcase-like-btn' + (liked ? ' liked' : '') + '" ' +
             'aria-label="' + (liked ? 'Unlike' : 'Like') + ' ' + _escapeHtml(item.title) + '" ' +
             'aria-pressed="' + liked + '" ' +
-            'data-id="' + item.id + '">' +
+            'data-id="' + _escapeHtml(item.id) + '">' +
             '<span class="showcase-heart" aria-hidden="true">' + (liked ? '\u2764\uFE0F' : '\u2661') + '</span> ' +
             '<span class="showcase-like-count">' + likeCount + '</span>' +
           '</button>' +

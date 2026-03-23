@@ -11,13 +11,11 @@ var ThemeToggle = (function () {
     icon = document.getElementById('themeIcon');
     if (!btn) return;
 
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'light') {
-        document.body.classList.add('light-mode');
-        if (icon) icon.textContent = '🌙';
-      }
-    } catch (e) { /* localStorage unavailable (private browsing) */ }
+    const saved = StorageUtil.get(STORAGE_KEY, null);
+    if (saved === 'light') {
+      document.body.classList.add('light-mode');
+      if (icon) icon.textContent = '🌙';
+    }
 
     btn.addEventListener('click', toggle);
   }
@@ -25,7 +23,7 @@ var ThemeToggle = (function () {
   function toggle() {
     const isLight = document.body.classList.toggle('light-mode');
     if (icon) icon.textContent = isLight ? '🌙' : '☀️';
-    try { localStorage.setItem(STORAGE_KEY, isLight ? 'light' : 'dark'); } catch (e) { /* private browsing */ }
+    StorageUtil.set(STORAGE_KEY, isLight ? 'light' : 'dark');
   }
 
   return { init: init };

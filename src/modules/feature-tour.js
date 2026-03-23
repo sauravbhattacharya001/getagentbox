@@ -299,7 +299,7 @@ var FeatureTour = (function () {
     destroyOverlay();
 
     // Mark as completed
-    try { localStorage.setItem(STORAGE_KEY, 'true'); } catch (e) { /* private browsing */ }
+    try { StorageUtil.set(STORAGE_KEY, 'true'); } catch (e) { /* private browsing */ }
   }
 
   function onKeyDown(e) {
@@ -319,12 +319,12 @@ var FeatureTour = (function () {
 
   /** Whether the user has completed the tour before. */
   function hasCompleted() {
-    try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch (e) { return false; }
+    try { return StorageUtil.get(STORAGE_KEY) === 'true'; } catch (e) { return false; }
   }
 
   /** Reset the completed flag (for testing or re-prompting). */
   function reset() {
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* noop */ }
+    try { StorageUtil.remove(STORAGE_KEY); } catch (e) { /* noop */ }
   }
 
   // ── Init: bind trigger button ────────────────────────────────────

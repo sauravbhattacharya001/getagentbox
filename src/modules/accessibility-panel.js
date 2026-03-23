@@ -11,20 +11,17 @@ var AccessibilityPanel = (function () {
   let _isOpen = false;
 
   function load() {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        _prefs = {};
-        for (var key in DEFAULTS) { if (DEFAULTS.hasOwnProperty(key)) { _prefs[key] = parsed.hasOwnProperty(key) ? parsed[key] : DEFAULTS[key]; } }
-        return;
-      }
-    } catch (e) { /* noop */ }
+    const parsed = StorageUtil.getJSON(STORAGE_KEY, null);
+    if (parsed) {
+      _prefs = {};
+      for (var key in DEFAULTS) { if (DEFAULTS.hasOwnProperty(key)) { _prefs[key] = parsed.hasOwnProperty(key) ? parsed[key] : DEFAULTS[key]; } }
+      return;
+    }
     _prefs = {};
     for (var k in DEFAULTS) { if (DEFAULTS.hasOwnProperty(k)) _prefs[k] = DEFAULTS[k]; }
   }
 
-  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(_prefs)); } catch (e) { /* noop */ } }
+  function save() { StorageUtil.setJSON(STORAGE_KEY, _prefs); }
 
   function applyAll() {
     let html = document.documentElement;

@@ -195,17 +195,12 @@ var Roadmap = (function () {
           };
         }
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (_) {
-      /* localStorage unavailable */
+      StorageUtil.setJSON(STORAGE_KEY, data);
     }
   }
 
   function restoreVotes() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
+      const parsed = StorageUtil.getJSON(STORAGE_KEY, null);
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
       // Rebuild as prototype-safe map with validated entries
       const data = Object.create(null);
@@ -233,9 +228,6 @@ var Roadmap = (function () {
           btn.setAttribute('aria-pressed', 'true');
         }
       }
-    } catch (_) {
-      /* localStorage unavailable or corrupted */
-    }
   }
 
   return {

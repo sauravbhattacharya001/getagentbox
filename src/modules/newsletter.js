@@ -43,9 +43,7 @@ var Newsletter = (function () {
 
       setTimeout(function () {
         subs.push(email);
-        try {
-          localStorage.setItem('agentbox_newsletter', JSON.stringify(subs));
-        } catch (_) { /* ignore */ }
+        StorageUtil.setJSON('agentbox_newsletter', subs);
 
         showStatus(status, 'You\'re in! Welcome aboard. 🚀', 'success');
         btn.textContent = 'Subscribed ✓';
@@ -73,19 +71,14 @@ var Newsletter = (function () {
   }
 
   function getSubscribers() {
-    try {
-      const data = localStorage.getItem('agentbox_newsletter');
-      if (!data) return [];
-      const parsed = JSON.parse(data);
-      // Validate: must be an array of strings (email addresses)
-      if (!Array.isArray(parsed)) return [];
-      const safe = [];
-      for (var i = 0; i < parsed.length; i++) {
-        if (typeof parsed[i] === 'string') safe.push(parsed[i]);
-      }
-      return safe;
-    } catch (_) {
-      return [];
+    const parsed = StorageUtil.getJSON('agentbox_newsletter', []);
+    // Validate: must be an array of strings (email addresses)
+    if (!Array.isArray(parsed)) return [];
+    const safe = [];
+    for (var i = 0; i < parsed.length; i++) {
+      if (typeof parsed[i] === 'string') safe.push(parsed[i]);
+    }
+    return safe;
     }
   }
 
