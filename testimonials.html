@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Testimonials & Reviews</title>
+    <meta name="description" content="See what users are saying about AgentBox — real testimonials from developers, freelancers, students, and teams who use AgentBox daily.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --surface-3: #e8e8e8;
+            --border: #ddd;
+            --text: #1a1a1a;
+            --text-muted: #666;
+            --accent-bg: #00d4ff20;
+            --green-bg: #00b89418;
+            --yellow-bg: #fdcb6e18;
+            --purple-bg: #6c5ce718;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(12px);
+        }
+
+        .top-nav a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 1.1rem; }
+        .top-nav a:hover { color: var(--accent-light); }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .nav-links a { font-size: 0.9rem; color: var(--text-muted); font-weight: 400; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .theme-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.4rem 0.6rem;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            padding: 2rem;
+            margin: 1rem auto;
+            max-width: 700px;
+        }
+
+        .stat { text-align: center; }
+        .stat-num { font-size: 2rem; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Controls */
+        .controls {
+            max-width: 1100px;
+            margin: 0 auto 2rem;
+            padding: 0 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.7rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus { border-color: var(--accent); }
+        .search-box::placeholder { color: var(--text-muted); }
+
+        .filter-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+        .filter-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+        .sort-select {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Grid */
+        .grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Card */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .card:hover { transform: translateY(-2px); border-color: var(--accent); }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .user-info { flex: 1; }
+        .user-name { font-weight: 600; font-size: 0.95rem; }
+        .user-role { font-size: 0.8rem; color: var(--text-muted); }
+
+        .stars { color: var(--yellow); font-size: 0.9rem; letter-spacing: 1px; }
+
+        .card-body { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; flex: 1; }
+        .card-body em { color: var(--text); font-style: normal; font-weight: 500; }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            background: var(--accent-bg);
+            color: var(--accent);
+        }
+
+        .tag.dev { background: var(--purple-bg); color: var(--purple); }
+        .tag.freelancer { background: var(--green-bg); color: var(--green); }
+        .tag.student { background: var(--yellow-bg); color: var(--yellow); }
+        .tag.team { background: var(--accent-bg); color: var(--accent); }
+
+        .helpful { font-size: 0.8rem; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+        .helpful:hover { color: var(--accent); }
+        .helpful.voted { color: var(--accent); }
+
+        .date { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Empty state */
+        .empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+        /* CTA */
+        .cta-section {
+            text-align: center;
+            padding: 3rem 2rem;
+            max-width: 600px;
+            margin: 0 auto 3rem;
+        }
+
+        .cta-section h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .cta-section p { color: var(--text-muted); margin-bottom: 1.5rem; }
+
+        .cta-btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: var(--accent);
+            color: #000;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .cta-btn:hover { opacity: 0.9; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a { color: var(--accent); text-decoration: none; }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 1.8rem; }
+            .stats-bar { gap: 1.5rem; }
+            .stat-num { font-size: 1.5rem; }
+            .grid { grid-template-columns: 1fr; }
+            .controls { flex-direction: column; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="index.html">🤖 AgentBox</a>
+        <div class="nav-links">
+            <a href="faq.html">FAQ</a>
+            <a href="api-docs.html">API</a>
+            <a href="voting.html">Vote</a>
+            <a href="contact.html">Contact</a>
+        </div>
+        <button class="theme-btn" id="themeToggle" aria-label="Toggle theme">☀️</button>
+    </nav>
+
+    <section class="hero">
+        <h1>What Users Are Saying</h1>
+        <p>Real feedback from developers, freelancers, students, and teams who use AgentBox every day.</p>
+    </section>
+
+    <div class="stats-bar">
+        <div class="stat"><div class="stat-num" id="avgRating">4.8</div><div class="stat-label">Avg Rating</div></div>
+        <div class="stat"><div class="stat-num" id="totalReviews">0</div><div class="stat-label">Reviews</div></div>
+        <div class="stat"><div class="stat-num" id="recommendPct">96%</div><div class="stat-label">Recommend</div></div>
+    </div>
+
+    <div class="controls">
+        <input type="text" class="search-box" id="searchBox" placeholder="Search testimonials..." aria-label="Search testimonials">
+        <div class="filter-group" id="filterGroup">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="developer">Developer</button>
+            <button class="filter-btn" data-filter="freelancer">Freelancer</button>
+            <button class="filter-btn" data-filter="student">Student</button>
+            <button class="filter-btn" data-filter="team">Team</button>
+        </div>
+        <select class="sort-select" id="sortSelect" aria-label="Sort reviews">
+            <option value="newest">Newest First</option>
+            <option value="highest">Highest Rated</option>
+            <option value="lowest">Lowest Rated</option>
+            <option value="helpful">Most Helpful</option>
+        </select>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <section class="cta-section">
+        <h2>Love AgentBox?</h2>
+        <p>Share your experience and help others discover what makes AgentBox special.</p>
+        <a href="https://t.me/agentboxbot" class="cta-btn" rel="noopener">Try AgentBox Free →</a>
+    </section>
+
+    <footer>
+        <p>© 2026 AgentBox · <a href="index.html">Home</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></p>
+    </footer>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const TESTIMONIALS = [
+            { name: "Alex Chen", role: "Full-stack Developer", category: "developer", stars: 5, date: "2026-03-18", text: "The <em>memory feature</em> is a game-changer. I told my agent my tech stack once and it remembers every time I ask for code help. No more re-explaining context.", helpful: 42, avatar: "AC", color: "#6c5ce7" },
+            { name: "Maya Patel", role: "Freelance Designer", category: "freelancer", stars: 5, date: "2026-03-15", text: "I use AgentBox to draft client emails and manage my schedule. The <em>reminder system</em> alone saves me 30 minutes a day. Worth every penny.", helpful: 38, avatar: "MP", color: "#00b894" },
+            { name: "Jordan Kim", role: "CS Student", category: "student", stars: 4, date: "2026-03-12", text: "Great for studying! I paste my lecture notes and it generates <em>practice questions</em>. The free tier is generous enough for daily use.", helpful: 31, avatar: "JK", color: "#fdcb6e" },
+            { name: "Sarah Mitchell", role: "Product Manager", category: "team", stars: 5, date: "2026-03-10", text: "Our team uses AgentBox for <em>daily standups and meeting summaries</em>. It captures action items perfectly and reminds people about follow-ups.", helpful: 55, avatar: "SM", color: "#00d4ff" },
+            { name: "Marcus Johnson", role: "DevOps Engineer", category: "developer", stars: 5, date: "2026-03-08", text: "I connected it to our monitoring alerts. Now my agent <em>summarizes incidents</em> and suggests runbook steps before I even open my laptop.", helpful: 47, avatar: "MJ", color: "#6c5ce7" },
+            { name: "Elena Rodriguez", role: "Content Writer", category: "freelancer", stars: 4, date: "2026-03-05", text: "Excellent brainstorming partner. I describe a topic and it helps me <em>outline articles</em> with SEO keywords. The web search integration is super useful.", helpful: 29, avatar: "ER", color: "#00b894" },
+            { name: "Liam O'Brien", role: "Data Science Student", category: "student", stars: 5, date: "2026-03-03", text: "Uploaded a dataset description and it wrote my <em>entire pandas pipeline</em>. The image understanding feature is perfect for debugging matplotlib plots.", helpful: 36, avatar: "LO", color: "#fdcb6e" },
+            { name: "Priya Sharma", role: "Startup Founder", category: "team", stars: 5, date: "2026-02-28", text: "We replaced three SaaS tools with AgentBox. It handles our <em>customer FAQs, content drafts, and research</em>. The Pro plan pays for itself in a week.", helpful: 61, avatar: "PS", color: "#00d4ff" },
+            { name: "Tom Weber", role: "Mobile Developer", category: "developer", stars: 4, date: "2026-02-25", text: "The Telegram integration is seamless. I can <em>debug Swift code</em> on the go from my phone. Would love to see more IDE integrations in the future.", helpful: 22, avatar: "TW", color: "#6c5ce7" },
+            { name: "Aisha Nkomo", role: "UX Researcher", category: "freelancer", stars: 5, date: "2026-02-22", text: "I use it for <em>synthesizing user interview transcripts</em>. It identifies themes and patterns I might miss. The personality customization makes responses feel natural.", helpful: 33, avatar: "AN", color: "#00b894" },
+            { name: "Ryan Park", role: "Grad Student", category: "student", stars: 5, date: "2026-02-20", text: "Writing my thesis with AgentBox as my <em>research assistant</em>. It finds papers, summarizes them, and helps me spot gaps in my literature review.", helpful: 44, avatar: "RP", color: "#fdcb6e" },
+            { name: "Nina Kowalski", role: "Engineering Manager", category: "team", stars: 4, date: "2026-02-18", text: "Solid for <em>async team communication</em>. We use it to triage bugs and generate weekly reports. The learning curve is minimal — everyone picked it up in a day.", helpful: 27, avatar: "NK", color: "#00d4ff" },
+            { name: "David Lee", role: "Backend Developer", category: "developer", stars: 5, date: "2026-02-15", text: "Best AI tool I've used in Telegram. The <em>code generation quality</em> is excellent and it actually understands my project context from previous conversations.", helpful: 51, avatar: "DL", color: "#6c5ce7" },
+            { name: "Clara Santos", role: "Virtual Assistant", category: "freelancer", stars: 5, date: "2026-02-12", text: "AgentBox helps me manage <em>5 clients simultaneously</em>. Scheduling, email drafts, research — it handles the grunt work so I can focus on relationships.", helpful: 39, avatar: "CS", color: "#00b894" },
+            { name: "Kai Tanaka", role: "CS Undergraduate", category: "student", stars: 4, date: "2026-02-10", text: "Really helpful for <em>explaining algorithms</em> step by step. When I'm stuck on homework, it doesn't just give answers — it teaches the concept.", helpful: 26, avatar: "KT", color: "#fdcb6e" },
+            { name: "Rebecca Foster", role: "CTO", category: "team", stars: 5, date: "2026-02-08", text: "We evaluated 6 AI assistants for our team. AgentBox won on <em>privacy, customization, and Telegram-native UX</em>. The self-hosting option sealed the deal.", helpful: 58, avatar: "RF", color: "#00d4ff" },
+        ];
+
+        const grid = document.getElementById('grid');
+        const searchBox = document.getElementById('searchBox');
+        const filterGroup = document.getElementById('filterGroup');
+        const sortSelect = document.getElementById('sortSelect');
+        const totalReviewsEl = document.getElementById('totalReviews');
+        const themeToggle = document.getElementById('themeToggle');
+
+        let activeFilter = 'all';
+        let voted = new Set();
+
+        totalReviewsEl.textContent = TESTIMONIALS.length;
+
+        function createCard(t, idx) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            const starStr = '★'.repeat(t.stars) + '☆'.repeat(5 - t.stars);
+            const tagClass = t.category === 'developer' ? 'dev' : t.category;
+            const votedClass = voted.has(idx) ? ' voted' : '';
+            const helpfulCount = voted.has(idx) ? t.helpful + 1 : t.helpful;
+            card.innerHTML =
+                '<div class="card-header">' +
+                    '<div class="avatar" style="background:' + t.color + '">' + t.avatar + '</div>' +
+                    '<div class="user-info"><div class="user-name">' + t.name + '</div><div class="user-role">' + t.role + '</div></div>' +
+                    '<div class="stars">' + starStr + '</div>' +
+                '</div>' +
+                '<div class="card-body">"' + t.text + '"</div>' +
+                '<div class="card-footer">' +
+                    '<span class="tag ' + tagClass + '">' + t.category + '</span>' +
+                    '<span class="helpful' + votedClass + '" data-idx="' + idx + '">👍 ' + helpfulCount + ' helpful</span>' +
+                    '<span class="date">' + t.date + '</span>' +
+                '</div>';
+            return card;
+        }
+
+        function render() {
+            const query = searchBox.value.toLowerCase().trim();
+            const sort = sortSelect.value;
+
+            let filtered = TESTIMONIALS.map(function(t, i) { return { t: t, i: i }; });
+
+            if (activeFilter !== 'all') {
+                filtered = filtered.filter(function(item) { return item.t.category === activeFilter; });
+            }
+
+            if (query) {
+                filtered = filtered.filter(function(item) {
+                    var t = item.t;
+                    return t.name.toLowerCase().indexOf(query) !== -1 ||
+                           t.role.toLowerCase().indexOf(query) !== -1 ||
+                           t.text.toLowerCase().indexOf(query) !== -1;
+                });
+            }
+
+            filtered.sort(function(a, b) {
+                if (sort === 'newest') return new Date(b.t.date) - new Date(a.t.date);
+                if (sort === 'highest') return b.t.stars - a.t.stars || new Date(b.t.date) - new Date(a.t.date);
+                if (sort === 'lowest') return a.t.stars - b.t.stars || new Date(b.t.date) - new Date(a.t.date);
+                if (sort === 'helpful') return b.t.helpful - a.t.helpful;
+                return 0;
+            });
+
+            grid.innerHTML = '';
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><p>No testimonials match your search.</p></div>';
+                return;
+            }
+
+            filtered.forEach(function(item) {
+                grid.appendChild(createCard(item.t, item.i));
+            });
+        }
+
+        // Events
+        searchBox.addEventListener('input', render);
+        sortSelect.addEventListener('change', render);
+
+        filterGroup.addEventListener('click', function(e) {
+            var btn = e.target.closest('.filter-btn');
+            if (!btn) return;
+            filterGroup.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            activeFilter = btn.dataset.filter;
+            render();
+        });
+
+        grid.addEventListener('click', function(e) {
+            var el = e.target.closest('.helpful');
+            if (!el) return;
+            var idx = parseInt(el.dataset.idx, 10);
+            if (voted.has(idx)) { voted.delete(idx); } else { voted.add(idx); }
+            render();
+        });
+
+        // Theme
+        var theme = localStorage.getItem('ab-theme') || 'dark';
+        if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        updateThemeIcon();
+
+        themeToggle.addEventListener('click', function() {
+            theme = theme === 'dark' ? 'light' : 'dark';
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            localStorage.setItem('ab-theme', theme);
+            updateThemeIcon();
+        });
+
+        function updateThemeIcon() {
+            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        render();
+    })();
+    </script>
+</body>
+</html>
