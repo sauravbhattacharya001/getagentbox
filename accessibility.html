@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Statement - AgentBox</title>
+    <meta name="description" content="AgentBox Accessibility Statement — our commitment to digital accessibility and inclusive design for all users.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="site-nav" id="siteNav" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo" aria-label="Back to home">🤖 AgentBox</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Toggle theme">
+                <span class="theme-icon" id="themeIcon">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="legal-page">
+        <div class="legal-container">
+            <h1>Accessibility Statement</h1>
+            <p class="legal-updated">Last updated: March 24, 2026</p>
+
+            <nav class="legal-toc" aria-label="Table of contents">
+                <h2>Contents</h2>
+                <ol>
+                    <li><a href="#commitment">Our Commitment</a></li>
+                    <li><a href="#standards">Standards We Follow</a></li>
+                    <li><a href="#features">Accessibility Features</a></li>
+                    <li><a href="#assistive">Assistive Technology Support</a></li>
+                    <li><a href="#known-issues">Known Limitations</a></li>
+                    <li><a href="#testing">How We Test</a></li>
+                    <li><a href="#feedback">Feedback &amp; Contact</a></li>
+                    <li><a href="#enforcement">Enforcement &amp; Complaints</a></li>
+                </ol>
+            </nav>
+
+            <section id="commitment">
+                <h2>1. Our Commitment</h2>
+                <p>AgentBox is committed to ensuring digital accessibility for people of all abilities. We believe that everyone — regardless of disability, impairment, or assistive technology — should be able to use our products and services with ease.</p>
+                <p>We continually improve the user experience for everyone and apply relevant accessibility standards across our website and Telegram-based agent interface.</p>
+            </section>
+
+            <section id="standards">
+                <h2>2. Standards We Follow</h2>
+                <p>We aim to conform to the <strong>Web Content Accessibility Guidelines (WCAG) 2.1</strong> at Level AA. These guidelines cover a wide range of recommendations for making web content more accessible, including:</p>
+                <ul>
+                    <li><strong>Perceivable</strong> — Information and UI components must be presentable in ways users can perceive (text alternatives, captions, adaptable layouts, sufficient contrast).</li>
+                    <li><strong>Operable</strong> — UI components and navigation must be operable (keyboard accessible, enough time, no seizure triggers, clear navigation).</li>
+                    <li><strong>Understandable</strong> — Information and UI operation must be understandable (readable, predictable, input assistance).</li>
+                    <li><strong>Robust</strong> — Content must be robust enough to work with current and future assistive technologies.</li>
+                </ul>
+            </section>
+
+            <section id="features">
+                <h2>3. Accessibility Features</h2>
+                <p>Our website and product include the following accessibility features:</p>
+
+                <h3>Navigation &amp; Structure</h3>
+                <ul>
+                    <li>Semantic HTML throughout all pages (<code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;section&gt;</code>, headings hierarchy)</li>
+                    <li>Skip-to-content links where applicable</li>
+                    <li>ARIA landmarks and labels for screen readers</li>
+                    <li>Keyboard-navigable menus and interactive elements</li>
+                    <li>Visible focus indicators on all focusable elements</li>
+                </ul>
+
+                <h3>Visual Design</h3>
+                <ul>
+                    <li>Light and dark mode toggle to suit different visual needs</li>
+                    <li>Color contrast ratios meeting WCAG AA minimums (4.5:1 for normal text, 3:1 for large text)</li>
+                    <li>Responsive design that adapts to zoom levels up to 200%</li>
+                    <li>No information conveyed solely through color</li>
+                    <li>Resizable text without loss of functionality</li>
+                </ul>
+
+                <h3>Content</h3>
+                <ul>
+                    <li>Descriptive alt text for meaningful images</li>
+                    <li>Clear link text that makes sense out of context</li>
+                    <li>Plain language wherever possible</li>
+                    <li>Consistent navigation across pages</li>
+                </ul>
+
+                <h3>Telegram Agent</h3>
+                <ul>
+                    <li>Text-based interface compatible with all screen readers</li>
+                    <li>No time limits on interactions</li>
+                    <li>Clear, structured responses from the AI agent</li>
+                    <li>Works with Telegram's built-in accessibility features</li>
+                </ul>
+            </section>
+
+            <section id="assistive">
+                <h2>4. Assistive Technology Support</h2>
+                <p>AgentBox is designed to work with the following assistive technologies:</p>
+                <table class="accessibility-table" role="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Technology</th>
+                            <th scope="col">Platform</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>NVDA</td>
+                            <td>Windows</td>
+                            <td>✅ Supported</td>
+                        </tr>
+                        <tr>
+                            <td>JAWS</td>
+                            <td>Windows</td>
+                            <td>✅ Supported</td>
+                        </tr>
+                        <tr>
+                            <td>VoiceOver</td>
+                            <td>macOS / iOS</td>
+                            <td>✅ Supported</td>
+                        </tr>
+                        <tr>
+                            <td>TalkBack</td>
+                            <td>Android</td>
+                            <td>✅ Supported</td>
+                        </tr>
+                        <tr>
+                            <td>Dragon NaturallySpeaking</td>
+                            <td>Windows</td>
+                            <td>✅ Supported</td>
+                        </tr>
+                        <tr>
+                            <td>Switch Access</td>
+                            <td>Android / ChromeOS</td>
+                            <td>✅ Supported</td>
+                        </tr>
+                        <tr>
+                            <td>Keyboard-only navigation</td>
+                            <td>All platforms</td>
+                            <td>✅ Supported</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="known-issues">
+                <h2>5. Known Limitations</h2>
+                <p>While we strive for full accessibility, some areas are still being improved:</p>
+                <ul>
+                    <li><strong>Third-party embeds:</strong> Some embedded content (e.g., video players, analytics widgets) may not fully meet accessibility standards. We work with vendors to improve this.</li>
+                    <li><strong>PDF documents:</strong> Older PDF resources may not be fully tagged for screen readers. We are converting these to accessible HTML where possible.</li>
+                    <li><strong>Complex data visualizations:</strong> Charts on the ROI Calculator and Status pages include text alternatives, but may not convey all nuances to screen reader users.</li>
+                </ul>
+                <p>We actively track and resolve accessibility issues. If you encounter a barrier, please let us know.</p>
+            </section>
+
+            <section id="testing">
+                <h2>6. How We Test</h2>
+                <p>Our accessibility testing process includes:</p>
+                <ul>
+                    <li><strong>Automated scanning</strong> using axe-core, Lighthouse, and WAVE</li>
+                    <li><strong>Manual testing</strong> with keyboard navigation and screen readers (NVDA, VoiceOver)</li>
+                    <li><strong>Browser testing</strong> across Chrome, Firefox, Safari, and Edge</li>
+                    <li><strong>Periodic audits</strong> when major features or pages are added</li>
+                    <li><strong>User feedback</strong> incorporated into continuous improvement</li>
+                </ul>
+            </section>
+
+            <section id="feedback">
+                <h2>7. Feedback &amp; Contact</h2>
+                <p>We welcome your feedback on the accessibility of AgentBox. If you encounter any barriers or have suggestions, please contact us:</p>
+                <ul>
+                    <li><strong>Email:</strong> <a href="mailto:accessibility@getagentbox.com">accessibility@getagentbox.com</a></li>
+                    <li><strong>General support:</strong> <a href="contact.html">Contact page</a></li>
+                </ul>
+                <p>We aim to respond to accessibility feedback within <strong>5 business days</strong> and to resolve reported issues within <strong>30 days</strong> where feasible.</p>
+            </section>
+
+            <section id="enforcement">
+                <h2>8. Enforcement &amp; Complaints</h2>
+                <p>If you are not satisfied with our response to your accessibility concern, you may escalate through:</p>
+                <ul>
+                    <li>Your national disability rights organization</li>
+                    <li>The relevant government enforcement body in your jurisdiction</li>
+                    <li>In the US: <a href="https://www.ada.gov/file-a-complaint/" rel="noopener noreferrer" target="_blank">File an ADA complaint</a></li>
+                    <li>In the EU: Contact your country's national enforcement body under the <a href="https://eur-lex.europa.eu/eli/dir/2016/2102/oj" rel="noopener noreferrer" target="_blank">Web Accessibility Directive</a></li>
+                </ul>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <p>&copy; 2026 AgentBox. All rights reserved.</p>
+            <nav aria-label="Footer navigation">
+                <a href="privacy.html">Privacy</a>
+                <a href="terms.html">Terms</a>
+                <a href="accessibility.html" aria-current="page">Accessibility</a>
+                <a href="contact.html">Contact</a>
+            </nav>
+        </div>
+    </footer>
+
+    <script>
+        // Theme toggle (consistent with other pages)
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        function setTheme(dark) {
+            document.body.classList.toggle('dark-mode', dark);
+            themeIcon.textContent = dark ? '🌙' : '☀️';
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+        }
+        themeToggle.addEventListener('click', () => {
+            setTheme(!document.body.classList.contains('dark-mode'));
+        });
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            setTheme(true);
+        }
+    </script>
+</body>
+</html>
