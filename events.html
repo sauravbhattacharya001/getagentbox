@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'; worker-src 'none';">
+    <title>Events &amp; Webinars - AgentBox</title>
+    <meta name="description" content="Join AgentBox webinars, workshops, and community meetups. Learn AI agent best practices from the team and community.">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .events-hero {
+            text-align: center;
+            padding: 6rem 2rem 3rem;
+            background: linear-gradient(135deg, var(--color-bg) 0%, rgba(0, 212, 255, 0.05) 100%);
+        }
+        .events-hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .events-hero p {
+            color: var(--color-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .events-filters {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 1.5rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .events-filter-btn {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .events-filter-btn:hover,
+        .events-filter-btn.active {
+            background: var(--color-accent);
+            color: #fff;
+            border-color: var(--color-accent);
+        }
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 4rem;
+        }
+        .event-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .event-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .event-card-header {
+            padding: 1.5rem 1.5rem 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+        .event-date-badge {
+            background: var(--color-accent);
+            color: #fff;
+            border-radius: 10px;
+            padding: 0.5rem 0.6rem;
+            text-align: center;
+            min-width: 56px;
+            flex-shrink: 0;
+        }
+        .event-date-badge .month {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+        .event-date-badge .day {
+            font-size: 1.4rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .event-info h3 {
+            font-size: 1.15rem;
+            margin-bottom: 0.3rem;
+        }
+        .event-meta {
+            color: var(--color-muted);
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+        .event-card-body {
+            padding: 0.5rem 1.5rem 1rem;
+        }
+        .event-card-body p {
+            color: var(--color-muted);
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+        .event-tags {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+        .event-tag {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--color-accent);
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-weight: 500;
+        }
+        .event-card-footer {
+            padding: 0 1.5rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .event-status {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+        }
+        .event-status.upcoming {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+        }
+        .event-status.live {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            animation: pulse-live 2s infinite;
+        }
+        .event-status.past {
+            background: rgba(149, 165, 166, 0.15);
+            color: #95a5a6;
+        }
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .event-cta {
+            background: var(--color-accent);
+            color: #fff;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .event-cta:hover { opacity: 0.85; }
+        .event-cta.past-cta {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+        .events-empty {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--color-muted);
+        }
+        .events-subscribe {
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            text-align: center;
+            padding: 2rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+        }
+        .events-subscribe h2 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+        .events-subscribe p {
+            color: var(--color-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .subscribe-row {
+            display: flex;
+            gap: 0.5rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .subscribe-row input {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-size: 0.9rem;
+        }
+        .subscribe-row button {
+            background: var(--color-accent);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .back-link {
+            display: inline-block;
+            margin: 2rem;
+            color: var(--color-accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .events-calendar-link {
+            text-align: center;
+            padding: 0 2rem 2rem;
+        }
+        .events-calendar-link a {
+            color: var(--color-accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .events-calendar-link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Home</a>
+
+    <section class="events-hero">
+        <h1>📅 Events &amp; Webinars</h1>
+        <p>Join live workshops, webinars, and community meetups. Learn AI agent best practices and connect with fellow users.</p>
+    </section>
+
+    <div class="events-filters" id="eventsFilters">
+        <button class="events-filter-btn active" data-filter="all">All</button>
+        <button class="events-filter-btn" data-filter="webinar">Webinars</button>
+        <button class="events-filter-btn" data-filter="workshop">Workshops</button>
+        <button class="events-filter-btn" data-filter="meetup">Meetups</button>
+        <button class="events-filter-btn" data-filter="conference">Conferences</button>
+    </div>
+
+    <div class="events-calendar-link">
+        <a href="#" id="icalLink">📥 Add all events to your calendar (.ics)</a>
+    </div>
+
+    <div class="events-grid" id="eventsGrid"></div>
+
+    <section class="events-subscribe">
+        <h2>Never Miss an Event</h2>
+        <p>Get notified about upcoming webinars, workshops, and community events.</p>
+        <div class="subscribe-row">
+            <input type="email" id="eventEmail" placeholder="your@email.com" aria-label="Email for event notifications">
+            <button id="eventSubscribeBtn">Notify Me</button>
+        </div>
+        <p id="subscribeMsg" style="margin-top:0.75rem; font-size:0.85rem; display:none;"></p>
+    </section>
+
+    <script src="dist/bundle.js"></script>
+    <script src="src/events-page.js"></script>
+</body>
+</html>
