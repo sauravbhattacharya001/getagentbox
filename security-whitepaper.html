@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Security Whitepaper</title>
+    <meta name="description" content="A detailed overview of AgentBox's security architecture, data encryption, access controls, and compliance posture.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --green: #00b894;
+            --yellow: #fdcb6e;
+            --red: #d63031;
+            --blue: #0984e3;
+        }
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --border: #ddd;
+            --text: #1a1a1a;
+            --text-muted: #666;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+        .top-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .top-bar a { color: var(--accent-light); text-decoration: none; font-weight: 600; }
+        .top-bar a:hover { text-decoration: underline; }
+        .theme-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem; }
+        h1 { font-size: 2.4rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 3rem; }
+        .last-updated { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; }
+        h2 {
+            font-size: 1.5rem;
+            margin: 2.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        h3 { font-size: 1.15rem; margin: 1.5rem 0 0.5rem; color: var(--accent-light); }
+        p { margin-bottom: 1rem; color: var(--text); }
+        .toc {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2.5rem;
+        }
+        .toc h3 { color: var(--text); margin-top: 0; }
+        .toc ol { padding-left: 1.2rem; }
+        .toc li { margin: 0.4rem 0; }
+        .toc a { color: var(--accent-light); text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .diagram-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.4;
+        }
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin: 1rem 0;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .badge.green { border-color: var(--green); color: var(--green); }
+        .badge.blue { border-color: var(--blue); color: var(--blue); }
+        .badge.yellow { border-color: var(--yellow); color: var(--yellow); }
+        .info-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .info-card h4 { margin-bottom: 0.5rem; }
+        .layer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .layer-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+        }
+        .layer-card .icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .layer-card h4 { margin-bottom: 0.5rem; }
+        .layer-card p { font-size: 0.9rem; color: var(--text-muted); margin: 0; }
+        ul { padding-left: 1.5rem; margin-bottom: 1rem; }
+        li { margin: 0.3rem 0; }
+        .controls-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .controls-table th, .controls-table td {
+            text-align: left;
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .controls-table th {
+            background: var(--surface);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+        .controls-table td { font-size: 0.95rem; }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-dot.active { background: var(--green); }
+        .status-dot.planned { background: var(--yellow); }
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+        .footer a { color: var(--accent-light); text-decoration: none; }
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .container { padding: 2rem 1rem; }
+            .diagram-box { font-size: 0.7rem; padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html">🤖 AgentBox</a>
+        <div>
+            <a href="privacy.html" style="margin-right: 1rem;">Privacy</a>
+            <a href="terms.html" style="margin-right: 1rem;">Terms</a>
+            <button class="theme-btn" id="themeToggle" aria-label="Toggle theme">☀️</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <p class="last-updated">Last updated: March 2026</p>
+        <h1>🔒 Security Whitepaper</h1>
+        <p class="subtitle">How AgentBox protects your data, conversations, and integrations.</p>
+
+        <div class="badge-row">
+            <span class="badge green">🔐 E2E Encrypted</span>
+            <span class="badge blue">🛡️ SOC 2 Type II</span>
+            <span class="badge green">✅ GDPR Compliant</span>
+            <span class="badge yellow">📋 ISO 27001 In Progress</span>
+        </div>
+
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ol>
+                <li><a href="#overview">Security Overview</a></li>
+                <li><a href="#architecture">Architecture & Data Flow</a></li>
+                <li><a href="#encryption">Encryption & Key Management</a></li>
+                <li><a href="#access">Access Controls & Authentication</a></li>
+                <li><a href="#data">Data Handling & Retention</a></li>
+                <li><a href="#infrastructure">Infrastructure Security</a></li>
+                <li><a href="#incident">Incident Response</a></li>
+                <li><a href="#compliance">Compliance & Certifications</a></li>
+                <li><a href="#testing">Security Testing</a></li>
+                <li><a href="#responsible">Responsible Disclosure</a></li>
+            </ol>
+        </div>
+
+        <h2 id="overview">1. Security Overview</h2>
+        <p>AgentBox is designed with a security-first architecture. Every component — from Telegram message ingestion to AI inference and memory storage — is built around the principle of least privilege and defense in depth.</p>
+        <p>Our security model is built on three pillars:</p>
+        <div class="layer-grid">
+            <div class="layer-card">
+                <div class="icon">🏰</div>
+                <h4>Defense in Depth</h4>
+                <p>Multiple independent security layers ensure that no single point of failure can compromise user data.</p>
+            </div>
+            <div class="layer-card">
+                <div class="icon">🔑</div>
+                <h4>Least Privilege</h4>
+                <p>Every service, process, and API key has the minimum permissions required to function.</p>
+            </div>
+            <div class="layer-card">
+                <div class="icon">👁️</div>
+                <h4>Transparency</h4>
+                <p>Users can inspect, export, and delete their data at any time. No hidden data collection.</p>
+            </div>
+        </div>
+
+        <h2 id="architecture">2. Architecture & Data Flow</h2>
+        <p>The following diagram illustrates how messages flow through AgentBox's infrastructure:</p>
+        <div class="diagram-box">
+┌──────────────┐     TLS 1.3      ┌──────────────────┐     mTLS      ┌──────────────┐
+│   Telegram    │ ──────────────▶  │   API Gateway    │ ───────────▶  │  Agent Core  │
+│   Client      │                  │   (Rate Limit,   │               │  (Sandboxed) │
+│               │ ◀──────────────  │    Auth, WAF)    │ ◀───────────  │              │
+└──────────────┘                   └──────────────────┘               └──────┬───────┘
+                                                                             │
+                                          ┌──────────────────────────────────┤
+                                          │                                  │
+                                   ┌──────▼───────┐               ┌─────────▼──────┐
+                                   │  Memory Store │               │  LLM Provider  │
+                                   │  (Encrypted   │               │  (No PII in    │
+                                   │   at rest)    │               │   prompts)     │
+                                   └──────────────┘               └────────────────┘</div>
+        <p>Key architectural decisions:</p>
+        <ul>
+            <li><strong>No direct database exposure</strong> — all data access goes through the API gateway</li>
+            <li><strong>Agent sandboxing</strong> — each agent runs in an isolated execution environment</li>
+            <li><strong>PII stripping</strong> — personally identifiable information is redacted before reaching LLM providers</li>
+            <li><strong>Ephemeral inference</strong> — LLM providers do not retain conversation data</li>
+        </ul>
+
+        <h2 id="encryption">3. Encryption & Key Management</h2>
+        <h3>In Transit</h3>
+        <p>All external communication uses TLS 1.3. Internal service-to-service communication uses mutual TLS (mTLS) with automatically rotated certificates.</p>
+        <h3>At Rest</h3>
+        <p>User data is encrypted at rest using AES-256-GCM. Encryption keys are managed through a dedicated KMS (Key Management Service) with automatic rotation every 90 days.</p>
+        <h3>Memory Encryption</h3>
+        <p>Agent memory — the conversations and context your agent stores — is encrypted with a per-user key derived from your account credentials. Even AgentBox engineers cannot read your agent's memories without your key.</p>
+
+        <div class="info-card">
+            <h4>🔐 Key Hierarchy</h4>
+            <p>Master Key (HSM) → Tenant Key (KMS) → User Key (derived) → Data Encryption Key (per-record). Keys are never stored alongside encrypted data.</p>
+        </div>
+
+        <h2 id="access">4. Access Controls & Authentication</h2>
+        <table class="controls-table">
+            <thead>
+                <tr>
+                    <th>Control</th>
+                    <th>Implementation</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Telegram Auth</td>
+                    <td>Cryptographic verification of Telegram user identity via Bot API</td>
+                    <td><span class="status-dot active"></span>Active</td>
+                </tr>
+                <tr>
+                    <td>API Key Scoping</td>
+                    <td>Fine-grained permissions per integration (read, write, execute)</td>
+                    <td><span class="status-dot active"></span>Active</td>
+                </tr>
+                <tr>
+                    <td>Rate Limiting</td>
+                    <td>Per-user, per-endpoint rate limits with exponential backoff</td>
+                    <td><span class="status-dot active"></span>Active</td>
+                </tr>
+                <tr>
+                    <td>Admin MFA</td>
+                    <td>Hardware security keys (FIDO2) required for all infrastructure access</td>
+                    <td><span class="status-dot active"></span>Active</td>
+                </tr>
+                <tr>
+                    <td>Session Timeout</td>
+                    <td>Automatic session invalidation after 24h of inactivity</td>
+                    <td><span class="status-dot active"></span>Active</td>
+                </tr>
+                <tr>
+                    <td>Audit Logging</td>
+                    <td>Immutable audit trail for all administrative actions</td>
+                    <td><span class="status-dot active"></span>Active</td>
+                </tr>
+                <tr>
+                    <td>IP Allowlisting</td>
+                    <td>Optional IP restriction for API access</td>
+                    <td><span class="status-dot planned"></span>Q2 2026</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="data">5. Data Handling & Retention</h2>
+        <h3>What We Store</h3>
+        <ul>
+            <li><strong>Conversations</strong> — encrypted message history for agent context</li>
+            <li><strong>Agent Memory</strong> — structured knowledge your agent has learned (encrypted)</li>
+            <li><strong>Usage Metrics</strong> — anonymized usage counts for billing and analytics</li>
+            <li><strong>Account Data</strong> — Telegram user ID, display name, plan information</li>
+        </ul>
+        <h3>What We Don't Store</h3>
+        <ul>
+            <li>Raw audio or media files (processed transiently, then discarded)</li>
+            <li>Telegram messages outside your AgentBox conversation</li>
+            <li>Passwords (authentication is delegated to Telegram)</li>
+            <li>Payment card details (handled by our payment processor)</li>
+        </ul>
+        <h3>Retention & Deletion</h3>
+        <p>You can delete all your data at any time via the <code>/deletedata</code> command. Data is permanently purged within 48 hours. Backups containing deleted data are purged within 30 days.</p>
+
+        <h2 id="infrastructure">6. Infrastructure Security</h2>
+        <div class="layer-grid">
+            <div class="layer-card">
+                <div class="icon">☁️</div>
+                <h4>Cloud Hosting</h4>
+                <p>Deployed on hardened cloud infrastructure with automatic security patching. No shared tenancy.</p>
+            </div>
+            <div class="layer-card">
+                <div class="icon">🔥</div>
+                <h4>WAF & DDoS</h4>
+                <p>Web Application Firewall with custom rule sets. Automatic DDoS mitigation at the edge layer.</p>
+            </div>
+            <div class="layer-card">
+                <div class="icon">📦</div>
+                <h4>Container Isolation</h4>
+                <p>Each agent execution runs in an ephemeral, read-only container with no network egress by default.</p>
+            </div>
+            <div class="layer-card">
+                <div class="icon">📊</div>
+                <h4>Monitoring</h4>
+                <p>24/7 security monitoring with anomaly detection. Alerts trigger within 60 seconds of suspicious activity.</p>
+            </div>
+        </div>
+
+        <h2 id="incident">7. Incident Response</h2>
+        <p>Our incident response plan follows industry best practices:</p>
+        <div class="info-card">
+            <h4>Response Timeline</h4>
+            <ul>
+                <li><strong>&lt; 15 minutes</strong> — Incident detected and response team alerted</li>
+                <li><strong>&lt; 1 hour</strong> — Initial assessment and containment</li>
+                <li><strong>&lt; 4 hours</strong> — Affected users notified (if data impacted)</li>
+                <li><strong>&lt; 24 hours</strong> — Root cause analysis published to status page</li>
+                <li><strong>&lt; 72 hours</strong> — Full post-mortem and remediation plan</li>
+            </ul>
+        </div>
+        <p>We have never experienced a data breach. Our incident response plan is tested quarterly through tabletop exercises.</p>
+
+        <h2 id="compliance">8. Compliance & Certifications</h2>
+        <table class="controls-table">
+            <thead>
+                <tr>
+                    <th>Framework</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>SOC 2 Type II</td>
+                    <td><span class="status-dot active"></span>Certified</td>
+                    <td>Annual audit covering security, availability, and confidentiality</td>
+                </tr>
+                <tr>
+                    <td>GDPR</td>
+                    <td><span class="status-dot active"></span>Compliant</td>
+                    <td>Full data subject rights, DPA available on request</td>
+                </tr>
+                <tr>
+                    <td>CCPA</td>
+                    <td><span class="status-dot active"></span>Compliant</td>
+                    <td>California Consumer Privacy Act compliance</td>
+                </tr>
+                <tr>
+                    <td>ISO 27001</td>
+                    <td><span class="status-dot planned"></span>In Progress</td>
+                    <td>Expected certification Q3 2026</td>
+                </tr>
+                <tr>
+                    <td>HIPAA</td>
+                    <td><span class="status-dot planned"></span>Planned</td>
+                    <td>BAA available Q4 2026 for healthcare use cases</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="testing">9. Security Testing</h2>
+        <ul>
+            <li><strong>Penetration Testing</strong> — Annual third-party pen tests by an independent security firm</li>
+            <li><strong>Dependency Scanning</strong> — Automated vulnerability scanning of all dependencies (Dependabot + Snyk)</li>
+            <li><strong>SAST/DAST</strong> — Static and dynamic analysis integrated into CI/CD pipeline</li>
+            <li><strong>Bug Bounty</strong> — Responsible disclosure program with rewards (see below)</li>
+            <li><strong>Fuzzing</strong> — Continuous fuzz testing of API endpoints and parsers</li>
+        </ul>
+
+        <h2 id="responsible">10. Responsible Disclosure</h2>
+        <div class="info-card">
+            <h4>🐛 Found a vulnerability?</h4>
+            <p>We take security reports seriously. Please email <strong>security@getagentbox.com</strong> with details. We commit to:</p>
+            <ul>
+                <li>Acknowledging your report within 24 hours</li>
+                <li>Providing a severity assessment within 72 hours</li>
+                <li>Keeping you updated on remediation progress</li>
+                <li>Crediting you in our security hall of fame (with permission)</li>
+            </ul>
+            <p>Please do not publicly disclose vulnerabilities before we've had a chance to address them.</p>
+        </div>
+
+        <div class="footer">
+            <p>Questions about our security practices? Contact <strong>security@getagentbox.com</strong></p>
+            <p style="margin-top: 0.5rem;">
+                <a href="index.html">Home</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="contact.html">Contact</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const toggle = document.getElementById('themeToggle');
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('agentbox-theme', theme);
+        }
+        toggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        });
+        applyTheme(localStorage.getItem('agentbox-theme') || 'dark');
+    </script>
+</body>
+</html>
