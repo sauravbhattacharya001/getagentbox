@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community - AgentBox</title>
+    <meta name="description" content="Join the AgentBox community. Connect with other users, share workflows, get help, and contribute to the future of personal AI agents.">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .community-hero {
+            text-align: center;
+            padding: 6rem 2rem 4rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .community-hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+        }
+        .community-hero p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .community-channels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+        .channel-card {
+            background: var(--card-bg, #f8f9fa);
+            border: 1px solid var(--border-color, #e0e0e0);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .channel-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .channel-card .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .channel-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+        .channel-card p {
+            opacity: 0.7;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+        .channel-card .btn {
+            display: inline-block;
+            padding: 0.6rem 1.4rem;
+            background: var(--accent-color, #667eea);
+            color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .channel-card .btn:hover {
+            opacity: 0.85;
+        }
+
+        .community-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+        .stat-item {
+            padding: 1.5rem;
+        }
+        .stat-item .number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-item .label {
+            font-size: 0.95rem;
+            opacity: 0.7;
+            margin-top: 0.3rem;
+        }
+
+        .spotlight-section {
+            max-width: 1000px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+        .spotlight-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+        .spotlight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        .spotlight-card {
+            background: var(--card-bg, #f8f9fa);
+            border: 1px solid var(--border-color, #e0e0e0);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        .spotlight-card .quote {
+            font-style: italic;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+        }
+        .spotlight-card .author {
+            font-weight: 600;
+            opacity: 0.8;
+        }
+        .spotlight-card .role {
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+
+        .resources-section {
+            max-width: 1000px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+        .resources-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+        .resources-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .resource-item {
+            background: var(--card-bg, #f8f9fa);
+            border: 1px solid var(--border-color, #e0e0e0);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .resource-item .res-icon {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+        .resource-item h4 {
+            margin: 0 0 0.3rem;
+            font-size: 1.1rem;
+        }
+        .resource-item p {
+            margin: 0;
+            opacity: 0.7;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .guidelines-section {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+        .guidelines-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .guidelines-list {
+            list-style: none;
+            padding: 0;
+        }
+        .guidelines-list li {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color, #e0e0e0);
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        .guidelines-list li:last-child {
+            border-bottom: none;
+        }
+        .guidelines-list .gl-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .guidelines-list .gl-text h4 {
+            margin: 0 0 0.2rem;
+        }
+        .guidelines-list .gl-text p {
+            margin: 0;
+            opacity: 0.7;
+            line-height: 1.5;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 4rem 2rem;
+            max-width: 600px;
+            margin: 2rem auto;
+        }
+        .cta-section h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .cta-section p {
+            opacity: 0.7;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        .cta-section .btn-primary {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .cta-section .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            padding: 2rem;
+            opacity: 0.6;
+            text-decoration: none;
+            color: inherit;
+        }
+        .back-link:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="community-hero">
+        <h1>🌍 Community</h1>
+        <p>AgentBox is built by and for its community. Connect with thousands of users, share your best workflows, get help when you're stuck, and help shape the future of personal AI agents.</p>
+    </div>
+
+    <div class="community-stats">
+        <div class="stat-item">
+            <div class="number">5,000+</div>
+            <div class="label">Active Users</div>
+        </div>
+        <div class="stat-item">
+            <div class="number">12,000+</div>
+            <div class="label">Messages / Month</div>
+        </div>
+        <div class="stat-item">
+            <div class="number">350+</div>
+            <div class="label">Shared Workflows</div>
+        </div>
+        <div class="stat-item">
+            <div class="number">80+</div>
+            <div class="label">Contributors</div>
+        </div>
+    </div>
+
+    <div class="community-channels">
+        <div class="channel-card">
+            <div class="icon">💬</div>
+            <h3>Discord Server</h3>
+            <p>Real-time chat with other users. Get help, share tips, and hang out with the team.</p>
+            <a href="#" class="btn">Join Discord</a>
+        </div>
+        <div class="channel-card">
+            <div class="icon">📣</div>
+            <h3>Telegram Group</h3>
+            <p>Official Telegram community. Product updates, feature discussions, and support.</p>
+            <a href="#" class="btn">Join Telegram</a>
+        </div>
+        <div class="channel-card">
+            <div class="icon">🐙</div>
+            <h3>GitHub</h3>
+            <p>Report bugs, request features, contribute code, and browse the source.</p>
+            <a href="#" class="btn">View GitHub</a>
+        </div>
+    </div>
+
+    <div class="spotlight-section">
+        <h2>✨ Community Spotlight</h2>
+        <div class="spotlight-grid">
+            <div class="spotlight-card">
+                <div class="quote">"I built a workflow that checks my email, summarizes it, and sends me a morning briefing on Telegram. Took 10 minutes to set up."</div>
+                <div class="author">Sarah K.</div>
+                <div class="role">Product Manager · Using AgentBox since Jan 2026</div>
+            </div>
+            <div class="spotlight-card">
+                <div class="quote">"The community helped me figure out how to integrate AgentBox with my calendar. Now I never miss a meeting. The Discord is incredibly helpful."</div>
+                <div class="author">Marco R.</div>
+                <div class="role">Freelance Developer · Community Contributor</div>
+            </div>
+            <div class="spotlight-card">
+                <div class="quote">"I contributed a translation plugin and the team merged it within a day. They really value community input and move fast."</div>
+                <div class="author">Yuki T.</div>
+                <div class="role">Open Source Contributor · 15+ PRs merged</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="resources-section">
+        <h2>📚 Community Resources</h2>
+        <div class="resources-list">
+            <div class="resource-item">
+                <div class="res-icon">📖</div>
+                <div>
+                    <h4>Getting Started Guide</h4>
+                    <p>New to AgentBox? Start here for a step-by-step walkthrough of setting up your agent.</p>
+                </div>
+            </div>
+            <div class="resource-item">
+                <div class="res-icon">🎥</div>
+                <div>
+                    <h4>Video Tutorials</h4>
+                    <p>Community-created video guides covering everything from basics to advanced workflows.</p>
+                </div>
+            </div>
+            <div class="resource-item">
+                <div class="res-icon">🧩</div>
+                <div>
+                    <h4>Workflow Gallery</h4>
+                    <p>Browse and share ready-to-use workflows. One-click import into your agent.</p>
+                </div>
+            </div>
+            <div class="resource-item">
+                <div class="res-icon">📝</div>
+                <div>
+                    <h4>Community Blog</h4>
+                    <p>Articles, tutorials, and case studies written by community members.</p>
+                </div>
+            </div>
+            <div class="resource-item">
+                <div class="res-icon">🏆</div>
+                <div>
+                    <h4>Monthly Challenges</h4>
+                    <p>Compete in monthly prompt and workflow challenges. Win prizes and recognition.</p>
+                </div>
+            </div>
+            <div class="resource-item">
+                <div class="res-icon">🔌</div>
+                <div>
+                    <h4>Plugin Directory</h4>
+                    <p>Community-built plugins and extensions. Extend your agent's capabilities.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="guidelines-section">
+        <h2>🤝 Community Guidelines</h2>
+        <ul class="guidelines-list">
+            <li>
+                <div class="gl-icon">💚</div>
+                <div class="gl-text">
+                    <h4>Be Kind & Respectful</h4>
+                    <p>Treat everyone with respect. We're all here to learn and build together. No harassment, discrimination, or personal attacks.</p>
+                </div>
+            </li>
+            <li>
+                <div class="gl-icon">🔍</div>
+                <div class="gl-text">
+                    <h4>Search Before Asking</h4>
+                    <p>Check the FAQ, docs, and previous discussions before posting a question. It helps keep the community efficient.</p>
+                </div>
+            </li>
+            <li>
+                <div class="gl-icon">🎯</div>
+                <div class="gl-text">
+                    <h4>Stay On Topic</h4>
+                    <p>Keep discussions relevant to AgentBox and AI agents. Use the right channels for different topics.</p>
+                </div>
+            </li>
+            <li>
+                <div class="gl-icon">🔒</div>
+                <div class="gl-text">
+                    <h4>Protect Privacy</h4>
+                    <p>Never share API keys, personal data, or private information. Report any privacy concerns to moderators.</p>
+                </div>
+            </li>
+            <li>
+                <div class="gl-icon">🌱</div>
+                <div class="gl-text">
+                    <h4>Help Others Grow</h4>
+                    <p>Share your knowledge freely. Detailed answers help not just the asker but everyone who finds it later.</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="cta-section">
+        <h2>Ready to Join?</h2>
+        <p>Be part of a growing community of people building the future of personal AI. Whether you're a user, developer, or just curious — there's a place for you.</p>
+        <a href="#" class="btn-primary">Join the Community →</a>
+    </div>
+
+    <a href="index.html" class="back-link">← Back to AgentBox</a>
+</body>
+</html>
