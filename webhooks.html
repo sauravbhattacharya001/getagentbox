@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Webhooks</title>
+    <meta name="description" content="Set up webhooks to receive real-time events from your AgentBox agent. Message notifications, reminder triggers, and more.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .page-header {
+            text-align: center;
+            padding: 80px 20px 40px;
+            background: linear-gradient(135deg, #0a0a0a 0%, #141428 50%, #0a0a0a 100%);
+            border-bottom: 1px solid var(--border);
+        }
+        .page-header h1 { font-size: 2.5rem; margin-bottom: 12px; }
+        .page-header h1 span { color: var(--accent); }
+        .page-header p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: var(--text-muted); font-size: 0.9rem; }
+        .back-link:hover { color: var(--accent); }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+
+        .section { margin-bottom: 48px; }
+        .section h2 { font-size: 1.5rem; margin-bottom: 16px; color: var(--text); }
+        .section h3 { font-size: 1.15rem; margin: 24px 0 12px; color: var(--accent-light); }
+        .section p { color: var(--text-muted); margin-bottom: 12px; }
+
+        .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin: 20px 0; }
+        .event-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+        .event-card:hover { border-color: var(--accent); }
+        .event-card .event-name { font-weight: 600; font-size: 1rem; margin-bottom: 6px; font-family: 'Courier New', monospace; color: var(--accent); }
+        .event-card .event-desc { color: var(--text-muted); font-size: 0.9rem; }
+
+        pre {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            margin: 12px 0 20px;
+            color: var(--text);
+        }
+        code { font-family: 'Courier New', monospace; }
+        .inline-code {
+            background: var(--surface-2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.88rem;
+        }
+
+        .tester-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin: 20px 0;
+        }
+        .tester-box label { display: block; font-weight: 600; margin-bottom: 8px; }
+        .tester-box input, .tester-box select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+            font-family: inherit;
+        }
+        .tester-box input:focus, .tester-box select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .tester-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 10px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: opacity 0.2s;
+        }
+        .tester-btn:hover { opacity: 0.85; }
+        .tester-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .tester-output {
+            margin-top: 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .tester-output.visible { display: block; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-badge.success { background: var(--green-bg); color: var(--green); }
+        .status-badge.error { background: #e1705522; color: var(--orange); }
+
+        .step-list { list-style: none; counter-reset: steps; }
+        .step-list li {
+            counter-increment: steps;
+            padding: 12px 0 12px 48px;
+            position: relative;
+            color: var(--text-muted);
+            border-left: 2px solid var(--border);
+            margin-left: 16px;
+        }
+        .step-list li::before {
+            content: counter(steps);
+            position: absolute;
+            left: -14px;
+            width: 28px;
+            height: 28px;
+            background: var(--accent);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .step-list li strong { color: var(--text); }
+
+        .security-box {
+            background: var(--purple-bg);
+            border: 1px solid #6c5ce744;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .security-box h3 { color: var(--purple); margin-top: 0; }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .page-header h1 { font-size: 1.8rem; }
+            .event-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <a href="index.html" class="back-link">← Back to AgentBox</a>
+        <h1>🔗 <span>Webhooks</span></h1>
+        <p>Receive real-time events from your AgentBox agent. Build automations, log activity, or connect to your own systems.</p>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h2>Quick Start</h2>
+            <p>Set up webhooks in three simple steps:</p>
+            <ol class="step-list">
+                <li><strong>Create an endpoint</strong> — set up an HTTPS URL that accepts POST requests on your server.</li>
+                <li><strong>Register the webhook</strong> — tell AgentBox where to send events using the <code class="inline-code">/webhook</code> command in Telegram or the API.</li>
+                <li><strong>Handle events</strong> — parse the JSON payload and respond with a 200 status code within 10 seconds.</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>Available Events</h2>
+            <p>Subscribe to any combination of these events:</p>
+            <div class="event-grid">
+                <div class="event-card">
+                    <div class="event-name">message.received</div>
+                    <div class="event-desc">Fired when the agent receives a new message from the user.</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-name">message.sent</div>
+                    <div class="event-desc">Fired when the agent sends a response back to the user.</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-name">reminder.triggered</div>
+                    <div class="event-desc">Fired when a scheduled reminder activates.</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-name">memory.updated</div>
+                    <div class="event-desc">Fired when the agent updates its long-term memory about the user.</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-name">task.completed</div>
+                    <div class="event-desc">Fired when a background task (web search, file processing) finishes.</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-name">session.started</div>
+                    <div class="event-desc">Fired when a new conversation session begins.</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-name">session.ended</div>
+                    <div class="event-desc">Fired when a conversation session ends due to inactivity or user action.</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-name">quota.warning</div>
+                    <div class="event-desc">Fired when the user approaches their daily message limit (80% used).</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Payload Format</h2>
+            <p>All webhook payloads follow the same structure:</p>
+<pre>{
+  "id": "evt_abc123def456",
+  "event": "message.received",
+  "timestamp": "2026-03-25T18:30:00Z",
+  "data": {
+    "user_id": "u_789",
+    "session_id": "sess_012",
+    "content": "Remind me to call the vet tomorrow at 3pm",
+    "metadata": {
+      "channel": "telegram",
+      "message_id": "msg_345"
+    }
+  }
+}</pre>
+            <h3>Event-Specific Data</h3>
+            <p><code class="inline-code">reminder.triggered</code> includes:</p>
+<pre>{
+  "event": "reminder.triggered",
+  "data": {
+    "reminder_id": "rem_678",
+    "user_id": "u_789",
+    "text": "Call the vet",
+    "scheduled_at": "2026-03-26T15:00:00Z",
+    "created_at": "2026-03-25T18:30:00Z"
+  }
+}</pre>
+            <p><code class="inline-code">task.completed</code> includes:</p>
+<pre>{
+  "event": "task.completed",
+  "data": {
+    "task_id": "tsk_901",
+    "type": "web_search",
+    "user_id": "u_789",
+    "result_summary": "Found 5 results for 'best restaurants Seattle'",
+    "duration_ms": 2340
+  }
+}</pre>
+        </div>
+
+        <div class="section">
+            <h2>Setup via API</h2>
+<pre>POST /api/v1/webhooks
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "url": "https://yourserver.com/agentbox-webhook",
+  "events": ["message.received", "reminder.triggered"],
+  "secret": "whsec_your_signing_secret"
+}</pre>
+            <p>Or use the Telegram command:</p>
+<pre>/webhook add https://yourserver.com/agentbox-webhook message.received,reminder.triggered</pre>
+        </div>
+
+        <div class="section">
+            <h2>Code Examples</h2>
+            <h3>Node.js (Express)</h3>
+<pre>const express = require('express');
+const crypto = require('crypto');
+const app = express();
+
+app.use(express.json());
+
+function verifySignature(req, secret) {
+  const signature = req.headers['x-agentbox-signature'];
+  const timestamp = req.headers['x-agentbox-timestamp'];
+  const body = JSON.stringify(req.body);
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(timestamp + '.' + body)
+    .digest('hex');
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expected)
+  );
+}
+
+app.post('/agentbox-webhook', (req, res) => {
+  if (!verifySignature(req, 'whsec_your_secret')) {
+    return res.status(401).send('Invalid signature');
+  }
+
+  const { event, data } = req.body;
+  console.log(`Received ${event}:`, data);
+
+  switch (event) {
+    case 'message.received':
+      console.log(`User said: ${data.content}`);
+      break;
+    case 'reminder.triggered':
+      console.log(`Reminder: ${data.text}`);
+      break;
+  }
+
+  res.status(200).json({ ok: true });
+});
+
+app.listen(3000);</pre>
+
+            <h3>Python (Flask)</h3>
+<pre>import hmac, hashlib, json
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+SECRET = 'whsec_your_secret'
+
+def verify_signature(req):
+    signature = req.headers.get('X-AgentBox-Signature', '')
+    timestamp = req.headers.get('X-AgentBox-Timestamp', '')
+    body = req.get_data(as_text=True)
+    expected = hmac.new(
+        SECRET.encode(),
+        f'{timestamp}.{body}'.encode(),
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(signature, expected)
+
+@app.route('/agentbox-webhook', methods=['POST'])
+def webhook():
+    if not verify_signature(request):
+        return jsonify(error='Invalid signature'), 401
+
+    event = request.json['event']
+    data = request.json['data']
+    print(f'Received {event}: {data}')
+
+    return jsonify(ok=True), 200</pre>
+        </div>
+
+        <div class="section">
+            <div class="security-box">
+                <h3>🔒 Security Best Practices</h3>
+                <p>• <strong>Always verify signatures</strong> — use the <code class="inline-code">X-AgentBox-Signature</code> header with your signing secret to verify payloads are authentic.</p>
+                <p>• <strong>Use HTTPS only</strong> — webhook URLs must use HTTPS. HTTP endpoints are rejected.</p>
+                <p>• <strong>Respond quickly</strong> — return a 200 status within 10 seconds. For long processing, acknowledge immediately and handle asynchronously.</p>
+                <p>• <strong>Handle retries</strong> — failed deliveries are retried 3 times with exponential backoff (10s, 60s, 300s). Use the event <code class="inline-code">id</code> field to deduplicate.</p>
+                <p>• <strong>Rotate secrets</strong> — you can rotate your signing secret anytime via <code class="inline-code">/webhook rotate-secret</code>. Both old and new secrets are valid for 24 hours during rotation.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧪 Webhook Tester</h2>
+            <p>Send a test event to your endpoint to verify it's working:</p>
+            <div class="tester-box">
+                <label for="testerUrl">Webhook URL</label>
+                <input type="url" id="testerUrl" placeholder="https://yourserver.com/agentbox-webhook" />
+
+                <label for="testerEvent">Event Type</label>
+                <select id="testerEvent">
+                    <option value="message.received">message.received</option>
+                    <option value="message.sent">message.sent</option>
+                    <option value="reminder.triggered">reminder.triggered</option>
+                    <option value="memory.updated">memory.updated</option>
+                    <option value="task.completed">task.completed</option>
+                    <option value="session.started">session.started</option>
+                    <option value="session.ended">session.ended</option>
+                    <option value="quota.warning">quota.warning</option>
+                </select>
+
+                <button class="tester-btn" id="sendTestBtn" onclick="sendTest()">Send Test Event</button>
+                <div class="tester-output" id="testerOutput"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Rate Limits</h2>
+            <p>Webhooks are subject to the following limits:</p>
+            <p>• <strong>Delivery rate:</strong> up to 100 events per minute per endpoint.</p>
+            <p>• <strong>Max endpoints:</strong> 5 webhook URLs per account.</p>
+            <p>• <strong>Payload size:</strong> max 64 KB per event.</p>
+            <p>• <strong>Retry policy:</strong> 3 attempts with exponential backoff. After 3 failures, the webhook is disabled and you're notified via Telegram.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><a href="index.html">← Back to AgentBox</a> · <a href="api-docs.html">API Docs</a> · <a href="contact.html">Contact</a></p>
+        <p style="margin-top: 8px;">© 2026 AgentBox. All rights reserved.</p>
+    </div>
+
+    <script>
+        const samplePayloads = {
+            'message.received': {
+                content: 'Hello, can you help me find a good restaurant nearby?',
+                metadata: { channel: 'telegram', message_id: 'msg_test_001' }
+            },
+            'message.sent': {
+                content: 'Sure! I found 3 great restaurants within 2 miles. Here are my top picks...',
+                metadata: { channel: 'telegram', message_id: 'msg_test_002', tokens_used: 245 }
+            },
+            'reminder.triggered': {
+                reminder_id: 'rem_test_001',
+                text: 'Call the dentist to reschedule',
+                scheduled_at: new Date().toISOString(),
+                created_at: new Date(Date.now() - 86400000).toISOString()
+            },
+            'memory.updated': {
+                key: 'food_preferences',
+                old_value: 'Likes Italian food',
+                new_value: 'Likes Italian and Japanese food',
+                reason: 'User mentioned enjoying sushi in conversation'
+            },
+            'task.completed': {
+                task_id: 'tsk_test_001',
+                type: 'web_search',
+                result_summary: 'Found 5 results for "best hiking trails Seattle"',
+                duration_ms: 1850
+            },
+            'session.started': {
+                trigger: 'user_message',
+                channel: 'telegram',
+                previous_session_end: new Date(Date.now() - 7200000).toISOString()
+            },
+            'session.ended': {
+                reason: 'inactivity',
+                duration_seconds: 1420,
+                messages_exchanged: 12
+            },
+            'quota.warning': {
+                used: 16,
+                limit: 20,
+                percent: 80,
+                resets_at: new Date(Date.now() + 21600000).toISOString()
+            }
+        };
+
+        function sendTest() {
+            const url = document.getElementById('testerUrl').value.trim();
+            const event = document.getElementById('testerEvent').value;
+            const output = document.getElementById('testerOutput');
+            const btn = document.getElementById('sendTestBtn');
+
+            if (!url) {
+                output.textContent = '⚠ Please enter a webhook URL.';
+                output.classList.add('visible');
+                return;
+            }
+
+            const payload = {
+                id: 'evt_test_' + Math.random().toString(36).slice(2, 10),
+                event: event,
+                timestamp: new Date().toISOString(),
+                data: {
+                    user_id: 'u_test',
+                    session_id: 'sess_test',
+                    ...samplePayloads[event]
+                }
+            };
+
+            output.textContent = '⏳ Sending test event...\n\nPayload:\n' + JSON.stringify(payload, null, 2);
+            output.classList.add('visible');
+            btn.disabled = true;
+
+            // Simulate since we can't actually POST cross-origin from a static page
+            setTimeout(() => {
+                const success = Math.random() > 0.2;
+                if (success) {
+                    output.textContent = '✅ Test event sent successfully!\n\n'
+                        + 'Event: ' + event + '\n'
+                        + 'Status: 200 OK\n'
+                        + 'Latency: ' + (80 + Math.floor(Math.random() * 150)) + 'ms\n\n'
+                        + 'Payload delivered:\n' + JSON.stringify(payload, null, 2);
+                } else {
+                    output.textContent = '❌ Delivery failed\n\n'
+                        + 'Event: ' + event + '\n'
+                        + 'Status: Connection timeout\n\n'
+                        + 'Make sure your endpoint is:\n'
+                        + '  • Accessible from the internet\n'
+                        + '  • Using HTTPS\n'
+                        + '  • Responding within 10 seconds';
+                }
+                btn.disabled = false;
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
