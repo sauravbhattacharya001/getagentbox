@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Level Agreement - AgentBox</title>
+    <meta name="description" content="AgentBox SLA — our uptime commitment, response times, support tiers, and remedies.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="site-nav" id="siteNav" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo" aria-label="Back to home">🤖 AgentBox</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Toggle theme">
+                <span class="theme-icon" id="themeIcon">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="legal-page">
+        <div class="legal-container">
+            <h1>Service Level Agreement</h1>
+            <p class="legal-updated">Effective: March 26, 2026</p>
+
+            <nav class="legal-toc" aria-label="Table of contents">
+                <h2>Contents</h2>
+                <ol>
+                    <li><a href="#overview">Overview</a></li>
+                    <li><a href="#uptime">Uptime Commitment</a></li>
+                    <li><a href="#response">Response Time Targets</a></li>
+                    <li><a href="#support">Support Tiers</a></li>
+                    <li><a href="#exclusions">Exclusions</a></li>
+                    <li><a href="#remedies">Service Credits &amp; Remedies</a></li>
+                    <li><a href="#maintenance">Scheduled Maintenance</a></li>
+                    <li><a href="#monitoring">Monitoring &amp; Reporting</a></li>
+                    <li><a href="#changes">Changes to This SLA</a></li>
+                </ol>
+            </nav>
+
+            <section id="overview">
+                <h2>1. Overview</h2>
+                <p>This Service Level Agreement ("SLA") describes the uptime guarantees, performance targets, and support commitments AgentBox provides to its users. This SLA applies to all paid plans; free-tier users receive best-effort service.</p>
+            </section>
+
+            <section id="uptime">
+                <h2>2. Uptime Commitment</h2>
+                <p>AgentBox commits to the following monthly uptime targets:</p>
+                <div class="sla-table-wrapper">
+                    <table class="sla-table" role="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Plan</th>
+                                <th scope="col">Monthly Uptime</th>
+                                <th scope="col">Max Downtime / Month</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Starter</td><td>99.5%</td><td>~3 h 36 min</td></tr>
+                            <tr><td>Pro</td><td>99.9%</td><td>~43 min</td></tr>
+                            <tr><td>Enterprise</td><td>99.95%</td><td>~22 min</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>Uptime</strong> is calculated as: <code>(Total minutes − Downtime minutes) / Total minutes × 100</code>. Scheduled maintenance windows are excluded from downtime calculations.</p>
+            </section>
+
+            <section id="response">
+                <h2>3. Response Time Targets</h2>
+                <p>AgentBox targets the following median response latencies for AI agent interactions:</p>
+                <div class="sla-table-wrapper">
+                    <table class="sla-table" role="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Request Type</th>
+                                <th scope="col">Target (p50)</th>
+                                <th scope="col">Target (p95)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Text message</td><td>&lt; 2 s</td><td>&lt; 5 s</td></tr>
+                            <tr><td>Image analysis</td><td>&lt; 4 s</td><td>&lt; 10 s</td></tr>
+                            <tr><td>Web search</td><td>&lt; 3 s</td><td>&lt; 8 s</td></tr>
+                            <tr><td>Reminder / scheduled task</td><td>&lt; 1 s</td><td>&lt; 3 s</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>These are targets, not guarantees. Response times may vary based on upstream AI provider performance.</p>
+            </section>
+
+            <section id="support">
+                <h2>4. Support Tiers</h2>
+                <div class="sla-table-wrapper">
+                    <table class="sla-table" role="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Severity</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Initial Response</th>
+                                <th scope="col">Resolution Target</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="sla-badge sla-critical">Critical</span></td>
+                                <td>Service completely unavailable</td>
+                                <td>15 minutes</td>
+                                <td>4 hours</td>
+                            </tr>
+                            <tr>
+                                <td><span class="sla-badge sla-high">High</span></td>
+                                <td>Major feature degraded</td>
+                                <td>1 hour</td>
+                                <td>8 hours</td>
+                            </tr>
+                            <tr>
+                                <td><span class="sla-badge sla-medium">Medium</span></td>
+                                <td>Minor feature issue</td>
+                                <td>4 hours</td>
+                                <td>48 hours</td>
+                            </tr>
+                            <tr>
+                                <td><span class="sla-badge sla-low">Low</span></td>
+                                <td>General inquiry</td>
+                                <td>24 hours</td>
+                                <td>5 business days</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Support is available via email at <strong>support@getagentbox.com</strong> and through the in-app help chat.</p>
+            </section>
+
+            <section id="exclusions">
+                <h2>5. Exclusions</h2>
+                <p>The following are not counted as downtime for SLA purposes:</p>
+                <ul>
+                    <li>Scheduled maintenance (announced ≥ 48 hours in advance)</li>
+                    <li>Force majeure events (natural disasters, wars, pandemics)</li>
+                    <li>Third-party service outages (Telegram API, AI model providers)</li>
+                    <li>User-caused issues (API misuse, exceeding rate limits)</li>
+                    <li>Network issues outside AgentBox's infrastructure</li>
+                    <li>Beta or experimental features explicitly marked as such</li>
+                </ul>
+            </section>
+
+            <section id="remedies">
+                <h2>6. Service Credits &amp; Remedies</h2>
+                <p>If AgentBox fails to meet the uptime commitment for a given month, affected paid users may request service credits:</p>
+                <div class="sla-table-wrapper">
+                    <table class="sla-table" role="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Monthly Uptime</th>
+                                <th scope="col">Credit (% of Monthly Fee)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>99.0% – below target</td><td>10%</td></tr>
+                            <tr><td>95.0% – 98.99%</td><td>25%</td></tr>
+                            <tr><td>Below 95.0%</td><td>50%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Credits must be requested within 30 days of the affected month. Credits are applied to future billing and are not redeemable for cash. Maximum credit per month is capped at 50% of that month's fee.</p>
+            </section>
+
+            <section id="maintenance">
+                <h2>7. Scheduled Maintenance</h2>
+                <p>Routine maintenance is performed during low-traffic windows (typically Tuesdays 2:00–4:00 AM UTC). Users are notified at least 48 hours in advance via email and the <a href="status-page.html">Status Page</a>. Emergency maintenance may occur without advance notice when required to address security vulnerabilities or critical bugs.</p>
+            </section>
+
+            <section id="monitoring">
+                <h2>8. Monitoring &amp; Reporting</h2>
+                <p>AgentBox uses automated monitoring to track uptime and performance. Current system status is always available on the <a href="status-page.html">Status Page</a>. Monthly uptime reports are published in the <a href="docs/changelog.html">Changelog</a>.</p>
+            </section>
+
+            <section id="changes">
+                <h2>9. Changes to This SLA</h2>
+                <p>We may update this SLA from time to time. Material changes will be communicated via email at least 30 days before they take effect. Continued use of the service after changes constitutes acceptance of the updated SLA.</p>
+                <p>Questions? Contact us at <strong>support@getagentbox.com</strong>.</p>
+            </section>
+        </div>
+    </main>
+
+    <footer class="legal-footer">
+        <p><a href="index.html">← Back to Home</a> · <a href="terms.html">Terms of Service</a> · <a href="privacy.html">Privacy Center</a> · <a href="status-page.html">System Status</a></p>
+    </footer>
+
+    <script>
+    (function() {
+        const toggle = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        function getTheme() {
+            return localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        }
+        function applyTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            icon.textContent = t === 'dark' ? '🌙' : '☀️';
+            localStorage.setItem('theme', t);
+        }
+        applyTheme(getTheme());
+        toggle.addEventListener('click', function() {
+            applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+        });
+    })();
+    </script>
+</body>
+</html>
