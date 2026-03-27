@@ -103,35 +103,69 @@
     return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
   }
 
+  /**
+   * Helper: create a DOM element with optional class, text, and children.
+   * Avoids innerHTML/string concatenation to prevent XSS.
+   */
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    if (attrs) {
+      if (attrs.className) node.className = attrs.className;
+      if (attrs.text) node.textContent = attrs.text;
+      if (attrs.href) node.setAttribute('href', attrs.href);
+      if (attrs.data) {
+        for (var k in attrs.data) {
+          if (Object.prototype.hasOwnProperty.call(attrs.data, k)) {
+            node.setAttribute('data-' + k, attrs.data[k]);
+          }
+        }
+      }
+    }
+    if (children) {
+      for (var i = 0; i < children.length; i++) {
+        node.appendChild(children[i]);
+      }
+    }
+    return node;
+  }
+
   function renderCard(evt) {
     var d = parseDate(evt.date);
     var month = MONTHS[d.getMonth()];
     var day = d.getDate();
     var isPast = evt.status === 'past';
-    var statusLabel = evt.status === 'live' ? '🔴 Live Now' : evt.status === 'upcoming' ? 'Upcoming' : 'Past';
-    var ctaText = isPast ? '▶ Watch Recording' : 'Register';
+    var statusLabel = evt.status === 'live' ? '\uD83D\uDD34 Live Now' : evt.status === 'upcoming' ? 'Upcoming' : 'Past';
+    var ctaText = isPast ? '\u25B6 Watch Recording' : 'Register';
     var ctaClass = isPast ? 'event-cta past-cta' : 'event-cta';
     var ctaHref = isPast ? (evt.recordingLink || '#') : (evt.link || '#');
 
-    var tagsHtml = evt.tags.map(function(t) {
-      return '<span class="event-tag">' + t + '</span>';
-    }).join('');
+    var tagEls = evt.tags.map(function(t) {
+      return el('span', { className: 'event-tag', text: t });
+    });
 
-    return '<article class="event-card" data-type="' + evt.type + '" data-status="' + evt.status + '">' +
-      '<div class="event-card-header">' +
-        '<div class="event-date-badge"><div class="month">' + month + '</div><div class="day">' + day + '</div></div>' +
-        '<div class="event-info"><h3>' + evt.title + '</h3>' +
-          '<div class="event-meta"><span>🕐 ' + evt.time + ' · ' + evt.duration + '</span><span>🎤 ' + evt.speaker + '</span></div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="event-card-body"><p>' + evt.description + '</p>' +
-        '<div class="event-tags">' + tagsHtml + '</div>' +
-      '</div>' +
-      '<div class="event-card-footer">' +
-        '<span class="event-status ' + evt.status + '">' + statusLabel + '</span>' +
-        '<a href="' + ctaHref + '" class="' + ctaClass + '">' + ctaText + '</a>' +
-      '</div>' +
-    '</article>';
+    return el('article', { className: 'event-card', data: { type: evt.type, status: evt.status } }, [
+      el('div', { className: 'event-card-header' }, [
+        el('div', { className: 'event-date-badge' }, [
+          el('div', { className: 'month', text: month }),
+          el('div', { className: 'day', text: String(day) })
+        ]),
+        el('div', { className: 'event-info' }, [
+          el('h3', { text: evt.title }),
+          el('div', { className: 'event-meta' }, [
+            el('span', { text: '\uD83D\uDD50 ' + evt.time + ' \u00B7 ' + evt.duration }),
+            el('span', { text: '\uD83C\uDFA4 ' + evt.speaker })
+          ])
+        ])
+      ]),
+      el('div', { className: 'event-card-body' }, [
+        el('p', { text: evt.description }),
+        el('div', { className: 'event-tags' }, tagEls)
+      ]),
+      el('div', { className: 'event-card-footer' }, [
+        el('span', { className: 'event-status ' + evt.status, text: statusLabel }),
+        el('a', { className: ctaClass, href: ctaHref, text: ctaText })
+      ])
+    ]);
   }
 
   function render(filter) {
@@ -143,11 +177,21 @@
     var past = filtered.filter(function(e) { return e.status === 'past'; }).sort(function(a,b) { return parseDate(b.date) - parseDate(a.date); });
     var sorted = upcoming.concat(past);
 
+    // Clear grid safely
+    while (grid.firstChild) grid.removeChild(grid.firstChild);
+
     if (sorted.length === 0) {
-      grid.innerHTML = '<div class="events-empty"><p>No events found for this category. Check back soon!</p></div>';
+      var empty = el('div', { className: 'events-empty' }, [
+        el('p', { text: 'No events found for this category. Check back soon!' })
+      ]);
+      grid.appendChild(empty);
       return;
     }
-    grid.innerHTML = sorted.map(renderCard).join('');
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < sorted.length; i++) {
+      frag.appendChild(renderCard(sorted[i]));
+    }
+    grid.appendChild(frag);
   }
 
   // Filters
