@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'; worker-src 'none';">
+    <title>Tutorials - AgentBox</title>
+    <meta name="description" content="Step-by-step interactive tutorials for AgentBox. Learn to set up reminders, customize your agent's personality, manage memory, and more.">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tutorials-hero {
+            text-align: center;
+            padding: 6rem 2rem 3rem;
+            background: linear-gradient(135deg, var(--color-bg-deep, #1a1a2e) 0%, rgba(123, 44, 191, 0.08) 100%);
+        }
+        .tutorials-hero h1 { font-size: 2.8rem; margin-bottom: 0.5rem; }
+        .tutorials-hero p { color: var(--color-text-muted, #a0a0a0); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+        .tutorials-filters {
+            display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;
+            padding: 1.5rem 2rem; max-width: 900px; margin: 0 auto;
+        }
+        .tutorials-filter-btn {
+            background: var(--color-surface, rgba(255,255,255,0.05));
+            border: 1px solid var(--border-subtle, rgba(255,255,255,0.1));
+            color: var(--color-text, #fff); padding: 0.4rem 1rem;
+            border-radius: 2rem; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+        }
+        .tutorials-filter-btn:hover, .tutorials-filter-btn.active {
+            background: var(--color-primary, #00d4ff); color: #000;
+            border-color: var(--color-primary, #00d4ff);
+        }
+
+        .tutorials-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem; max-width: 1100px; margin: 0 auto; padding: 1rem 2rem 2rem;
+        }
+        .tutorial-card {
+            background: var(--color-surface, rgba(255,255,255,0.05));
+            border: 1px solid var(--border-subtle, rgba(255,255,255,0.1));
+            border-radius: var(--radius-md, 12px); padding: 1.5rem; cursor: pointer;
+            transition: all 0.25s; position: relative; overflow: hidden;
+        }
+        .tutorial-card:hover {
+            border-color: var(--color-primary, #00d4ff);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 212, 255, 0.1);
+        }
+        .tutorial-card .card-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+        .tutorial-card h3 { font-size: 1.15rem; margin-bottom: 0.4rem; }
+        .tutorial-card .card-desc { color: var(--color-text-muted, #a0a0a0); font-size: 0.9rem; line-height: 1.5; margin-bottom: 0.75rem; }
+        .tutorial-meta {
+            display: flex; gap: 0.75rem; align-items: center; font-size: 0.78rem;
+            color: var(--color-text-dim, #888);
+        }
+        .tutorial-meta .difficulty {
+            padding: 0.15rem 0.5rem; border-radius: 1rem; font-weight: 600; font-size: 0.72rem;
+        }
+        .difficulty-beginner { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
+        .difficulty-intermediate { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .difficulty-advanced { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        /* Expanded tutorial view */
+        .tutorial-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            z-index: 1000; overflow-y: auto; padding: 2rem;
+        }
+        .tutorial-overlay.active { display: flex; justify-content: center; align-items: flex-start; }
+        .tutorial-content {
+            background: var(--color-bg-deep, #1a1a2e); border: 1px solid var(--border-subtle, rgba(255,255,255,0.1));
+            border-radius: var(--radius-lg, 16px); max-width: 720px; width: 100%;
+            padding: 2.5rem; margin: 2rem 0; position: relative;
+        }
+        .tutorial-close {
+            position: absolute; top: 1rem; right: 1rem; background: none; border: none;
+            color: var(--color-text-muted, #a0a0a0); font-size: 1.5rem; cursor: pointer;
+        }
+        .tutorial-content h2 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .tutorial-content .tutorial-subtitle { color: var(--color-text-muted, #a0a0a0); margin-bottom: 2rem; }
+
+        .step-list { list-style: none; padding: 0; margin: 0; }
+        .step-item {
+            display: flex; gap: 1rem; padding: 1rem 0;
+            border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,0.1));
+            opacity: 0.5; transition: opacity 0.3s;
+        }
+        .step-item.active, .step-item.completed { opacity: 1; }
+        .step-number {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--color-surface, rgba(255,255,255,0.05));
+            border: 2px solid var(--border-medium, rgba(255,255,255,0.2));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.85rem; flex-shrink: 0; transition: all 0.3s;
+        }
+        .step-item.completed .step-number {
+            background: var(--color-primary, #00d4ff); border-color: var(--color-primary, #00d4ff); color: #000;
+        }
+        .step-item.active .step-number {
+            border-color: var(--color-primary, #00d4ff); color: var(--color-primary, #00d4ff);
+        }
+        .step-body h4 { margin: 0 0 0.3rem; font-size: 1rem; }
+        .step-body p { margin: 0; color: var(--color-text-muted, #a0a0a0); font-size: 0.9rem; line-height: 1.5; }
+        .step-body code {
+            background: rgba(0, 212, 255, 0.1); color: var(--color-primary, #00d4ff);
+            padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.85rem;
+        }
+        .step-chat {
+            background: var(--color-surface, rgba(255,255,255,0.05));
+            border-radius: var(--radius-sm, 8px); padding: 0.75rem 1rem;
+            margin-top: 0.5rem; font-family: monospace; font-size: 0.85rem;
+            border-left: 3px solid var(--color-primary, #00d4ff);
+        }
+        .step-chat .chat-user { color: var(--color-primary, #00d4ff); }
+        .step-chat .chat-bot { color: var(--color-success, #4ade80); }
+
+        .step-nav {
+            display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 1rem;
+        }
+        .step-btn {
+            padding: 0.6rem 1.5rem; border-radius: var(--radius-pill, 50px);
+            border: 1px solid var(--border-medium, rgba(255,255,255,0.2));
+            background: transparent; color: var(--color-text, #fff);
+            cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
+        }
+        .step-btn:hover { background: var(--color-surface-hover, rgba(255,255,255,0.1)); }
+        .step-btn.primary {
+            background: var(--color-primary, #00d4ff); color: #000;
+            border-color: var(--color-primary, #00d4ff); font-weight: 600;
+        }
+        .step-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .progress-bar {
+            height: 4px; background: var(--color-surface, rgba(255,255,255,0.05));
+            border-radius: 2px; margin-bottom: 2rem; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: var(--color-primary, #00d4ff);
+            transition: width 0.4s ease; border-radius: 2px;
+        }
+
+        .tutorials-search {
+            display: flex; max-width: 500px; margin: 0 auto 1rem;
+        }
+        .tutorials-search input {
+            flex: 1; padding: 0.6rem 1rem; border-radius: 2rem;
+            border: 1px solid var(--border-subtle, rgba(255,255,255,0.1));
+            background: var(--color-surface, rgba(255,255,255,0.05));
+            color: var(--color-text, #fff); font-size: 0.95rem; outline: none;
+        }
+        .tutorials-search input:focus { border-color: var(--color-primary, #00d4ff); }
+        .tutorials-search input::placeholder { color: var(--color-text-dim, #888); }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: var(--color-text-muted, #a0a0a0); text-decoration: none;
+            font-size: 0.9rem; padding: 1.5rem 2rem 0;
+        }
+        .back-link:hover { color: var(--color-primary, #00d4ff); }
+
+        @media (max-width: 600px) {
+            .tutorials-hero h1 { font-size: 2rem; }
+            .tutorials-grid { grid-template-columns: 1fr; padding: 1rem; }
+            .tutorial-content { padding: 1.5rem; margin: 1rem 0; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Home</a>
+
+    <section class="tutorials-hero">
+        <h1>📚 Tutorials</h1>
+        <p>Interactive step-by-step guides to help you master AgentBox. Follow along at your own pace.</p>
+    </section>
+
+    <div class="tutorials-search">
+        <input type="text" id="tutorialSearch" placeholder="Search tutorials..." aria-label="Search tutorials">
+    </div>
+
+    <div class="tutorials-filters" id="tutorialFilters">
+        <button class="tutorials-filter-btn active" data-filter="all">All</button>
+        <button class="tutorials-filter-btn" data-filter="getting-started">Getting Started</button>
+        <button class="tutorials-filter-btn" data-filter="productivity">Productivity</button>
+        <button class="tutorials-filter-btn" data-filter="customization">Customization</button>
+        <button class="tutorials-filter-btn" data-filter="advanced">Advanced</button>
+    </div>
+
+    <div class="tutorials-grid" id="tutorialsGrid"></div>
+
+    <div class="tutorial-overlay" id="tutorialOverlay">
+        <div class="tutorial-content" id="tutorialContent"></div>
+    </div>
+
+    <script>
+    (function() {
+        const tutorials = [
+            {
+                id: 'first-chat',
+                icon: '💬',
+                title: 'Your First Conversation',
+                desc: 'Start chatting with your AgentBox bot and learn the basics of interaction.',
+                category: 'getting-started',
+                difficulty: 'beginner',
+                time: '3 min',
+                steps: [
+                    { title: 'Find Your Bot', text: 'Open Telegram and search for your AgentBox bot using the username you received during signup.', chat: null },
+                    { title: 'Say Hello', text: 'Send a message to start the conversation. Your agent will introduce itself.', chat: { user: 'Hey there!', bot: "Hi! I'm your personal AI agent. I can help with questions, reminders, web searches, and more. What would you like to do?" } },
+                    { title: 'Ask a Question', text: 'Try asking something factual or creative. Your agent uses advanced AI to respond.', chat: { user: "What's the capital of Iceland?", bot: "The capital of Iceland is Reykjavík — the world's northernmost capital city! 🇮🇸" } },
+                    { title: 'Send an Image', text: 'Your agent can understand images too. Send a photo and ask about it.', chat: { user: '[📷 Photo of a plant]', bot: "That looks like a Monstera deliciosa (Swiss cheese plant)! It's healthy — the fenestrations (holes) show it's getting good light. Water when the top 2 inches of soil are dry." } },
+                    { title: 'You\'re Ready!', text: 'That\'s the basics! Your agent is always available in Telegram whenever you need help.', chat: null }
+                ]
+            },
+            {
+                id: 'reminders',
+                icon: '⏰',
+                title: 'Setting Up Reminders',
+                desc: 'Learn to set one-time and recurring reminders so you never forget anything.',
+                category: 'productivity',
+                difficulty: 'beginner',
+                time: '4 min',
+                steps: [
+                    { title: 'Simple Reminder', text: 'Just tell your agent what to remind you about and when. Use natural language.', chat: { user: 'Remind me to call the dentist tomorrow at 10am', bot: "✅ Reminder set for tomorrow at 10:00 AM: Call the dentist. I'll ping you then!" } },
+                    { title: 'Recurring Reminders', text: 'For things you need to do regularly, specify the pattern.', chat: { user: 'Remind me to take vitamins every morning at 8am', bot: "✅ Recurring reminder set: Take vitamins — every day at 8:00 AM. I'll keep reminding you until you tell me to stop." } },
+                    { title: 'Relative Timing', text: 'You can also use relative time like "in 20 minutes" or "in 2 hours".', chat: { user: 'Remind me in 30 minutes to check the oven', bot: '✅ Got it! I\'ll remind you to check the oven at 2:45 PM (in 30 minutes).' } },
+                    { title: 'List Reminders', text: 'Check what reminders you have active at any time.', chat: { user: 'What reminders do I have?', bot: '📋 Your active reminders:\n1. Call the dentist — Tomorrow 10:00 AM\n2. Take vitamins — Daily 8:00 AM\n3. Check the oven — Today 2:45 PM' } },
+                    { title: 'Cancel a Reminder', text: 'Changed your mind? Just tell your agent to cancel it.', chat: { user: 'Cancel the oven reminder', bot: "✅ Cancelled: Check the oven. You won't be reminded about this anymore." } }
+                ]
+            },
+            {
+                id: 'web-search',
+                icon: '🔍',
+                title: 'Web Search & Research',
+                desc: 'Use your agent to search the web, summarize articles, and do research.',
+                category: 'productivity',
+                difficulty: 'beginner',
+                time: '4 min',
+                steps: [
+                    { title: 'Ask for Current Info', text: 'Your agent can search the web to answer questions about current events, prices, reviews, and more.', chat: { user: "What's the weather in Seattle this weekend?", bot: "🌧️ Seattle this weekend:\n• Saturday: 52°F, light rain, 80% chance\n• Sunday: 55°F, partly cloudy\nYou might want an umbrella for Saturday!" } },
+                    { title: 'Research a Topic', text: 'Ask your agent to research something and summarize findings.', chat: { user: 'Research the best budget mechanical keyboards under $50', bot: "Here are the top picks based on recent reviews:\n1. **Keychron C3 Pro** ($35) — hot-swappable, USB-C\n2. **Royal Kludge RK61** ($45) — wireless, 60%\n3. **Redragon K552** ($30) — compact TKL\nWant more details on any of these?" } },
+                    { title: 'Summarize a Link', text: 'Paste a URL and ask for a summary.', chat: { user: 'Summarize this article: https://example.com/ai-news', bot: "📄 Summary: The article discusses three key AI developments in 2026...\n\nKey points:\n• New efficiency breakthroughs in model training\n• Open-source models closing the gap\n• Enterprise adoption accelerating\n\n~3 min read. Want the full details on any point?" } },
+                    { title: 'Compare Options', text: 'Ask your agent to compare products, services, or ideas.', chat: { user: 'Compare Notion vs Obsidian for note-taking', bot: "📊 Notion vs Obsidian:\n\n**Notion**: Cloud-based, great collaboration, databases & wikis, free tier. Best for teams.\n\n**Obsidian**: Local-first, markdown files, plugin ecosystem, one-time purchase. Best for personal knowledge management.\n\nWhich matters more to you — collaboration or privacy?" } }
+                ]
+            },
+            {
+                id: 'personality',
+                icon: '🎭',
+                title: 'Customizing Your Agent\'s Personality',
+                desc: 'Make your agent match your vibe — from professional to playful.',
+                category: 'customization',
+                difficulty: 'intermediate',
+                time: '5 min',
+                steps: [
+                    { title: 'Default Personality', text: 'Out of the box, your agent is friendly and helpful. But you can change that!', chat: null },
+                    { title: 'Set a Tone', text: 'Tell your agent how you want it to communicate.', chat: { user: 'Be more casual and use emojis', bot: "yooo got it! 😎 i'll keep it chill from now on 🤙 anything else u wanna tweak?" } },
+                    { title: 'Professional Mode', text: 'Need something more formal? Just say so.', chat: { user: 'Switch to professional tone', bot: 'Understood. I\'ll maintain a professional and concise communication style going forward. How may I assist you?' } },
+                    { title: 'Give It a Name', text: 'You can even name your agent to make it feel more personal.', chat: { user: 'I want to call you Atlas', bot: "Love it! I'm Atlas now. You can call me that anytime. Is there anything else you'd like to customize about how I work?" } },
+                    { title: 'Set Expertise Areas', text: 'Tell your agent what you care about most so it can tailor responses.', chat: { user: "I'm a software engineer interested in Rust and distributed systems", bot: "Noted! I'll prioritize Rust-focused answers, reference distributed systems concepts when relevant, and keep technical depth high. I'll also watch for interesting developments in those areas." } },
+                    { title: 'Reset Anytime', text: 'Want to start fresh? You can reset personality at any time.', chat: { user: 'Reset your personality to default', bot: 'Done! I\'m back to my default friendly self. All personality customizations have been cleared.' } }
+                ]
+            },
+            {
+                id: 'memory',
+                icon: '🧠',
+                title: 'Using Agent Memory',
+                desc: 'Teach your agent to remember facts, preferences, and context about you.',
+                category: 'customization',
+                difficulty: 'intermediate',
+                time: '5 min',
+                steps: [
+                    { title: 'How Memory Works', text: 'Your agent remembers things you tell it across conversations. It builds a profile of your preferences and important details.', chat: null },
+                    { title: 'Tell It Something', text: 'Share facts and preferences naturally — your agent will remember.', chat: { user: "I'm allergic to shellfish", bot: "Got it — I'll remember your shellfish allergy. I'll flag it if I ever suggest recipes or restaurants. 🦐❌" } },
+                    { title: 'Test the Memory', text: 'In a later conversation, check if it remembers.', chat: { user: 'Can you suggest a seafood restaurant?', bot: "Sure! Here are some great options. Just a heads up — I'm flagging which dishes to avoid since you have a shellfish allergy:\n\n🐟 **Ocean Blue** — great salmon and cod dishes\n⚠️ Avoid: the shrimp platter and lobster bisque" } },
+                    { title: 'Store Specific Info', text: 'You can explicitly ask it to remember things.', chat: { user: "Remember that my wife's birthday is March 15th", bot: "Saved! I'll remember your wife's birthday is March 15th. Want me to remind you a few days before next year?" } },
+                    { title: 'Review What It Knows', text: 'Check what your agent has stored about you.', chat: { user: 'What do you know about me?', bot: "Here's what I remember:\n• Shellfish allergy\n• Wife's birthday: March 15th\n• Software engineer (Rust, distributed systems)\n• Prefers casual communication\n\nWant me to update or remove anything?" } },
+                    { title: 'Forget Something', text: 'Ask your agent to forget specific things for privacy.', chat: { user: "Forget my wife's birthday", bot: "Done — I've removed that from my memory. Your privacy matters!" } }
+                ]
+            },
+            {
+                id: 'daily-digest',
+                icon: '📰',
+                title: 'Setting Up a Daily Digest',
+                desc: 'Get a personalized morning briefing with news, weather, and reminders.',
+                category: 'productivity',
+                difficulty: 'intermediate',
+                time: '4 min',
+                steps: [
+                    { title: 'Request a Digest', text: 'Ask your agent to set up a daily briefing.', chat: { user: 'Set up a daily digest at 7:30am', bot: "Great! I'll send you a daily digest at 7:30 AM. What should I include?\n\n• ☀️ Weather\n• 📰 Top news\n• 📅 Today's reminders\n• 📊 Stock prices\n\nPick what you want, or say 'all'!" } },
+                    { title: 'Choose Topics', text: 'Select what matters to you.', chat: { user: 'Weather, news about AI and tech, and my reminders', bot: "✅ Daily digest configured for 7:30 AM:\n• Weather for your location\n• Top AI & tech news\n• Active reminders for the day\n\nI'll start tomorrow morning!" } },
+                    { title: 'See a Preview', text: 'Ask for a preview to see the format.', chat: { user: 'Show me a preview of the digest', bot: "☀️ **Good morning!** Here's your digest:\n\n🌤️ **Weather**: 58°F, partly cloudy, no rain today\n\n📰 **AI & Tech News**:\n• OpenAI announces new reasoning model\n• EU passes comprehensive AI regulation\n• Rust Foundation releases v1.80\n\n📋 **Today's Reminders**:\n• 10:00 AM — Call the dentist\n• 2:00 PM — Team standup\n\nHave a great day! 🚀" } },
+                    { title: 'Adjust Anytime', text: 'You can modify the digest schedule or content whenever you want.', chat: { user: 'Add stock prices for AAPL and MSFT to my digest', bot: '✅ Updated! Your digest now includes AAPL and MSFT stock prices. Changes take effect starting tomorrow.' } }
+                ]
+            },
+            {
+                id: 'workflows',
+                icon: '⚡',
+                title: 'Creating Workflows',
+                desc: 'Chain multiple actions together to automate repetitive tasks.',
+                category: 'advanced',
+                difficulty: 'advanced',
+                time: '6 min',
+                steps: [
+                    { title: 'What Are Workflows?', text: 'Workflows let you trigger a sequence of actions with a single command. Think of them as custom macros for your agent.', chat: null },
+                    { title: 'Create a Workflow', text: 'Define a workflow by describing the sequence of actions.', chat: { user: 'Create a workflow called "morning" that checks weather, lists my reminders, and gives me a motivational quote', bot: '✅ Workflow "morning" created with 3 steps:\n1. Check weather for your location\n2. List today\'s reminders\n3. Generate a motivational quote\n\nTrigger it anytime by saying "run morning"!' } },
+                    { title: 'Run It', text: 'Execute the workflow with a simple command.', chat: { user: 'Run morning', bot: "🌅 **Morning workflow running...**\n\n☀️ **Weather**: 62°F, sunny all day!\n\n📋 **Today's Reminders**:\n• 9:00 AM — Standup\n• 1:00 PM — Lunch with Sarah\n• 5:00 PM — Gym\n\n💪 **Quote**: \"The only way to do great work is to love what you do.\" — Steve Jobs\n\nHave an awesome day!" } },
+                    { title: 'Conditional Steps', text: 'Add conditions to make workflows smarter.', chat: { user: 'Update morning workflow: only show weather if rain is expected', bot: '✅ Updated! Weather step now only triggers when rain probability is above 30%. Otherwise it\'ll skip to reminders.' } },
+                    { title: 'Schedule Workflows', text: 'Combine workflows with scheduling for full automation.', chat: { user: 'Run morning workflow automatically at 7am on weekdays', bot: '✅ Scheduled! "morning" workflow will run Mon-Fri at 7:00 AM automatically. You can say "pause morning" to temporarily stop it.' } }
+                ]
+            },
+            {
+                id: 'privacy',
+                icon: '🔒',
+                title: 'Privacy & Data Controls',
+                desc: 'Manage what your agent stores and how your data is handled.',
+                category: 'advanced',
+                difficulty: 'intermediate',
+                time: '4 min',
+                steps: [
+                    { title: 'Your Data, Your Control', text: 'AgentBox gives you full control over your data. Nothing is shared with third parties.', chat: null },
+                    { title: 'Check Stored Data', text: 'See exactly what your agent has stored.', chat: { user: 'Show me all my stored data', bot: "📦 Your stored data:\n\n**Memory** (6 items): preferences, facts about you\n**Reminders** (3 active)\n**Workflows** (1 defined)\n**Conversation history** (last 30 days)\n\nWant to export, review, or delete any of these?" } },
+                    { title: 'Export Your Data', text: 'Download everything in a portable format.', chat: { user: 'Export all my data', bot: '📥 Generating your data export...\n\nDone! Here\'s your complete data archive in JSON format. It includes all memories, reminders, workflows, and conversation history.\n\n[📎 agentbox-export-2026-03-27.json]' } },
+                    { title: 'Delete Everything', text: 'Nuclear option — clear all stored data.', chat: { user: 'Delete all my data', bot: "⚠️ This will permanently delete:\n• All memories and preferences\n• All reminders\n• All workflows\n• All conversation history\n\nThis cannot be undone. Type 'CONFIRM DELETE' to proceed." } },
+                    { title: 'Selective Deletion', text: 'Or just remove specific categories.', chat: { user: 'Delete only my conversation history', bot: '✅ Conversation history deleted. Your memories, reminders, and workflows are still intact.' } }
+                ]
+            }
+        ];
+
+        const grid = document.getElementById('tutorialsGrid');
+        const overlay = document.getElementById('tutorialOverlay');
+        const content = document.getElementById('tutorialContent');
+        const searchInput = document.getElementById('tutorialSearch');
+        const filtersContainer = document.getElementById('tutorialFilters');
+        let currentFilter = 'all';
+
+        function renderCards(filter, query) {
+            let filtered = filter === 'all' ? tutorials : tutorials.filter(t => t.category === filter);
+            if (query) {
+                const q = query.toLowerCase();
+                filtered = filtered.filter(t => t.title.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q));
+            }
+            grid.innerHTML = filtered.map(t => `
+                <div class="tutorial-card" data-id="${t.id}" tabindex="0" role="button" aria-label="Open tutorial: ${t.title}">
+                    <span class="card-icon">${t.icon}</span>
+                    <h3>${t.title}</h3>
+                    <p class="card-desc">${t.desc}</p>
+                    <div class="tutorial-meta">
+                        <span class="difficulty difficulty-${t.difficulty}">${t.difficulty}</span>
+                        <span>⏱️ ${t.time}</span>
+                        <span>${t.steps.length} steps</span>
+                    </div>
+                </div>
+            `).join('');
+
+            grid.querySelectorAll('.tutorial-card').forEach(card => {
+                card.addEventListener('click', () => openTutorial(card.dataset.id));
+                card.addEventListener('keydown', e => { if (e.key === 'Enter') openTutorial(card.dataset.id); });
+            });
+        }
+
+        function openTutorial(id) {
+            const tut = tutorials.find(t => t.id === id);
+            if (!tut) return;
+            let currentStep = 0;
+
+            function renderStep() {
+                content.innerHTML = `
+                    <button class="tutorial-close" aria-label="Close tutorial">&times;</button>
+                    <h2>${tut.icon} ${tut.title}</h2>
+                    <p class="tutorial-subtitle">${tut.desc}</p>
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${((currentStep + 1) / tut.steps.length) * 100}%"></div></div>
+                    <ol class="step-list">
+                        ${tut.steps.map((s, i) => `
+                            <li class="step-item ${i < currentStep ? 'completed' : ''} ${i === currentStep ? 'active' : ''}">
+                                <div class="step-number">${i < currentStep ? '✓' : i + 1}</div>
+                                <div class="step-body">
+                                    <h4>${s.title}</h4>
+                                    <p>${s.text}</p>
+                                    ${s.chat && i === currentStep ? `
+                                        <div class="step-chat">
+                                            <div class="chat-user">👤 You: ${s.chat.user}</div>
+                                            <div class="chat-bot">🤖 Agent: ${s.chat.bot.replace(/\n/g, '<br>')}</div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ol>
+                    <div class="step-nav">
+                        <button class="step-btn" id="stepPrev" ${currentStep === 0 ? 'disabled' : ''}>← Previous</button>
+                        <span style="color: var(--color-text-dim); font-size: 0.85rem; align-self: center;">
+                            Step ${currentStep + 1} of ${tut.steps.length}
+                        </span>
+                        <button class="step-btn primary" id="stepNext">
+                            ${currentStep === tut.steps.length - 1 ? '✅ Done' : 'Next →'}
+                        </button>
+                    </div>
+                `;
+
+                content.querySelector('.tutorial-close').addEventListener('click', closeTutorial);
+                content.querySelector('#stepPrev').addEventListener('click', () => { if (currentStep > 0) { currentStep--; renderStep(); } });
+                content.querySelector('#stepNext').addEventListener('click', () => {
+                    if (currentStep < tut.steps.length - 1) { currentStep++; renderStep(); }
+                    else closeTutorial();
+                });
+            }
+
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            renderStep();
+        }
+
+        function closeTutorial() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeTutorial(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTutorial(); });
+
+        filtersContainer.addEventListener('click', e => {
+            if (!e.target.classList.contains('tutorials-filter-btn')) return;
+            filtersContainer.querySelectorAll('.tutorials-filter-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentFilter = e.target.dataset.filter;
+            renderCards(currentFilter, searchInput.value);
+        });
+
+        searchInput.addEventListener('input', () => renderCards(currentFilter, searchInput.value));
+
+        renderCards('all', '');
+    })();
+    </script>
+</body>
+</html>
