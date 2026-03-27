@@ -26,39 +26,71 @@ npx serve .
 
 ```
 getagentbox/
-├── index.html          # Main landing page (all sections)
-├── styles.css          # All styles (responsive, dark theme)
-├── app.js              # Interactive components (chat demo, carousel, etc.)
-├── __tests__/
-│   └── index.test.js   # Jest + jsdom tests for all modules
-├── package.json        # Test dependencies only
-├── Dockerfile          # Production container (nginx)
-└── .github/            # CI, CodeQL, Pages deploy, Dependabot
+├── index.html              # Main landing page
+├── styles.css              # All styles (responsive, dark theme, CSS vars)
+├── app.js                  # 21 interactive modules (~2,300 lines)
+├── src/
+│   └── index.js            # npm package — reusable FAQ, Pricing, Stats (UMD)
+├── vendor/
+│   └── count.js            # Vendored GoatCounter analytics (DO NOT modify)
+├── __tests__/              # 50+ Jest + jsdom test suites
+│   ├── index.test.js       # Core app.js module tests
+│   ├── lib.test.js         # npm package tests
+│   └── *.test.js           # Per-feature tests (sitenav, status, trust, etc.)
+├── docs/                   # Developer documentation site
+├── Dockerfile              # Multi-stage nginx production container
+├── SECURITY.md             # CSP policy, security headers, XSS prevention
+├── CHANGELOG.md            # Release history
+└── .github/
+    ├── workflows/          # CI, Pages, Docker, CodeQL, npm publish, etc.
+    ├── dependabot.yml
+    ├── copilot-instructions.md   # AI agent coding context
+    └── copilot-setup-steps.yml
 ```
 
 ## Tech Stack
 
-- **Pure HTML/CSS/JS** — no frameworks, no build step
+- **Pure HTML/CSS/JS** — no frameworks, no build step, no runtime dependencies
+- **ES5 only** — no `let`/`const`, no arrow functions, no template literals
 - **Jest + jsdom** for testing
 - **GitHub Pages** for deployment
 - **Docker + nginx** for containerized hosting
+- **GoatCounter** for privacy-friendly analytics (vendored locally)
 
 ## Development Guidelines
 
 ### Code Style
 
-- Vanilla JavaScript — no frameworks or transpilers
-- Modules are defined as global objects in `app.js` (e.g., `ChatDemo`, `FAQ`, `Pricing`, `Testimonials`, `HowItWorks`, `Stats`)
-- Each module follows the pattern: `init()`, `reset()`, plus module-specific methods
-- CSS uses a single `styles.css` file with section-based organization
+- **ES5 JavaScript only** — no ES6+ syntax for broad browser compatibility
+- Modules are global IIFEs in `app.js`:
+  ```javascript
+  var MyModule = (function () {
+      function init() { /* DOM setup */ }
+      function reset() { /* cleanup for tests */ }
+      return { init: init, reset: reset };
+  })();
+  ```
+- Use `/* exported ... */` JSHint comments for global module declarations
+- CSS uses a single `styles.css` with section-based organization and CSS custom properties
 - Use semantic HTML with ARIA attributes for accessibility
+- Check `prefersReducedMotion` before adding animations (WCAG 2.3.3)
 
 ### Content Security Policy
 
-The site uses a strict CSP header in `index.html`. If you add new external resources:
-- Update the CSP meta tag to allow the new origin
-- Only `https:` sources are permitted for images
-- Scripts must be from `'self'` or explicitly allowed domains
+The site uses a strict CSP via `<meta>` tag in `index.html` **and** nginx headers in the Dockerfile. Both must stay in sync.
+
+- `script-src 'self'` — no external scripts
+- `style-src 'self'` — no external stylesheets
+- `img-src 'self'` — no external images
+- No `eval()`, `Function()`, or `document.write()`
+
+If you need a new external resource, update CSP in **both** `index.html` and `Dockerfile`.
+
+### DOM Safety
+
+- **Never** use `innerHTML` with dynamic or user-influenced content
+- Use `document.createElement()`, `createTextNode()`, and `DocumentFragment`
+- `innerHTML` is acceptable only for static templates from trusted app data or clearing containers (`innerHTML = ''`)
 
 ### Testing
 
@@ -70,44 +102,56 @@ npm test
 npm run test:coverage
 
 # Run a specific test file
-npx jest __tests__/index.test.js
+npx jest __tests__/feedback.test.js
 ```
 
 **Test conventions:**
 - Tests use jsdom environment (configured in `jest.config.js`)
-- Each module has a `describe` block in `index.test.js`
-- DOM elements are set up in `beforeEach` using `document.body.innerHTML`
-- `app.js` is loaded inline in tests (jsdom can't fetch external scripts from `file://`)
-- Aim for meaningful assertions — test behavior, not implementation details
+- Each feature has its own test file in `__tests__/`
+- DOM elements are set up in `beforeEach`
+- Functions from `app.js` are re-evaluated in test scope (jsdom can't `require` browser globals)
+- Test behavior, not implementation — meaningful assertions over brittle structural checks
+- Note: Jest exit code may be 1 even when all tests pass (pre-existing config quirk)
 
-### Adding a New Section
+### Adding a New Module
 
-1. Add the HTML in `index.html` within the `.container` div
-2. Add styles in `styles.css` (follow existing section patterns)
-3. If interactive, add a module in `app.js`:
+1. Add the HTML section in `index.html`
+2. Add styles in `styles.css` (follow section-based organization, use CSS variables)
+3. Create an IIFE module in `app.js`:
    ```javascript
-   const MySection = {
-       init() { /* set up event listeners */ },
-       reset() { /* clean up for testing */ },
-       // ... module methods
-   };
+   var MyModule = (function () {
+       function init() {
+           var container = document.getElementById('my-module');
+           if (!container) return;
+           // set up event listeners, build DOM
+       }
+
+       function reset() {
+           // clean up for test isolation
+       }
+
+       return { init: init, reset: reset };
+   })();
    ```
-4. Call `MySection.init()` in the `DOMContentLoaded` listener
-5. Add tests in `__tests__/index.test.js`
+4. Call `MyModule.init()` in the second `DOMContentLoaded` block (around line ~2292)
+5. Add tests in `__tests__/my-module.test.js`
 6. Update README if the section adds user-facing features
 
 ### Responsive Design
 
 - Mobile-first approach
 - Breakpoints: 768px (tablet), 480px (phone)
+- Use `contain: content` on independent sections for layout isolation
+- Use `will-change` on animated elements for GPU compositing
 - Test on multiple viewport sizes before submitting
 
 ### Accessibility
 
-- Use semantic elements (`<section>`, `<nav>`, `<button>`)
-- Add `aria-label` to interactive elements
-- Ensure keyboard navigation works (Tab, Enter, Escape)
-- Maintain color contrast ratios (dark theme)
+- Use semantic elements (`<section>`, `<nav>`, `<button>`, `<article>`)
+- Add `aria-label`, `aria-expanded`, `role` attributes to interactive elements
+- Ensure keyboard navigation works (Tab, Enter, Escape, arrow keys)
+- Maintain color contrast ratios for both dark and light themes
+- Support `prefers-reduced-motion` — disable animations when set
 
 ## Pull Request Process
 
@@ -143,27 +187,32 @@ Before requesting review, verify:
 
 - [ ] `npm test` passes with no failures
 - [ ] No console errors or warnings in the browser
-- [ ] CSP meta tag updated if new external resources added
+- [ ] CSP meta tag and Dockerfile nginx CSP stay in sync
 - [ ] Tested on mobile viewport (≤480px) and tablet (≤768px)
 - [ ] Keyboard navigation works for any new interactive elements
 - [ ] ARIA attributes added to new interactive components
 - [ ] No hardcoded colors — use existing CSS custom properties
+- [ ] ES5 only — no `let`, `const`, arrow functions, or template literals
+- [ ] No `innerHTML` with dynamic content — use safe DOM APIs
 
 ## What We're Looking For
 
 **Good contributions:**
 - New landing page sections that showcase AgentBox features
-- Accessibility improvements
-- Performance optimizations (lazy loading, reduced paint)
+- Accessibility improvements (keyboard nav, screen reader support)
+- Performance optimizations (lazy loading, reduced paint, IntersectionObserver)
 - Better mobile experience
-- Animation polish
+- Animation polish (respecting `prefers-reduced-motion`)
 - SEO improvements
 - Test coverage for untested modules
+- Documentation improvements
 
 **Please avoid:**
-- Adding build tools or frameworks (keep it vanilla)
+- Adding build tools, transpilers, or frameworks (keep it vanilla)
+- Using ES6+ syntax (project is ES5 for compatibility)
 - Major redesigns without discussion
 - Changes that break the CSP policy
+- Modifying `vendor/count.js` (third-party GoatCounter)
 - Removing existing functionality
 
 ## Reporting Issues
