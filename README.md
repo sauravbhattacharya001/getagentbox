@@ -89,9 +89,9 @@ The [live landing page](https://sauravbhattacharya001.github.io/getagentbox/) in
 ┌──────────────────────────────────────┐
 │        Landing Page (this repo)      │
 │                                      │
-│  Single-file static site with:       │
-│  • Feature showcase                  │
-│  • Interactive chat demos (4 modes)  │
+│  Multi-page static site with:        │
+│  • 30+ pages (landing, docs, tools)  │
+│  • 50+ modular JS components         │
 │  • Comparison table                  │
 │  • FAQ accordion                     │
 │  • CTA → Telegram bot               │
@@ -114,7 +114,7 @@ The [live landing page](https://sauravbhattacharya001.github.io/getagentbox/) in
 └──────────────────────────────────────┘
 ```
 
-> This repository contains the **landing page** only — a single-file static site deployed via GitHub Pages. The bot backend runs separately and communicates through the Telegram Bot API.
+> This repository contains the **landing site** — a multi-page static site with 30+ pages and 50+ interactive JS modules, deployed via GitHub Pages. The bot backend runs separately and communicates through the Telegram Bot API.
 
 ---
 
@@ -136,31 +136,83 @@ The [live landing page](https://sauravbhattacharya001.github.io/getagentbox/) in
 
 ```
 getagentbox/
-├── index.html                              # Entire landing page (HTML + CSS + JS inline)
-├── styles.css                              # Styling (dark theme, responsive)
-├── app.js                                  # Interactive components (IIFE modules)
-├── src/
-│   └── index.js                            # Reusable npm library (FAQ, Pricing, Stats)
-├── docs/
-│   ├── index.html                          # API reference & developer docs
-│   └── getting-started.html                # Step-by-step setup guide
+├── index.html                              # Main landing page
+├── styles.css                              # Global styling (dark theme, responsive)
+├── app.js                                  # Interactive component orchestrator
+├── cookie-consent.js                       # GDPR-compliant cookie consent
+├── keyboard-shortcuts.js                   # Keyboard navigation support
+├── build.js                                # Build script
+│
+├── # ─── Site Pages (30+) ───
+├── compare.html                            # Feature comparison matrix
+├── faq.html                                # FAQ page
+├── api-docs.html                           # API documentation
+├── tutorials.html                          # User tutorials
+├── blog.html                               # Blog / updates
+├── community.html                          # Community hub
+├── integrations.html                       # Integration catalog
+├── onboarding.html                         # Onboarding wizard
+├── roi-calculator.html                     # ROI calculator tool
+├── use-case-explorer.html                  # Interactive use case explorer
+├── status-page.html                        # Service status dashboard
+├── uptime-history.html                     # Historical uptime data
+├── security-whitepaper.html                # Security documentation
+├── accessibility.html                      # Accessibility statement
+├── testimonials.html                       # User testimonials
+├── privacy.html / terms.html / sla.html    # Legal pages
+├── careers.html / partners.html            # Company pages
+├── 404.html                                # Custom error page
+├── ... (and more)
+│
+├── src/                                    # npm package source
+│   ├── index.js                            # Package entry (FAQ, Pricing, Stats)
+│   ├── roi-calculator.js                   # ROI calculator logic
+│   ├── capability-radar.js                 # Capability radar chart
+│   ├── workflow-builder.js                 # Visual workflow builder
+│   ├── command-reference.js                # Command reference engine
+│   └── modules/                            # 50+ modular UI components
+│       ├── chat-demo.js                    # Animated chat simulation
+│       ├── pricing.js                      # Pricing toggle & tiers
+│       ├── faq.js                          # FAQ accordion
+│       ├── stats.js                        # Animated statistics
+│       ├── playground.js                   # Interactive playground
+│       ├── api-explorer.js                 # API explorer widget
+│       ├── command-palette.js              # Cmd+K command palette
+│       ├── pipeline-builder.js             # Visual pipeline builder
+│       ├── onboarding-quiz.js              # Onboarding questionnaire
+│       ├── personality-configurator.js     # Agent personality config
+│       ├── prompt-gallery.js               # Prompt template gallery
+│       ├── theme-toggle.js                 # Light/dark theme toggle
+│       ├── site-nav.js                     # Navigation system
+│       └── ... (40+ more modules)
+│
+├── docs/                                   # Developer documentation
+│   ├── index.html                          # API reference
+│   ├── getting-started.html                # Setup guide
+│   ├── architecture.html                   # Architecture overview
+│   ├── changelog.html                      # Visual changelog
+│   ├── customization.md                    # Customization guide
+│   └── modules.md                          # Module documentation
+│
+├── vendor/                                 # Vendored dependencies
+├── __tests__/                              # Jest test suites
 ├── Dockerfile                              # Multi-stage nginx container
 ├── .dockerignore                           # Docker build exclusions
-├── README.md
-├── __tests__/                              # Jest test suites
-├── .github/
-│   ├── copilot-setup-steps.yml             # GitHub Copilot coding agent config
-│   ├── copilot-instructions.md             # Repo context for AI agents
-│   ├── pull_request_template.md            # PR template
-│   ├── ISSUE_TEMPLATE/
-│   │   ├── bug_report.yml                  # Bug report form
-│   │   ├── feature_request.yml             # Feature request form
-│   │   └── config.yml                      # Issue template config
-│   └── workflows/
-│       ├── ci.yml                          # CI: HTML validate, structure, links, a11y
-│       ├── pages.yml                       # Auto-deploy to GitHub Pages
-│       ├── publish.yml                     # npm publish on release
-│       └── docker.yml                      # Docker build/push
+├── codecov.yml                             # Code coverage config
+├── CONTRIBUTING.md                         # Contribution guidelines
+├── CHANGELOG.md                            # Release changelog
+├── LICENSE                                 # MIT License
+│
+└── .github/
+    ├── copilot-setup-steps.yml             # GitHub Copilot coding agent config
+    ├── copilot-instructions.md             # Repo context for AI agents
+    ├── pull_request_template.md            # PR template
+    ├── ISSUE_TEMPLATE/                     # Issue form templates
+    └── workflows/
+        ├── ci.yml                          # CI: validate, lint, a11y audit
+        ├── pages.yml                       # Auto-deploy to GitHub Pages
+        ├── publish.yml                     # npm publish on release
+        └── docker.yml                      # Docker build/push
 ```
 
 ---
@@ -207,7 +259,7 @@ php -S localhost:8000
 # Open http://localhost:8000
 ```
 
-No build step. No `npm install`. Edit `index.html` and refresh your browser.
+No build step required for page edits. Modify HTML/CSS/JS and refresh your browser.
 
 ### 🐳 Docker
 
@@ -243,7 +295,7 @@ The landing page includes several security measures:
 
 ## 🎨 Design Decisions
 
-- **Single file** — Zero build complexity, instant deploy, no dependency management
+- **Minimal build** — Zero heavy toolchain, instant deploy, no bundler required
 - **Dark theme** — Gradient accents matching the Telegram aesthetic
 - **Responsive** — Works down to 320px width
 - **No external deps** — Loads fast everywhere, no CDN dependency
