@@ -1,4 +1,4 @@
-// Workflow Builder init
+// Component initializers (for modules that don't self-init)
 if (typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', function () {
     if (typeof WorkflowBuilder !== 'undefined') { WorkflowBuilder.init('workflowBuilderRoot'); }
