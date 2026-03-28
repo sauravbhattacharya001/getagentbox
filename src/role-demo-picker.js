@@ -86,11 +86,12 @@ var RoleDemoPicker = (function () {
   var _activeRole = null;
   var _chatArea = null;
 
-  function escapeHtml(str) {
-    var div = document.createElement('div');
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML;
-  }
+  /** Lookup table: role id → ROLES entry for O(1) access. */
+  var _rolesById = (function () {
+    var map = Object.create(null);
+    for (var i = 0; i < ROLES.length; i++) map[ROLES[i].id] = ROLES[i];
+    return map;
+  })();
 
   function init() {
     _container = document.getElementById('rolePickerSection');
@@ -102,22 +103,20 @@ var RoleDemoPicker = (function () {
 
     if (!roleGrid) return;
 
-    var buttons = roleGrid.querySelectorAll('.role-picker-btn');
-    for (var i = 0; i < buttons.length; i++) {
-      buttons[i].addEventListener('click', function () {
-        selectRole(this.getAttribute('data-role'));
-      });
-    }
+    // Event delegation instead of per-button listeners
+    roleGrid.addEventListener('click', function (e) {
+      var btn = e.target.closest('.role-picker-btn');
+      if (btn && btn.getAttribute('data-role')) {
+        selectRole(btn.getAttribute('data-role'));
+      }
+    });
 
     // Select first role by default
     selectRole(ROLES[0].id);
   }
 
   function selectRole(roleId) {
-    var role = null;
-    for (var i = 0; i < ROLES.length; i++) {
-      if (ROLES[i].id === roleId) { role = ROLES[i]; break; }
-    }
+    var role = _rolesById[roleId];
     if (!role) return;
     _activeRole = roleId;
 
