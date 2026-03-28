@@ -129,8 +129,10 @@
      * Format a number as currency.
      */
     function formatCurrency(n) {
-        if (n >= 1000) return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-        return '$' + n.toFixed(2);
+        var abs = Math.abs(n);
+        var prefix = n < 0 ? '-$' : '$';
+        if (abs >= 1000) return prefix + abs.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        return prefix + abs.toFixed(2);
     }
 
     /**

@@ -354,9 +354,9 @@ function initExplorer() {
     modalEl.innerHTML = `
       <button class="modal-close" aria-label="Close">&times;</button>
       <div class="modal-head">
-        <h2>${uc.icon} ${uc.title}</h2>
-        <span class="cat-tag ${uc.category}">${uc.category}</span>
-        <p class="scenario">${uc.scenario}</p>
+        <h2>${escapeHtml(uc.icon)} ${escapeHtml(uc.title)}</h2>
+        <span class="cat-tag ${escapeHtml(uc.category)}">${escapeHtml(uc.category)}</span>
+        <p class="scenario">${escapeHtml(uc.scenario)}</p>
       </div>
       <div class="modal-steps">${stepsHtml}</div>
       <div class="modal-outcome"><strong>Result:</strong> ${escapeHtml(uc.outcome)}</div>
