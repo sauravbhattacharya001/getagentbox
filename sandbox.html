@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Sandbox Playground</title>
+    <meta name="description" content="Try AgentBox commands in an interactive sandbox. Explore features, test prompts, and see what your AI agent can do — no signup required.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --red: #ff6b6b;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            border-bottom: 1px solid var(--border);
+        }
+        .header a.back {
+            display: inline-block;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .header a.back:hover { text-decoration: underline; }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .header h1 .emoji { margin-right: 12px; }
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Sandbox UI */
+        .sandbox-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            min-height: 600px;
+        }
+
+        /* Sidebar - Command Categories */
+        .sidebar {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .sidebar h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        .category-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 14px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s;
+            margin-bottom: 4px;
+        }
+        .category-btn:hover {
+            background: var(--surface-2);
+            border-color: var(--border);
+        }
+        .category-btn.active {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .category-btn .icon { font-size: 1.1rem; }
+        .category-btn .count {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: var(--surface-3);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* Main Panel */
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Chat Window */
+        .chat-window {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 450px;
+        }
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .chat-header .bot-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .chat-header .bot-info h4 { font-size: 0.95rem; }
+        .chat-header .bot-info span {
+            font-size: 0.8rem;
+            color: var(--green);
+        }
+        .chat-header .clear-btn {
+            margin-left: auto;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.15s;
+        }
+        .chat-header .clear-btn:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 80%;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.user {
+            align-self: flex-end;
+        }
+        .message.bot {
+            align-self: flex-start;
+        }
+        .message .bubble {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .message.user .bubble {
+            background: var(--accent);
+            color: #000;
+            border-bottom-right-radius: 4px;
+        }
+        .message.bot .bubble {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+        .message .bubble code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.85em;
+        }
+        .message .bubble pre {
+            background: rgba(0,0,0,0.4);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin-top: 8px;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+        .message .meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+        .message.user .meta { text-align: right; }
+
+        .typing-indicator {
+            align-self: flex-start;
+            display: none;
+        }
+        .typing-indicator.show { display: block; }
+        .typing-indicator .bubble {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 18px;
+            display: flex;
+            gap: 5px;
+        }
+        .typing-indicator .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            animation: typingBounce 1.2s infinite;
+        }
+        .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* Input Area */
+        .chat-input {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+        .chat-input input {
+            flex: 1;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            color: var(--text);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .chat-input input:focus {
+            border-color: var(--accent);
+        }
+        .chat-input input::placeholder {
+            color: var(--text-muted);
+        }
+        .chat-input button {
+            background: var(--accent);
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 12px 20px;
+            color: #000;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .chat-input button:hover { opacity: 0.85; }
+
+        /* Quick Commands */
+        .quick-commands {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0 20px 16px;
+        }
+        .quick-cmd {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .quick-cmd:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Command Reference Panel */
+        .reference-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .reference-panel h3 {
+            font-size: 1rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cmd-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
+        }
+        .cmd-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .cmd-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+        .cmd-card .cmd-name {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        .cmd-card .cmd-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .cmd-card .cmd-tag {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--purple-bg);
+            color: var(--purple);
+        }
+
+        /* Info Banner */
+        .info-banner {
+            background: var(--accent-bg);
+            border: 1px solid rgba(0,212,255,0.2);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .info-banner .icon { font-size: 1.3rem; }
+        .info-banner p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .info-banner a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .info-banner a:hover { text-decoration: underline; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sandbox-layout {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 16px;
+            }
+            .sidebar h3 {
+                width: 100%;
+            }
+            .category-btn {
+                flex: 0 0 auto;
+                padding: 8px 12px;
+            }
+            .category-btn .count { display: none; }
+            .header h1 { font-size: 1.8rem; }
+            .cmd-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a class="back" href="index.html">← Back to AgentBox</a>
+    <h1><span class="emoji">🧪</span>Sandbox Playground</h1>
+    <p>Try AgentBox commands in a simulated environment. Explore what your AI agent can do — no signup required.</p>
+</div>
+
+<div class="container">
+
+    <div class="info-banner">
+        <span class="icon">💡</span>
+        <p>This is a <strong>simulated demo</strong> — responses are pre-built examples. For the real experience, <a href="index.html#get-started">set up AgentBox on Telegram</a>.</p>
+    </div>
+
+    <div class="sandbox-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h3>Categories</h3>
+            <button class="category-btn active" data-category="all">
+                <span class="icon">📋</span> All Commands <span class="count">24</span>
+            </button>
+            <button class="category-btn" data-category="productivity">
+                <span class="icon">⚡</span> Productivity <span class="count">5</span>
+            </button>
+            <button class="category-btn" data-category="ai">
+                <span class="icon">🤖</span> AI & Chat <span class="count">4</span>
+            </button>
+            <button class="category-btn" data-category="automation">
+                <span class="icon">🔄</span> Automation <span class="count">5</span>
+            </button>
+            <button class="category-btn" data-category="data">
+                <span class="icon">📊</span> Data & Search <span class="count">4</span>
+            </button>
+            <button class="category-btn" data-category="system">
+                <span class="icon">⚙️</span> System <span class="count">3</span>
+            </button>
+            <button class="category-btn" data-category="fun">
+                <span class="icon">🎮</span> Fun & Social <span class="count">3</span>
+            </button>
+        </div>
+
+        <!-- Main Panel -->
+        <div class="main-panel">
+            <!-- Chat Window -->
+            <div class="chat-window">
+                <div class="chat-header">
+                    <div class="bot-avatar">🤖</div>
+                    <div class="bot-info">
+                        <h4>AgentBox Demo</h4>
+                        <span>● Online — Sandbox Mode</span>
+                    </div>
+                    <button class="clear-btn" onclick="clearChat()">Clear Chat</button>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <div class="bubble">
+                            👋 Welcome to the AgentBox Sandbox! Try typing a command or click one of the quick commands below. I'll show you what AgentBox can do.
+                        </div>
+                        <div class="meta">AgentBox Demo • just now</div>
+                    </div>
+                </div>
+
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="bubble">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+
+                <div class="quick-commands">
+                    <span class="quick-cmd" onclick="sendQuickCmd(this)">What can you do?</span>
+                    <span class="quick-cmd" onclick="sendQuickCmd(this)">Summarize my emails</span>
+                    <span class="quick-cmd" onclick="sendQuickCmd(this)">Set a reminder</span>
+                    <span class="quick-cmd" onclick="sendQuickCmd(this)">Search the web</span>
+                    <span class="quick-cmd" onclick="sendQuickCmd(this)">Create a task</span>
+                    <span class="quick-cmd" onclick="sendQuickCmd(this)">Tell me a joke</span>
+                </div>
+
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Try a command... (e.g., 'remind me to call Mom at 5pm')" onkeydown="if(event.key==='Enter')sendMessage()">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+
+            <!-- Command Reference -->
+            <div class="reference-panel">
+                <h3>📖 Command Reference</h3>
+                <div class="cmd-grid" id="cmdGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    <p>AgentBox Sandbox — a taste of what's possible. <a href="index.html#get-started">Get the real thing →</a></p>
+</div>
+
+<script>
+const commands = [
+    { name: "/remind", desc: "Set reminders with natural language", example: "Remind me to call Mom at 5pm tomorrow", category: "productivity", response: "⏰ <strong>Reminder set!</strong>\n\n📝 Call Mom\n📅 Tomorrow at 5:00 PM (PST)\n\nI'll send you a message when it's time. You can say <code>/reminders</code> to see all active reminders." },
+    { name: "/task", desc: "Create and manage tasks", example: "Create a task: finish quarterly report by Friday", category: "productivity", response: "✅ <strong>Task created!</strong>\n\n<pre>📋 finish quarterly report\n📅 Due: Friday, Mar 28\n🏷️ Priority: Normal\n📁 List: Default</pre>\n\nSay <code>/tasks</code> to see your full task list." },
+    { name: "/summarize", desc: "Summarize emails, articles, or text", example: "Summarize my emails", category: "productivity", response: "📧 <strong>Email Summary</strong> (last 24h)\n\nYou have <strong>12 unread</strong> emails:\n\n🔴 <strong>3 Important</strong>\n• Meeting rescheduled to 3pm — from Sarah K.\n• Q1 budget approval needed — from Finance\n• Deploy failed on staging — from CI/CD\n\n🟡 <strong>4 Updates</strong>\n• Newsletter from Dev Weekly\n• GitHub: 2 PR reviews requested\n• Slack digest: 8 mentions\n• Calendar: 3 events tomorrow\n\n⚪ 5 low-priority (promotions, notifications)" },
+    { name: "/note", desc: "Save quick notes and memos", example: "Note: the API key for prod is rotated every 90 days", category: "productivity", response: "📝 <strong>Note saved!</strong>\n\n<pre>\"the API key for prod is rotated every 90 days\"</pre>\n\n🏷️ Auto-tagged: <code>#api</code> <code>#prod</code> <code>#security</code>\n📅 Saved: Mar 28, 2026\n\nSay <code>/notes</code> to browse, or <code>/search API key</code> to find it later." },
+    { name: "/schedule", desc: "View and manage your calendar", example: "What's on my calendar today?", category: "productivity", response: "📅 <strong>Today's Schedule</strong> — Friday, Mar 28\n\n<pre>09:00  ☕  Daily standup (Zoom)\n10:30  💻  Code review — PR #342\n12:00  🍕  Lunch with David\n14:00  📊  Q1 Review presentation\n16:00  🏃  Gym (recurring)\n</pre>\n\n💡 You have a <strong>2-hour gap</strong> between 10:30-12:00. Want me to block focus time?" },
+    { name: "/ask", desc: "Ask anything — get AI-powered answers", example: "What's the difference between TCP and UDP?", category: "ai", response: "🤖 <strong>TCP vs UDP</strong>\n\n<strong>TCP (Transmission Control Protocol)</strong>\n• Connection-oriented — establishes a handshake\n• Reliable delivery with ordering & retransmission\n• Slower but guaranteed\n• Use for: web, email, file transfer\n\n<strong>UDP (User Datagram Protocol)</strong>\n• Connectionless — fire and forget\n• No delivery guarantee, no ordering\n• Faster, lower overhead\n• Use for: gaming, video streaming, DNS\n\n<pre>TCP = certified mail 📬\nUDP = shouting across the room 📢</pre>\n\nWant me to go deeper on either one?" },
+    { name: "/write", desc: "Generate text, emails, or documents", example: "Write a professional email declining a meeting", category: "ai", response: "✍️ <strong>Here's a draft:</strong>\n\n<pre>Subject: Re: Meeting Request — March 28\n\nHi [Name],\n\nThank you for the invitation. Unfortunately,\nI have a scheduling conflict and won't be\nable to attend the meeting on [date].\n\nIf there are any materials or notes from\nthe discussion, I'd appreciate being looped\nin afterward. I'm also happy to connect\n1:1 if there's anything that needs my input.\n\nBest regards,\n[Your name]</pre>\n\n📋 Copied to clipboard. Want me to adjust the tone or add anything?" },
+    { name: "/translate", desc: "Translate text between languages", example: "Translate 'Where is the train station?' to Japanese", category: "ai", response: "🌐 <strong>Translation</strong>\n\n🇬🇧 English → 🇯🇵 Japanese\n\n<pre>駅はどこですか？\n(Eki wa doko desu ka?)</pre>\n\n🔊 Pronunciation: eh-kee wah doh-koh deh-soo kah?\n\n💡 This is polite/formal. Casual: 駅どこ？(Eki doko?)" },
+    { name: "/code", desc: "Generate, explain, or debug code", example: "Write a Python function to check if a string is a palindrome", category: "ai", response: "💻 <strong>Palindrome Checker</strong>\n\n<pre>def is_palindrome(s: str) -> bool:\n    \"\"\"Check if a string is a palindrome,\n    ignoring case and non-alphanumeric chars.\"\"\"\n    cleaned = ''.join(\n        c.lower() for c in s if c.isalnum()\n    )\n    return cleaned == cleaned[::-1]\n\n# Examples\nprint(is_palindrome(\"racecar\"))     # True\nprint(is_palindrome(\"A man, a plan, a canal: Panama\"))\n# True\nprint(is_palindrome(\"hello\"))       # False</pre>\n\n⏱️ Time: O(n) | Space: O(n)\n\nWant me to optimize it for O(1) space, or add tests?" },
+    { name: "/cron", desc: "Schedule recurring automated tasks", example: "Every Monday at 9am, summarize my unread emails", category: "automation", response: "🔄 <strong>Recurring task created!</strong>\n\n<pre>📋 Summarize unread emails\n⏰ Every Monday at 9:00 AM (PST)\n🔁 Repeats: Weekly\n📧 Output: Sent to this chat</pre>\n\n⚡ First run: Monday, Mar 31 at 9:00 AM\n\nSay <code>/crons</code> to manage scheduled tasks." },
+    { name: "/monitor", desc: "Watch websites or services for changes", example: "Monitor https://status.openai.com every hour", category: "automation", response: "👁️ <strong>Monitor configured!</strong>\n\n<pre>🌐 https://status.openai.com\n⏰ Check: Every 1 hour\n📢 Alert: On any content change\n🔔 Notify: This chat</pre>\n\n📊 Baseline snapshot saved. I'll alert you whenever the page content changes.\n\nSay <code>/monitors</code> to see all active monitors." },
+    { name: "/workflow", desc: "Create multi-step automated workflows", example: "When I get an email from my boss, summarize it and create a task", category: "automation", response: "⚡ <strong>Workflow created!</strong>\n\n<pre>🔗 Workflow: Boss Email Handler\n\n  Trigger: New email from boss\n     ↓\n  Step 1: Summarize email content\n     ↓\n  Step 2: Create task from key action items\n     ↓\n  Step 3: Send summary to this chat\n</pre>\n\n✅ Active immediately. Say <code>/workflows</code> to manage." },
+    { name: "/backup", desc: "Export and backup your data", example: "Backup my notes and tasks", category: "automation", response: "💾 <strong>Backup started...</strong>\n\n<pre>📝 Notes:      47 items  ✅\n✅ Tasks:      23 items  ✅\n⏰ Reminders:  8 items   ✅\n📅 Calendars:  3 synced  ✅\n🔄 Workflows:  5 active  ✅</pre>\n\n📦 Backup ready! Format: JSON + Markdown\n📎 Sending as file attachment...\n\n<em>[backup_2026-03-28.zip — 2.3 MB]</em>" },
+    { name: "/digest", desc: "Get a daily digest of activity", example: "Give me my daily digest", category: "automation", response: "📰 <strong>Daily Digest</strong> — Mar 28, 2026\n\n<strong>📧 Email</strong>: 12 new (3 important)\n<strong>✅ Tasks</strong>: 4 completed, 2 overdue\n<strong>📅 Calendar</strong>: 5 events today\n<strong>💬 Messages</strong>: 28 unread across 4 channels\n<strong>🐙 GitHub</strong>: 3 PRs merged, 1 review pending\n\n<strong>🏆 Wins</strong>\n• Closed 4 tasks (above your average of 2.8)\n• Inbox at 89% processed\n\n<strong>⚠️ Needs Attention</strong>\n• Q1 report due tomorrow\n• 2 PRs waiting for your review" },
+    { name: "/search", desc: "Search the web with AI-powered answers", example: "Search the web for best mechanical keyboards 2026", category: "data", response: "🔍 <strong>Best Mechanical Keyboards 2026</strong>\n\nTop picks from recent reviews:\n\n<strong>1. Keychron Q Max</strong> ⭐ 9.4/10\n   Wireless, hot-swappable, gasket mount\n   💰 $199\n\n<strong>2. Wooting 80HE</strong> ⭐ 9.2/10\n   Hall effect switches, analog input\n   💰 $175\n\n<strong>3. HHKB Studio</strong> ⭐ 9.0/10\n   Topre switches, built-in trackpoint\n   💰 $399\n\n<strong>4. Zoom65 V3</strong> ⭐ 8.8/10\n   Budget-friendly, excellent sound\n   💰 $129\n\n📎 Sources: Tom's Hardware, RTINGS, r/MechanicalKeyboards" },
+    { name: "/fetch", desc: "Fetch and summarize any webpage", example: "Fetch and summarize https://arxiv.org/abs/2301.13688", category: "data", response: "🌐 <strong>Page fetched & summarized</strong>\n\n📄 <strong>\"LLaMA: Open and Efficient Foundation Language Models\"</strong>\n<em>Meta AI Research, 2023</em>\n\n<strong>Key Points:</strong>\n• Open-source LLM family: 7B to 65B parameters\n• Trained on publicly available data only\n• LLaMA-13B outperforms GPT-3 (175B) on most benchmarks\n• LLaMA-65B competitive with Chinchilla-70B and PaLM-540B\n• Proves smaller, well-trained models can match larger ones\n\n<strong>Impact:</strong> Catalyzed the open-source LLM movement, leading to Alpaca, Vicuna, and many fine-tuned variants.\n\n📎 Full paper: 27 pages | Published: Feb 2023" },
+    { name: "/weather", desc: "Get current weather and forecasts", example: "What's the weather in Seattle?", category: "data", response: "🌤️ <strong>Weather — Seattle, WA</strong>\n\n<pre>🌡️  54°F (12°C) — Partly Cloudy\n💧  Humidity: 72%\n💨  Wind: 8 mph NW\n🌧️  Rain: 15% chance\n\n📅 Forecast:\n  Sat:  🌤️ 56°F / 43°F\n  Sun:  🌧️ 52°F / 41°F  ← rain likely\n  Mon:  ⛅ 55°F / 44°F\n</pre>\n\n☂️ Pack an umbrella for Sunday!" },
+    { name: "/calculate", desc: "Math, conversions, and calculations", example: "Calculate compound interest on $10,000 at 7% for 20 years", category: "data", response: "🧮 <strong>Compound Interest Calculator</strong>\n\n<pre>💰 Principal:     $10,000.00\n📈 Annual Rate:   7%\n📅 Period:        20 years\n🔄 Compounding:   Annual\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n💎 Final Amount:  $38,696.84\n📊 Total Interest: $28,696.84\n📈 Growth:        287%\n\nYear 5:   $14,025.52\nYear 10:  $19,671.51\nYear 15:  $27,590.32\nYear 20:  $38,696.84</pre>\n\n💡 With monthly compounding: $40,387.39 (+$1,690 more)" },
+    { name: "/status", desc: "Check your AgentBox status and usage", example: "/status", category: "system", response: "📊 <strong>AgentBox Status</strong>\n\n<pre>👤 Plan:        Pro\n📅 Billing:     Renews Apr 15\n💬 Messages:    1,247 / 5,000 this month\n🧠 Model:       GPT-4 Turbo\n⚡ Avg Response: 1.2s\n🔌 Integrations: 4 connected\n💾 Storage:     23 MB / 1 GB\n\n🟢 All systems operational</pre>" },
+    { name: "/settings", desc: "Configure your AgentBox preferences", example: "/settings", category: "system", response: "⚙️ <strong>Settings</strong>\n\n<pre>🤖 AI Model:       GPT-4 Turbo  [change]\n🌐 Language:       English      [change]\n🕐 Timezone:       PST (UTC-8)  [change]\n🔔 Notifications:  On           [toggle]\n🌙 Quiet Hours:    11pm - 7am   [edit]\n🔒 Privacy Mode:   Off          [toggle]\n📊 Usage Reports:  Weekly       [change]\n</pre>\n\nReply with a setting name to change it, or say <code>reset all</code> to restore defaults." },
+    { name: "/help", desc: "Get help and list available commands", example: "/help", category: "system", response: "📚 <strong>AgentBox Commands</strong>\n\n<strong>⚡ Productivity</strong>\n<code>/remind</code> — Set reminders\n<code>/task</code> — Manage tasks\n<code>/note</code> — Save notes\n<code>/schedule</code> — View calendar\n<code>/summarize</code> — Summarize content\n\n<strong>🤖 AI & Chat</strong>\n<code>/ask</code> — Get AI answers\n<code>/write</code> — Generate text\n<code>/translate</code> — Translate languages\n<code>/code</code> — Code assistance\n\n<strong>🔄 Automation</strong>\n<code>/cron</code> — Scheduled tasks\n<code>/monitor</code> — Watch for changes\n<code>/workflow</code> — Multi-step flows\n\n<strong>📊 Data</strong>\n<code>/search</code> — Web search\n<code>/weather</code> — Weather info\n<code>/calculate</code> — Math & conversions\n\n💡 Or just chat naturally — no commands needed!" },
+    { name: "/joke", desc: "Get a random joke or fun fact", example: "Tell me a joke", category: "fun", response: "😄 Here's one:\n\n<strong>Why do programmers prefer dark mode?</strong>\n\nBecause light attracts bugs. 🐛\n\n<pre>// related:\nif (joke.isGood()) {\n  audience.laugh();\n} else {\n  audience.groan(); // ← you are here\n}</pre>\n\nWant another? Say <code>/joke</code> again!" },
+    { name: "/trivia", desc: "Random trivia and quiz questions", example: "Give me a trivia question", category: "fun", response: "🧠 <strong>Trivia Time!</strong>\n\n<strong>Category:</strong> Science 🔬\n\n❓ What is the only letter that doesn't appear in any U.S. state name?\n\n<em>A)</em> Q\n<em>B)</em> X\n<em>C)</em> Z\n<em>D)</em> J\n\nReply with your answer (A-D)!\n\n<details style='margin-top:8px'><summary>Show answer</summary>The answer is <strong>Q</strong>! No U.S. state contains the letter Q.</details>" },
+    { name: "/quote", desc: "Get an inspirational quote", example: "Give me an inspirational quote", category: "fun", response: "💭 <strong>Quote of the moment</strong>\n\n<em>\"The best time to plant a tree was 20 years ago. The second best time is now.\"</em>\n\n— Chinese Proverb 🌳\n\n<pre>━━━━━━━━━━━━━━━━━━━━━━━━\n🏷️ Tags: #motivation #growth\n📅 Mar 28, 2026\n━━━━━━━━━━━━━━━━━━━━━━━━</pre>\n\nSay <code>/quote</code> for another, or <code>/quote [topic]</code> for a specific theme." }
+];
+
+// Natural language patterns for matching
+const naturalPatterns = [
+    { patterns: ["what can you do", "help me", "what do you do", "capabilities", "features"], cmdName: "/help" },
+    { patterns: ["remind", "reminder", "don't forget", "remember to"], cmdName: "/remind" },
+    { patterns: ["email", "inbox", "mail", "summarize"], cmdName: "/summarize" },
+    { patterns: ["task", "todo", "to-do", "to do"], cmdName: "/task" },
+    { patterns: ["note", "save this", "write down", "memo"], cmdName: "/note" },
+    { patterns: ["calendar", "schedule", "agenda", "events today", "what's on"], cmdName: "/schedule" },
+    { patterns: ["weather", "temperature", "forecast", "rain"], cmdName: "/weather" },
+    { patterns: ["search", "look up", "find", "google"], cmdName: "/search" },
+    { patterns: ["joke", "funny", "laugh", "humor"], cmdName: "/joke" },
+    { patterns: ["quote", "inspiration", "motivat"], cmdName: "/quote" },
+    { patterns: ["trivia", "quiz", "question"], cmdName: "/trivia" },
+    { patterns: ["translate", "translation", "say in", "in japanese", "in spanish", "in french"], cmdName: "/translate" },
+    { patterns: ["code", "function", "program", "script", "debug"], cmdName: "/code" },
+    { patterns: ["write", "draft", "compose", "email"], cmdName: "/write" },
+    { patterns: ["calculate", "math", "compound", "interest", "convert"], cmdName: "/calculate" },
+    { patterns: ["status", "usage", "plan"], cmdName: "/status" },
+    { patterns: ["settings", "config", "preferences"], cmdName: "/settings" },
+    { patterns: ["cron", "recurring", "every day", "every week", "every monday"], cmdName: "/cron" },
+    { patterns: ["monitor", "watch", "track changes"], cmdName: "/monitor" },
+    { patterns: ["workflow", "automate", "when i get"], cmdName: "/workflow" },
+    { patterns: ["backup", "export", "download"], cmdName: "/backup" },
+    { patterns: ["digest", "daily summary", "daily digest", "report"], cmdName: "/digest" },
+    { patterns: ["fetch", "webpage", "article", "arxiv", "url"], cmdName: "/fetch" },
+];
+
+// Render command grid
+function renderCommands(category = 'all') {
+    const grid = document.getElementById('cmdGrid');
+    const filtered = category === 'all' ? commands : commands.filter(c => c.category === category);
+    grid.innerHTML = filtered.map(cmd => `
+        <div class="cmd-card" onclick="tryCommand('${cmd.name}')">
+            <div class="cmd-name">${cmd.name}</div>
+            <div class="cmd-desc">${cmd.desc}</div>
+            <span class="cmd-tag">${cmd.category}</span>
+        </div>
+    `).join('');
+}
+
+// Category buttons
+document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderCommands(btn.dataset.category);
+    });
+});
+
+function tryCommand(cmdName) {
+    const cmd = commands.find(c => c.name === cmdName);
+    if (cmd) {
+        document.getElementById('chatInput').value = cmd.example;
+        sendMessage();
+    }
+}
+
+function sendQuickCmd(el) {
+    document.getElementById('chatInput').value = el.textContent;
+    sendMessage();
+}
+
+function findResponse(input) {
+    const lower = input.toLowerCase().trim();
+
+    // Check for exact command match
+    const exactCmd = commands.find(c => lower.startsWith(c.name));
+    if (exactCmd) return exactCmd.response;
+
+    // Check natural language patterns
+    for (const pattern of naturalPatterns) {
+        if (pattern.patterns.some(p => lower.includes(p))) {
+            const cmd = commands.find(c => c.name === pattern.cmdName);
+            if (cmd) return cmd.response;
+        }
+    }
+
+    // Default fallback
+    return `I understand you're asking about: <em>"${input}"</em>\n\nIn the full AgentBox, I'd handle this with AI-powered understanding. In this sandbox demo, try one of these:\n\n• Click a command card below\n• Use the quick command buttons\n• Type a command like <code>/remind</code>, <code>/search</code>, or <code>/ask</code>\n\n💡 The real AgentBox understands natural language — no commands needed!`;
+}
+
+function addMessage(text, isUser) {
+    const messages = document.getElementById('chatMessages');
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const div = document.createElement('div');
+    div.className = `message ${isUser ? 'user' : 'bot'}`;
+    div.innerHTML = `
+        <div class="bubble">${text}</div>
+        <div class="meta">${isUser ? 'You' : 'AgentBox Demo'} • ${now}</div>
+    `;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, true);
+    input.value = '';
+
+    // Show typing indicator
+    const typing = document.getElementById('typingIndicator');
+    typing.classList.add('show');
+    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+
+    // Simulate response delay
+    const delay = 500 + Math.random() * 1000;
+    setTimeout(() => {
+        typing.classList.remove('show');
+        const response = findResponse(text);
+        addMessage(response, false);
+    }, delay);
+}
+
+function clearChat() {
+    const messages = document.getElementById('chatMessages');
+    messages.innerHTML = '';
+    addMessage('👋 Chat cleared! Try another command or click a card below to explore.', false);
+}
+
+// Initial render
+renderCommands();
+</script>
+
+</body>
+</html>
