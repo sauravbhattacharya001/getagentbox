@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Knowledge Base</title>
+    <meta name="description" content="Browse AgentBox help articles, guides, and tutorials. Find answers to common questions and learn how to get the most out of your AI agent.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 1.1em; }
+        .header a:hover { text-decoration: underline; }
+        .header-title { font-size: 1.3em; font-weight: 700; }
+
+        .hero {
+            text-align: center;
+            padding: 60px 24px 40px;
+        }
+        .hero h1 {
+            font-size: 2.4em;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p { color: var(--text-muted); font-size: 1.15em; max-width: 600px; margin: 0 auto; }
+
+        .search-box {
+            max-width: 560px;
+            margin: 32px auto 0;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 1.05em;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-box input:focus { border-color: var(--accent); }
+        .search-box input::placeholder { color: var(--text-muted); }
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2em;
+            color: var(--text-muted);
+        }
+        .search-count {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9em;
+            margin-top: 8px;
+            min-height: 1.4em;
+        }
+
+        .categories {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 20px 24px 8px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .cat-btn {
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.92em;
+            transition: all 0.2s;
+        }
+        .cat-btn:hover { border-color: var(--accent); color: var(--text); }
+        .cat-btn.active {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .articles {
+            max-width: 800px;
+            margin: 32px auto;
+            padding: 0 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .article-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .article-card:hover { border-color: var(--accent); }
+        .article-header {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+        .article-icon {
+            font-size: 1.5em;
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-2);
+            border-radius: var(--radius-sm);
+        }
+        .article-meta { flex: 1; }
+        .article-meta h3 { font-size: 1.1em; margin-bottom: 4px; }
+        .article-meta p { color: var(--text-muted); font-size: 0.9em; }
+        .article-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .article-tag {
+            font-size: 0.75em;
+            padding: 2px 10px;
+            border-radius: 10px;
+            background: var(--surface-3);
+            color: var(--text-muted);
+        }
+        .article-chevron {
+            color: var(--text-muted);
+            transition: transform 0.3s;
+            font-size: 1.2em;
+            margin-top: 4px;
+        }
+        .article-card.open .article-chevron { transform: rotate(90deg); }
+        .article-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        .article-body-inner {
+            padding: 0 24px 24px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            color: var(--text-muted);
+            line-height: 1.75;
+        }
+        .article-body-inner h4 { color: var(--text); margin: 16px 0 8px; }
+        .article-body-inner code {
+            background: var(--surface-3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: var(--accent);
+        }
+        .article-body-inner ul { margin: 8px 0 8px 20px; }
+        .article-body-inner li { margin-bottom: 4px; }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+        }
+        .no-results span { font-size: 2em; display: block; margin-bottom: 12px; }
+
+        .footer {
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9em;
+            margin-top: 60px;
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 1.7em; }
+            .header { padding: 16px 20px; }
+            .articles { padding: 0 16px; }
+            .article-header { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html">🤖 AgentBox</a>
+        <span class="header-title">Knowledge Base</span>
+        <a href="faq.html">FAQ →</a>
+    </header>
+
+    <section class="hero">
+        <h1>📚 Knowledge Base</h1>
+        <p>Everything you need to know about setting up, using, and getting the most out of your AgentBox AI agent.</p>
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search articles..." autocomplete="off">
+        </div>
+        <div class="search-count" id="searchCount"></div>
+    </section>
+
+    <div class="categories" id="categories"></div>
+    <div class="articles" id="articles"></div>
+    <div class="no-results" id="noResults" style="display:none;">
+        <span>🔎</span>
+        No articles match your search. Try different keywords.
+    </div>
+
+    <footer class="footer">
+        <p>Can't find what you're looking for? <a href="contact.html">Contact support</a> · <a href="faq.html">Browse FAQ</a> · <a href="community.html">Ask the community</a></p>
+    </footer>
+
+    <script>
+    (function() {
+        const articles = [
+            {
+                id: 'getting-started',
+                icon: '🚀',
+                title: 'Getting Started with AgentBox',
+                summary: 'Set up your AI agent in under 2 minutes and send your first message.',
+                category: 'Getting Started',
+                tags: ['setup', 'telegram', 'beginner'],
+                body: `
+                    <h4>Step 1: Find the Bot</h4>
+                    <p>Search for <code>@AgentBoxBot</code> on Telegram and tap <strong>Start</strong>.</p>
+                    <h4>Step 2: Say Hello</h4>
+                    <p>Send any message to begin. Your agent will introduce itself and start learning about you.</p>
+                    <h4>Step 3: Explore Features</h4>
+                    <ul>
+                        <li>Ask questions — your agent searches the web for you</li>
+                        <li>Set reminders — <code>/remind Buy groceries in 2 hours</code></li>
+                        <li>Send images — your agent can understand and describe photos</li>
+                        <li>Have conversations — it remembers context within each session</li>
+                    </ul>
+                    <h4>Free Tier</h4>
+                    <p>You get <strong>20 free messages per day</strong> to try everything out. No credit card required.</p>
+                `
+            },
+            {
+                id: 'memory-system',
+                icon: '🧠',
+                title: 'How Agent Memory Works',
+                summary: 'Understand how your agent remembers you across conversations.',
+                category: 'Core Features',
+                tags: ['memory', 'personalization', 'context'],
+                body: `
+                    <h4>Short-Term Memory</h4>
+                    <p>Within a conversation, your agent remembers everything discussed. This context resets after a period of inactivity.</p>
+                    <h4>Long-Term Memory</h4>
+                    <p>Important details (your name, preferences, recurring topics) are stored in long-term memory. Your agent recalls these across sessions.</p>
+                    <h4>What Gets Remembered</h4>
+                    <ul>
+                        <li>Your name and how you like to be addressed</li>
+                        <li>Topics you frequently discuss</li>
+                        <li>Preferences you've expressed</li>
+                        <li>Important dates or facts you've shared</li>
+                    </ul>
+                    <h4>Managing Your Memory</h4>
+                    <p>Use <code>/memory</code> to see what your agent remembers. Use <code>/forget</code> to clear specific memories or reset entirely.</p>
+                `
+            },
+            {
+                id: 'web-search',
+                icon: '🌐',
+                title: 'Web Search & Research',
+                summary: 'Your agent can search the web and summarize findings for you.',
+                category: 'Core Features',
+                tags: ['search', 'web', 'research'],
+                body: `
+                    <h4>How It Works</h4>
+                    <p>Just ask a question naturally. If your agent doesn't know the answer from its training data, it automatically searches the web.</p>
+                    <h4>Examples</h4>
+                    <ul>
+                        <li>"What's the weather in Tokyo right now?"</li>
+                        <li>"Find the best-rated Italian restaurants near me"</li>
+                        <li>"What happened in tech news today?"</li>
+                        <li>"Compare the specs of iPhone 16 vs Pixel 9"</li>
+                    </ul>
+                    <h4>Tips for Better Results</h4>
+                    <ul>
+                        <li>Be specific — "best budget laptop 2026" works better than "good laptop"</li>
+                        <li>Ask follow-ups — your agent remembers the search context</li>
+                        <li>Request summaries — "summarize the top 3 results"</li>
+                    </ul>
+                `
+            },
+            {
+                id: 'reminders',
+                icon: '⏰',
+                title: 'Setting Reminders & Alerts',
+                summary: 'Never forget anything — let your agent remind you at the right time.',
+                category: 'Productivity',
+                tags: ['reminders', 'alerts', 'scheduling'],
+                body: `
+                    <h4>Quick Reminders</h4>
+                    <p>Use <code>/remind</code> followed by your reminder text and timing:</p>
+                    <ul>
+                        <li><code>/remind Call dentist in 2 hours</code></li>
+                        <li><code>/remind Team standup tomorrow at 9am</code></li>
+                        <li><code>/remind Pay rent on the 1st</code></li>
+                    </ul>
+                    <h4>Natural Language</h4>
+                    <p>You can also just say "remind me to..." in normal conversation and your agent will set it up.</p>
+                    <h4>Managing Reminders</h4>
+                    <p>Use <code>/reminders</code> to list all active reminders. Reply to a reminder message to snooze or cancel it.</p>
+                `
+            },
+            {
+                id: 'image-understanding',
+                icon: '📸',
+                title: 'Image Understanding',
+                summary: 'Send photos and images for your agent to analyze and describe.',
+                category: 'Core Features',
+                tags: ['images', 'vision', 'photos'],
+                body: `
+                    <h4>What Can It Do?</h4>
+                    <ul>
+                        <li>Describe what's in a photo</li>
+                        <li>Read text from screenshots or documents</li>
+                        <li>Identify objects, animals, plants</li>
+                        <li>Analyze charts, graphs, or diagrams</li>
+                        <li>Help with homework by reading problem images</li>
+                    </ul>
+                    <h4>How to Use</h4>
+                    <p>Simply send an image in your chat. You can add a question as a caption, like sending a menu photo with "What's the cheapest option?"</p>
+                    <h4>Limitations</h4>
+                    <p>The agent cannot identify specific people. Very blurry or low-resolution images may produce less accurate results.</p>
+                `
+            },
+            {
+                id: 'privacy-security',
+                icon: '🔒',
+                title: 'Privacy & Data Security',
+                summary: 'How we protect your data and what we store.',
+                category: 'Trust & Safety',
+                tags: ['privacy', 'security', 'data', 'encryption'],
+                body: `
+                    <h4>What We Store</h4>
+                    <ul>
+                        <li>Your Telegram user ID (for routing messages)</li>
+                        <li>Conversation history (for memory features)</li>
+                        <li>Preferences you've explicitly set</li>
+                    </ul>
+                    <h4>What We Don't Do</h4>
+                    <ul>
+                        <li>We never sell your data</li>
+                        <li>We don't train models on your conversations</li>
+                        <li>We don't share data with third parties</li>
+                        <li>We don't read your conversations manually</li>
+                    </ul>
+                    <h4>Data Deletion</h4>
+                    <p>Use <code>/deletedata</code> to permanently erase all your data. This is irreversible. See our <a href="privacy.html">Privacy Policy</a> for full details.</p>
+                `
+            },
+            {
+                id: 'commands-reference',
+                icon: '⌨️',
+                title: 'Commands Quick Reference',
+                summary: 'All available slash commands and what they do.',
+                category: 'Reference',
+                tags: ['commands', 'reference', 'slash'],
+                body: `
+                    <h4>General</h4>
+                    <ul>
+                        <li><code>/start</code> — Begin or restart your agent</li>
+                        <li><code>/help</code> — Show available commands</li>
+                        <li><code>/settings</code> — Open settings menu</li>
+                        <li><code>/status</code> — Check your usage and plan</li>
+                    </ul>
+                    <h4>Memory</h4>
+                    <ul>
+                        <li><code>/memory</code> — View stored memories</li>
+                        <li><code>/forget</code> — Clear memories</li>
+                    </ul>
+                    <h4>Productivity</h4>
+                    <ul>
+                        <li><code>/remind [text] [time]</code> — Set a reminder</li>
+                        <li><code>/reminders</code> — List active reminders</li>
+                        <li><code>/summarize</code> — Summarize the current conversation</li>
+                    </ul>
+                    <h4>Account</h4>
+                    <ul>
+                        <li><code>/upgrade</code> — View pricing plans</li>
+                        <li><code>/usage</code> — Check daily message count</li>
+                        <li><code>/deletedata</code> — Delete all your data</li>
+                    </ul>
+                `
+            },
+            {
+                id: 'troubleshooting',
+                icon: '🔧',
+                title: 'Troubleshooting Common Issues',
+                summary: 'Solutions for the most frequently reported problems.',
+                category: 'Troubleshooting',
+                tags: ['issues', 'bugs', 'fix', 'help'],
+                body: `
+                    <h4>Agent Not Responding</h4>
+                    <ul>
+                        <li>Check the <a href="status-page.html">status page</a> for any outages</li>
+                        <li>Try sending <code>/start</code> to reset the connection</li>
+                        <li>Make sure you haven't exceeded your daily message limit</li>
+                    </ul>
+                    <h4>Agent Seems Confused</h4>
+                    <ul>
+                        <li>Start a new topic by saying "let's talk about something else"</li>
+                        <li>If memory seems wrong, use <code>/memory</code> to check and <code>/forget</code> to correct</li>
+                    </ul>
+                    <h4>Messages Taking Too Long</h4>
+                    <p>Complex queries (especially with web search) may take 10-15 seconds. If delays persist beyond 30 seconds, there may be a service issue.</p>
+                    <h4>Still Need Help?</h4>
+                    <p>Visit our <a href="contact.html">support page</a> or ask in the <a href="community.html">community forum</a>.</p>
+                `
+            },
+            {
+                id: 'billing-plans',
+                icon: '💳',
+                title: 'Plans, Billing & Upgrades',
+                summary: 'Understanding your plan, upgrading, and managing payments.',
+                category: 'Account',
+                tags: ['billing', 'plans', 'pricing', 'upgrade'],
+                body: `
+                    <h4>Free Tier</h4>
+                    <p>20 messages per day, all features included. No credit card needed. Resets at midnight UTC.</p>
+                    <h4>Pro Plan</h4>
+                    <p>Unlimited messages, priority response times, and advanced features. See <code>/upgrade</code> in your bot for current pricing.</p>
+                    <h4>How to Upgrade</h4>
+                    <p>Send <code>/upgrade</code> to your agent. You'll receive a secure payment link. We accept major credit cards.</p>
+                    <h4>Cancellation</h4>
+                    <p>Cancel anytime from <code>/settings</code>. You keep Pro access until the end of your billing period. No questions asked.</p>
+                `
+            },
+            {
+                id: 'tips-tricks',
+                icon: '💡',
+                title: 'Tips & Tricks for Power Users',
+                summary: 'Get more out of your agent with these advanced techniques.',
+                category: 'Productivity',
+                tags: ['tips', 'advanced', 'power-user'],
+                body: `
+                    <h4>Chain Requests</h4>
+                    <p>Your agent understands context. Ask a question, then follow up: "Now compare that to..." or "Can you format that as a table?"</p>
+                    <h4>Use Voice Messages</h4>
+                    <p>Send a voice note on Telegram — your agent will transcribe it and respond to the content.</p>
+                    <h4>Share to Your Agent</h4>
+                    <p>Use Telegram's "Forward" feature to forward articles, tweets, or messages to your agent for summarization.</p>
+                    <h4>Set Your Preferences Early</h4>
+                    <p>Tell your agent things like "I prefer concise answers" or "Always respond in Spanish" — it will remember.</p>
+                    <h4>Batch Tasks</h4>
+                    <p>You can give multi-part requests: "Search for X, summarize the top 3 results, and set a reminder to review them tomorrow."</p>
+                `
+            },
+            {
+                id: 'integrations',
+                icon: '🔗',
+                title: 'Integrations & Connected Services',
+                summary: 'Connect your agent to other tools and platforms.',
+                category: 'Getting Started',
+                tags: ['integrations', 'api', 'connect'],
+                body: `
+                    <h4>Available Integrations</h4>
+                    <ul>
+                        <li><strong>Google Calendar</strong> — check and create events</li>
+                        <li><strong>Notion</strong> — search and update your workspace</li>
+                        <li><strong>GitHub</strong> — check issues and PR status</li>
+                        <li><strong>Email</strong> — check and summarize unread emails</li>
+                    </ul>
+                    <h4>Setting Up</h4>
+                    <p>Use <code>/connect</code> to see available integrations and follow the authorization flow for each one.</p>
+                    <h4>API Access</h4>
+                    <p>For developers, see our <a href="api-docs.html">API documentation</a> and <a href="sdk.html">SDK page</a>.</p>
+                `
+            },
+            {
+                id: 'whatsapp',
+                icon: '📱',
+                title: 'Using AgentBox on WhatsApp',
+                summary: 'How to connect and use your agent on WhatsApp alongside Telegram.',
+                category: 'Getting Started',
+                tags: ['whatsapp', 'multi-platform', 'setup'],
+                body: `
+                    <h4>Multi-Platform Support</h4>
+                    <p>AgentBox supports both Telegram and WhatsApp. Your memory and preferences sync across platforms.</p>
+                    <h4>Getting Started on WhatsApp</h4>
+                    <p>Use <code>/whatsapp</code> in your Telegram bot to get a QR code or link to connect your WhatsApp account.</p>
+                    <h4>Differences from Telegram</h4>
+                    <ul>
+                        <li>Slash commands work slightly differently — type them as regular messages</li>
+                        <li>Rich formatting (buttons, menus) may be limited on WhatsApp</li>
+                        <li>Image understanding works on both platforms</li>
+                    </ul>
+                `
+            }
+        ];
+
+        const categoriesEl = document.getElementById('categories');
+        const articlesEl = document.getElementById('articles');
+        const searchInput = document.getElementById('searchInput');
+        const searchCount = document.getElementById('searchCount');
+        const noResults = document.getElementById('noResults');
+
+        const categories = ['All', ...new Set(articles.map(a => a.category))];
+        let activeCategory = 'All';
+
+        function renderCategories() {
+            categoriesEl.innerHTML = categories.map(c =>
+                `<button class="cat-btn ${c === activeCategory ? 'active' : ''}" data-cat="${c}">${c}</button>`
+            ).join('');
+            categoriesEl.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activeCategory = btn.dataset.cat;
+                    renderCategories();
+                    renderArticles();
+                });
+            });
+        }
+
+        function renderArticles() {
+            const query = searchInput.value.toLowerCase().trim();
+            const filtered = articles.filter(a => {
+                const matchCat = activeCategory === 'All' || a.category === activeCategory;
+                const matchSearch = !query ||
+                    a.title.toLowerCase().includes(query) ||
+                    a.summary.toLowerCase().includes(query) ||
+                    a.tags.some(t => t.includes(query)) ||
+                    a.body.toLowerCase().includes(query);
+                return matchCat && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                articlesEl.innerHTML = '';
+                noResults.style.display = 'block';
+                searchCount.textContent = '';
+            } else {
+                noResults.style.display = 'none';
+                searchCount.textContent = query ? `${filtered.length} article${filtered.length !== 1 ? 's' : ''} found` : '';
+                articlesEl.innerHTML = filtered.map(a => `
+                    <div class="article-card" data-id="${a.id}">
+                        <div class="article-header" role="button" tabindex="0" aria-expanded="false">
+                            <div class="article-icon">${a.icon}</div>
+                            <div class="article-meta">
+                                <h3>${a.title}</h3>
+                                <p>${a.summary}</p>
+                                <div class="article-tags">
+                                    ${a.tags.map(t => `<span class="article-tag">${t}</span>`).join('')}
+                                </div>
+                            </div>
+                            <span class="article-chevron">▶</span>
+                        </div>
+                        <div class="article-body">
+                            <div class="article-body-inner">${a.body}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                articlesEl.querySelectorAll('.article-header').forEach(header => {
+                    header.addEventListener('click', () => toggleArticle(header));
+                    header.addEventListener('keydown', e => {
+                        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleArticle(header); }
+                    });
+                });
+            }
+        }
+
+        function toggleArticle(header) {
+            const card = header.parentElement;
+            const body = card.querySelector('.article-body');
+            const isOpen = card.classList.contains('open');
+
+            if (isOpen) {
+                body.style.maxHeight = '0';
+                card.classList.remove('open');
+                header.setAttribute('aria-expanded', 'false');
+            } else {
+                body.style.maxHeight = body.scrollHeight + 'px';
+                card.classList.add('open');
+                header.setAttribute('aria-expanded', 'true');
+            }
+        }
+
+        // Deep-link support: open article from hash
+        function checkHash() {
+            const id = window.location.hash.slice(1);
+            if (id) {
+                setTimeout(() => {
+                    const card = document.querySelector(`.article-card[data-id="${id}"]`);
+                    if (card) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const header = card.querySelector('.article-header');
+                        if (!card.classList.contains('open')) toggleArticle(header);
+                    }
+                }, 100);
+            }
+        }
+
+        searchInput.addEventListener('input', renderArticles);
+        window.addEventListener('hashchange', checkHash);
+
+        renderCategories();
+        renderArticles();
+        checkHash();
+    })();
+    </script>
+</body>
+</html>
