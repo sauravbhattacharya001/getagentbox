@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Studies - AgentBox</title>
+    <meta name="description" content="See how real users leverage AgentBox to automate tasks, boost productivity, and streamline their daily workflows with AI-powered Telegram agents.">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .cs-hero {
+            text-align: center;
+            padding: 6rem 2rem 4rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .cs-hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+        }
+        .cs-hero p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .cs-filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .cs-filter-btn {
+            padding: 0.5rem 1.2rem;
+            border: 1px solid var(--border-color, #e0e0e0);
+            border-radius: 20px;
+            background: var(--card-bg, #f8f9fa);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .cs-filter-btn:hover,
+        .cs-filter-btn.active {
+            background: var(--accent, #0066ff);
+            color: #fff;
+            border-color: var(--accent, #0066ff);
+        }
+
+        .cs-stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+        .cs-stat {
+            background: var(--card-bg, #f8f9fa);
+            border: 1px solid var(--border-color, #e0e0e0);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+        }
+        .cs-stat .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent, #0066ff);
+        }
+        .cs-stat .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-top: 0.3rem;
+        }
+
+        .cs-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2.5rem;
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .cs-card {
+            background: var(--card-bg, #f8f9fa);
+            border: 1px solid var(--border-color, #e0e0e0);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .cs-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        .cs-card-header {
+            padding: 2rem 2rem 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.2rem;
+        }
+        .cs-card-avatar {
+            font-size: 2.5rem;
+            flex-shrink: 0;
+        }
+        .cs-card-meta h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+        }
+        .cs-card-meta .cs-card-role {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        .cs-card-tags {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        .cs-tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            background: rgba(0,102,255,0.1);
+            color: var(--accent, #0066ff);
+        }
+
+        .cs-card-body {
+            padding: 0 2rem 1.5rem;
+        }
+        .cs-card-body h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+        .cs-card-body p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .cs-card-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border-color, #e0e0e0);
+            background: rgba(0,102,255,0.03);
+        }
+        .cs-result {
+            text-align: center;
+        }
+        .cs-result .result-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent, #0066ff);
+        }
+        .cs-result .result-desc {
+            font-size: 0.8rem;
+            opacity: 0.65;
+            margin-top: 0.2rem;
+        }
+
+        .cs-card-quote {
+            padding: 1rem 2rem 2rem;
+            font-style: italic;
+            opacity: 0.75;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border-top: 1px solid var(--border-color, #e0e0e0);
+        }
+        .cs-card-quote::before {
+            content: '"';
+            font-size: 1.5rem;
+            opacity: 0.4;
+        }
+
+        .cs-cta {
+            text-align: center;
+            padding: 4rem 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .cs-cta h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .cs-cta p {
+            opacity: 0.7;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .cs-cta-btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: var(--accent, #0066ff);
+            color: #fff;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: opacity 0.2s;
+        }
+        .cs-cta-btn:hover {
+            opacity: 0.9;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin: 2rem;
+            color: var(--accent, #0066ff);
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .cs-hero h1 { font-size: 2rem; }
+            .cs-card-header { flex-direction: column; }
+            .cs-card-results { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Home</a>
+
+    <section class="cs-hero">
+        <h1>📊 Case Studies</h1>
+        <p>Real stories from real users. See how people are using AgentBox to save time, stay organized, and get more done — all from Telegram.</p>
+    </section>
+
+    <div class="cs-stats-bar">
+        <div class="cs-stat">
+            <div class="stat-number">2,500+</div>
+            <div class="stat-label">Active Users</div>
+        </div>
+        <div class="cs-stat">
+            <div class="stat-number">85%</div>
+            <div class="stat-label">Time Saved on Tasks</div>
+        </div>
+        <div class="cs-stat">
+            <div class="stat-number">12M+</div>
+            <div class="stat-label">Messages Processed</div>
+        </div>
+        <div class="cs-stat">
+            <div class="stat-number">4.8/5</div>
+            <div class="stat-label">User Satisfaction</div>
+        </div>
+    </div>
+
+    <div class="cs-filters">
+        <button class="cs-filter-btn active" data-filter="all">All</button>
+        <button class="cs-filter-btn" data-filter="productivity">Productivity</button>
+        <button class="cs-filter-btn" data-filter="research">Research</button>
+        <button class="cs-filter-btn" data-filter="business">Business</button>
+        <button class="cs-filter-btn" data-filter="personal">Personal</button>
+        <button class="cs-filter-btn" data-filter="education">Education</button>
+    </div>
+
+    <div class="cs-grid" id="csGrid">
+
+        <!-- Case Study 1 -->
+        <article class="cs-card" data-category="productivity business">
+            <div class="cs-card-header">
+                <div class="cs-card-avatar">👩‍💻</div>
+                <div class="cs-card-meta">
+                    <h3>Sarah, Freelance Designer</h3>
+                    <div class="cs-card-role">UI/UX Design · Portland, OR</div>
+                    <div class="cs-card-tags">
+                        <span class="cs-tag">Productivity</span>
+                        <span class="cs-tag">Business</span>
+                    </div>
+                </div>
+            </div>
+            <div class="cs-card-body">
+                <h4>The Challenge</h4>
+                <p>Managing client communications, tracking project deadlines, and juggling invoices across multiple tools was eating into design time.</p>
+                <h4>How AgentBox Helped</h4>
+                <p>Sarah uses AgentBox to get daily briefings on upcoming deadlines, set reminders for client follow-ups, and quickly draft professional emails — all without leaving Telegram. The memory feature means her agent knows her clients by name.</p>
+            </div>
+            <div class="cs-card-results">
+                <div class="cs-result">
+                    <div class="result-value">3h</div>
+                    <div class="result-desc">Saved per week</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">40%</div>
+                    <div class="result-desc">Fewer missed deadlines</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">2x</div>
+                    <div class="result-desc">Faster email replies</div>
+                </div>
+            </div>
+            <div class="cs-card-quote">It's like having a personal assistant who actually remembers what I told them last week. Game changer for my freelance workflow.</div>
+        </article>
+
+        <!-- Case Study 2 -->
+        <article class="cs-card" data-category="research education">
+            <div class="cs-card-header">
+                <div class="cs-card-avatar">🧑‍🔬</div>
+                <div class="cs-card-meta">
+                    <h3>Dr. Marcus Chen</h3>
+                    <div class="cs-card-role">Research Scientist · MIT</div>
+                    <div class="cs-card-tags">
+                        <span class="cs-tag">Research</span>
+                        <span class="cs-tag">Education</span>
+                    </div>
+                </div>
+            </div>
+            <div class="cs-card-body">
+                <h4>The Challenge</h4>
+                <p>Keeping up with hundreds of new papers per week in machine learning while running experiments and mentoring students.</p>
+                <h4>How AgentBox Helped</h4>
+                <p>Marcus has AgentBox summarize papers he shares via URL, maintain a running list of key findings, and send him a weekly digest of themes he's tracking. The web search integration lets him quickly fact-check claims on the go.</p>
+            </div>
+            <div class="cs-card-results">
+                <div class="cs-result">
+                    <div class="result-value">50+</div>
+                    <div class="result-desc">Papers reviewed/week</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">70%</div>
+                    <div class="result-desc">Less time on literature review</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">1</div>
+                    <div class="result-desc">Weekly digest, zero effort</div>
+                </div>
+            </div>
+            <div class="cs-card-quote">I share a paper link, and AgentBox gives me a structured summary in seconds. It remembers what topics I'm interested in. Indispensable.</div>
+        </article>
+
+        <!-- Case Study 3 -->
+        <article class="cs-card" data-category="business">
+            <div class="cs-card-header">
+                <div class="cs-card-avatar">👨‍💼</div>
+                <div class="cs-card-meta">
+                    <h3>Priya Sharma</h3>
+                    <div class="cs-card-role">Startup Founder · Bangalore</div>
+                    <div class="cs-card-tags">
+                        <span class="cs-tag">Business</span>
+                    </div>
+                </div>
+            </div>
+            <div class="cs-card-body">
+                <h4>The Challenge</h4>
+                <p>Running a 10-person startup means wearing many hats — investor updates, hiring emails, meeting prep, and competitive research, often from a phone.</p>
+                <h4>How AgentBox Helped</h4>
+                <p>Priya uses AgentBox as her mobile command center. She drafts investor updates on the go, has the agent research competitors before meetings, and gets reminded about follow-ups. The image analysis feature helps review design mockups shared in chat.</p>
+            </div>
+            <div class="cs-card-results">
+                <div class="cs-result">
+                    <div class="result-value">5h</div>
+                    <div class="result-desc">Saved per week</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">90%</div>
+                    <div class="result-desc">Fewer dropped follow-ups</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">3x</div>
+                    <div class="result-desc">Faster meeting prep</div>
+                </div>
+            </div>
+            <div class="cs-card-quote">My team thinks I have superhuman memory. Nope — it's just AgentBox remembering everything for me.</div>
+        </article>
+
+        <!-- Case Study 4 -->
+        <article class="cs-card" data-category="personal">
+            <div class="cs-card-header">
+                <div class="cs-card-avatar">👩‍🍳</div>
+                <div class="cs-card-meta">
+                    <h3>Tom & Lisa</h3>
+                    <div class="cs-card-role">Busy Parents · Chicago</div>
+                    <div class="cs-card-tags">
+                        <span class="cs-tag">Personal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="cs-card-body">
+                <h4>The Challenge</h4>
+                <p>Coordinating two kids' schedules, meal planning, grocery lists, and household tasks while both working full-time.</p>
+                <h4>How AgentBox Helped</h4>
+                <p>They share an AgentBox group where the agent tracks who's picking up the kids, suggests weekly meals based on preferences it's learned, and reminds them about school events. "Send me the grocery list for this week's meals" is now a one-message command.</p>
+            </div>
+            <div class="cs-card-results">
+                <div class="cs-result">
+                    <div class="result-value">0</div>
+                    <div class="result-desc">Forgotten school events</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">4h</div>
+                    <div class="result-desc">Saved on meal planning</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">∞</div>
+                    <div class="result-desc">Less "did you remember…" texts</div>
+                </div>
+            </div>
+            <div class="cs-card-quote">We used to have 20 apps for family coordination. Now we have one Telegram group with AgentBox. It just works.</div>
+        </article>
+
+        <!-- Case Study 5 -->
+        <article class="cs-card" data-category="education">
+            <div class="cs-card-header">
+                <div class="cs-card-avatar">🎓</div>
+                <div class="cs-card-meta">
+                    <h3>Alex Rivera</h3>
+                    <div class="cs-card-role">Computer Science Student · UC Berkeley</div>
+                    <div class="cs-card-tags">
+                        <span class="cs-tag">Education</span>
+                    </div>
+                </div>
+            </div>
+            <div class="cs-card-body">
+                <h4>The Challenge</h4>
+                <p>Balancing coursework, side projects, and studying for exams while trying to build a portfolio for internship applications.</p>
+                <h4>How AgentBox Helped</h4>
+                <p>Alex uses AgentBox to explain tricky concepts, debug code snippets shared as images, plan study schedules, and draft cover letters tailored to each company. The persistent memory means the agent knows his skill set and project history.</p>
+            </div>
+            <div class="cs-card-results">
+                <div class="cs-result">
+                    <div class="result-value">A−</div>
+                    <div class="result-desc">Average grade (up from B)</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">8</div>
+                    <div class="result-desc">Internship applications/week</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">15min</div>
+                    <div class="result-desc">Per cover letter (was 1h)</div>
+                </div>
+            </div>
+            <div class="cs-card-quote">AgentBox is like a study buddy that never sleeps and remembers every concept I've struggled with. It helped me land my dream internship.</div>
+        </article>
+
+        <!-- Case Study 6 -->
+        <article class="cs-card" data-category="productivity personal">
+            <div class="cs-card-header">
+                <div class="cs-card-avatar">✍️</div>
+                <div class="cs-card-meta">
+                    <h3>Yuki Tanaka</h3>
+                    <div class="cs-card-role">Content Creator · Tokyo</div>
+                    <div class="cs-card-tags">
+                        <span class="cs-tag">Productivity</span>
+                        <span class="cs-tag">Personal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="cs-card-body">
+                <h4>The Challenge</h4>
+                <p>Creating content for three platforms in two languages while managing sponsorship deadlines and audience engagement metrics.</p>
+                <h4>How AgentBox Helped</h4>
+                <p>Yuki uses AgentBox to brainstorm video ideas, translate captions between Japanese and English, track posting schedules, and analyze engagement trends she shares as screenshots. The agent adapts its suggestions based on what's performed well before.</p>
+            </div>
+            <div class="cs-card-results">
+                <div class="cs-result">
+                    <div class="result-value">2x</div>
+                    <div class="result-desc">Content output</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">100%</div>
+                    <div class="result-desc">Sponsorship deadlines met</div>
+                </div>
+                <div class="cs-result">
+                    <div class="result-value">30%</div>
+                    <div class="result-desc">Higher engagement</div>
+                </div>
+            </div>
+            <div class="cs-card-quote">I brainstorm in Japanese, and AgentBox helps me create the English version. It knows my brand voice perfectly now.</div>
+        </article>
+
+    </div>
+
+    <section class="cs-cta">
+        <h2>Ready to Write Your Own Success Story?</h2>
+        <p>Join thousands of users who've made AgentBox their personal AI sidekick. Start free with 20 messages per day.</p>
+        <a href="https://t.me/AgentBoxBot" class="cs-cta-btn">Start Free on Telegram →</a>
+    </section>
+
+    <script>
+        // Category filtering
+        document.querySelectorAll('.cs-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.cs-filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('.cs-card').forEach(card => {
+                    if (filter === 'all' || card.dataset.category.includes(filter)) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
