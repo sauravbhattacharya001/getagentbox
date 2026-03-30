@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Affiliate Program</title>
+    <meta name="description" content="Join the AgentBox affiliate program. Earn recurring commissions by sharing AgentBox with your audience.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --green: #00b894;
+            --blue: #0984e3;
+            --cyan: #00d4ff;
+            --orange: #f39c12;
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --border: #ddd;
+            --text: #1a1a1a;
+            --text-muted: #666;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-bar a { color: var(--accent-light); text-decoration: none; font-weight: 600; }
+        .top-bar a:hover { text-decoration: underline; }
+
+        .theme-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .container { max-width: 960px; margin: 0 auto; padding: 2rem; }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0 3rem;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--cyan), var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            margin: 3rem 0 1.5rem;
+            color: var(--cyan);
+        }
+
+        .tiers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .tier-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .tier-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+
+        .tier-card.featured {
+            border-color: var(--cyan);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.1);
+        }
+
+        .tier-card .tier-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .tier-card .commission {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 1rem 0;
+        }
+
+        .tier-card .commission span {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .tier-card ul {
+            list-style: none;
+            text-align: left;
+            margin: 1.5rem 0;
+        }
+
+        .tier-card ul li {
+            padding: 0.4rem 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .tier-card ul li::before {
+            content: '✓ ';
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .starter .commission { color: var(--green); }
+        .growth .commission { color: var(--cyan); }
+        .elite .commission { color: var(--orange); }
+
+        .how-it-works {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .step .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .step h3 { margin-bottom: 0.5rem; font-size: 1.1rem; }
+        .step p { color: var(--text-muted); font-size: 0.9rem; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-box .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--cyan);
+        }
+
+        .stat-box .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+        .faq-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+        }
+
+        .faq-q {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .faq-q:hover { background: var(--surface-2); }
+
+        .faq-a {
+            padding: 0 1.5rem 1rem;
+            color: var(--text-muted);
+            display: none;
+            font-size: 0.95rem;
+        }
+
+        .faq-item.open .faq-a { display: block; }
+        .faq-item.open .faq-arrow { transform: rotate(180deg); }
+
+        .faq-arrow {
+            transition: transform 0.2s;
+            font-size: 0.8rem;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 3rem 0;
+            margin-top: 2rem;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--cyan));
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .cta-btn:hover { opacity: 0.9; }
+
+        .tools-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .tool-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem;
+        }
+
+        .tool-item h4 { margin-bottom: 0.3rem; font-size: 1rem; }
+        .tool-item p { color: var(--text-muted); font-size: 0.85rem; }
+
+        .calculator {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .calc-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .calc-row label {
+            min-width: 140px;
+            font-weight: 600;
+        }
+
+        .calc-row input[type="range"] {
+            flex: 1;
+            min-width: 200px;
+            accent-color: var(--cyan);
+        }
+
+        .calc-row .calc-val {
+            min-width: 60px;
+            text-align: right;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .calc-result {
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            background: var(--surface-2);
+            border-radius: 8px;
+        }
+
+        .calc-result .amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--green);
+        }
+
+        .calc-result .period {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 2rem; }
+            .container { padding: 1rem; }
+            .tier-card .commission { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html">← Back to AgentBox</a>
+        <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">☀️</button>
+    </div>
+
+    <div class="container">
+        <div class="hero">
+            <h1>💰 Affiliate Program</h1>
+            <p>Earn recurring commissions by sharing AgentBox with your audience. Get paid every month for every active subscriber you refer.</p>
+        </div>
+
+        <!-- Program Stats -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-value">30%</div>
+                <div class="stat-label">Starting Commission</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">90 days</div>
+                <div class="stat-label">Cookie Duration</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">$50</div>
+                <div class="stat-label">Min Payout</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">Monthly</div>
+                <div class="stat-label">Payout Frequency</div>
+            </div>
+        </div>
+
+        <!-- How It Works -->
+        <h2>How It Works</h2>
+        <div class="how-it-works">
+            <div class="step">
+                <div class="step-num">1</div>
+                <h3>Apply</h3>
+                <p>Fill out a quick application. We review within 24 hours and get you set up.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <h3>Share</h3>
+                <p>Get your unique referral link and share it with your audience through any channel.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <h3>Earn</h3>
+                <p>Earn recurring commissions for every subscriber who signs up through your link.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <h3>Get Paid</h3>
+                <p>Monthly payouts via PayPal, Stripe, or bank transfer. Real-time dashboard tracking.</p>
+            </div>
+        </div>
+
+        <!-- Commission Tiers -->
+        <h2>Commission Tiers</h2>
+        <div class="tiers">
+            <div class="tier-card starter">
+                <div class="tier-name">Starter</div>
+                <div class="commission">30%<span> / month</span></div>
+                <ul>
+                    <li>0–25 active referrals</li>
+                    <li>Standard referral link</li>
+                    <li>Monthly payout</li>
+                    <li>Email support</li>
+                    <li>Basic analytics dashboard</li>
+                </ul>
+            </div>
+            <div class="tier-card featured growth">
+                <div class="tier-name">🚀 Growth</div>
+                <div class="commission">40%<span> / month</span></div>
+                <ul>
+                    <li>26–100 active referrals</li>
+                    <li>Custom landing pages</li>
+                    <li>Bi-weekly payout</li>
+                    <li>Priority support</li>
+                    <li>Advanced analytics + conversion tracking</li>
+                    <li>Co-branded marketing materials</li>
+                </ul>
+            </div>
+            <div class="tier-card elite">
+                <div class="tier-name">⭐ Elite</div>
+                <div class="commission">50%<span> / month</span></div>
+                <ul>
+                    <li>100+ active referrals</li>
+                    <li>Dedicated affiliate manager</li>
+                    <li>Weekly payout</li>
+                    <li>Custom commission structures</li>
+                    <li>Early access to new features</li>
+                    <li>Joint webinars & promotions</li>
+                    <li>Revenue share negotiations</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Earnings Calculator -->
+        <h2>💸 Earnings Calculator</h2>
+        <div class="calculator">
+            <div class="calc-row">
+                <label for="refSlider">Referrals/month</label>
+                <input type="range" id="refSlider" min="1" max="200" value="20">
+                <span class="calc-val" id="refVal">20</span>
+            </div>
+            <div class="calc-row">
+                <label for="priceSlider">Avg plan price</label>
+                <input type="range" id="priceSlider" min="5" max="100" value="29" step="1">
+                <span class="calc-val" id="priceVal">$29</span>
+            </div>
+            <div class="calc-row">
+                <label for="retSlider">Retention (months)</label>
+                <input type="range" id="retSlider" min="1" max="24" value="8">
+                <span class="calc-val" id="retVal">8</span>
+            </div>
+            <div class="calc-result">
+                <div class="period">Estimated monthly recurring earnings</div>
+                <div class="amount" id="calcResult">$174</div>
+                <div class="period" id="calcAnnual">~$2,088 / year</div>
+            </div>
+        </div>
+
+        <!-- Affiliate Tools -->
+        <h2>🛠️ Affiliate Tools</h2>
+        <div class="tools-list">
+            <div class="tool-item">
+                <h4>📊 Real-time Dashboard</h4>
+                <p>Track clicks, conversions, commissions, and payouts in real time.</p>
+            </div>
+            <div class="tool-item">
+                <h4>🔗 Smart Links</h4>
+                <p>Deep-linking to any page. Automatic UTM tracking and A/B testing support.</p>
+            </div>
+            <div class="tool-item">
+                <h4>🎨 Creative Assets</h4>
+                <p>Banners, social media graphics, email templates, and video snippets ready to use.</p>
+            </div>
+            <div class="tool-item">
+                <h4>📧 Email Swipes</h4>
+                <p>Pre-written email sequences optimized for conversion. Just copy, customize, send.</p>
+            </div>
+            <div class="tool-item">
+                <h4>📱 Social Media Kit</h4>
+                <p>Ready-made posts for Twitter, LinkedIn, Instagram, and TikTok with proven hooks.</p>
+            </div>
+            <div class="tool-item">
+                <h4>🎥 Demo Videos</h4>
+                <p>White-label product demos you can share or embed on your site.</p>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    Who can join the affiliate program?
+                    <span class="faq-arrow">▼</span>
+                </div>
+                <div class="faq-a">Anyone! Content creators, developers, bloggers, consultants, newsletters — if you have an audience that could benefit from an AI agent, you're a great fit.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    How long do cookies last?
+                    <span class="faq-arrow">▼</span>
+                </div>
+                <div class="faq-a">Our affiliate cookies last 90 days. If someone clicks your link and signs up within 90 days, you get credit for the referral.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    Are commissions recurring?
+                    <span class="faq-arrow">▼</span>
+                </div>
+                <div class="faq-a">Yes! You earn commissions for as long as the referred customer stays subscribed. It's truly passive income.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    When do I get paid?
+                    <span class="faq-arrow">▼</span>
+                </div>
+                <div class="faq-a">Payouts happen monthly (Starter), bi-weekly (Growth), or weekly (Elite) once you hit the $50 minimum threshold. We support PayPal, Stripe, and direct bank transfers.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    Can I promote AgentBox on social media?
+                    <span class="faq-arrow">▼</span>
+                </div>
+                <div class="faq-a">Absolutely! We encourage it. We provide social media kits and pre-made content to make it easy. Just follow our brand guidelines and be transparent about the affiliate relationship.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    Is there a limit to how much I can earn?
+                    <span class="faq-arrow">▼</span>
+                </div>
+                <div class="faq-a">No cap on earnings. The more subscribers you refer, the higher your tier and commission rate. Our top affiliates earn $5,000+/month.</div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-section">
+            <h2 style="color: var(--text); margin-bottom: 1rem;">Ready to Start Earning?</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 1.1rem;">Join hundreds of affiliates already earning recurring income with AgentBox.</p>
+            <a href="mailto:affiliates@getagentbox.com?subject=Affiliate%20Program%20Application" class="cta-btn">Apply Now →</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 AgentBox · <a href="index.html" style="color: var(--accent-light);">Home</a> · <a href="terms.html" style="color: var(--accent-light);">Terms</a> · <a href="privacy.html" style="color: var(--accent-light);">Privacy</a></p>
+    </footer>
+
+    <script>
+        // Theme toggle
+        const themeBtn = document.getElementById('themeBtn');
+        const saved = localStorage.getItem('agentbox-theme');
+        if (saved === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeBtn.textContent = '🌙'; }
+        themeBtn.addEventListener('click', () => {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            document.documentElement.setAttribute('data-theme', isLight ? '' : 'light');
+            themeBtn.textContent = isLight ? '☀️' : '🌙';
+            localStorage.setItem('agentbox-theme', isLight ? 'dark' : 'light');
+        });
+
+        // Earnings calculator
+        const refSlider = document.getElementById('refSlider');
+        const priceSlider = document.getElementById('priceSlider');
+        const retSlider = document.getElementById('retSlider');
+        const refVal = document.getElementById('refVal');
+        const priceVal = document.getElementById('priceVal');
+        const retVal = document.getElementById('retVal');
+        const calcResult = document.getElementById('calcResult');
+        const calcAnnual = document.getElementById('calcAnnual');
+
+        function getRate(refs) {
+            if (refs > 100) return 0.50;
+            if (refs > 25) return 0.40;
+            return 0.30;
+        }
+
+        function updateCalc() {
+            const refs = parseInt(refSlider.value);
+            const price = parseInt(priceSlider.value);
+            const ret = parseInt(retSlider.value);
+            const rate = getRate(refs);
+
+            refVal.textContent = refs;
+            priceVal.textContent = '$' + price;
+            retVal.textContent = ret;
+
+            // Monthly recurring: cumulative referrals retained * commission
+            const activeRefs = Math.min(refs * ret, refs * 12);
+            const monthly = Math.round(refs * price * rate);
+            const annual = monthly * 12;
+
+            calcResult.textContent = '$' + monthly.toLocaleString();
+            calcAnnual.textContent = '~$' + annual.toLocaleString() + ' / year';
+        }
+
+        refSlider.addEventListener('input', updateCalc);
+        priceSlider.addEventListener('input', updateCalc);
+        retSlider.addEventListener('input', updateCalc);
+        updateCalc();
+    </script>
+</body>
+</html>
