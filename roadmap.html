@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Product Roadmap</title>
+    <meta name="description" content="See what's planned, in progress, and recently shipped for AgentBox. Our public roadmap keeps you in the loop.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --orange-bg: #e1705522;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --blue: #0984e3;
+            --blue-bg: #0984e322;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --surface-3: #e8e8e8;
+            --border: #ddd;
+            --text: #1a1a1a;
+            --text-muted: #666;
+            --accent-bg: #00d4ff20;
+            --green-bg: #00b89430;
+            --yellow-bg: #fdcb6e30;
+            --orange-bg: #e1705530;
+            --purple-bg: #6c5ce730;
+            --blue-bg: #0984e330;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .top-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .top-bar a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .theme-toggle {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .hero {
+            text-align: center;
+            padding: 60px 24px 40px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .hero h1 {
+            font-size: 2.4rem;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 24px 32px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-bg);
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px 60px;
+        }
+        @media (max-width: 900px) {
+            .board { grid-template-columns: 1fr; }
+        }
+        .column {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .column-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .column-header .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .column-header .count {
+            margin-left: auto;
+            background: var(--surface-3);
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .column-body {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 200px;
+        }
+        .card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            cursor: default;
+            transition: border-color 0.2s;
+        }
+        .card:hover {
+            border-color: var(--accent);
+        }
+        .card-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .tag {
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .tag-core { background: var(--accent-bg); color: var(--accent); }
+        .tag-integration { background: var(--purple-bg); color: var(--purple); }
+        .tag-ux { background: var(--green-bg); color: var(--green); }
+        .tag-security { background: var(--orange-bg); color: var(--orange); }
+        .tag-api { background: var(--blue-bg); color: var(--blue); }
+        .tag-performance { background: var(--yellow-bg); color: var(--yellow); }
+        .quarter {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+        .footer {
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html">← AgentBox</a>
+        <button class="theme-toggle" onclick="toggleTheme()">🌓 Theme</button>
+    </div>
+
+    <div class="hero">
+        <h1>Product Roadmap</h1>
+        <p>Transparency is a feature. Here's what we're building, what's next, and what just shipped.</p>
+    </div>
+
+    <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="core">Core</button>
+        <button class="filter-btn" data-filter="integration">Integrations</button>
+        <button class="filter-btn" data-filter="ux">UX</button>
+        <button class="filter-btn" data-filter="security">Security</button>
+        <button class="filter-btn" data-filter="api">API</button>
+        <button class="filter-btn" data-filter="performance">Performance</button>
+    </div>
+
+    <div class="board" id="board">
+        <!-- Planned -->
+        <div class="column">
+            <div class="column-header">
+                <span class="dot" style="background: var(--purple);"></span>
+                Planned
+                <span class="count" id="planned-count">0</span>
+            </div>
+            <div class="column-body" id="planned"></div>
+        </div>
+        <!-- In Progress -->
+        <div class="column">
+            <div class="column-header">
+                <span class="dot" style="background: var(--yellow);"></span>
+                In Progress
+                <span class="count" id="progress-count">0</span>
+            </div>
+            <div class="column-body" id="progress"></div>
+        </div>
+        <!-- Shipped -->
+        <div class="column">
+            <div class="column-header">
+                <span class="dot" style="background: var(--green);"></span>
+                Shipped
+                <span class="count" id="shipped-count">0</span>
+            </div>
+            <div class="column-body" id="shipped"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Have a feature request? <a href="voting.html">Vote on upcoming features</a> or <a href="contact.html">get in touch</a>.</p>
+        <p style="margin-top: 8px;">Updated quarterly · Last refresh: Q1 2026</p>
+    </div>
+
+    <script>
+        const items = [
+            // Planned
+            { title: "Multi-Agent Orchestration", desc: "Run multiple agents that collaborate on complex tasks with shared context.", status: "planned", tag: "core", quarter: "Q2 2026" },
+            { title: "Slack Integration", desc: "Deploy agents directly into Slack workspaces with slash commands and thread awareness.", status: "planned", tag: "integration", quarter: "Q2 2026" },
+            { title: "Custom Agent Personas", desc: "Define personality, tone, and domain expertise for each agent with a visual editor.", status: "planned", tag: "ux", quarter: "Q2 2026" },
+            { title: "Audit Trail & Compliance Logs", desc: "Immutable logs of every agent action for SOC 2 and enterprise compliance.", status: "planned", tag: "security", quarter: "Q3 2026" },
+            { title: "GraphQL API", desc: "Full GraphQL endpoint alongside REST for flexible data queries.", status: "planned", tag: "api", quarter: "Q3 2026" },
+            { title: "Edge Deployment", desc: "Run agents on edge nodes for sub-50ms response times in latency-critical workflows.", status: "planned", tag: "performance", quarter: "Q3 2026" },
+            { title: "Marketplace for Agent Templates", desc: "Community-built agent templates you can fork and customize in one click.", status: "planned", tag: "core", quarter: "Q3 2026" },
+            { title: "Microsoft Teams Integration", desc: "Native Teams bot with adaptive cards and meeting summaries.", status: "planned", tag: "integration", quarter: "Q4 2026" },
+
+            // In Progress
+            { title: "Streaming Responses", desc: "Real-time token streaming for chat-style agent interactions.", status: "progress", tag: "core", quarter: "Q1 2026" },
+            { title: "Role-Based Access Control", desc: "Granular permissions per agent, workspace, and API key.", status: "progress", tag: "security", quarter: "Q1 2026" },
+            { title: "Webhook V2", desc: "Redesigned webhook system with retry logic, signing, and filtering.", status: "progress", tag: "api", quarter: "Q1 2026" },
+            { title: "Dark Mode Dashboard", desc: "System-aware dark mode across the entire management dashboard.", status: "progress", tag: "ux", quarter: "Q1 2026" },
+            { title: "Response Caching Layer", desc: "Intelligent caching for repeated queries to reduce cost and latency.", status: "progress", tag: "performance", quarter: "Q1 2026" },
+
+            // Shipped
+            { title: "Agent Memory (Long-Term)", desc: "Persistent memory across sessions so agents remember context.", status: "shipped", tag: "core", quarter: "Q4 2025" },
+            { title: "GitHub Integration", desc: "Connect agents to repos for code review, issue triage, and PR summaries.", status: "shipped", tag: "integration", quarter: "Q4 2025" },
+            { title: "API Key Scoping", desc: "Scope API keys to specific agents and endpoints for least-privilege access.", status: "shipped", tag: "security", quarter: "Q4 2025" },
+            { title: "Onboarding Wizard", desc: "Step-by-step setup flow for new users with interactive examples.", status: "shipped", tag: "ux", quarter: "Q4 2025" },
+            { title: "Batch Processing API", desc: "Submit bulk tasks via API with progress tracking and callbacks.", status: "shipped", tag: "api", quarter: "Q3 2025" },
+            { title: "Cold Start Optimization", desc: "Reduced agent cold start from 3s to under 400ms.", status: "shipped", tag: "performance", quarter: "Q3 2025" },
+            { title: "Discord Integration", desc: "Deploy agents as Discord bots with full slash command support.", status: "shipped", tag: "integration", quarter: "Q3 2025" },
+        ];
+
+        function renderBoard(filter) {
+            const cols = { planned: [], progress: [], shipped: [] };
+            const filtered = filter === 'all' ? items : items.filter(i => i.tag === filter);
+            filtered.forEach(item => cols[item.status].push(item));
+
+            Object.entries(cols).forEach(([status, cards]) => {
+                const el = document.getElementById(status === 'progress' ? 'progress' : status);
+                const countEl = document.getElementById(status === 'progress' ? 'progress-count' : `${status}-count`);
+                el.innerHTML = cards.map(c => `
+                    <div class="card" data-tag="${c.tag}">
+                        <div class="card-title">${c.title}</div>
+                        <div class="card-desc">${c.desc}</div>
+                        <div class="card-meta">
+                            <span class="tag tag-${c.tag}">${c.tag}</span>
+                            <span class="quarter">${c.quarter}</span>
+                        </div>
+                    </div>
+                `).join('');
+                countEl.textContent = cards.length;
+            });
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderBoard(btn.dataset.filter);
+            });
+        });
+
+        // Theme toggle
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            document.documentElement.setAttribute('data-theme', current === 'light' ? '' : 'light');
+            localStorage.setItem('theme', current === 'light' ? 'dark' : 'light');
+        }
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+
+        // Initial render
+        renderBoard('all');
+    </script>
+</body>
+</html>
