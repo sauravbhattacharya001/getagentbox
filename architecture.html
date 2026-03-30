@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture - AgentBox</title>
+    <meta name="description" content="AgentBox system architecture — see how the AI engine, memory store, Telegram integration, and scheduler work together.">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .arch-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+        .arch-page h1 { text-align: center; margin-bottom: 0.5rem; font-size: 2.2rem; }
+        .arch-subtitle { text-align: center; color: var(--text-muted, #666); margin-bottom: 2.5rem; font-size: 1.1rem; }
+
+        .arch-diagram { position: relative; width: 100%; max-width: 900px; margin: 0 auto 3rem; }
+        .arch-diagram svg { width: 100%; height: auto; display: block; }
+
+        .arch-node { cursor: pointer; transition: transform 0.2s, filter 0.2s; }
+        .arch-node:hover { filter: brightness(1.1); transform: scale(1.04); }
+        .arch-node:focus { outline: 2px solid var(--accent, #4f8cff); outline-offset: 2px; }
+
+        .arch-node rect, .arch-node ellipse { transition: stroke-width 0.2s; }
+        .arch-node:hover rect, .arch-node:hover ellipse { stroke-width: 3; }
+
+        .arch-detail { display: none; background: var(--card-bg, #fff); border: 1px solid var(--border, #e0e0e0); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); animation: fadeIn 0.3s ease; }
+        .arch-detail.active { display: block; }
+        .arch-detail h3 { margin-top: 0; display: flex; align-items: center; gap: 0.5rem; }
+        .arch-detail h3 .detail-icon { font-size: 1.4rem; }
+        .arch-detail ul { padding-left: 1.2rem; margin: 0.5rem 0 0; }
+        .arch-detail li { margin-bottom: 0.4rem; line-height: 1.5; }
+        .arch-detail .detail-close { float: right; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted, #666); }
+        .arch-detail .detail-close:hover { color: var(--text, #333); }
+
+        .arch-legend { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-bottom: 2rem; }
+        .arch-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; color: var(--text-muted, #666); }
+        .arch-legend-swatch { width: 16px; height: 16px; border-radius: 4px; border: 1px solid #ccc; }
+
+        .arch-flow { margin-top: 3rem; }
+        .arch-flow h2 { text-align: center; margin-bottom: 1.5rem; }
+        .arch-flow-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+        .arch-flow-step { background: var(--card-bg, #fff); border: 1px solid var(--border, #e0e0e0); border-radius: 10px; padding: 1.2rem; text-align: center; position: relative; }
+        .arch-flow-step .step-num { display: inline-block; background: var(--accent, #4f8cff); color: #fff; width: 28px; height: 28px; line-height: 28px; border-radius: 50%; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .arch-flow-step h4 { margin: 0.3rem 0; }
+        .arch-flow-step p { margin: 0; font-size: 0.9rem; color: var(--text-muted, #666); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 600px) { .arch-page h1 { font-size: 1.6rem; } .arch-flow-steps { grid-template-columns: 1fr; } }
+
+        /* Dark mode adjustments */
+        [data-theme="dark"] .arch-detail { background: #1e1e2e; border-color: #333; }
+        [data-theme="dark"] .arch-flow-step { background: #1e1e2e; border-color: #333; }
+    </style>
+</head>
+<body>
+    <nav class="site-nav" id="siteNav" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo" aria-label="Back to home">🤖 AgentBox</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Toggle theme">
+                <span class="theme-icon" id="themeIcon">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="arch-page">
+        <h1>System Architecture</h1>
+        <p class="arch-subtitle">Click any component to learn more about how it works</p>
+
+        <div class="arch-legend">
+            <div class="arch-legend-item"><div class="arch-legend-swatch" style="background:#4f8cff"></div> Core Engine</div>
+            <div class="arch-legend-item"><div class="arch-legend-swatch" style="background:#34d399"></div> Storage</div>
+            <div class="arch-legend-item"><div class="arch-legend-swatch" style="background:#f59e0b"></div> External Services</div>
+            <div class="arch-legend-item"><div class="arch-legend-swatch" style="background:#a78bfa"></div> User Interface</div>
+        </div>
+
+        <div class="arch-diagram">
+            <svg viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AgentBox system architecture diagram">
+                <!-- Telegram Bot (UI) -->
+                <g class="arch-node" tabindex="0" data-component="telegram" role="button" aria-label="Telegram Bot Gateway">
+                    <rect x="300" y="10" width="200" height="56" rx="10" fill="#a78bfa" stroke="#7c3aed" stroke-width="2"/>
+                    <text x="400" y="38" text-anchor="middle" fill="#fff" font-weight="bold" font-size="14">📱 Telegram Bot</text>
+                    <text x="400" y="54" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11">User Interface</text>
+                </g>
+
+                <!-- Arrow: Telegram → Gateway -->
+                <line x1="400" y1="66" x2="400" y2="110" stroke="#888" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+                <!-- API Gateway -->
+                <g class="arch-node" tabindex="0" data-component="gateway" role="button" aria-label="API Gateway">
+                    <rect x="280" y="110" width="240" height="56" rx="10" fill="#4f8cff" stroke="#2563eb" stroke-width="2"/>
+                    <text x="400" y="138" text-anchor="middle" fill="#fff" font-weight="bold" font-size="14">🔀 API Gateway</text>
+                    <text x="400" y="154" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11">Auth · Rate Limit · Routing</text>
+                </g>
+
+                <!-- Arrow: Gateway → AI Engine -->
+                <line x1="400" y1="166" x2="400" y2="220" stroke="#888" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+                <!-- AI Engine (center) -->
+                <g class="arch-node" tabindex="0" data-component="ai-engine" role="button" aria-label="AI Engine">
+                    <rect x="260" y="220" width="280" height="70" rx="14" fill="#4f8cff" stroke="#2563eb" stroke-width="2"/>
+                    <text x="400" y="250" text-anchor="middle" fill="#fff" font-weight="bold" font-size="15">🧠 AI Engine</text>
+                    <text x="400" y="270" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11">LLM Orchestration · Context · Tools</text>
+                </g>
+
+                <!-- Arrow: AI Engine → Memory Store -->
+                <line x1="310" y1="290" x2="170" y2="370" stroke="#888" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+                <!-- Arrow: AI Engine → Scheduler -->
+                <line x1="490" y1="290" x2="630" y2="370" stroke="#888" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+                <!-- Arrow: AI Engine → Skills -->
+                <line x1="400" y1="290" x2="400" y2="370" stroke="#888" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+                <!-- Arrow: AI Engine → Web Search (left side) -->
+                <line x1="260" y1="260" x2="100" y2="260" stroke="#888" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrowhead)"/>
+
+                <!-- Arrow: AI Engine → LLM Provider (right side) -->
+                <line x1="540" y1="260" x2="680" y2="260" stroke="#888" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrowhead)"/>
+
+                <!-- Memory Store -->
+                <g class="arch-node" tabindex="0" data-component="memory" role="button" aria-label="Memory Store">
+                    <ellipse cx="150" cy="400" rx="110" ry="35" fill="#34d399" stroke="#059669" stroke-width="2"/>
+                    <text x="150" y="396" text-anchor="middle" fill="#fff" font-weight="bold" font-size="13">💾 Memory Store</text>
+                    <text x="150" y="414" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="10">Long-term · Per-user</text>
+                </g>
+
+                <!-- Skill Engine -->
+                <g class="arch-node" tabindex="0" data-component="skills" role="button" aria-label="Skill Engine">
+                    <rect x="320" y="370" width="160" height="56" rx="10" fill="#4f8cff" stroke="#2563eb" stroke-width="2"/>
+                    <text x="400" y="396" text-anchor="middle" fill="#fff" font-weight="bold" font-size="13">⚡ Skills</text>
+                    <text x="400" y="412" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="10">Web · Images · Reminders</text>
+                </g>
+
+                <!-- Scheduler -->
+                <g class="arch-node" tabindex="0" data-component="scheduler" role="button" aria-label="Scheduler">
+                    <rect x="570" y="370" width="160" height="56" rx="10" fill="#4f8cff" stroke="#2563eb" stroke-width="2"/>
+                    <text x="650" y="396" text-anchor="middle" fill="#fff" font-weight="bold" font-size="13">⏰ Scheduler</text>
+                    <text x="650" y="412" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="10">Cron · Reminders · Heartbeats</text>
+                </g>
+
+                <!-- Web Search (external) -->
+                <g class="arch-node" tabindex="0" data-component="web-search" role="button" aria-label="Web Search">
+                    <rect x="10" y="236" width="90" height="48" rx="8" fill="#f59e0b" stroke="#d97706" stroke-width="2"/>
+                    <text x="55" y="258" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">🌐 Search</text>
+                    <text x="55" y="272" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="9">Brave API</text>
+                </g>
+
+                <!-- LLM Provider (external) -->
+                <g class="arch-node" tabindex="0" data-component="llm" role="button" aria-label="LLM Provider">
+                    <rect x="680" y="236" width="110" height="48" rx="8" fill="#f59e0b" stroke="#d97706" stroke-width="2"/>
+                    <text x="735" y="258" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">🤖 LLM</text>
+                    <text x="735" y="272" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="9">Claude / GPT</text>
+                </g>
+
+                <!-- Arrow markers -->
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#888"/>
+                    </marker>
+                </defs>
+
+                <!-- Data flow labels -->
+                <text x="355" y="95" text-anchor="middle" fill="#888" font-size="10" font-style="italic">messages</text>
+                <text x="355" y="205" text-anchor="middle" fill="#888" font-size="10" font-style="italic">requests</text>
+                <text x="220" y="340" text-anchor="middle" fill="#888" font-size="10" font-style="italic">read/write</text>
+                <text x="570" y="340" text-anchor="middle" fill="#888" font-size="10" font-style="italic">schedule</text>
+                <text x="180" y="250" text-anchor="middle" fill="#888" font-size="10" font-style="italic">query</text>
+                <text x="615" y="250" text-anchor="middle" fill="#888" font-size="10" font-style="italic">inference</text>
+
+                <!-- Arrow: Scheduler → Memory -->
+                <line x1="570" y1="420" x2="260" y2="420" stroke="#888" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arrowhead)"/>
+                <text x="415" y="440" text-anchor="middle" fill="#888" font-size="9" font-style="italic">periodic tasks read memory</text>
+
+                <!-- Arrow: Skills → Memory -->
+                <line x1="360" y1="426" x2="260" y2="414" stroke="#888" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arrowhead)"/>
+            </svg>
+        </div>
+
+        <!-- Detail panels (shown on click) -->
+        <div id="detail-telegram" class="arch-detail">
+            <button class="detail-close" aria-label="Close" onclick="this.parentElement.classList.remove('active')">&times;</button>
+            <h3><span class="detail-icon">📱</span> Telegram Bot Gateway</h3>
+            <ul>
+                <li>Receives user messages via Telegram Bot API (webhook or long-poll)</li>
+                <li>Supports text, images, voice, documents, and inline buttons</li>
+                <li>Handles message formatting, reactions, and reply threading</li>
+                <li>Delivers AI responses back to the user's chat in real-time</li>
+            </ul>
+        </div>
+
+        <div id="detail-gateway" class="arch-detail">
+            <button class="detail-close" aria-label="Close" onclick="this.parentElement.classList.remove('active')">&times;</button>
+            <h3><span class="detail-icon">🔀</span> API Gateway</h3>
+            <ul>
+                <li>Authenticates users and validates bot tokens</li>
+                <li>Rate limits requests to prevent abuse (per-user quotas)</li>
+                <li>Routes messages to the correct AI session</li>
+                <li>Manages WebSocket connections for real-time updates</li>
+                <li>Handles graceful degradation when downstream services are slow</li>
+            </ul>
+        </div>
+
+        <div id="detail-ai-engine" class="arch-detail">
+            <button class="detail-close" aria-label="Close" onclick="this.parentElement.classList.remove('active')">&times;</button>
+            <h3><span class="detail-icon">🧠</span> AI Engine</h3>
+            <ul>
+                <li>Orchestrates LLM calls with context injection (memory, persona, tools)</li>
+                <li>Manages conversation history with intelligent truncation</li>
+                <li>Selects and calls tools (web search, code execution, file I/O)</li>
+                <li>Applies safety guardrails and content filtering</li>
+                <li>Supports multiple LLM providers with automatic failover</li>
+                <li>Handles streaming responses for faster perceived latency</li>
+            </ul>
+        </div>
+
+        <div id="detail-memory" class="arch-detail">
+            <button class="detail-close" aria-label="Close" onclick="this.parentElement.classList.remove('active')">&times;</button>
+            <h3><span class="detail-icon">💾</span> Memory Store</h3>
+            <ul>
+                <li>Per-user persistent memory with semantic search</li>
+                <li>Stores preferences, facts, conversation highlights</li>
+                <li>Curated long-term memory (MEMORY.md) vs. daily notes</li>
+                <li>Vector-indexed for fast relevance retrieval</li>
+                <li>Privacy-first: each user's data is fully isolated</li>
+            </ul>
+        </div>
+
+        <div id="detail-skills" class="arch-detail">
+            <button class="detail-close" aria-label="Close" onclick="this.parentElement.classList.remove('active')">&times;</button>
+            <h3><span class="detail-icon">⚡</span> Skill Engine</h3>
+            <ul>
+                <li>Modular skill system — each skill defines tools, prompts, and scripts</li>
+                <li>Built-in skills: web search, weather, image understanding, code execution</li>
+                <li>Community skill marketplace for extending capabilities</li>
+                <li>Skills can access browser, files, shell, and external APIs</li>
+                <li>Sandboxed execution with permission controls</li>
+            </ul>
+        </div>
+
+        <div id="detail-scheduler" class="arch-detail">
+            <button class="detail-close" aria-label="Close" onclick="this.parentElement.classList.remove('active')">&times;</button>
+            <h3><span class="detail-icon">⏰</span> Scheduler</h3>
+            <ul>
+                <li>Cron-based task scheduling with human-friendly syntax</li>
+                <li>One-shot reminders ("remind me in 2 hours")</li>
+                <li>Heartbeat system for proactive check-ins</li>
+                <li>Background sub-agent spawning for long-running tasks</li>
+                <li>Automatic retry with exponential backoff on failures</li>
+            </ul>
+        </div>
+
+        <div id="detail-web-search" class="arch-detail">
+            <button class="detail-close" aria-label="Close" onclick="this.parentElement.classList.remove('active')">&times;</button>
+            <h3><span class="detail-icon">🌐</span> Web Search</h3>
+            <ul>
+                <li>Brave Search API integration for real-time web results</li>
+                <li>Page fetching with automatic content extraction (HTML → readable text)</li>
+                <li>Region and language-aware search results</li>
+                <li>Freshness filters for time-sensitive queries</li>
+            </ul>
+        </div>
+
+        <div id="detail-llm" class="arch-detail">
+            <button class="detail-close" aria-label="Close" onclick="this.parentElement.classList.remove('active')">&times;</button>
+            <h3><span class="detail-icon">🤖</span> LLM Provider</h3>
+            <ul>
+                <li>Supports Claude (Anthropic), GPT (OpenAI), and other providers</li>
+                <li>Configurable per-session model selection and overrides</li>
+                <li>Extended thinking / reasoning mode support</li>
+                <li>Automatic token budget management and context windowing</li>
+                <li>Fallback to alternative models on rate limits or outages</li>
+            </ul>
+        </div>
+
+        <!-- Request flow -->
+        <section class="arch-flow">
+            <h2>How a Message Flows</h2>
+            <div class="arch-flow-steps">
+                <div class="arch-flow-step">
+                    <div class="step-num">1</div>
+                    <h4>User Sends Message</h4>
+                    <p>You type in Telegram. The bot receives your message via webhook.</p>
+                </div>
+                <div class="arch-flow-step">
+                    <div class="step-num">2</div>
+                    <h4>Gateway Authenticates</h4>
+                    <p>Your identity is verified, rate limits checked, session resolved.</p>
+                </div>
+                <div class="arch-flow-step">
+                    <div class="step-num">3</div>
+                    <h4>Context Assembly</h4>
+                    <p>Memory is searched, persona loaded, recent history gathered.</p>
+                </div>
+                <div class="arch-flow-step">
+                    <div class="step-num">4</div>
+                    <h4>AI Thinks</h4>
+                    <p>The LLM processes your message with full context and available tools.</p>
+                </div>
+                <div class="arch-flow-step">
+                    <div class="step-num">5</div>
+                    <h4>Tools Execute</h4>
+                    <p>If needed, the AI searches the web, checks your calendar, runs code, etc.</p>
+                </div>
+                <div class="arch-flow-step">
+                    <div class="step-num">6</div>
+                    <h4>Response Delivered</h4>
+                    <p>The response streams back to your Telegram chat in real-time.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer style="text-align:center; padding:2rem; color:var(--text-muted,#666); font-size:0.9rem;">
+        <a href="index.html">← Back to Home</a>
+    </footer>
+
+    <script>
+        // Theme toggle (same pattern as other pages)
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        function setTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            themeIcon.textContent = t === 'dark' ? '🌙' : '☀️';
+            localStorage.setItem('theme', t);
+        }
+        themeToggle?.addEventListener('click', () => {
+            setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        });
+        const saved = localStorage.getItem('theme');
+        if (saved) setTheme(saved);
+        else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
+
+        // Interactive component details
+        document.querySelectorAll('.arch-node').forEach(node => {
+            node.addEventListener('click', () => {
+                const comp = node.dataset.component;
+                // Close all
+                document.querySelectorAll('.arch-detail').forEach(d => d.classList.remove('active'));
+                // Open matching
+                const detail = document.getElementById('detail-' + comp);
+                if (detail) {
+                    detail.classList.add('active');
+                    detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
