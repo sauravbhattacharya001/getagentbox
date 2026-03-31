@@ -659,7 +659,13 @@ function findResponse(input) {
     }
 
     // Default fallback
-    return `I understand you're asking about: <em>"${input}"</em>\n\nIn the full AgentBox, I'd handle this with AI-powered understanding. In this sandbox demo, try one of these:\n\n• Click a command card below\n• Use the quick command buttons\n• Type a command like <code>/remind</code>, <code>/search</code>, or <code>/ask</code>\n\n💡 The real AgentBox understands natural language — no commands needed!`;
+    return `I understand you're asking about: <em>"${escapeHtml(input)}"</em>\n\nIn the full AgentBox, I'd handle this with AI-powered understanding. In this sandbox demo, try one of these:\n\n• Click a command card below\n• Use the quick command buttons\n• Type a command like <code>/remind</code>, <code>/search</code>, or <code>/ask</code>\n\n💡 The real AgentBox understands natural language — no commands needed!`;
+}
+
+function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
 }
 
 function addMessage(text, isUser) {
@@ -667,8 +673,9 @@ function addMessage(text, isUser) {
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const div = document.createElement('div');
     div.className = `message ${isUser ? 'user' : 'bot'}`;
+    const safeText = isUser ? escapeHtml(text) : text;
     div.innerHTML = `
-        <div class="bubble">${text}</div>
+        <div class="bubble">${safeText}</div>
         <div class="meta">${isUser ? 'You' : 'AgentBox Demo'} • ${now}</div>
     `;
     messages.appendChild(div);
