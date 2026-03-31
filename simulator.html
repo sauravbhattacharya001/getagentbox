@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox Simulator — Try Before You Chat</title>
+    <meta name="description" content="Experience AgentBox's capabilities in an interactive simulator. See how it handles web search, memory, reminders, and image understanding.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .sim-header {
+            text-align: center;
+            padding: 2rem 1rem 1rem;
+            max-width: 700px;
+        }
+        .sim-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .sim-header p { color: var(--color-text-muted); font-size: 1rem; }
+        .sim-phone {
+            width: 380px;
+            max-width: 95vw;
+            background: var(--color-bg-mid);
+            border-radius: 24px;
+            border: 2px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .sim-topbar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(0,0,0,0.2);
+        }
+        .sim-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        .sim-topbar-info { flex: 1; }
+        .sim-topbar-info .name { font-weight: 600; font-size: 0.95rem; }
+        .sim-topbar-info .status { font-size: 0.75rem; color: var(--color-success); }
+        .sim-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            scroll-behavior: smooth;
+        }
+        .sim-msg {
+            max-width: 80%;
+            padding: 0.65rem 0.9rem;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            animation: msgIn 0.3s ease;
+        }
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .sim-msg.user {
+            align-self: flex-end;
+            background: var(--color-primary-alt);
+            border-bottom-right-radius: 4px;
+        }
+        .sim-msg.bot {
+            align-self: flex-start;
+            background: var(--color-surface-hover);
+            border-bottom-left-radius: 4px;
+        }
+        .sim-msg .capability-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            background: rgba(0,212,255,0.15);
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+        .sim-typing {
+            align-self: flex-start;
+            padding: 0.65rem 0.9rem;
+            background: var(--color-surface-hover);
+            border-radius: 16px;
+            display: none;
+        }
+        .sim-typing span {
+            display: inline-block;
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--color-text-muted);
+            margin: 0 2px;
+            animation: bounce 1.4s infinite;
+        }
+        .sim-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .sim-typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-6px); }
+        }
+        .sim-input-area {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            background: rgba(0,0,0,0.2);
+        }
+        .sim-input {
+            flex: 1;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 0.6rem 1rem;
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .sim-input:focus { border-color: var(--color-primary); }
+        .sim-input::placeholder { color: var(--color-text-muted); }
+        .sim-send {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--color-primary);
+            color: #000;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.15s;
+        }
+        .sim-send:hover { transform: scale(1.1); }
+        .sim-send:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .sim-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0 1rem 1rem;
+            max-width: 380px;
+        }
+        .sim-suggestions button {
+            border: 1px solid rgba(255,255,255,0.15);
+            background: var(--color-surface);
+            color: var(--color-text);
+            padding: 0.45rem 0.85rem;
+            border-radius: 16px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sim-suggestions button:hover {
+            border-color: var(--color-primary);
+            background: rgba(0,212,255,0.1);
+        }
+        .sim-back {
+            margin: 0 0 2rem;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .sim-back:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="sim-header">
+        <h1>🤖 AgentBox Simulator</h1>
+        <p>Try AgentBox right here — type a message or pick a suggestion below to see how it responds.</p>
+    </div>
+    <div class="sim-phone" role="application" aria-label="AgentBox chat simulator">
+        <div class="sim-topbar">
+            <div class="sim-avatar">🤖</div>
+            <div class="sim-topbar-info">
+                <div class="name">AgentBox</div>
+                <div class="status" id="simStatus">● Online</div>
+            </div>
+        </div>
+        <div class="sim-messages" id="simMessages" aria-live="polite">
+            <div class="sim-msg bot">Hey! I'm AgentBox 🤖 Try asking me something — I can search the web, remember things, set reminders, and more!</div>
+        </div>
+        <div class="sim-typing" id="simTyping"><span></span><span></span><span></span></div>
+        <div class="sim-input-area">
+            <input class="sim-input" id="simInput" type="text" placeholder="Type a message..." autocomplete="off" aria-label="Chat message">
+            <button class="sim-send" id="simSend" aria-label="Send message">➤</button>
+        </div>
+    </div>
+    <div class="sim-suggestions" id="simSuggestions"></div>
+    <a class="sim-back" href="index.html">← Back to AgentBox</a>
+
+    <script>
+    (function() {
+        'use strict';
+
+        var conversations = {
+            "search": {
+                triggers: ["search", "find", "look up", "google", "what is", "who is", "news"],
+                capability: "🔍 Web Search",
+                responses: [
+                    "Let me search that for you...\n\n🔍 Searching the web...\n\nHere's what I found:\n\n**Top 3 results:**\n1. Comprehensive overview from Wikipedia\n2. Latest news article from Reuters\n3. In-depth analysis from The Verge\n\nWant me to summarize any of these?",
+                    "On it! 🔍\n\nI searched the web and found several relevant sources. Here's a quick summary:\n\n📰 The latest info suggests this is a rapidly evolving topic. I found 5 recent articles from the past week.\n\nWant me to dig deeper into any specific aspect?"
+                ]
+            },
+            "remember": {
+                triggers: ["remember", "don't forget", "save this", "note", "memo", "keep track"],
+                capability: "🧠 Memory",
+                responses: [
+                    "Got it! 🧠 I've saved that to my memory.\n\nI now remember this about you. Next time you ask, I'll have this context ready — even days or weeks from now.\n\nYou can say \"what do you remember?\" anytime to check.",
+                    "Noted! ✅ I've stored that in my memory.\n\nUnlike other AI assistants, I actually remember things across conversations. This is now part of what I know about you.\n\nSay \"forget this\" anytime if you change your mind."
+                ]
+            },
+            "remind": {
+                triggers: ["remind", "alarm", "timer", "schedule", "wake me", "tell me at", "in 5 minutes", "tomorrow"],
+                capability: "⏰ Reminders",
+                responses: [
+                    "⏰ Reminder set!\n\nI'll send you a message when it's time. You don't need to keep the chat open — I'll ping you in Telegram automatically.\n\nYou can manage your reminders with:\n• /reminders — list all\n• /cancel — remove one",
+                    "Done! ⏰ I've scheduled that reminder.\n\nI'll message you right here in Telegram when the time comes. No app needed, no push notification setup — just a regular chat message from me.\n\n💡 Tip: You can set recurring reminders too, like \"remind me every Monday at 9am\""
+                ]
+            },
+            "image": {
+                triggers: ["image", "picture", "photo", "screenshot", "look at this", "what's in this", "describe this"],
+                capability: "👁️ Vision",
+                responses: [
+                    "I can analyze images! 👁️\n\nIn the real AgentBox on Telegram, you'd just send me a photo and I can:\n\n📸 Describe what's in it\n📝 Extract text (OCR)\n🔍 Identify objects, people, places\n🎨 Analyze colors, style, composition\n\nTry it out — send me an image on Telegram!",
+                    "I have vision capabilities! 👁️\n\nSend me any image on Telegram and I can:\n\n• Read text from screenshots or documents\n• Identify objects, food, animals, landmarks\n• Answer questions about what you see\n• Compare multiple images\n\nIt works with photos from your camera or any image you forward to me."
+                ]
+            },
+            "help": {
+                triggers: ["help", "what can you do", "commands", "features", "how do you work", "capabilities"],
+                capability: "📚 Help",
+                responses: [
+                    "Here's what I can do! 🚀\n\n🔍 **Web Search** — I can look things up in real time\n🧠 **Memory** — I remember our conversations\n⏰ **Reminders** — Set timers and scheduled alerts\n👁️ **Vision** — Analyze images you send me\n💬 **Chat** — Just talk naturally about anything\n📊 **Analysis** — Help with data, math, code\n\nJust chat naturally — no special syntax needed!\n\n20 free messages/day. Ready to try? → @AgentBox11Bot"
+                ]
+            },
+            "greeting": {
+                triggers: ["hi", "hello", "hey", "sup", "yo", "what's up", "good morning", "good evening"],
+                capability: "💬 Chat",
+                responses: [
+                    "Hey there! 👋 Great to see you!\n\nI'm AgentBox — your AI assistant on Telegram. This is a simulator, but the real me is even better!\n\nTry asking me to:\n• Search for something 🔍\n• Remember a note 🧠\n• Set a reminder ⏰\n• Or just chat! 💬",
+                    "Hello! 😊 Welcome to the AgentBox simulator!\n\nFeel free to chat with me here, or try the real thing on Telegram → @AgentBox11Bot\n\nWhat can I help you with?"
+                ]
+            },
+            "code": {
+                triggers: ["code", "programming", "javascript", "python", "function", "debug", "error", "bug"],
+                capability: "💻 Coding Help",
+                responses: [
+                    "I can help with code! 💻\n\n```\n// I can write, explain, and debug code\nfunction example() {\n  return 'AgentBox helps with code!';\n}\n```\n\nI support all major languages: Python, JavaScript, TypeScript, Rust, Go, C++, and more.\n\nJust paste your code or describe what you need — I'll help you build it, fix it, or understand it.",
+                    "Code mode activated! 🧑‍💻\n\nI can:\n• Write code from scratch\n• Debug errors and exceptions\n• Explain complex code\n• Refactor and optimize\n• Convert between languages\n\nPaste your code or describe what you're building. On the real Telegram bot, I format code blocks beautifully too!"
+                ]
+            },
+            "default": {
+                capability: "💬 Chat",
+                responses: [
+                    "That's an interesting question! 🤔\n\nIn the real AgentBox on Telegram, I'd give you a thorough, personalized answer — drawing from web search, my memory of our past conversations, and my broad knowledge.\n\nWant to try the real thing? → @AgentBox11Bot\n\n20 free messages/day, no signup required!",
+                    "Great question! I'd love to help with that.\n\nThis simulator shows a taste of what I can do, but the full AgentBox experience on Telegram is much richer — real web search, persistent memory, image analysis, and more.\n\n🚀 Try it: @AgentBox11Bot on Telegram\nNo signup, no app to install — just start chatting!"
+                ]
+            }
+        };
+
+        var suggestions = [
+            "What can you do?",
+            "Search for AI news",
+            "Remember my birthday is June 15",
+            "Remind me in 30 minutes",
+            "Help me write Python code",
+            "What's in this image?"
+        ];
+
+        var messagesEl = document.getElementById('simMessages');
+        var inputEl = document.getElementById('simInput');
+        var sendBtn = document.getElementById('simSend');
+        var typingEl = document.getElementById('simTyping');
+        var suggestionsEl = document.getElementById('simSuggestions');
+        var statusEl = document.getElementById('simStatus');
+        var busy = false;
+
+        function renderSuggestions() {
+            suggestionsEl.innerHTML = '';
+            suggestions.forEach(function(s) {
+                var btn = document.createElement('button');
+                btn.textContent = s;
+                btn.addEventListener('click', function() { sendMessage(s); });
+                suggestionsEl.appendChild(btn);
+            });
+        }
+
+        function addMessage(text, type, capTag) {
+            var div = document.createElement('div');
+            div.className = 'sim-msg ' + type;
+            if (capTag) {
+                var tag = document.createElement('div');
+                tag.className = 'capability-tag';
+                tag.textContent = capTag;
+                div.appendChild(tag);
+            }
+            var content = document.createElement('div');
+            content.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/```([\s\S]+?)```/g, '<pre style="background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;overflow-x:auto;font-size:0.82rem;margin:4px 0">$1</pre>');
+            div.appendChild(content);
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function matchConversation(text) {
+            var lower = text.toLowerCase();
+            var keys = Object.keys(conversations);
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                if (key === 'default') continue;
+                var triggers = conversations[key].triggers;
+                for (var j = 0; j < triggers.length; j++) {
+                    if (lower.indexOf(triggers[j]) !== -1) return conversations[key];
+                }
+            }
+            return conversations['default'];
+        }
+
+        function sendMessage(text) {
+            if (busy || !text.trim()) return;
+            busy = true;
+            sendBtn.disabled = true;
+            inputEl.value = '';
+
+            addMessage(text, 'user');
+            statusEl.textContent = '● Typing...';
+            typingEl.style.display = 'block';
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+
+            var conv = matchConversation(text);
+            var resp = conv.responses[Math.floor(Math.random() * conv.responses.length)];
+            var delay = 800 + Math.random() * 1200;
+
+            setTimeout(function() {
+                typingEl.style.display = 'none';
+                statusEl.textContent = '● Online';
+                addMessage(resp, 'bot', conv.capability);
+                busy = false;
+                sendBtn.disabled = false;
+                inputEl.focus();
+            }, delay);
+        }
+
+        sendBtn.addEventListener('click', function() { sendMessage(inputEl.value); });
+        inputEl.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') sendMessage(inputEl.value);
+        });
+
+        renderSuggestions();
+        inputEl.focus();
+    })();
+    </script>
+</body>
+</html>
