@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitemap - AgentBox</title>
+    <meta name="description" content="Browse all AgentBox pages organized by category. Find documentation, tools, resources, and more.">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sitemap-hero {
+            text-align: center;
+            padding: var(--space-xl) var(--space-lg);
+            margin-top: 80px;
+        }
+        .sitemap-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-sm);
+        }
+        .sitemap-hero p {
+            color: var(--color-text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto var(--space-lg);
+        }
+        .sitemap-search {
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .sitemap-search input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-subtle);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 1rem;
+            outline: none;
+            transition: border var(--transition-fast);
+            box-sizing: border-box;
+        }
+        .sitemap-search input:focus {
+            border-color: var(--color-primary);
+        }
+        .sitemap-search .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            opacity: 0.5;
+        }
+        .sitemap-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 var(--space-lg) var(--space-xl);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--space-lg);
+        }
+        .sitemap-category {
+            background: var(--color-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            transition: border-color var(--transition-fast), transform var(--transition-fast);
+        }
+        .sitemap-category:hover {
+            border-color: var(--color-primary);
+            transform: translateY(-2px);
+        }
+        .sitemap-category h2 {
+            font-size: 1.15rem;
+            margin: 0 0 var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        .sitemap-category h2 .cat-icon {
+            font-size: 1.4rem;
+        }
+        .sitemap-category ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sitemap-category li {
+            margin-bottom: 6px;
+        }
+        .sitemap-category a {
+            color: var(--color-text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            transition: background var(--transition-fast), color var(--transition-fast);
+        }
+        .sitemap-category a:hover {
+            background: var(--color-surface-hover);
+            color: var(--color-primary);
+        }
+        .sitemap-category a .link-emoji {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .no-results {
+            text-align: center;
+            color: var(--color-text-muted);
+            padding: var(--space-xl);
+            display: none;
+            grid-column: 1 / -1;
+            font-size: 1.1rem;
+        }
+        .page-count {
+            text-align: center;
+            color: var(--color-text-dim);
+            font-size: 0.85rem;
+            margin-top: var(--space-md);
+        }
+        @media (max-width: 600px) {
+            .sitemap-hero h1 { font-size: 1.8rem; }
+            .sitemap-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="site-nav" id="siteNav" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo" aria-label="Back to home">🤖 AgentBox</a>
+        </div>
+    </nav>
+
+    <div class="sitemap-hero">
+        <h1>🗺️ Sitemap</h1>
+        <p>Every page on AgentBox, organized by category. Use search to find what you need fast.</p>
+        <div class="sitemap-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="sitemapSearch" placeholder="Search pages..." autocomplete="off">
+        </div>
+        <div class="page-count" id="pageCount"></div>
+    </div>
+
+    <div class="sitemap-grid" id="sitemapGrid">
+        <div class="sitemap-category" data-category="core">
+            <h2><span class="cat-icon">🏠</span> Core Pages</h2>
+            <ul>
+                <li><a href="index.html"><span class="link-emoji">🤖</span> Home — Landing page &amp; overview</a></li>
+                <li><a href="faq.html"><span class="link-emoji">❓</span> FAQ — Frequently asked questions</a></li>
+                <li><a href="contact.html"><span class="link-emoji">📬</span> Contact — Get in touch</a></li>
+                <li><a href="accessibility.html"><span class="link-emoji">♿</span> Accessibility — A11y statement</a></li>
+                <li><a href="404.html"><span class="link-emoji">🚫</span> 404 — Page not found</a></li>
+            </ul>
+        </div>
+
+        <div class="sitemap-category" data-category="product">
+            <h2><span class="cat-icon">⚡</span> Product</h2>
+            <ul>
+                <li><a href="roadmap.html"><span class="link-emoji">🗺️</span> Roadmap — What's planned next</a></li>
+                <li><a href="updates.html"><span class="link-emoji">📦</span> Updates — Release notes &amp; changelog</a></li>
+                <li><a href="compare.html"><span class="link-emoji">⚖️</span> Compare — vs. other AI assistants</a></li>
+                <li><a href="integrations.html"><span class="link-emoji">🔌</span> Integrations — Supported services</a></li>
+                <li><a href="status-page.html"><span class="link-emoji">📊</span> Status — System uptime &amp; health</a></li>
+                <li><a href="uptime-history.html"><span class="link-emoji">📈</span> Uptime History — Historical availability</a></li>
+                <li><a href="architecture.html"><span class="link-emoji">🏗️</span> Architecture — System design overview</a></li>
+            </ul>
+        </div>
+
+        <div class="sitemap-category" data-category="developers">
+            <h2><span class="cat-icon">🛠️</span> Developers</h2>
+            <ul>
+                <li><a href="api-docs.html"><span class="link-emoji">📘</span> API Docs — REST API reference</a></li>
+                <li><a href="sdk.html"><span class="link-emoji">📦</span> SDK — Client libraries</a></li>
+                <li><a href="webhooks.html"><span class="link-emoji">🔗</span> Webhooks — Event notifications</a></li>
+                <li><a href="sandbox.html"><span class="link-emoji">🧪</span> Sandbox — Test environment</a></li>
+                <li><a href="migrate.html"><span class="link-emoji">🚚</span> Migration Guide — Switch to AgentBox</a></li>
+            </ul>
+        </div>
+
+        <div class="sitemap-category" data-category="resources">
+            <h2><span class="cat-icon">📚</span> Resources</h2>
+            <ul>
+                <li><a href="tutorials.html"><span class="link-emoji">🎓</span> Tutorials — Step-by-step guides</a></li>
+                <li><a href="knowledge-base.html"><span class="link-emoji">📖</span> Knowledge Base — In-depth articles</a></li>
+                <li><a href="glossary.html"><span class="link-emoji">📝</span> Glossary — AI &amp; product terms</a></li>
+                <li><a href="case-studies.html"><span class="link-emoji">📊</span> Case Studies — Real-world examples</a></li>
+                <li><a href="blog.html"><span class="link-emoji">✍️</span> Blog — News &amp; insights</a></li>
+                <li><a href="use-case-explorer.html"><span class="link-emoji">🔍</span> Use Case Explorer — Find your fit</a></li>
+            </ul>
+        </div>
+
+        <div class="sitemap-category" data-category="tools">
+            <h2><span class="cat-icon">🔧</span> Interactive Tools</h2>
+            <ul>
+                <li><a href="roi-calculator.html"><span class="link-emoji">💰</span> ROI Calculator — Estimate your savings</a></li>
+                <li><a href="voting.html"><span class="link-emoji">🗳️</span> Feature Voting — Request &amp; upvote features</a></li>
+                <li><a href="onboarding.html"><span class="link-emoji">🚀</span> Onboarding — Getting started wizard</a></li>
+                <li><a href="events.html"><span class="link-emoji">📅</span> Events — Webinars &amp; meetups</a></li>
+            </ul>
+        </div>
+
+        <div class="sitemap-category" data-category="community">
+            <h2><span class="cat-icon">🌍</span> Community &amp; Company</h2>
+            <ul>
+                <li><a href="community.html"><span class="link-emoji">💬</span> Community — Join the conversation</a></li>
+                <li><a href="partners.html"><span class="link-emoji">🤝</span> Partners — Partner program</a></li>
+                <li><a href="affiliate.html"><span class="link-emoji">💸</span> Affiliate — Earn referral rewards</a></li>
+                <li><a href="careers.html"><span class="link-emoji">💼</span> Careers — Join the team</a></li>
+                <li><a href="press-kit.html"><span class="link-emoji">📰</span> Press Kit — Media resources</a></li>
+                <li><a href="testimonials.html"><span class="link-emoji">⭐</span> Testimonials — What users say</a></li>
+                <li><a href="postmortems.html"><span class="link-emoji">🔬</span> Postmortems — Incident reports</a></li>
+            </ul>
+        </div>
+
+        <div class="sitemap-category" data-category="trust">
+            <h2><span class="cat-icon">🔒</span> Trust &amp; Legal</h2>
+            <ul>
+                <li><a href="security-whitepaper.html"><span class="link-emoji">🛡️</span> Security Whitepaper — How we protect data</a></li>
+                <li><a href="privacy.html"><span class="link-emoji">🔐</span> Privacy Policy — Data handling practices</a></li>
+                <li><a href="terms.html"><span class="link-emoji">📄</span> Terms of Service — Usage agreement</a></li>
+                <li><a href="sla.html"><span class="link-emoji">✅</span> SLA — Service level agreement</a></li>
+            </ul>
+        </div>
+
+        <div class="no-results" id="noResults">
+            No pages match your search. Try different keywords.
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var searchInput = document.getElementById('sitemapSearch');
+            var categories = document.querySelectorAll('.sitemap-category');
+            var noResults = document.getElementById('noResults');
+            var countEl = document.getElementById('pageCount');
+
+            // Count total links
+            var totalLinks = document.querySelectorAll('.sitemap-category a').length;
+            countEl.textContent = totalLinks + ' pages across ' + categories.length + ' categories';
+
+            searchInput.addEventListener('input', function() {
+                var query = this.value.toLowerCase().trim();
+                var anyVisible = false;
+
+                categories.forEach(function(cat) {
+                    var links = cat.querySelectorAll('li');
+                    var catVisible = false;
+
+                    // If query matches category heading, show all
+                    var heading = cat.querySelector('h2').textContent.toLowerCase();
+                    if (!query || heading.indexOf(query) !== -1) {
+                        links.forEach(function(li) { li.style.display = ''; });
+                        cat.style.display = '';
+                        anyVisible = true;
+                        return;
+                    }
+
+                    links.forEach(function(li) {
+                        var text = li.textContent.toLowerCase();
+                        if (text.indexOf(query) !== -1) {
+                            li.style.display = '';
+                            catVisible = true;
+                        } else {
+                            li.style.display = 'none';
+                        }
+                    });
+
+                    cat.style.display = catVisible ? '' : 'none';
+                    if (catVisible) anyVisible = true;
+                });
+
+                noResults.style.display = anyVisible ? 'none' : 'block';
+            });
+        })();
+    </script>
+</body>
+</html>
