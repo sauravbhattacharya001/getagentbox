@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox Badge Generator — Embeddable Status Badges</title>
+    <meta name="description" content="Generate embeddable SVG badges for your AgentBox agent. Show status, uptime, message count, and more on your README or website.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #fbbf24;
+            --color-error: #f87171;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { font-size: 2.2rem; text-align: center; margin-bottom: 0.5rem; }
+        h1 span { color: var(--color-primary); }
+        .subtitle { text-align: center; color: var(--color-text-muted); margin-bottom: 2.5rem; font-size: 1.1rem; }
+        .back-link { display: inline-block; margin-bottom: 1.5rem; color: var(--color-primary); text-decoration: none; font-size: 0.95rem; }
+        .back-link:hover { text-decoration: underline; }
+
+        .builder { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+        @media (max-width: 700px) { .builder { grid-template-columns: 1fr; } }
+
+        .panel {
+            background: var(--color-surface);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .panel h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--color-primary); }
+
+        label { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.3rem; margin-top: 0.8rem; }
+        label:first-child { margin-top: 0; }
+        input[type="text"], select {
+            width: 100%; padding: 0.5rem 0.7rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.3); color: var(--color-text); font-size: 0.95rem; outline: none;
+        }
+        input:focus, select:focus { border-color: var(--color-primary); }
+        select option { background: #1a1a2e; }
+
+        .color-row { display: flex; gap: 0.5rem; align-items: center; }
+        .color-row input[type="color"] { width: 36px; height: 36px; border: none; border-radius: 6px; cursor: pointer; background: none; }
+        .color-row input[type="text"] { flex: 1; }
+
+        .preview-area {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80px;
+            background: repeating-conic-gradient(rgba(255,255,255,0.03) 0% 25%, transparent 0% 50%) 0 0 / 20px 20px;
+            border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem;
+        }
+
+        .output-section { margin-top: 1rem; }
+        .output-section h3 { font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 0.4rem; }
+        .code-block {
+            background: rgba(0,0,0,0.4); border-radius: 6px; padding: 0.6rem 0.8rem; font-family: 'Fira Code', monospace;
+            font-size: 0.82rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; position: relative;
+            border: 1px solid rgba(255,255,255,0.08); color: #ccc; margin-bottom: 0.8rem;
+        }
+        .copy-btn {
+            position: absolute; top: 4px; right: 4px; background: var(--color-primary); color: #000; border: none;
+            border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; cursor: pointer; font-weight: 600;
+        }
+        .copy-btn:hover { opacity: 0.85; }
+        .copy-btn.copied { background: var(--color-success); }
+
+        .presets { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+        .preset-btn {
+            padding: 0.35rem 0.8rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15);
+            background: transparent; color: var(--color-text); cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+        }
+        .preset-btn:hover { background: var(--color-primary); color: #000; border-color: var(--color-primary); }
+        .preset-btn.active { background: var(--color-primary); color: #000; border-color: var(--color-primary); }
+
+        .gallery { display: flex; flex-wrap: wrap; gap: 0.7rem; justify-content: center; margin-top: 1rem; }
+        .gallery-item { cursor: pointer; transition: transform 0.15s; }
+        .gallery-item:hover { transform: scale(1.08); }
+
+        footer { text-align: center; margin-top: 3rem; color: var(--color-text-muted); font-size: 0.85rem; }
+        footer a { color: var(--color-primary); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to AgentBox</a>
+        <h1>🏷️ Badge <span>Generator</span></h1>
+        <p class="subtitle">Create embeddable SVG badges for your AgentBox agent. Perfect for READMEs, docs, and dashboards.</p>
+
+        <div class="presets">
+            <button class="preset-btn active" data-preset="status">Status</button>
+            <button class="preset-btn" data-preset="uptime">Uptime</button>
+            <button class="preset-btn" data-preset="messages">Messages</button>
+            <button class="preset-btn" data-preset="plan">Plan</button>
+            <button class="preset-btn" data-preset="version">Version</button>
+            <button class="preset-btn" data-preset="response">Response Time</button>
+            <button class="preset-btn" data-preset="custom">Custom</button>
+        </div>
+
+        <div class="builder">
+            <div class="panel">
+                <h2>⚙️ Configure</h2>
+                <label for="badgeLabel">Label (left side)</label>
+                <input type="text" id="badgeLabel" value="AgentBox" placeholder="e.g. AgentBox">
+
+                <label for="badgeValue">Value (right side)</label>
+                <input type="text" id="badgeValue" value="online" placeholder="e.g. online">
+
+                <label for="badgeStyle">Style</label>
+                <select id="badgeStyle">
+                    <option value="flat">Flat</option>
+                    <option value="flat-square">Flat Square</option>
+                    <option value="rounded">Rounded (Pill)</option>
+                </select>
+
+                <label>Label Color</label>
+                <div class="color-row">
+                    <input type="color" id="labelColorPicker" value="#555555">
+                    <input type="text" id="labelColor" value="#555555" maxlength="7">
+                </div>
+
+                <label>Value Color</label>
+                <div class="color-row">
+                    <input type="color" id="valueColorPicker" value="#4ade80">
+                    <input type="text" id="valueColor" value="#4ade80" maxlength="7">
+                </div>
+
+                <label for="badgeIcon">Icon (emoji, optional)</label>
+                <input type="text" id="badgeIcon" value="🤖" placeholder="e.g. 🤖 or leave empty" maxlength="4">
+            </div>
+
+            <div class="panel">
+                <h2>👁️ Preview</h2>
+                <div class="preview-area" id="previewArea"></div>
+
+                <div class="output-section">
+                    <h3>SVG Code</h3>
+                    <div class="code-block" id="svgCode"><button class="copy-btn" data-target="svgCode">Copy</button></div>
+                </div>
+                <div class="output-section">
+                    <h3>Markdown</h3>
+                    <div class="code-block" id="mdCode"><button class="copy-btn" data-target="mdCode">Copy</button></div>
+                </div>
+                <div class="output-section">
+                    <h3>HTML</h3>
+                    <div class="code-block" id="htmlCode"><button class="copy-btn" data-target="htmlCode">Copy</button></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>🖼️ Example Gallery</h2>
+            <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.8rem;">Click any badge to load its settings.</p>
+            <div class="gallery" id="gallery"></div>
+        </div>
+
+        <footer>
+            <p>Part of <a href="index.html">AgentBox</a> · Badges are pure SVG — no external dependencies</p>
+        </footer>
+    </div>
+
+    <script>
+        const $ = id => document.getElementById(id);
+
+        const presets = {
+            status:   { label: 'AgentBox', value: 'online',    labelColor: '#555555', valueColor: '#4ade80', icon: '🤖' },
+            uptime:   { label: 'uptime',   value: '99.9%',     labelColor: '#555555', valueColor: '#00d4ff', icon: '⏱️' },
+            messages: { label: 'messages', value: '12.4k',     labelColor: '#555555', valueColor: '#646cff', icon: '💬' },
+            plan:     { label: 'plan',     value: 'pro',       labelColor: '#555555', valueColor: '#7b2cbf', icon: '⭐' },
+            version:  { label: 'version',  value: 'v2.1.0',    labelColor: '#555555', valueColor: '#fbbf24', icon: '📦' },
+            response: { label: 'response', value: '<500ms',    labelColor: '#555555', valueColor: '#f472b6', icon: '⚡' },
+            custom:   { label: 'my-agent', value: 'awesome',   labelColor: '#333333', valueColor: '#ff6b6b', icon: '' },
+        };
+
+        const galleryItems = [
+            { label: 'AgentBox', value: 'online',      labelColor: '#555', valueColor: '#4ade80', icon: '🤖', style: 'flat' },
+            { label: 'AgentBox', value: 'maintenance',  labelColor: '#555', valueColor: '#fbbf24', icon: '🔧', style: 'flat' },
+            { label: 'AgentBox', value: 'offline',      labelColor: '#555', valueColor: '#f87171', icon: '❌', style: 'flat' },
+            { label: 'uptime',   value: '99.9%',        labelColor: '#333', valueColor: '#00d4ff', icon: '',   style: 'rounded' },
+            { label: 'plan',     value: 'enterprise',   labelColor: '#333', valueColor: '#7b2cbf', icon: '👑', style: 'flat-square' },
+            { label: 'memory',   value: 'active',       labelColor: '#444', valueColor: '#4ade80', icon: '🧠', style: 'flat' },
+            { label: 'tools',    value: '14 enabled',   labelColor: '#444', valueColor: '#646cff', icon: '🛠️', style: 'rounded' },
+            { label: 'model',    value: 'GPT-4o',       labelColor: '#333', valueColor: '#f472b6', icon: '🧪', style: 'flat' },
+        ];
+
+        function textWidth(text, fontSize) {
+            // Approximate: ~6.5px per char at 11px font
+            return text.length * 6.5 + 10;
+        }
+
+        function generateSVG(label, value, labelColor, valueColor, style, icon) {
+            const iconText = icon ? icon + ' ' : '';
+            const fullLabel = iconText + label;
+            const lw = textWidth(fullLabel, 11) + 4;
+            const vw = textWidth(value, 11) + 4;
+            const w = lw + vw;
+            const h = 20;
+            const r = style === 'flat-square' ? 0 : style === 'rounded' ? 10 : 3;
+
+            return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" role="img" aria-label="${label}: ${value}">
+  <title>${label}: ${value}</title>
+  <clipPath id="c"><rect width="${w}" height="${h}" rx="${r}"/></clipPath>
+  <g clip-path="url(#c)">
+    <rect width="${lw}" height="${h}" fill="${labelColor}"/>
+    <rect x="${lw}" width="${vw}" height="${h}" fill="${valueColor}"/>
+  </g>
+  <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">
+    <text x="${lw / 2}" y="14" fill="#010101" fill-opacity=".3">${escXml(fullLabel)}</text>
+    <text x="${lw / 2}" y="13">${escXml(fullLabel)}</text>
+    <text x="${lw + vw / 2}" y="14" fill="#010101" fill-opacity=".3">${escXml(value)}</text>
+    <text x="${lw + vw / 2}" y="13">${escXml(value)}</text>
+  </g>
+</svg>`;
+        }
+
+        function escXml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function render() {
+            const label = $('badgeLabel').value || 'badge';
+            const value = $('badgeValue').value || '?';
+            const labelColor = $('labelColor').value;
+            const valueColor = $('valueColor').value;
+            const style = $('badgeStyle').value;
+            const icon = $('badgeIcon').value;
+
+            const svg = generateSVG(label, value, labelColor, valueColor, style, icon);
+            $('previewArea').innerHTML = svg;
+
+            const svgOneLine = svg.replace(/\n\s*/g, '');
+            const btnSvg = $('svgCode').querySelector('.copy-btn').outerHTML;
+            const btnMd = $('mdCode').querySelector('.copy-btn').outerHTML;
+            const btnHtml = $('htmlCode').querySelector('.copy-btn').outerHTML;
+
+            $('svgCode').innerHTML = btnSvg + escXml(svgOneLine);
+            $('mdCode').innerHTML = btnMd + `![${escXml(label)}](data:image/svg+xml;base64,${btoa(svg)})`;
+            $('htmlCode').innerHTML = btnHtml + escXml(`<img src="data:image/svg+xml;base64,${btoa(svg)}" alt="${label}">`);
+        }
+
+        // Sync color pickers
+        $('labelColorPicker').addEventListener('input', e => { $('labelColor').value = e.target.value; render(); });
+        $('labelColor').addEventListener('input', e => { $('labelColorPicker').value = e.target.value; render(); });
+        $('valueColorPicker').addEventListener('input', e => { $('valueColor').value = e.target.value; render(); });
+        $('valueColor').addEventListener('input', e => { $('valueColorPicker').value = e.target.value; render(); });
+
+        // Re-render on any change
+        ['badgeLabel','badgeValue','badgeStyle','badgeIcon'].forEach(id => {
+            $(id).addEventListener('input', render);
+        });
+
+        // Presets
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const p = presets[btn.dataset.preset];
+                $('badgeLabel').value = p.label;
+                $('badgeValue').value = p.value;
+                $('labelColor').value = p.labelColor; $('labelColorPicker').value = p.labelColor;
+                $('valueColor').value = p.valueColor; $('valueColorPicker').value = p.valueColor;
+                $('badgeIcon').value = p.icon;
+                render();
+            });
+        });
+
+        // Copy buttons
+        document.addEventListener('click', e => {
+            if (!e.target.classList.contains('copy-btn')) return;
+            const block = $(e.target.dataset.target);
+            const text = block.textContent.replace('Copy','').replace('Copied!','').trim();
+            navigator.clipboard.writeText(text).then(() => {
+                e.target.textContent = 'Copied!';
+                e.target.classList.add('copied');
+                setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1500);
+            });
+        });
+
+        // Gallery
+        function renderGallery() {
+            const g = $('gallery');
+            g.innerHTML = '';
+            galleryItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.innerHTML = generateSVG(item.label, item.value, item.labelColor, item.valueColor, item.style || 'flat', item.icon || '');
+                div.addEventListener('click', () => {
+                    $('badgeLabel').value = item.label;
+                    $('badgeValue').value = item.value;
+                    $('labelColor').value = item.labelColor; $('labelColorPicker').value = item.labelColor;
+                    $('valueColor').value = item.valueColor; $('valueColorPicker').value = item.valueColor;
+                    $('badgeStyle').value = item.style || 'flat';
+                    $('badgeIcon').value = item.icon || '';
+                    render();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+                g.appendChild(div);
+            });
+        }
+
+        renderGallery();
+        render();
+    </script>
+</body>
+</html>
