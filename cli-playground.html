@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox CLI Playground — Try Commands Live</title>
+    <meta name="description" content="Interactive terminal emulator to explore AgentBox CLI commands with simulated output. Learn by doing.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #facc15;
+            --color-error: #f87171;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .page-header {
+            text-align: center;
+            padding: 2rem 1rem 1rem;
+            max-width: 800px;
+        }
+        .page-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-header p { color: var(--color-text-muted); font-size: 1.05rem; }
+
+        .terminal-wrap {
+            width: 820px;
+            max-width: 95vw;
+            margin: 1.5rem auto 1rem;
+        }
+        .terminal-bar {
+            background: #2a2a3e;
+            border-radius: 12px 12px 0 0;
+            padding: 0.6rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .terminal-dot.r { background: #f87171; }
+        .terminal-dot.y { background: #facc15; }
+        .terminal-dot.g { background: #4ade80; }
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+            font-family: 'Courier New', monospace;
+        }
+        .terminal-body {
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            padding: 1rem;
+            min-height: 400px;
+            max-height: 520px;
+            overflow-y: auto;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .terminal-body::-webkit-scrollbar { width: 6px; }
+        .terminal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+        .line { white-space: pre-wrap; word-break: break-word; }
+        .line.prompt-line { color: var(--color-success); }
+        .line.output { color: #c9d1d9; }
+        .line.error { color: var(--color-error); }
+        .line.info { color: var(--color-primary); }
+        .line.warning { color: var(--color-warning); }
+        .line.muted { color: #6e7681; }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            margin-top: 0.25rem;
+        }
+        .input-row .prompt-label {
+            color: var(--color-success);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre;
+        }
+        .input-row input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            outline: none;
+            caret-color: var(--color-primary);
+        }
+
+        .quick-cmds {
+            width: 820px;
+            max-width: 95vw;
+            margin: 0.5rem auto 2rem;
+        }
+        .quick-cmds h3 {
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .cmd-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .cmd-chip {
+            background: var(--color-surface);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.4rem 0.8rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            color: var(--color-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cmd-chip:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--color-primary);
+        }
+
+        .back-link {
+            margin: 1rem 0 2rem;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .page-header h1 { font-size: 1.5rem; }
+            .terminal-body { min-height: 300px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>⌨️ CLI Playground</h1>
+        <p>Explore AgentBox commands in a simulated terminal. Type a command or click a chip below.</p>
+    </div>
+
+    <div class="terminal-wrap">
+        <div class="terminal-bar">
+            <div class="terminal-dot r"></div>
+            <div class="terminal-dot y"></div>
+            <div class="terminal-dot g"></div>
+            <div class="terminal-title">agentbox — bash</div>
+        </div>
+        <div class="terminal-body" id="termBody">
+            <div class="line muted">Welcome to AgentBox CLI Playground v1.0</div>
+            <div class="line muted">Type "help" to see available commands, or click a chip below.</div>
+            <div class="line muted">─────────────────────────────────────────────</div>
+        </div>
+        <div class="input-row" id="inputRow">
+            <span class="prompt-label">~/agentbox $ </span>
+            <input type="text" id="cmdInput" autocomplete="off" autofocus placeholder="Type a command..." />
+        </div>
+    </div>
+
+    <div class="quick-cmds">
+        <h3>Quick Commands</h3>
+        <div class="cmd-chips" id="chips"></div>
+    </div>
+
+    <a href="index.html" class="back-link">← Back to Home</a>
+
+    <script>
+    (function() {
+        const body = document.getElementById('termBody');
+        const input = document.getElementById('cmdInput');
+        const chipsEl = document.getElementById('chips');
+
+        const history = [];
+        let histIdx = -1;
+
+        const COMMANDS = {
+            help: {
+                desc: 'List all available commands',
+                run: () => [
+                    { text: 'Available commands:', cls: 'info' },
+                    { text: '' },
+                    { text: '  help                 Show this help message', cls: 'output' },
+                    { text: '  agentbox init        Initialize a new agent project', cls: 'output' },
+                    { text: '  agentbox deploy      Deploy agent to the cloud', cls: 'output' },
+                    { text: '  agentbox status      Show agent status & health', cls: 'output' },
+                    { text: '  agentbox logs        Stream recent agent logs', cls: 'output' },
+                    { text: '  agentbox config      View current configuration', cls: 'output' },
+                    { text: '  agentbox test        Run agent test suite', cls: 'output' },
+                    { text: '  agentbox scale       Scale agent replicas', cls: 'output' },
+                    { text: '  agentbox rollback    Rollback to previous version', cls: 'output' },
+                    { text: '  agentbox env         Manage environment variables', cls: 'output' },
+                    { text: '  agentbox metrics     Show performance metrics', cls: 'output' },
+                    { text: '  clear                Clear terminal', cls: 'output' },
+                    { text: '  version              Show CLI version', cls: 'output' },
+                    { text: '' },
+                    { text: 'Tip: Use ↑↓ arrows for command history', cls: 'muted' },
+                ]
+            },
+            version: {
+                desc: 'Show version',
+                run: () => [{ text: 'agentbox-cli v3.8.2 (build 2026.03.31)', cls: 'output' }]
+            },
+            clear: {
+                desc: 'Clear terminal',
+                run: () => { body.innerHTML = ''; return []; }
+            },
+            'agentbox init': {
+                desc: 'Initialize a new agent',
+                run: () => {
+                    const lines = [
+                        { text: '🚀 Initializing AgentBox project...', cls: 'info' },
+                        { text: '' },
+                        { text: '  ✔ Created agent.yaml', cls: 'output', delay: 300 },
+                        { text: '  ✔ Created tools/ directory', cls: 'output', delay: 500 },
+                        { text: '  ✔ Created prompts/system.md', cls: 'output', delay: 700 },
+                        { text: '  ✔ Created .agentbox/config.json', cls: 'output', delay: 900 },
+                        { text: '  ✔ Created tests/smoke.test.js', cls: 'output', delay: 1100 },
+                        { text: '' },
+                        { text: '✅ Project initialized! Next steps:', cls: 'info', delay: 1400 },
+                        { text: '   1. Edit agent.yaml to configure your agent', cls: 'output', delay: 1400 },
+                        { text: '   2. Add tools in tools/ directory', cls: 'output', delay: 1400 },
+                        { text: '   3. Run "agentbox test" to verify', cls: 'output', delay: 1400 },
+                        { text: '   4. Run "agentbox deploy" when ready', cls: 'output', delay: 1400 },
+                    ];
+                    return lines;
+                }
+            },
+            'agentbox deploy': {
+                desc: 'Deploy an agent',
+                run: () => [
+                    { text: '📦 Packaging agent...', cls: 'info' },
+                    { text: '   Bundle size: 2.4 MB (3 tools, 1 prompt)', cls: 'output', delay: 400 },
+                    { text: '   Uploading to us-west-2...', cls: 'output', delay: 800 },
+                    { text: '   ████████████████████████████████ 100%', cls: 'info', delay: 1500 },
+                    { text: '' },
+                    { text: '🔍 Running pre-deploy checks...', cls: 'info', delay: 1800 },
+                    { text: '   ✔ Config valid', cls: 'output', delay: 2000 },
+                    { text: '   ✔ Dependencies resolved', cls: 'output', delay: 2200 },
+                    { text: '   ✔ Health check passed', cls: 'output', delay: 2500 },
+                    { text: '' },
+                    { text: '✅ Deployed! Agent live at:', cls: 'info', delay: 2800 },
+                    { text: '   https://my-agent.agentbox.run', cls: 'output', delay: 2800 },
+                    { text: '   Dashboard: https://app.agentbox.ai/agents/my-agent', cls: 'muted', delay: 2800 },
+                ]
+            },
+            'agentbox status': {
+                desc: 'Show agent status',
+                run: () => [
+                    { text: '┌─────────────────────────────────────────┐', cls: 'info' },
+                    { text: '│          Agent Status Dashboard          │', cls: 'info' },
+                    { text: '├─────────────────────────────────────────┤', cls: 'info' },
+                    { text: '│  Name:      my-research-agent           │', cls: 'output' },
+                    { text: '│  Status:    🟢 Running                  │', cls: 'output' },
+                    { text: '│  Version:   v2.1.0 (deployed 3h ago)    │', cls: 'output' },
+                    { text: '│  Replicas:  2/2 healthy                 │', cls: 'output' },
+                    { text: '│  Region:    us-west-2                   │', cls: 'output' },
+                    { text: '├─────────────────────────────────────────┤', cls: 'info' },
+                    { text: '│  Requests:  1,247 (last 24h)            │', cls: 'output' },
+                    { text: '│  Avg Lat:   342ms                       │', cls: 'output' },
+                    { text: '│  Errors:    0.3%                        │', cls: 'output' },
+                    { text: '│  Uptime:    99.97%                      │', cls: 'output' },
+                    { text: '└─────────────────────────────────────────┘', cls: 'info' },
+                ]
+            },
+            'agentbox logs': {
+                desc: 'Stream agent logs',
+                run: () => {
+                    const ts = () => new Date().toISOString().slice(11,23);
+                    return [
+                        { text: '📋 Streaming logs (latest 8)...', cls: 'info' },
+                        { text: '' },
+                        { text: `[${ts()}] INFO  Request received: "What is quantum computing?"`, cls: 'output', delay: 200 },
+                        { text: `[${ts()}] INFO  Tool call: web_search("quantum computing overview")`, cls: 'output', delay: 500 },
+                        { text: `[${ts()}] INFO  Tool result: 5 sources found (342ms)`, cls: 'output', delay: 900 },
+                        { text: `[${ts()}] INFO  Response generated (1.2s, 247 tokens)`, cls: 'output', delay: 1300 },
+                        { text: `[${ts()}] INFO  Request received: "Summarize this PDF"`, cls: 'output', delay: 1800 },
+                        { text: `[${ts()}] INFO  Tool call: file_read("upload_a8f2.pdf")`, cls: 'output', delay: 2100 },
+                        { text: `[${ts()}] WARN  Large file: 48 pages, splitting into chunks`, cls: 'warning', delay: 2400 },
+                        { text: `[${ts()}] INFO  Response generated (3.8s, 512 tokens)`, cls: 'output', delay: 2800 },
+                        { text: '' },
+                        { text: 'End of log stream. Use --follow for live tailing.', cls: 'muted', delay: 3000 },
+                    ];
+                }
+            },
+            'agentbox config': {
+                desc: 'View configuration',
+                run: () => [
+                    { text: '# agent.yaml', cls: 'muted' },
+                    { text: 'name: my-research-agent', cls: 'output' },
+                    { text: 'model: gpt-4o', cls: 'output' },
+                    { text: 'max_tokens: 4096', cls: 'output' },
+                    { text: 'temperature: 0.7', cls: 'output' },
+                    { text: 'tools:', cls: 'output' },
+                    { text: '  - web_search', cls: 'output' },
+                    { text: '  - file_read', cls: 'output' },
+                    { text: '  - code_execute', cls: 'output' },
+                    { text: 'memory:', cls: 'output' },
+                    { text: '  provider: redis', cls: 'output' },
+                    { text: '  ttl: 3600', cls: 'output' },
+                    { text: 'rate_limit:', cls: 'output' },
+                    { text: '  requests_per_min: 60', cls: 'output' },
+                    { text: '  burst: 10', cls: 'output' },
+                ]
+            },
+            'agentbox test': {
+                desc: 'Run test suite',
+                run: () => [
+                    { text: '🧪 Running agent test suite...', cls: 'info' },
+                    { text: '' },
+                    { text: '  ✔ System prompt loads correctly (12ms)', cls: 'output', delay: 400 },
+                    { text: '  ✔ Tool: web_search responds (234ms)', cls: 'output', delay: 800 },
+                    { text: '  ✔ Tool: file_read handles PDF (189ms)', cls: 'output', delay: 1100 },
+                    { text: '  ✔ Tool: code_execute sandboxed (56ms)', cls: 'output', delay: 1400 },
+                    { text: '  ✔ Memory write/read cycle (78ms)', cls: 'output', delay: 1700 },
+                    { text: '  ✔ Rate limiting enforced (102ms)', cls: 'output', delay: 2000 },
+                    { text: '  ✔ Error handling graceful (45ms)', cls: 'output', delay: 2200 },
+                    { text: '' },
+                    { text: '✅ 7/7 tests passed (716ms total)', cls: 'info', delay: 2500 },
+                ]
+            },
+            'agentbox scale': {
+                desc: 'Scale agent replicas',
+                run: () => [
+                    { text: '⚡ Scaling agent...', cls: 'info' },
+                    { text: '   Current: 2 replicas', cls: 'output', delay: 300 },
+                    { text: '   Target:  4 replicas', cls: 'output', delay: 500 },
+                    { text: '' },
+                    { text: '   Spinning up replica-3... 🟢 ready', cls: 'output', delay: 1200 },
+                    { text: '   Spinning up replica-4... 🟢 ready', cls: 'output', delay: 2000 },
+                    { text: '' },
+                    { text: '✅ Scaled to 4 replicas (load balanced)', cls: 'info', delay: 2300 },
+                ]
+            },
+            'agentbox rollback': {
+                desc: 'Rollback to previous version',
+                run: () => [
+                    { text: '⏪ Rolling back...', cls: 'warning' },
+                    { text: '   Current: v2.1.0 → Target: v2.0.3', cls: 'output', delay: 400 },
+                    { text: '   Swapping containers...', cls: 'output', delay: 1000 },
+                    { text: '   Health check... 🟢 pass', cls: 'output', delay: 1800 },
+                    { text: '' },
+                    { text: '✅ Rolled back to v2.0.3 successfully', cls: 'info', delay: 2200 },
+                    { text: '   Tip: Run "agentbox deploy" to go forward again', cls: 'muted', delay: 2200 },
+                ]
+            },
+            'agentbox env': {
+                desc: 'Manage env variables',
+                run: () => [
+                    { text: 'Environment variables (4 set):', cls: 'info' },
+                    { text: '' },
+                    { text: '  OPENAI_API_KEY    = sk-...Xf2w  (set)', cls: 'output' },
+                    { text: '  REDIS_URL         = redis://...  (set)', cls: 'output' },
+                    { text: '  LOG_LEVEL         = info         (set)', cls: 'output' },
+                    { text: '  AGENT_SECRET      = ************ (set)', cls: 'output' },
+                    { text: '' },
+                    { text: 'Use "agentbox env set KEY=VALUE" to add/update', cls: 'muted' },
+                ]
+            },
+            'agentbox metrics': {
+                desc: 'Performance metrics',
+                run: () => [
+                    { text: '📊 Performance Metrics (last 24h)', cls: 'info' },
+                    { text: '' },
+                    { text: '  Requests     │ ▁▂▃▅▇█▇▅▃▂▁▁▂▄▆█▇▅▃▂▁▁▂', cls: 'output' },
+                    { text: '  Total:       │ 1,247 requests', cls: 'output' },
+                    { text: '  Peak:        │ 142/min at 14:30 UTC', cls: 'output' },
+                    { text: '' },
+                    { text: '  Latency (p50/p95/p99):', cls: 'output' },
+                    { text: '    342ms / 890ms / 1,420ms', cls: 'output' },
+                    { text: '' },
+                    { text: '  Token Usage:', cls: 'output' },
+                    { text: '    Input:  284K tokens ($1.42)', cls: 'output' },
+                    { text: '    Output: 156K tokens ($2.34)', cls: 'output' },
+                    { text: '    Total:  $3.76', cls: 'info' },
+                    { text: '' },
+                    { text: '  Error Rate:  0.3% (4 errors)', cls: 'output' },
+                    { text: '  Cache Hit:   67%', cls: 'output' },
+                ]
+            },
+        };
+
+        const CHIPS = [
+            'help', 'agentbox init', 'agentbox deploy', 'agentbox status',
+            'agentbox logs', 'agentbox test', 'agentbox metrics', 'agentbox config',
+            'agentbox scale', 'agentbox env',
+        ];
+
+        // Render chips
+        CHIPS.forEach(cmd => {
+            const chip = document.createElement('div');
+            chip.className = 'cmd-chip';
+            chip.textContent = cmd;
+            chip.onclick = () => executeCommand(cmd);
+            chipsEl.appendChild(chip);
+        });
+
+        function addLine(text, cls, delay) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const div = document.createElement('div');
+                    div.className = 'line ' + (cls || 'output');
+                    div.textContent = text;
+                    body.appendChild(div);
+                    body.scrollTop = body.scrollHeight;
+                    resolve();
+                }, delay || 0);
+            });
+        }
+
+        let busy = false;
+
+        async function executeCommand(cmd) {
+            if (busy) return;
+            busy = true;
+            cmd = cmd.trim();
+
+            // Show prompt + command
+            await addLine(`~/agentbox $ ${cmd}`, 'prompt-line');
+
+            if (history[history.length - 1] !== cmd) history.push(cmd);
+            histIdx = history.length;
+
+            if (!cmd) { busy = false; return; }
+
+            const handler = COMMANDS[cmd];
+            if (!handler) {
+                await addLine(`agentbox: command not found: ${cmd}`, 'error');
+                await addLine('Type "help" to see available commands', 'muted');
+            } else {
+                const lines = handler.run();
+                for (const l of lines) {
+                    await addLine(l.text, l.cls, l.delay || 0);
+                }
+            }
+            await addLine('', 'output');
+            body.scrollTop = body.scrollHeight;
+            busy = false;
+            input.focus();
+        }
+
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                const cmd = input.value;
+                input.value = '';
+                executeCommand(cmd);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (histIdx > 0) { histIdx--; input.value = history[histIdx]; }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (histIdx < history.length - 1) { histIdx++; input.value = history[histIdx]; }
+                else { histIdx = history.length; input.value = ''; }
+            }
+        });
+
+        // Focus input on terminal click
+        document.querySelector('.terminal-wrap').addEventListener('click', () => input.focus());
+    })();
+    </script>
+</body>
+</html>
