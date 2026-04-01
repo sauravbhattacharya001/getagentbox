@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Persona Creator - AgentBox</title>
+    <meta name="description" content="Design your perfect AI agent personality. Choose tone, expertise, quirks, and preview live responses.">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --surface: #141825;
+            --surface2: #1c2133;
+            --border: #2a3040;
+            --text: #e0e6f0;
+            --text-muted: #8892a8;
+            --primary: #00d4ff;
+            --primary-dim: #00d4ff33;
+            --accent: #ff6b9d;
+            --accent2: #ffd93d;
+            --accent3: #6bff9d;
+            --radius: 12px;
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+        .top-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+        .top-bar a { color: var(--primary); text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+        .top-bar span { color: var(--text-muted); }
+
+        .page { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        h1 span { color: var(--primary); }
+        .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.1rem; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+        .panel h2 { font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        label { display: block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.4rem; margin-top: 1rem; }
+        label:first-of-type { margin-top: 0; }
+        input[type="text"], textarea, select {
+            width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+            color: var(--text); padding: 0.6rem 0.8rem; font-size: 0.95rem; font-family: var(--font);
+        }
+        textarea { resize: vertical; min-height: 60px; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
+
+        .chip-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.4rem; }
+        .chip {
+            padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.85rem; cursor: pointer;
+            border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); transition: all 0.2s;
+        }
+        .chip:hover { border-color: var(--primary); color: var(--text); }
+        .chip.active { background: var(--primary-dim); border-color: var(--primary); color: var(--primary); }
+
+        .slider-row { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.4rem; }
+        .slider-row input[type="range"] { flex: 1; accent-color: var(--primary); background: transparent; }
+        .slider-label { font-size: 0.8rem; color: var(--text-muted); min-width: 60px; text-align: center; }
+
+        .preview-chat { background: var(--bg); border-radius: 8px; padding: 1rem; min-height: 300px; max-height: 500px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
+        .msg { max-width: 85%; padding: 0.7rem 1rem; border-radius: 16px; font-size: 0.9rem; line-height: 1.5; animation: fadeIn 0.3s; }
+        .msg.user { background: var(--primary-dim); align-self: flex-end; border-bottom-right-radius: 4px; }
+        .msg.agent { background: var(--surface2); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .msg .name { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .prompt-row { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
+        .prompt-row input { flex: 1; }
+        .prompt-row button, .btn {
+            background: var(--primary); color: var(--bg); border: none; border-radius: 8px;
+            padding: 0.6rem 1.2rem; font-weight: 700; cursor: pointer; font-size: 0.9rem; white-space: nowrap;
+        }
+        .btn:hover, .prompt-row button:hover { filter: brightness(1.15); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        .persona-card {
+            background: linear-gradient(135deg, var(--surface), var(--surface2)); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.5rem; margin-top: 1.5rem; position: relative; overflow: hidden;
+        }
+        .persona-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--accent), var(--accent2)); }
+        .persona-card h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+        .persona-card .trait { display: inline-block; margin: 0.2rem; padding: 0.25rem 0.6rem; background: var(--primary-dim); border-radius: 12px; font-size: 0.8rem; color: var(--primary); }
+        .persona-card .bio { color: var(--text-muted); margin-top: 0.8rem; font-size: 0.9rem; line-height: 1.5; }
+
+        .export-row { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+
+        .presets { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html">🤖 AgentBox</a>
+        <span>/ Persona Creator</span>
+    </div>
+
+    <div class="page">
+        <h1>🎭 Agent <span>Persona Creator</span></h1>
+        <p class="subtitle">Design your agent's personality, tone, and expertise — then preview how it responds.</p>
+
+        <div class="presets">
+            <button class="btn btn-outline" onclick="applyPreset('professional')">💼 Professional</button>
+            <button class="btn btn-outline" onclick="applyPreset('creative')">🎨 Creative</button>
+            <button class="btn btn-outline" onclick="applyPreset('coach')">💪 Coach</button>
+            <button class="btn btn-outline" onclick="applyPreset('pirate')">🏴‍☠️ Pirate</button>
+            <button class="btn btn-outline" onclick="applyPreset('scientist')">🔬 Scientist</button>
+        </div>
+
+        <div class="grid">
+            <div>
+                <div class="panel">
+                    <h2>🧬 Identity</h2>
+                    <label for="agentName">Agent Name</label>
+                    <input type="text" id="agentName" placeholder="e.g. Atlas, Nova, Sage..." value="Atlas">
+
+                    <label for="agentRole">Role / Title</label>
+                    <input type="text" id="agentRole" placeholder="e.g. Research Assistant, Creative Partner..." value="AI Assistant">
+
+                    <label for="agentBio">Bio / Backstory</label>
+                    <textarea id="agentBio" placeholder="A brief backstory or description...">A friendly and capable AI assistant that adapts to your needs.</textarea>
+                </div>
+
+                <div class="panel" style="margin-top:1rem;">
+                    <h2>🎨 Personality Traits</h2>
+                    <label>Tone (pick up to 3)</label>
+                    <div class="chip-group" id="toneChips">
+                        <span class="chip active" data-val="friendly">Friendly</span>
+                        <span class="chip" data-val="professional">Professional</span>
+                        <span class="chip" data-val="witty">Witty</span>
+                        <span class="chip" data-val="formal">Formal</span>
+                        <span class="chip" data-val="casual">Casual</span>
+                        <span class="chip" data-val="sarcastic">Sarcastic</span>
+                        <span class="chip" data-val="empathetic">Empathetic</span>
+                        <span class="chip" data-val="enthusiastic">Enthusiastic</span>
+                        <span class="chip" data-val="deadpan">Deadpan</span>
+                        <span class="chip" data-val="poetic">Poetic</span>
+                    </div>
+
+                    <label>Verbosity</label>
+                    <div class="slider-row">
+                        <span class="slider-label">Terse</span>
+                        <input type="range" id="verbosity" min="1" max="5" value="3">
+                        <span class="slider-label">Verbose</span>
+                    </div>
+
+                    <label>Emoji Usage</label>
+                    <div class="slider-row">
+                        <span class="slider-label">None</span>
+                        <input type="range" id="emojiLevel" min="0" max="4" value="1">
+                        <span class="slider-label">Maximum</span>
+                    </div>
+
+                    <label>Formality</label>
+                    <div class="slider-row">
+                        <span class="slider-label">Chill</span>
+                        <input type="range" id="formality" min="1" max="5" value="3">
+                        <span class="slider-label">Buttoned-up</span>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top:1rem;">
+                    <h2>🧠 Expertise</h2>
+                    <label>Knowledge Areas (pick any)</label>
+                    <div class="chip-group" id="expertiseChips">
+                        <span class="chip" data-val="coding">Coding</span>
+                        <span class="chip" data-val="writing">Writing</span>
+                        <span class="chip" data-val="research">Research</span>
+                        <span class="chip" data-val="math">Math</span>
+                        <span class="chip" data-val="science">Science</span>
+                        <span class="chip" data-val="business">Business</span>
+                        <span class="chip" data-val="design">Design</span>
+                        <span class="chip" data-val="cooking">Cooking</span>
+                        <span class="chip" data-val="fitness">Fitness</span>
+                        <span class="chip" data-val="music">Music</span>
+                        <span class="chip" data-val="history">History</span>
+                        <span class="chip" data-val="philosophy">Philosophy</span>
+                    </div>
+
+                    <label for="customQuirk">Custom Quirk / Rule</label>
+                    <textarea id="customQuirk" placeholder="e.g. Always ends messages with a fun fact, speaks like a 1920s detective..."></textarea>
+                </div>
+            </div>
+
+            <div>
+                <div class="panel" style="position:sticky; top:1rem;">
+                    <h2>💬 Live Preview</h2>
+                    <div class="preview-chat" id="previewChat"></div>
+                    <div class="prompt-row">
+                        <input type="text" id="userInput" placeholder="Type a message to test..." onkeydown="if(event.key==='Enter')sendPreview()">
+                        <button onclick="sendPreview()">Send</button>
+                    </div>
+                    <div class="export-row">
+                        <button class="btn btn-outline" onclick="clearChat()">🗑️ Clear</button>
+                        <button class="btn btn-outline" onclick="randomPrompt()">🎲 Random</button>
+                        <button class="btn" onclick="exportJSON()">📋 Export JSON</button>
+                        <button class="btn btn-outline" onclick="exportMarkdown()">📝 Export MD</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="persona-card" id="personaCard">
+            <h3 id="cardName">Atlas</h3>
+            <div id="cardRole" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:0.5rem;">AI Assistant</div>
+            <div id="cardTraits"></div>
+            <div class="bio" id="cardBio">A friendly and capable AI assistant that adapts to your needs.</div>
+        </div>
+    </div>
+
+    <script>
+    // Chip selection
+    document.querySelectorAll('.chip-group').forEach(group => {
+        const maxSelect = group.id === 'toneChips' ? 3 : 99;
+        group.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (chip.classList.contains('active')) {
+                    chip.classList.remove('active');
+                } else {
+                    const active = group.querySelectorAll('.chip.active').length;
+                    if (active < maxSelect) chip.classList.add('active');
+                }
+                updateCard();
+            });
+        });
+    });
+
+    // Sliders update card
+    document.querySelectorAll('input[type="range"]').forEach(s => s.addEventListener('input', updateCard));
+    document.querySelectorAll('input[type="text"], textarea').forEach(el => el.addEventListener('input', updateCard));
+
+    function getPersona() {
+        const tones = [...document.querySelectorAll('#toneChips .chip.active')].map(c => c.dataset.val);
+        const expertise = [...document.querySelectorAll('#expertiseChips .chip.active')].map(c => c.dataset.val);
+        return {
+            name: document.getElementById('agentName').value || 'Agent',
+            role: document.getElementById('agentRole').value || 'AI Assistant',
+            bio: document.getElementById('agentBio').value,
+            tones, expertise,
+            verbosity: +document.getElementById('verbosity').value,
+            emojiLevel: +document.getElementById('emojiLevel').value,
+            formality: +document.getElementById('formality').value,
+            quirk: document.getElementById('customQuirk').value
+        };
+    }
+
+    function updateCard() {
+        const p = getPersona();
+        document.getElementById('cardName').textContent = p.name;
+        document.getElementById('cardRole').textContent = p.role;
+        document.getElementById('cardBio').textContent = p.bio || 'No bio set.';
+        const traits = [...p.tones, ...p.expertise];
+        document.getElementById('cardTraits').innerHTML = traits.map(t => `<span class="trait">${t}</span>`).join('');
+    }
+
+    // Chat preview with simulated responses
+    const sampleReplies = {
+        friendly: { hi: "Hey there! 😊 What can I help you with?", default: "That's a great question! Let me think about that..." },
+        professional: { hi: "Hello. How may I assist you today?", default: "Certainly. Let me address that for you." },
+        witty: { hi: "Well well well, look who decided to chat! What's up?", default: "Ah, interesting. Let me put on my thinking cap..." },
+        formal: { hi: "Good day. I am at your service.", default: "I shall endeavor to provide a thorough response." },
+        casual: { hi: "Hey! What's up?", default: "Yeah, so here's the thing..." },
+        sarcastic: { hi: "Oh, a human. How exciting.", default: "Wow, nobody's ever asked that before..." },
+        empathetic: { hi: "Hi there! I'm here for you. What's on your mind?", default: "I completely understand. Let's work through this together." },
+        enthusiastic: { hi: "OH HEY! So glad you're here!! What are we doing today?!", default: "Ooh that's AMAZING! Here's what I think—" },
+        deadpan: { hi: "Hello.", default: "Noted." },
+        poetic: { hi: "Greetings, wanderer of the digital realm.", default: "Like threads in a tapestry, let me weave an answer..." }
+    };
+
+    const emojiSets = ['', '👍', '🎯✨', '😊🎉💡🔥', '🚀✨💫🎯😎🔥💡🎉'];
+
+    function generateReply(userText) {
+        const p = getPersona();
+        const tone = p.tones[0] || 'friendly';
+        const replies = sampleReplies[tone] || sampleReplies.friendly;
+        const isGreeting = /^(hi|hey|hello|sup|yo)\b/i.test(userText.trim());
+
+        let reply = isGreeting ? replies.hi : replies.default;
+
+        // Add expertise flavor
+        if (p.expertise.length > 0 && !isGreeting) {
+            const area = p.expertise[Math.floor(Math.random() * p.expertise.length)];
+            const flavors = {
+                coding: " I'd approach this like debugging a tricky function.",
+                writing: " Let me craft a response worthy of publication.",
+                research: " Based on my analysis, here's what I've found.",
+                math: " Let me calculate the optimal answer.",
+                science: " The empirical evidence suggests...",
+                business: " From a strategic perspective...",
+                design: " Let me sketch out a solution.",
+                cooking: " Think of it like following a recipe—",
+                fitness: " Let's power through this together!",
+                music: " Let me find the right note here.",
+                history: " History teaches us an interesting lesson here.",
+                philosophy: " Ah, this touches on a deeper question."
+            };
+            reply += flavors[area] || '';
+        }
+
+        // Adjust verbosity
+        if (p.verbosity <= 2) {
+            reply = reply.split('.')[0] + '.';
+        } else if (p.verbosity >= 4) {
+            reply += " I want to make sure I give you a complete and thorough answer, so let me elaborate a bit further on this topic.";
+        }
+
+        // Add emojis
+        if (p.emojiLevel > 0) {
+            const emojis = emojiSets[p.emojiLevel] || '';
+            if (emojis) {
+                const e = emojis[Math.floor(Math.random() * emojis.length)];
+                reply = e + ' ' + reply;
+            }
+        }
+
+        // Add quirk
+        if (p.quirk) {
+            reply += `\n\n[${p.quirk}]`;
+        }
+
+        return reply;
+    }
+
+    function addMsg(text, type) {
+        const chat = document.getElementById('previewChat');
+        const div = document.createElement('div');
+        div.className = `msg ${type}`;
+        const p = getPersona();
+        const name = type === 'user' ? 'You' : p.name;
+        div.innerHTML = `<div class="name">${name}</div>${text.replace(/\n/g, '<br>')}`;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function sendPreview() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+        addMsg(text, 'user');
+        input.value = '';
+        setTimeout(() => addMsg(generateReply(text), 'agent'), 400 + Math.random() * 600);
+    }
+
+    function clearChat() {
+        document.getElementById('previewChat').innerHTML = '';
+    }
+
+    const randomPrompts = [
+        "Tell me a joke", "What's the meaning of life?", "Help me write an email",
+        "How do I learn to code?", "What should I have for dinner?", "Explain quantum computing",
+        "Give me a motivational quote", "What's the weather like?", "Plan my weekend",
+        "Hi there!", "Can you help me brainstorm?", "What's your favorite color?"
+    ];
+
+    function randomPrompt() {
+        const prompt = randomPrompts[Math.floor(Math.random() * randomPrompts.length)];
+        document.getElementById('userInput').value = prompt;
+        sendPreview();
+    }
+
+    function exportJSON() {
+        const p = getPersona();
+        const blob = new Blob([JSON.stringify(p, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${p.name.toLowerCase()}-persona.json`;
+        a.click();
+    }
+
+    function exportMarkdown() {
+        const p = getPersona();
+        const md = `# ${p.name}\n**Role:** ${p.role}\n\n## Personality\n- **Tones:** ${p.tones.join(', ') || 'None'}\n- **Verbosity:** ${p.verbosity}/5\n- **Emoji Level:** ${p.emojiLevel}/4\n- **Formality:** ${p.formality}/5\n\n## Expertise\n${p.expertise.map(e => `- ${e}`).join('\n') || 'None specified'}\n\n## Bio\n${p.bio || 'No bio.'}\n\n${p.quirk ? `## Custom Quirk\n${p.quirk}` : ''}`;
+        const blob = new Blob([md], { type: 'text/markdown' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${p.name.toLowerCase()}-persona.md`;
+        a.click();
+    }
+
+    // Presets
+    const presets = {
+        professional: { name: 'Meridian', role: 'Executive Assistant', bio: 'A polished, efficient assistant for business professionals.', tones: ['professional', 'formal'], expertise: ['business', 'writing'], verbosity: 3, emoji: 0, formality: 5, quirk: '' },
+        creative: { name: 'Pixel', role: 'Creative Partner', bio: 'A wildly imaginative collaborator who sees possibilities everywhere.', tones: ['enthusiastic', 'witty'], expertise: ['writing', 'design', 'music'], verbosity: 4, emoji: 3, formality: 1, quirk: 'Randomly names ideas after colors' },
+        coach: { name: 'Rex', role: 'Life & Fitness Coach', bio: 'Your personal motivator who pushes you to be your best self.', tones: ['enthusiastic', 'empathetic'], expertise: ['fitness', 'cooking'], verbosity: 3, emoji: 2, formality: 2, quirk: 'Ends each message with a motivational one-liner' },
+        pirate: { name: 'Captain Byte', role: 'Digital Buccaneer', bio: 'A swashbuckling AI who sails the seas of information.', tones: ['witty', 'casual'], expertise: ['history', 'coding'], verbosity: 4, emoji: 2, formality: 1, quirk: 'Speaks like a pirate — arrr!' },
+        scientist: { name: 'Dr. Lumen', role: 'Research Analyst', bio: 'A methodical thinker who values evidence above all else.', tones: ['professional', 'deadpan'], expertise: ['science', 'math', 'research'], verbosity: 4, emoji: 0, formality: 4, quirk: 'Always cites a (fictional) study' }
+    };
+
+    function applyPreset(key) {
+        const p = presets[key];
+        document.getElementById('agentName').value = p.name;
+        document.getElementById('agentRole').value = p.role;
+        document.getElementById('agentBio').value = p.bio;
+        document.getElementById('verbosity').value = p.verbosity;
+        document.getElementById('emojiLevel').value = p.emoji;
+        document.getElementById('formality').value = p.formality;
+        document.getElementById('customQuirk').value = p.quirk;
+
+        // Reset and set tone chips
+        document.querySelectorAll('#toneChips .chip').forEach(c => {
+            c.classList.toggle('active', p.tones.includes(c.dataset.val));
+        });
+        document.querySelectorAll('#expertiseChips .chip').forEach(c => {
+            c.classList.toggle('active', p.expertise.includes(c.dataset.val));
+        });
+        updateCard();
+        clearChat();
+    }
+
+    // Initial card update
+    updateCard();
+    // Welcome message
+    setTimeout(() => addMsg("Hi! I'm Atlas, your AI assistant. Try sending me a message to see how I respond with these personality settings!", 'agent'), 500);
+    </script>
+</body>
+</html>
