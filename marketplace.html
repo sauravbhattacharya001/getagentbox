@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox Marketplace — Community Agent Templates</title>
+    <meta name="description" content="Browse and deploy community-built agent templates. Find pre-configured agents for productivity, coding, writing, research, and more.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #fbbf24;
+            --color-error: #f87171;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-bg-far: #0f3460;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+            padding: 0;
+        }
+        a { color: var(--color-primary); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Header */
+        .mp-header {
+            text-align: center;
+            padding: 3rem 1rem 2rem;
+            background: linear-gradient(135deg, var(--color-bg-mid), var(--color-bg-far));
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .mp-header h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
+        .mp-header h1 span { color: var(--color-primary); }
+        .mp-header p { color: var(--color-text-muted); max-width: 600px; margin: 0 auto; }
+        .mp-back { display: inline-block; margin-bottom: 1rem; color: var(--color-text-muted); font-size: 0.9rem; }
+        .mp-back:hover { color: var(--color-primary); }
+
+        /* Controls */
+        .mp-controls {
+            max-width: 1200px; margin: 1.5rem auto; padding: 0 1rem;
+            display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;
+        }
+        .mp-search {
+            flex: 1; min-width: 220px; padding: 0.7rem 1rem; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15); background: var(--color-surface);
+            color: var(--color-text); font-size: 0.95rem; outline: none;
+        }
+        .mp-search:focus { border-color: var(--color-primary); }
+        .mp-sort {
+            padding: 0.7rem 1rem; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15); background: var(--color-surface);
+            color: var(--color-text); font-size: 0.9rem; cursor: pointer;
+        }
+        .mp-count { color: var(--color-text-muted); font-size: 0.85rem; }
+
+        /* Categories */
+        .mp-categories {
+            max-width: 1200px; margin: 0 auto 1rem; padding: 0 1rem;
+            display: flex; gap: 0.5rem; flex-wrap: wrap;
+        }
+        .mp-cat {
+            padding: 0.4rem 0.9rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15);
+            background: transparent; color: var(--color-text-muted); cursor: pointer;
+            font-size: 0.85rem; transition: all 0.2s;
+        }
+        .mp-cat:hover { border-color: var(--color-primary); color: var(--color-text); }
+        .mp-cat.active { background: var(--color-primary); color: #000; border-color: var(--color-primary); font-weight: 600; }
+
+        /* Grid */
+        .mp-grid {
+            max-width: 1200px; margin: 0 auto; padding: 0 1rem 3rem;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.2rem;
+        }
+
+        /* Card */
+        .mp-card {
+            background: var(--color-surface); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 1.5rem; transition: all 0.25s;
+            display: flex; flex-direction: column;
+        }
+        .mp-card:hover { border-color: var(--color-primary); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .mp-card-top { display: flex; align-items: flex-start; gap: 0.8rem; margin-bottom: 0.8rem; }
+        .mp-card-icon { font-size: 2rem; line-height: 1; flex-shrink: 0; }
+        .mp-card-meta { flex: 1; }
+        .mp-card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.2rem; }
+        .mp-card-author { font-size: 0.8rem; color: var(--color-text-muted); }
+        .mp-card-badge {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px;
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+        }
+        .mp-badge-official { background: var(--color-primary); color: #000; }
+        .mp-badge-popular { background: var(--color-accent); color: #fff; }
+        .mp-badge-new { background: var(--color-success); color: #000; }
+        .mp-card-desc { font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.5; flex: 1; margin-bottom: 1rem; }
+        .mp-card-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .mp-tag {
+            padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem;
+            background: rgba(255,255,255,0.06); color: var(--color-text-muted);
+        }
+        .mp-card-footer { display: flex; justify-content: space-between; align-items: center; }
+        .mp-card-stats { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--color-text-muted); }
+        .mp-card-stats span { display: flex; align-items: center; gap: 0.3rem; }
+        .mp-deploy-btn {
+            padding: 0.45rem 1rem; border-radius: 8px; border: none;
+            background: var(--color-primary); color: #000; font-weight: 600;
+            font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+        }
+        .mp-deploy-btn:hover { background: #33ddff; transform: scale(1.03); }
+        .mp-deploy-btn.deployed { background: var(--color-success); pointer-events: none; }
+
+        /* Detail Modal */
+        .mp-modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            z-index: 1000; justify-content: center; align-items: center; padding: 1rem;
+        }
+        .mp-modal-overlay.open { display: flex; }
+        .mp-modal {
+            background: var(--color-bg-mid); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; max-width: 640px; width: 100%; max-height: 85vh;
+            overflow-y: auto; padding: 2rem; position: relative;
+        }
+        .mp-modal-close {
+            position: absolute; top: 1rem; right: 1rem; background: none; border: none;
+            color: var(--color-text-muted); font-size: 1.5rem; cursor: pointer;
+        }
+        .mp-modal-close:hover { color: var(--color-text); }
+        .mp-modal h2 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+        .mp-modal .mp-card-author { margin-bottom: 1rem; }
+        .mp-modal-section { margin-bottom: 1.2rem; }
+        .mp-modal-section h3 { font-size: 0.95rem; color: var(--color-primary); margin-bottom: 0.5rem; }
+        .mp-modal-section p, .mp-modal-section ul { font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.6; }
+        .mp-modal-section ul { padding-left: 1.2rem; }
+        .mp-modal-section li { margin-bottom: 0.3rem; }
+        .mp-modal-config {
+            background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem;
+            font-family: 'Courier New', monospace; font-size: 0.85rem;
+            color: var(--color-success); overflow-x: auto; white-space: pre;
+        }
+        .mp-modal-deploy {
+            width: 100%; padding: 0.8rem; border-radius: 10px; border: none;
+            background: var(--color-primary); color: #000; font-weight: 700;
+            font-size: 1rem; cursor: pointer; margin-top: 1rem; transition: all 0.2s;
+        }
+        .mp-modal-deploy:hover { background: #33ddff; }
+        .mp-stars { color: var(--color-warning); }
+
+        /* Empty State */
+        .mp-empty {
+            grid-column: 1 / -1; text-align: center; padding: 3rem;
+            color: var(--color-text-muted); font-size: 1.1rem;
+        }
+
+        @media (max-width: 500px) {
+            .mp-header h1 { font-size: 1.6rem; }
+            .mp-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="mp-header">
+        <a href="index.html" class="mp-back">← Back to AgentBox</a>
+        <h1>🏪 Agent <span>Marketplace</span></h1>
+        <p>Browse community-built agent templates. Find the perfect pre-configured agent for your workflow, customize it, and deploy in seconds.</p>
+    </header>
+
+    <div class="mp-controls">
+        <input type="text" class="mp-search" id="mpSearch" placeholder="Search agents by name, tag, or description..." aria-label="Search agents">
+        <select class="mp-sort" id="mpSort" aria-label="Sort agents">
+            <option value="popular">Most Popular</option>
+            <option value="rating">Highest Rated</option>
+            <option value="newest">Newest First</option>
+            <option value="name">Alphabetical</option>
+            <option value="installs">Most Installed</option>
+        </select>
+        <span class="mp-count" id="mpCount"></span>
+    </div>
+
+    <div class="mp-categories" id="mpCategories"></div>
+    <div class="mp-grid" id="mpGrid"></div>
+
+    <div class="mp-modal-overlay" id="mpModal">
+        <div class="mp-modal" id="mpModalContent"></div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const AGENTS = [
+            {
+                id: 'daily-briefing', name: 'Daily Briefing Agent', icon: '📰',
+                author: 'AgentBox Team', badge: 'official',
+                category: 'Productivity',
+                desc: 'Sends a personalized morning briefing with weather, calendar, news headlines, and task reminders. Configurable delivery time and topics.',
+                tags: ['morning', 'news', 'calendar', 'weather'],
+                rating: 4.8, installs: 12400, reviews: 342,
+                features: ['Customizable delivery schedule', 'Weather integration', 'Calendar sync', 'News topic filtering', 'Task priority highlights'],
+                config: '{\n  "wake_time": "07:00",\n  "news_topics": ["tech", "business"],\n  "weather_city": "San Francisco",\n  "calendar": true\n}',
+                created: '2025-11-15'
+            },
+            {
+                id: 'code-reviewer', name: 'Code Review Buddy', icon: '🔍',
+                author: 'devtools-community', badge: 'popular',
+                category: 'Development',
+                desc: 'Paste code snippets and get instant reviews with suggestions for bugs, performance improvements, and best practices. Supports 20+ languages.',
+                tags: ['code', 'review', 'debugging', 'best-practices'],
+                rating: 4.7, installs: 9800, reviews: 267,
+                features: ['Multi-language support', 'Security vulnerability detection', 'Performance suggestions', 'Style guide compliance', 'Diff-based reviews'],
+                config: '{\n  "languages": ["python", "javascript", "go"],\n  "style_guide": "google",\n  "security_scan": true\n}',
+                created: '2025-12-01'
+            },
+            {
+                id: 'meeting-notes', name: 'Meeting Notes Scribe', icon: '✍️',
+                author: 'productivity-lab', badge: 'popular',
+                category: 'Productivity',
+                desc: 'Send meeting transcripts or voice notes and get structured summaries with action items, decisions, and follow-ups automatically extracted.',
+                tags: ['meetings', 'notes', 'summary', 'action-items'],
+                rating: 4.9, installs: 15200, reviews: 489,
+                features: ['Action item extraction', 'Decision tracking', 'Follow-up reminders', 'Attendee mention detection', 'Multiple output formats'],
+                config: '{\n  "format": "markdown",\n  "auto_remind": true,\n  "remind_hours": 24,\n  "extract_deadlines": true\n}',
+                created: '2025-10-20'
+            },
+            {
+                id: 'fitness-coach', name: 'Fitness Coach', icon: '💪',
+                author: 'health-ai', badge: 'popular',
+                category: 'Health',
+                desc: 'Personal workout planner and nutrition tracker. Generates routines based on your goals, tracks progress, and adapts over time.',
+                tags: ['fitness', 'workout', 'nutrition', 'health'],
+                rating: 4.5, installs: 7300, reviews: 198,
+                features: ['Custom workout plans', 'Nutrition tracking', 'Progress photos tracking', 'Rest day recommendations', 'Exercise form tips'],
+                config: '{\n  "goal": "muscle_gain",\n  "experience": "intermediate",\n  "days_per_week": 4,\n  "equipment": "full_gym"\n}',
+                created: '2025-12-10'
+            },
+            {
+                id: 'language-tutor', name: 'Language Practice Partner', icon: '🌍',
+                author: 'polyglot-io', badge: 'official',
+                category: 'Education',
+                desc: 'Practice conversations in 30+ languages with grammar corrections, vocabulary building, and spaced repetition flashcard generation.',
+                tags: ['language', 'learning', 'flashcards', 'conversation'],
+                rating: 4.6, installs: 11000, reviews: 312,
+                features: ['30+ languages', 'Grammar correction', 'Vocabulary tracking', 'Spaced repetition', 'Cultural context notes'],
+                config: '{\n  "target_language": "Spanish",\n  "native_language": "English",\n  "level": "B1",\n  "focus": "conversation"\n}',
+                created: '2025-11-01'
+            },
+            {
+                id: 'research-assistant', name: 'Research Assistant', icon: '🔬',
+                author: 'AgentBox Team', badge: 'official',
+                category: 'Research',
+                desc: 'Deep-dive research on any topic. Compiles sources, creates annotated bibliographies, generates literature review outlines, and fact-checks claims.',
+                tags: ['research', 'academic', 'citations', 'fact-check'],
+                rating: 4.7, installs: 8900, reviews: 245,
+                features: ['Source compilation', 'Citation formatting (APA, MLA, Chicago)', 'Fact verification', 'Literature review scaffolding', 'Key findings extraction'],
+                config: '{\n  "citation_style": "APA",\n  "depth": "comprehensive",\n  "include_abstracts": true,\n  "max_sources": 20\n}',
+                created: '2025-11-20'
+            },
+            {
+                id: 'social-media', name: 'Social Media Manager', icon: '📱',
+                author: 'growth-hackers', badge: 'new',
+                category: 'Marketing',
+                desc: 'Generate platform-optimized posts, schedule content calendars, analyze engagement patterns, and suggest trending hashtags.',
+                tags: ['social', 'marketing', 'content', 'scheduling'],
+                rating: 4.4, installs: 5600, reviews: 142,
+                features: ['Multi-platform formatting', 'Content calendar generation', 'Hashtag suggestions', 'Engagement analysis', 'A/B caption testing'],
+                config: '{\n  "platforms": ["twitter", "linkedin", "instagram"],\n  "tone": "professional",\n  "post_frequency": "daily",\n  "brand_voice": "friendly"\n}',
+                created: '2026-02-15'
+            },
+            {
+                id: 'recipe-chef', name: 'Recipe Chef', icon: '👨‍🍳',
+                author: 'foodie-bots', badge: null,
+                category: 'Lifestyle',
+                desc: 'Tell it what ingredients you have and get recipe suggestions with step-by-step instructions, nutritional info, and substitution ideas.',
+                tags: ['cooking', 'recipes', 'meal-planning', 'nutrition'],
+                rating: 4.6, installs: 6200, reviews: 175,
+                features: ['Ingredient-based search', 'Dietary restriction filters', 'Nutritional breakdown', 'Meal prep planning', 'Shopping list generation'],
+                config: '{\n  "dietary": ["vegetarian"],\n  "skill_level": "intermediate",\n  "servings": 2,\n  "cuisine_preference": "mediterranean"\n}',
+                created: '2026-01-05'
+            },
+            {
+                id: 'email-drafter', name: 'Email Composer Pro', icon: '✉️',
+                author: 'AgentBox Team', badge: 'official',
+                category: 'Productivity',
+                desc: 'Draft professional emails from bullet points. Adjusts tone for different contexts — sales, support, formal, casual. Includes subject line suggestions.',
+                tags: ['email', 'writing', 'professional', 'communication'],
+                rating: 4.8, installs: 13100, reviews: 398,
+                features: ['Tone adjustment', 'Subject line generator', 'Template library', 'Follow-up drafts', 'Multi-language support'],
+                config: '{\n  "default_tone": "professional",\n  "signature": true,\n  "suggest_subject": true,\n  "language": "en"\n}',
+                created: '2025-10-01'
+            },
+            {
+                id: 'travel-planner', name: 'Trip Planner', icon: '✈️',
+                author: 'wanderlust-ai', badge: 'popular',
+                category: 'Lifestyle',
+                desc: 'Plan trips with day-by-day itineraries, budget estimates, packing lists, and local tips. Handles flights, hotels, and activities.',
+                tags: ['travel', 'planning', 'itinerary', 'budget'],
+                rating: 4.5, installs: 8100, reviews: 223,
+                features: ['Day-by-day itineraries', 'Budget tracking', 'Packing list generator', 'Local tips and customs', 'Weather-aware planning'],
+                config: '{\n  "travel_style": "balanced",\n  "budget_level": "mid-range",\n  "interests": ["culture", "food", "nature"],\n  "currency": "USD"\n}',
+                created: '2025-12-20'
+            },
+            {
+                id: 'data-analyst', name: 'Data Analyst Bot', icon: '📊',
+                author: 'analytics-guild', badge: 'new',
+                category: 'Development',
+                desc: 'Paste CSV data or describe datasets and get instant analysis — trends, outliers, correlations, and visualization suggestions.',
+                tags: ['data', 'analytics', 'visualization', 'statistics'],
+                rating: 4.3, installs: 4200, reviews: 98,
+                features: ['CSV/JSON parsing', 'Statistical summaries', 'Trend detection', 'Chart recommendations', 'SQL query generation'],
+                config: '{\n  "default_chart": "auto",\n  "confidence_level": 0.95,\n  "outlier_method": "IQR",\n  "output_format": "markdown"\n}',
+                created: '2026-03-01'
+            },
+            {
+                id: 'journaling', name: 'Reflection Journal', icon: '📓',
+                author: 'mindful-tech', badge: null,
+                category: 'Health',
+                desc: 'Guided daily journaling with thoughtful prompts, mood tracking, and weekly insight summaries. Helps build a consistent reflection habit.',
+                tags: ['journaling', 'mindfulness', 'mood', 'reflection'],
+                rating: 4.7, installs: 5900, reviews: 167,
+                features: ['Daily prompts', 'Mood tracking', 'Weekly summaries', 'Gratitude exercises', 'Pattern detection'],
+                config: '{\n  "prompt_time": "21:00",\n  "style": "guided",\n  "mood_tracking": true,\n  "weekly_review": true\n}',
+                created: '2025-11-10'
+            },
+            {
+                id: 'interview-prep', name: 'Interview Coach', icon: '🎯',
+                author: 'career-boost', badge: 'popular',
+                category: 'Education',
+                desc: 'Practice technical and behavioral interviews with realistic questions, timed responses, and detailed feedback on your answers.',
+                tags: ['interview', 'career', 'practice', 'feedback'],
+                rating: 4.6, installs: 7800, reviews: 213,
+                features: ['Technical question bank', 'Behavioral STAR method coaching', 'Timed practice mode', 'Answer scoring', 'Industry-specific prep'],
+                config: '{\n  "role": "software_engineer",\n  "level": "senior",\n  "focus": ["system_design", "algorithms"],\n  "company_style": "FAANG"\n}',
+                created: '2025-12-05'
+            },
+            {
+                id: 'budget-tracker', name: 'Money Manager', icon: '💰',
+                author: 'fintech-bots', badge: null,
+                category: 'Finance',
+                desc: 'Track expenses via quick messages, categorize spending, set budgets, and get weekly financial summaries with saving tips.',
+                tags: ['finance', 'budget', 'expenses', 'savings'],
+                rating: 4.4, installs: 6700, reviews: 186,
+                features: ['Quick expense logging', 'Auto-categorization', 'Budget alerts', 'Weekly summaries', 'Savings goal tracking'],
+                config: '{\n  "currency": "USD",\n  "categories": ["food", "transport", "entertainment", "bills"],\n  "budget_period": "monthly",\n  "alert_threshold": 0.8\n}',
+                created: '2026-01-15'
+            },
+            {
+                id: 'writing-partner', name: 'Creative Writing Partner', icon: '🖊️',
+                author: 'story-forge', badge: 'new',
+                category: 'Creative',
+                desc: 'Collaborative fiction writing with plot suggestions, character development, dialogue coaching, and writer\'s block prompts.',
+                tags: ['writing', 'fiction', 'creativity', 'storytelling'],
+                rating: 4.5, installs: 4800, reviews: 134,
+                features: ['Plot brainstorming', 'Character profiles', 'Dialogue refinement', 'Genre-specific advice', 'Word count goals'],
+                config: '{\n  "genre": "sci-fi",\n  "style": "collaborative",\n  "feedback_level": "detailed",\n  "word_goal_daily": 1000\n}',
+                created: '2026-02-20'
+            },
+            {
+                id: 'devops-helper', name: 'DevOps Sidekick', icon: '⚙️',
+                author: 'infra-crew', badge: null,
+                category: 'Development',
+                desc: 'Generate Docker configs, CI/CD pipelines, Kubernetes manifests, and Terraform templates from natural language descriptions.',
+                tags: ['devops', 'docker', 'kubernetes', 'ci-cd'],
+                rating: 4.3, installs: 3900, reviews: 87,
+                features: ['Dockerfile generation', 'GitHub Actions workflows', 'K8s manifest builder', 'Terraform templates', 'Nginx config helper'],
+                config: '{\n  "cloud_provider": "aws",\n  "container_runtime": "docker",\n  "ci_platform": "github_actions",\n  "iac_tool": "terraform"\n}',
+                created: '2026-01-20'
+            },
+            {
+                id: 'study-buddy', name: 'Study Buddy', icon: '📚',
+                author: 'edu-agents', badge: null,
+                category: 'Education',
+                desc: 'Create flashcards, practice quizzes, and study schedules from your notes or textbook content. Uses active recall and spaced repetition.',
+                tags: ['study', 'flashcards', 'quiz', 'spaced-repetition'],
+                rating: 4.6, installs: 6400, reviews: 178,
+                features: ['Auto flashcard generation', 'Quiz creation', 'Spaced repetition scheduling', 'Progress tracking', 'Concept mapping'],
+                config: '{\n  "method": "active_recall",\n  "session_length_min": 25,\n  "review_algorithm": "SM-2",\n  "subjects": ["biology", "history"]\n}',
+                created: '2025-12-15'
+            },
+            {
+                id: 'legal-assistant', name: 'Legal Document Helper', icon: '⚖️',
+                author: 'legaltech-ai', badge: 'new',
+                category: 'Professional',
+                desc: 'Draft contracts, NDAs, terms of service, and privacy policies. Explains legal jargon in plain language and highlights key clauses.',
+                tags: ['legal', 'contracts', 'documents', 'compliance'],
+                rating: 4.2, installs: 3200, reviews: 76,
+                features: ['Template library', 'Jargon explainer', 'Clause highlighting', 'Risk assessment', 'Multi-jurisdiction awareness'],
+                config: '{\n  "jurisdiction": "US",\n  "document_type": "contract",\n  "language": "plain_english",\n  "highlight_risks": true\n}',
+                created: '2026-03-10'
+            }
+        ];
+
+        const CATEGORIES = ['All', ...new Set(AGENTS.map(a => a.category))].sort((a, b) => a === 'All' ? -1 : a.localeCompare(b));
+
+        let activeCategory = 'All';
+        let searchTerm = '';
+        let sortBy = 'popular';
+        const deployed = new Set();
+
+        const grid = document.getElementById('mpGrid');
+        const search = document.getElementById('mpSearch');
+        const sort = document.getElementById('mpSort');
+        const countEl = document.getElementById('mpCount');
+        const catContainer = document.getElementById('mpCategories');
+        const modalOverlay = document.getElementById('mpModal');
+        const modalContent = document.getElementById('mpModalContent');
+
+        function renderCategories() {
+            catContainer.innerHTML = CATEGORIES.map(c =>
+                '<button class="mp-cat' + (c === activeCategory ? ' active' : '') + '" data-cat="' + c + '">' + c + '</button>'
+            ).join('');
+        }
+
+        function getStars(rating) {
+            const full = Math.floor(rating);
+            const half = rating - full >= 0.5;
+            return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - (half ? 1 : 0));
+        }
+
+        function formatNumber(n) {
+            return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : n.toString();
+        }
+
+        function getBadgeHTML(badge) {
+            if (!badge) return '';
+            const cls = { official: 'mp-badge-official', popular: 'mp-badge-popular', 'new': 'mp-badge-new' };
+            return '<span class="mp-card-badge ' + (cls[badge] || '') + '">' + badge + '</span>';
+        }
+
+        function filtered() {
+            let list = AGENTS;
+            if (activeCategory !== 'All') list = list.filter(a => a.category === activeCategory);
+            if (searchTerm) {
+                const q = searchTerm.toLowerCase();
+                list = list.filter(a =>
+                    a.name.toLowerCase().includes(q) ||
+                    a.desc.toLowerCase().includes(q) ||
+                    a.tags.some(t => t.includes(q)) ||
+                    a.category.toLowerCase().includes(q) ||
+                    a.author.toLowerCase().includes(q)
+                );
+            }
+            const sorters = {
+                popular: (a, b) => b.installs - a.installs,
+                rating: (a, b) => b.rating - a.rating,
+                newest: (a, b) => new Date(b.created) - new Date(a.created),
+                name: (a, b) => a.name.localeCompare(b.name),
+                installs: (a, b) => b.installs - a.installs
+            };
+            list.sort(sorters[sortBy] || sorters.popular);
+            return list;
+        }
+
+        function renderGrid() {
+            const list = filtered();
+            countEl.textContent = list.length + ' agent' + (list.length !== 1 ? 's' : '');
+            if (!list.length) {
+                grid.innerHTML = '<div class="mp-empty">No agents match your search. Try different keywords or clear filters.</div>';
+                return;
+            }
+            grid.innerHTML = list.map(a => `
+                <div class="mp-card" data-id="${a.id}">
+                    <div class="mp-card-top">
+                        <div class="mp-card-icon">${a.icon}</div>
+                        <div class="mp-card-meta">
+                            <div class="mp-card-title">${a.name}</div>
+                            <div class="mp-card-author">by ${a.author} ${getBadgeHTML(a.badge)}</div>
+                        </div>
+                    </div>
+                    <div class="mp-card-desc">${a.desc}</div>
+                    <div class="mp-card-tags">${a.tags.map(t => '<span class="mp-tag">' + t + '</span>').join('')}</div>
+                    <div class="mp-card-footer">
+                        <div class="mp-card-stats">
+                            <span class="mp-stars">${getStars(a.rating)}</span>
+                            <span>${a.rating}</span>
+                            <span>📥 ${formatNumber(a.installs)}</span>
+                        </div>
+                        <button class="mp-deploy-btn${deployed.has(a.id) ? ' deployed' : ''}" data-deploy="${a.id}">
+                            ${deployed.has(a.id) ? '✓ Deployed' : 'Deploy'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(agent) {
+            modalContent.innerHTML = `
+                <button class="mp-modal-close" aria-label="Close">&times;</button>
+                <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.3rem;">
+                    <span style="font-size:2.5rem;">${agent.icon}</span>
+                    <div>
+                        <h2>${agent.name}</h2>
+                        <div class="mp-card-author">by ${agent.author} ${getBadgeHTML(agent.badge)}</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:1.5rem;margin:1rem 0;font-size:0.9rem;color:var(--color-text-muted);">
+                    <span class="mp-stars">${getStars(agent.rating)}</span>
+                    <span>${agent.rating} (${agent.reviews} reviews)</span>
+                    <span>📥 ${formatNumber(agent.installs)} installs</span>
+                    <span>📁 ${agent.category}</span>
+                </div>
+                <div class="mp-modal-section">
+                    <h3>Description</h3>
+                    <p>${agent.desc}</p>
+                </div>
+                <div class="mp-modal-section">
+                    <h3>Features</h3>
+                    <ul>${agent.features.map(f => '<li>' + f + '</li>').join('')}</ul>
+                </div>
+                <div class="mp-modal-section">
+                    <h3>Sample Configuration</h3>
+                    <div class="mp-modal-config">${agent.config}</div>
+                </div>
+                <div class="mp-modal-section">
+                    <h3>Tags</h3>
+                    <div class="mp-card-tags">${agent.tags.map(t => '<span class="mp-tag">' + t + '</span>').join('')}</div>
+                </div>
+                <button class="mp-modal-deploy${deployed.has(agent.id) ? ' deployed' : ''}" data-deploy="${agent.id}">
+                    ${deployed.has(agent.id) ? '✓ Deployed to Your AgentBox' : '🚀 Deploy This Agent'}
+                </button>
+            `;
+            modalOverlay.classList.add('open');
+        }
+
+        function deploy(id) {
+            deployed.add(id);
+            renderGrid();
+            if (modalOverlay.classList.contains('open')) {
+                const btn = modalContent.querySelector('.mp-modal-deploy');
+                if (btn) { btn.classList.add('deployed'); btn.textContent = '✓ Deployed to Your AgentBox'; }
+            }
+        }
+
+        // Events
+        catContainer.addEventListener('click', function(e) {
+            const btn = e.target.closest('.mp-cat');
+            if (!btn) return;
+            activeCategory = btn.dataset.cat;
+            renderCategories();
+            renderGrid();
+        });
+
+        search.addEventListener('input', function() {
+            searchTerm = this.value.trim();
+            renderGrid();
+        });
+
+        sort.addEventListener('change', function() {
+            sortBy = this.value;
+            renderGrid();
+        });
+
+        grid.addEventListener('click', function(e) {
+            const deployBtn = e.target.closest('.mp-deploy-btn');
+            if (deployBtn) { e.stopPropagation(); deploy(deployBtn.dataset.deploy); return; }
+            const card = e.target.closest('.mp-card');
+            if (card) { const a = AGENTS.find(x => x.id === card.dataset.id); if (a) openModal(a); }
+        });
+
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay || e.target.closest('.mp-modal-close')) {
+                modalOverlay.classList.remove('open');
+            }
+            const deployBtn = e.target.closest('.mp-modal-deploy');
+            if (deployBtn && !deployBtn.classList.contains('deployed')) deploy(deployBtn.dataset.deploy);
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modalOverlay.classList.contains('open')) modalOverlay.classList.remove('open');
+        });
+
+        // Init
+        renderCategories();
+        renderGrid();
+    })();
+    </script>
+</body>
+</html>
