@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox — Readiness Assessment</title>
+    <meta name="description" content="Take the AgentBox Readiness Assessment. Answer 10 quick questions to discover how prepared your team is for AI agent adoption and get personalized recommendations.">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --bg3: #1a1a2e;
+            --text: #e0e0e8;
+            --text2: #8888a0;
+            --accent: #6c63ff;
+            --accent2: #00c853;
+            --accent3: #ff6b9d;
+            --border: #2a2a3e;
+            --card-bg: #16161f;
+            --shadow: rgba(0,0,0,0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .back-link {
+            display: inline-block;
+            padding: 1rem 2rem;
+            font-size: 0.9rem;
+            color: var(--text2);
+        }
+        .back-link:hover { color: var(--accent); }
+
+        header {
+            text-align: center;
+            padding: 2rem 1rem 1rem;
+        }
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        header p {
+            color: var(--text2);
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 1.05rem;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Progress bar */
+        .progress-wrap {
+            margin-bottom: 2rem;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text2);
+            margin-bottom: 0.4rem;
+        }
+        .progress-bar {
+            height: 8px;
+            background: var(--bg3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 4px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+
+        /* Question card */
+        .question-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .question-card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 0.4rem;
+        }
+        .question-card .q-subtitle {
+            color: var(--text2);
+            font-size: 0.9rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .option-btn {
+            background: var(--bg3);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+            color: var(--text);
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover {
+            border-color: var(--accent);
+            background: rgba(108,99,255,0.1);
+        }
+        .option-btn.selected {
+            border-color: var(--accent);
+            background: rgba(108,99,255,0.15);
+        }
+
+        /* Nav */
+        .nav-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary {
+            background: var(--bg3);
+            color: var(--text2);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { color: var(--text); border-color: var(--accent); }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #5a52e0);
+            color: #fff;
+            font-weight: 600;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(108,99,255,0.3); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* Results */
+        .results { display: none; }
+        .score-ring {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 1.5rem;
+            position: relative;
+        }
+        .score-ring svg { transform: rotate(-90deg); }
+        .score-ring .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .score-ring .score-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .score-ring .score-label {
+            font-size: 0.8rem;
+            color: var(--text2);
+        }
+
+        .grade-badge {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .grade-badge .grade {
+            font-size: 1.3rem;
+            font-weight: 700;
+            padding: 0.5rem 1.5rem;
+            border-radius: 99px;
+            display: inline-block;
+        }
+        .grade-badge .grade-desc {
+            color: var(--text2);
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .dimension-list {
+            display: grid;
+            gap: 0.8rem;
+            margin-bottom: 2rem;
+        }
+        .dim-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+        }
+        .dim-icon { font-size: 1.4rem; flex-shrink: 0; }
+        .dim-info { flex: 1; }
+        .dim-name { font-size: 0.9rem; font-weight: 600; }
+        .dim-bar-bg {
+            height: 6px;
+            background: var(--bg3);
+            border-radius: 3px;
+            margin-top: 0.3rem;
+            overflow: hidden;
+        }
+        .dim-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+        .dim-score { font-weight: 700; font-size: 0.95rem; min-width: 30px; text-align: right; }
+
+        .recs {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .recs h3 { margin-bottom: 1rem; font-size: 1.1rem; }
+        .rec-item {
+            padding: 0.7rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 0.8rem;
+            align-items: flex-start;
+        }
+        .rec-item:last-child { border-bottom: none; }
+        .rec-priority {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            margin-top: 0.15rem;
+        }
+        .rec-priority.high { background: rgba(255,107,157,0.2); color: var(--accent3); }
+        .rec-priority.med { background: rgba(255,193,7,0.2); color: #ffc107; }
+        .rec-priority.low { background: rgba(0,200,83,0.2); color: var(--accent2); }
+
+        .share-row {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .share-btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .share-btn:hover { border-color: var(--accent); }
+
+        @media (max-width: 600px) {
+            .container { padding: 1rem; }
+            header h1 { font-size: 1.6rem; }
+            .question-card { padding: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Home</a>
+
+    <header>
+        <h1>🎯 Readiness Assessment</h1>
+        <p>Answer 10 quick questions to discover how ready your team is for AI agent adoption — and get a personalized action plan.</p>
+    </header>
+
+    <div class="container">
+        <!-- Quiz -->
+        <div id="quiz">
+            <div class="progress-wrap">
+                <div class="progress-label">
+                    <span id="prog-text">Question 1 of 10</span>
+                    <span id="prog-pct">0%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+            </div>
+            <div id="q-container"></div>
+            <div class="nav-row">
+                <button class="btn btn-secondary" id="btn-back" disabled>← Back</button>
+                <button class="btn btn-primary" id="btn-next" disabled>Next →</button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <div class="score-ring">
+                <svg width="180" height="180">
+                    <circle cx="90" cy="90" r="78" fill="none" stroke="var(--bg3)" stroke-width="12"/>
+                    <circle id="score-arc" cx="90" cy="90" r="78" fill="none" stroke="url(#grad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="490" stroke-dashoffset="490"/>
+                    <defs><linearGradient id="grad"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--accent2)"/></linearGradient></defs>
+                </svg>
+                <div class="score-text">
+                    <div class="score-number" id="score-num">0</div>
+                    <div class="score-label">out of 100</div>
+                </div>
+            </div>
+            <div class="grade-badge"><div class="grade" id="grade-tag"></div><div class="grade-desc" id="grade-desc"></div></div>
+            <div class="dimension-list" id="dim-list"></div>
+            <div class="recs" id="recs"><h3>📋 Your Action Plan</h3><div id="rec-items"></div></div>
+            <div class="share-row">
+                <button class="share-btn" onclick="copyResults()">📋 Copy Results</button>
+                <button class="share-btn" onclick="retake()">🔄 Retake</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+const questions = [
+    {
+        dim: "infrastructure",
+        icon: "🏗️",
+        q: "How would you describe your current infrastructure?",
+        sub: "Think about APIs, cloud services, and deployment pipelines.",
+        opts: [
+            { text: "Mostly manual — few APIs, limited cloud usage", pts: 1 },
+            { text: "Some cloud services and APIs in place", pts: 2 },
+            { text: "Solid cloud-native stack with CI/CD pipelines", pts: 3 },
+            { text: "Fully automated infrastructure with orchestration", pts: 4 }
+        ]
+    },
+    {
+        dim: "data",
+        icon: "📊",
+        q: "How accessible is your data for automation?",
+        sub: "Consider data formats, APIs, and documentation.",
+        opts: [
+            { text: "Scattered across spreadsheets and siloed systems", pts: 1 },
+            { text: "Centralized but not well-documented or API-accessible", pts: 2 },
+            { text: "Well-organized with some API access", pts: 3 },
+            { text: "Clean, documented, and fully API-accessible", pts: 4 }
+        ]
+    },
+    {
+        dim: "team",
+        icon: "👥",
+        q: "How comfortable is your team with AI/automation tools?",
+        sub: "From chatbots to code assistants to workflow automation.",
+        opts: [
+            { text: "Very new — most haven't used AI tools", pts: 1 },
+            { text: "Some team members use AI assistants casually", pts: 2 },
+            { text: "Most of the team uses AI tools regularly", pts: 3 },
+            { text: "AI-native — deeply integrated into daily workflows", pts: 4 }
+        ]
+    },
+    {
+        dim: "processes",
+        icon: "⚙️",
+        q: "How well-defined are your repetitive business processes?",
+        sub: "Processes that agents could potentially handle.",
+        opts: [
+            { text: "Mostly ad-hoc — people figure it out as they go", pts: 1 },
+            { text: "Some processes are documented but not standardized", pts: 2 },
+            { text: "Key processes are documented with clear steps", pts: 3 },
+            { text: "Comprehensive SOPs with measurable KPIs", pts: 4 }
+        ]
+    },
+    {
+        dim: "security",
+        icon: "🔒",
+        q: "What's your security and compliance posture?",
+        sub: "Authentication, access control, audit trails.",
+        opts: [
+            { text: "Basic — passwords and manual access management", pts: 1 },
+            { text: "SSO and role-based access for some systems", pts: 2 },
+            { text: "Comprehensive IAM with audit logging", pts: 3 },
+            { text: "Zero-trust architecture with automated compliance", pts: 4 }
+        ]
+    },
+    {
+        dim: "infrastructure",
+        icon: "🔌",
+        q: "How integrated are your existing tools and platforms?",
+        sub: "CRM, ticketing, communication, databases, etc.",
+        opts: [
+            { text: "Mostly standalone tools with manual data transfer", pts: 1 },
+            { text: "A few key integrations (e.g., Slack + Jira)", pts: 2 },
+            { text: "Most tools connected via APIs or middleware", pts: 3 },
+            { text: "Unified platform with event-driven integrations", pts: 4 }
+        ]
+    },
+    {
+        dim: "team",
+        icon: "🧠",
+        q: "Does your org have someone championing AI adoption?",
+        sub: "A person or team driving AI strategy.",
+        opts: [
+            { text: "No — AI isn't really on our radar yet", pts: 1 },
+            { text: "A few enthusiasts experimenting on their own", pts: 2 },
+            { text: "A dedicated person/team exploring AI initiatives", pts: 3 },
+            { text: "Executive-level AI strategy with budget allocated", pts: 4 }
+        ]
+    },
+    {
+        dim: "data",
+        icon: "📈",
+        q: "How do you currently measure and monitor operations?",
+        sub: "Dashboards, analytics, alerting.",
+        opts: [
+            { text: "Mostly manual reporting — spreadsheets and emails", pts: 1 },
+            { text: "Some dashboards but inconsistent tracking", pts: 2 },
+            { text: "Good observability with dashboards and alerts", pts: 3 },
+            { text: "Real-time monitoring with anomaly detection", pts: 4 }
+        ]
+    },
+    {
+        dim: "processes",
+        icon: "🎯",
+        q: "Have you identified specific use cases for AI agents?",
+        sub: "Concrete tasks you'd want agents to handle.",
+        opts: [
+            { text: "Not really — still exploring what's possible", pts: 1 },
+            { text: "A few ideas but nothing validated", pts: 2 },
+            { text: "Clear use cases identified with expected ROI", pts: 3 },
+            { text: "Prioritized roadmap with pilot programs planned", pts: 4 }
+        ]
+    },
+    {
+        dim: "security",
+        icon: "📜",
+        q: "How do you handle AI governance and ethics?",
+        sub: "Policies for AI decision-making, bias, transparency.",
+        opts: [
+            { text: "Haven't thought about it yet", pts: 1 },
+            { text: "Aware of the issues but no formal policies", pts: 2 },
+            { text: "Basic guidelines in place for AI usage", pts: 3 },
+            { text: "Comprehensive AI governance framework", pts: 4 }
+        ]
+    }
+];
+
+const dims = {
+    infrastructure: { name: "Infrastructure", icon: "🏗️", color: "#6c63ff", pts: 0, max: 0 },
+    data: { name: "Data Readiness", icon: "📊", color: "#00c853", pts: 0, max: 0 },
+    team: { name: "Team & Culture", icon: "👥", color: "#ff6b9d", pts: 0, max: 0 },
+    processes: { name: "Process Maturity", icon: "⚙️", color: "#ffc107", pts: 0, max: 0 },
+    security: { name: "Security & Governance", icon: "🔒", color: "#29b6f6", pts: 0, max: 0 }
+};
+
+let current = 0;
+const answers = new Array(questions.length).fill(-1);
+
+const qEl = document.getElementById('q-container');
+const btnNext = document.getElementById('btn-next');
+const btnBack = document.getElementById('btn-back');
+
+function render() {
+    const q = questions[current];
+    const sel = answers[current];
+    document.getElementById('prog-text').textContent = `Question ${current + 1} of ${questions.length}`;
+    const pct = Math.round(((current) / questions.length) * 100);
+    document.getElementById('prog-pct').textContent = pct + '%';
+    document.getElementById('prog-fill').style.width = pct + '%';
+
+    qEl.innerHTML = `<div class="question-card">
+        <h2>${q.icon} ${q.q}</h2>
+        <div class="q-subtitle">${q.sub}</div>
+        <div class="options">${q.opts.map((o, i) =>
+            `<button class="option-btn${sel === i ? ' selected' : ''}" data-i="${i}">${o.text}</button>`
+        ).join('')}</div>
+    </div>`;
+
+    qEl.querySelectorAll('.option-btn').forEach(b => {
+        b.addEventListener('click', () => {
+            answers[current] = parseInt(b.dataset.i);
+            render();
+        });
+    });
+
+    btnNext.disabled = sel === -1;
+    btnBack.disabled = current === 0;
+    btnNext.textContent = current === questions.length - 1 ? 'See Results ✨' : 'Next →';
+}
+
+btnNext.addEventListener('click', () => {
+    if (answers[current] === -1) return;
+    if (current < questions.length - 1) { current++; render(); }
+    else showResults();
+});
+btnBack.addEventListener('click', () => { if (current > 0) { current--; render(); } });
+
+function showResults() {
+    // Reset dims
+    Object.values(dims).forEach(d => { d.pts = 0; d.max = 0; });
+    questions.forEach((q, i) => {
+        dims[q.dim].max += 4;
+        dims[q.dim].pts += q.opts[answers[i]].pts;
+    });
+
+    let total = 0, totalMax = 0;
+    Object.values(dims).forEach(d => { total += d.pts; totalMax += d.max; });
+    const score = Math.round((total / totalMax) * 100);
+
+    document.getElementById('quiz').style.display = 'none';
+    const res = document.getElementById('results');
+    res.style.display = 'block';
+
+    // Animate score
+    const arc = document.getElementById('score-arc');
+    const circumf = 2 * Math.PI * 78;
+    arc.setAttribute('stroke-dasharray', circumf);
+    const offset = circumf - (circumf * score / 100);
+    setTimeout(() => { arc.setAttribute('stroke-dashoffset', offset); arc.style.transition = 'stroke-dashoffset 1.2s ease'; }, 50);
+
+    let counter = 0;
+    const numEl = document.getElementById('score-num');
+    const interval = setInterval(() => { counter++; numEl.textContent = counter; if (counter >= score) clearInterval(interval); }, 12);
+
+    // Grade
+    const grades = [
+        { min: 90, label: "🚀 Agent-Ready", color: "rgba(0,200,83,0.2)", tc: "#00c853", desc: "Your organization is primed for AI agent adoption. You can deploy complex multi-agent systems right away." },
+        { min: 70, label: "✅ Well-Prepared", color: "rgba(108,99,255,0.2)", tc: "#6c63ff", desc: "Strong foundation in place. A few targeted improvements and you're ready for production agents." },
+        { min: 50, label: "📈 Getting There", color: "rgba(255,193,7,0.2)", tc: "#ffc107", desc: "Good progress! Focus on the gaps below and you'll be agent-ready within a quarter." },
+        { min: 25, label: "🌱 Early Stage", color: "rgba(255,107,157,0.2)", tc: "#ff6b9d", desc: "Still building the foundation. Start with simple automations and work up to agents." },
+        { min: 0, label: "🔍 Exploring", color: "rgba(136,136,160,0.2)", tc: "#8888a0", desc: "Just getting started — that's okay! Focus on infrastructure and data fundamentals first." }
+    ];
+    const grade = grades.find(g => score >= g.min);
+    const gt = document.getElementById('grade-tag');
+    gt.textContent = grade.label;
+    gt.style.background = grade.color;
+    gt.style.color = grade.tc;
+    document.getElementById('grade-desc').textContent = grade.desc;
+
+    // Dimensions
+    const dimList = document.getElementById('dim-list');
+    dimList.innerHTML = '';
+    Object.entries(dims).forEach(([, d]) => {
+        const pct = Math.round((d.pts / d.max) * 100);
+        const row = document.createElement('div');
+        row.className = 'dim-row';
+        row.innerHTML = `<div class="dim-icon">${d.icon}</div>
+            <div class="dim-info"><div class="dim-name">${d.name}</div>
+            <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:0%;background:${d.color}"></div></div></div>
+            <div class="dim-score" style="color:${d.color}">${pct}%</div>`;
+        dimList.appendChild(row);
+        setTimeout(() => { row.querySelector('.dim-bar-fill').style.width = pct + '%'; }, 100);
+    });
+
+    // Recommendations
+    const recs = [];
+    Object.entries(dims).forEach(([key, d]) => {
+        const pct = d.pts / d.max;
+        if (pct < 0.5) {
+            recs.push({ priority: 'high', ...recMap[key] });
+        } else if (pct < 0.75) {
+            recs.push({ priority: 'med', ...recMap[key] });
+        }
+    });
+    if (recs.length === 0) recs.push({ priority: 'low', text: 'You\'re in great shape! Consider starting with a pilot agent project to validate your setup.', action: 'Explore the AgentBox Sandbox →' });
+
+    const recEl = document.getElementById('rec-items');
+    recEl.innerHTML = recs.map(r => `<div class="rec-item">
+        <span class="rec-priority ${r.priority}">${r.priority === 'high' ? 'HIGH' : r.priority === 'med' ? 'MED' : 'LOW'}</span>
+        <div><div style="font-size:0.95rem">${r.text}</div>
+        <div style="color:var(--accent);font-size:0.85rem;margin-top:0.3rem">${r.action}</div></div>
+    </div>`).join('');
+}
+
+const recMap = {
+    infrastructure: {
+        text: "Strengthen your infrastructure foundation — invest in APIs, cloud services, and CI/CD pipelines so agents have reliable systems to interact with.",
+        action: "Read our Integration Guide →"
+    },
+    data: {
+        text: "Improve data accessibility — centralize data sources, add API layers, and establish monitoring dashboards for agent observability.",
+        action: "See the Data Readiness Checklist →"
+    },
+    team: {
+        text: "Build AI literacy across the team — run workshops, appoint an AI champion, and start with low-risk AI tool adoption.",
+        action: "Check our Onboarding Guide →"
+    },
+    processes: {
+        text: "Document and standardize key processes — agents work best when workflows are well-defined with clear inputs and outputs.",
+        action: "View Process Mapping Templates →"
+    },
+    security: {
+        text: "Establish AI governance policies — define access controls, audit requirements, and ethical guidelines before deploying autonomous agents.",
+        action: "Read the Security Whitepaper →"
+    }
+};
+
+function copyResults() {
+    let total = 0, totalMax = 0;
+    Object.values(dims).forEach(d => { total += d.pts; totalMax += d.max; });
+    const score = Math.round((total / totalMax) * 100);
+    let text = `🎯 AgentBox Readiness Score: ${score}/100\n\n`;
+    Object.values(dims).forEach(d => {
+        const pct = Math.round((d.pts / d.max) * 100);
+        text += `${d.icon} ${d.name}: ${pct}%\n`;
+    });
+    text += `\nTake the assessment: ${location.href}`;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.share-btn');
+        const orig = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = orig, 2000);
+    });
+}
+
+function retake() {
+    answers.fill(-1);
+    current = 0;
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('quiz').style.display = 'block';
+    render();
+}
+
+render();
+</script>
+</body>
+</html>
