@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Name Generator | AgentBox</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --accent: #22d3ee;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+        h1 { text-align: center; font-size: 2.2rem; margin-bottom: 0.5rem; }
+        h1 span { color: var(--accent); }
+        .subtitle { text-align: center; color: var(--text-dim); margin-bottom: 2.5rem; font-size: 1.1rem; }
+        .config-panel { background: var(--surface); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
+        .config-panel h2 { font-size: 1.1rem; margin-bottom: 1.5rem; color: var(--accent); }
+        .field { margin-bottom: 1.5rem; }
+        .field label { display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .pill-group { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .pill { padding: 0.5rem 1rem; border-radius: 999px; border: 1px solid var(--surface2); background: transparent; color: var(--text-dim); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+        .pill:hover { border-color: var(--primary); color: var(--text); }
+        .pill.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .generate-btn { display: block; width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+        .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.3); }
+        .generate-btn:active { transform: translateY(0); }
+        .results { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: 2rem; }
+        .name-card { background: var(--surface); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--surface2); transition: all 0.2s; position: relative; overflow: hidden; }
+        .name-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        .name-card .agent-name { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .name-card .tagline { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.75rem; font-style: italic; }
+        .name-card .tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.75rem; }
+        .name-card .tag { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 999px; background: var(--surface2); color: var(--text-dim); }
+        .name-card .copy-btn { position: absolute; top: 0.75rem; right: 0.75rem; background: var(--surface2); border: none; color: var(--text-dim); padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
+        .name-card .copy-btn:hover { background: var(--primary); color: white; }
+        .name-card .copy-btn.copied { background: var(--success); color: white; }
+        .favorites { margin-top: 2.5rem; }
+        .favorites h2 { font-size: 1.1rem; color: var(--warning); margin-bottom: 1rem; }
+        .fav-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; position: absolute; bottom: 0.75rem; right: 0.75rem; opacity: 0.4; transition: opacity 0.2s; }
+        .fav-btn:hover, .fav-btn.saved { opacity: 1; }
+        .empty { text-align: center; color: var(--text-dim); padding: 2rem; }
+        .history-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; }
+        .history-bar span { color: var(--text-dim); font-size: 0.85rem; }
+        .history-bar button { background: var(--surface2); border: none; color: var(--text-dim); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+        .history-bar button:hover { color: var(--text); }
+        @media (max-width: 600px) { .results { grid-template-columns: 1fr; } h1 { font-size: 1.6rem; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🤖 Agent <span>Name Generator</span></h1>
+    <p class="subtitle">Find the perfect name for your AI agent — match personality, purpose, and style.</p>
+
+    <div class="config-panel">
+        <h2>⚙️ Configure Your Agent</h2>
+        <div class="field">
+            <label>Purpose</label>
+            <div class="pill-group" id="purpose">
+                <button class="pill active" data-val="assistant">💬 Assistant</button>
+                <button class="pill" data-val="analyst">📊 Analyst</button>
+                <button class="pill" data-val="creative">🎨 Creative</button>
+                <button class="pill" data-val="security">🛡️ Security</button>
+                <button class="pill" data-val="devops">⚙️ DevOps</button>
+                <button class="pill" data-val="research">🔬 Research</button>
+                <button class="pill" data-val="sales">💼 Sales</button>
+                <button class="pill" data-val="support">🎧 Support</button>
+            </div>
+        </div>
+        <div class="field">
+            <label>Personality</label>
+            <div class="pill-group" id="personality">
+                <button class="pill active" data-val="professional">Professional</button>
+                <button class="pill" data-val="friendly">Friendly</button>
+                <button class="pill" data-val="witty">Witty</button>
+                <button class="pill" data-val="mysterious">Mysterious</button>
+                <button class="pill" data-val="bold">Bold</button>
+                <button class="pill" data-val="calm">Calm</button>
+            </div>
+        </div>
+        <div class="field">
+            <label>Naming Style</label>
+            <div class="pill-group" id="style">
+                <button class="pill active" data-val="modern">Modern</button>
+                <button class="pill" data-val="mythological">Mythological</button>
+                <button class="pill" data-val="scientific">Scientific</button>
+                <button class="pill" data-val="playful">Playful</button>
+                <button class="pill" data-val="acronym">Acronym</button>
+                <button class="pill" data-val="nature">Nature</button>
+            </div>
+        </div>
+        <button class="generate-btn" onclick="generate()">✨ Generate Names</button>
+    </div>
+
+    <div id="results" class="results"></div>
+    <div id="historyBar" class="history-bar" style="display:none;">
+        <span id="genCount"></span>
+        <button onclick="clearFavorites()">Clear Favorites</button>
+    </div>
+    <div id="favSection" class="favorites" style="display:none;">
+        <h2>⭐ Saved Favorites</h2>
+        <div id="favList" class="results"></div>
+    </div>
+</div>
+
+<script>
+const NAMES = {
+    assistant: {
+        modern: ['Axion','Lumis','Nexa','Pylon','Kyra','Vex','Aura','Zeno','Luma','Talo','Orbi','Solis','Evo','Mira','Koda'],
+        mythological: ['Athena','Hermes','Iris','Thoth','Muse','Odin','Sphinx','Janus','Echo','Selene','Phoebe','Triton','Delphi','Clio','Arion'],
+        scientific: ['Qubit','Axiom','Nexus','Cortex','Helix','Photon','Vector','Prism','Tensor','Locus','Cipher','Vertex','Synaptic','Nova','Flux'],
+        playful: ['Buddy','Sparky','Pixel','Ziggy','Boop','Chippy','Dottie','Fizz','Mochi','Pip','Twix','Wally','Noodle','Blip','Dash'],
+        acronym: ['ARIA','SAGE','IRIS','CORE','NOVA','APEX','FLUX','BOLT','ECHO','VIBE','LINK','ALTO','OMNI','SYNC','BEAM'],
+        nature: ['Aspen','Brook','Cedar','Drift','Ember','Fern','Glen','Haze','Ivy','Jade','Kite','Lark','Moss','Oak','Reef']
+    },
+    analyst: {
+        modern: ['Metrix','Datara','Insyte','Querion','Parsec','Vizion','Anlyra','Proba','Trendex','Scopio','Sigmax','Claryx','Statix','Cogna','Indexa'],
+        mythological: ['Oracle','Minerva','Prometheus','Sibyl','Pythia','Cassandra','Themis','Argus','Laplace','Hypatia','Euclid','Archimedes','Ptolemy','Fermat','Gauss'],
+        scientific: ['Gaussian','Sigma','Bayesian','Matrix','Eigen','Lambda','Delta','Theta','Mu','Kappa','Omega','Zeta','Pi','Rho','Chi'],
+        playful: ['Crunchy','Tally','Sparksheet','Grapho','Dotplot','Charty','Numbsy','Pixy','Bingo','Trendy','Facty','Clicky','Scoopy','Inky','Plotzy'],
+        acronym: ['SCAN','DIVE','LENS','STAT','GRID','RANK','SORT','MINE','SIFT','PEEK','DATA','CALC','WISE','DEEP','FIND'],
+        nature: ['Falcon','Lynx','Osprey','Raven','Hawk','Heron','Crane','Eagle','Condor','Orca','Wolf','Panther','Viper','Cobra','Mantis']
+    },
+    creative: {
+        modern: ['Artex','Chromia','Pixela','Renderex','Kanva','Stylix','Palettra','Sketchr','Huelux','Designa','Craftel','Visua','Blendex','Forma','Dreama'],
+        mythological: ['Apollo','Calliope','Orpheus','Daedalus','Pygmalion','Erato','Polyhymnia','Bragi','Saraswati','Benzaiten','Xochiquetzal','Hathor','Brighid','Anansi','Loki'],
+        scientific: ['Spectrum','Chroma','Fractal','Mandelbrot','Fibonacci','Tessera','Penrose','Escher','Origami','Moiré','Parallax','Vortex','Spiral','Mosaic','Kaleidoscope'],
+        playful: ['Doodle','Scribbles','Splashy','Glitter','Rainbow','Confetti','Sparkle','Whimsy','Giggles','Bubbles','Paintsy','Crayon','Swirly','Peppy','Jazzy'],
+        acronym: ['MUSE','DRAW','HUES','FORM','VIBE','GLOW','BOLD','SNAP','ARTS','BLOOM','CRAFT','VERSE','LYRIC','TONE','FLAIR'],
+        nature: ['Aurora','Coral','Petal','Prism','Opal','Crystal','Amber','Indigo','Violet','Scarlet','Cobalt','Sienna','Sage','Thistle','Wren']
+    },
+    security: {
+        modern: ['Sentrix','Guardia','Fortex','Shieldra','Vigilex','Armora','Securion','Bastix','Lockra','Cryptex','Watchia','Alertex','Defensa','Wardex','Vaultex'],
+        mythological: ['Cerberus','Heimdall','Aegis','Bastion','Paladin','Warden','Sentinel','Bulwark','Rampart','Citadel','Praetor','Templar','Valkyrie','Griffin','Fenrir'],
+        scientific: ['Cipher','Entropy','Quantum','Lattice','Hashlock','Firewall','Sandbox','Enclave','Protocol','Algorithm','Binary','Kernel','Shield','Proxy','Token'],
+        playful: ['Watchdog','Bouncer','Gatekeeper','Buzzer','Alarmy','Snoopy','Tracker','Patchy','Whistle','Badge','Cluey','Scout','Sherlock','Sniffy','Pawprint'],
+        acronym: ['GUARD','WATCH','VAULT','SHIELD','ARMOR','LOCK','ALERT','FENCE','RADAR','SIEGE','WARD','KEEP','MOAT','BOLT','SAFE'],
+        nature: ['Thorn','Flint','Stone','Iron','Steel','Granite','Obsidian','Basalt','Onyx','Slate','Ridge','Summit','Blaze','Storm','Thunder']
+    },
+    devops: {
+        modern: ['Deployra','Pipelix','Kubex','Terrafix','Dockeron','Ansiblex','Helmix','Circula','Buildex','Stackra','Grafanex','Monitrix','Orchex','Cloudex','Infrax'],
+        mythological: ['Vulcan','Hephaestus','Forge','Anvil','Crucible','Foundry','Kiln','Smelt','Hammer','Golem','Titan','Atlas','Colossus','Cyclops','Archon'],
+        scientific: ['Pipeline','Container','Cluster','Node','Pod','Mesh','Registry','Artifact','Circuit','Reactor','Turbine','Generator','Compiler','Runtime','Daemon'],
+        playful: ['Shippy','Buildy','Deployo','Stacky','Pipey','Docky','Kubey','Rolly','Spinny','Cranky','Gears','Wrench','Botty','Beepo','Clank'],
+        acronym: ['SHIP','PIPE','RACK','HELM','GRID','MESH','NODE','PODS','RAFT','DOCK','FLUX','SPIN','LIFT','WARP','PUSH'],
+        nature: ['River','Cascade','Torrent','Rapids','Current','Stream','Delta','Tide','Wave','Surge','Glacier','Avalanche','Geyser','Spring','Falls']
+    },
+    research: {
+        modern: ['Discovra','Hypothex','Researchion','Studiex','Findra','Explorex','Theorix','Labrix','Inquirex','Evidex','Analyra','Curioix','Insightex','Probelix','Questrix'],
+        mythological: ['Thales','Socrates','Aristotle','Copernicus','Galileo','Darwin','Curie','Tesla','Faraday','Newton','Kepler','Leibniz','Descartes','Bacon','Avicenna'],
+        scientific: ['Hypothesis','Theorem','Axiom','Lemma','Conjecture','Postulate','Corollary','Proof','Variable','Constant','Equation','Function','Integral','Derivative','Series'],
+        playful: ['Eureka','Curious','Wondery','Brainy','Thinky','Ponder','Clue','Riddle','Puzzle','Quiz','Smarty','Nerdy','Geeky','Savvy','Bright'],
+        acronym: ['SEEK','KNOW','MIND','IDEA','FACT','TEST','LABS','WISE','SAGE','THINK','LEARN','QUEST','PROBE','SCOPE','STUDY'],
+        nature: ['Horizon','Cosmos','Nebula','Quasar','Pulsar','Comet','Orbit','Eclipse','Solstice','Equinox','Zenith','Meridian','Vertex','Apex','Summit']
+    },
+    sales: {
+        modern: ['Closera','Dealix','Prospex','Pitchly','Converta','Leadex','Quotera','Funnelx','Revenuex','Targetix','Boostra','Growix','Winex','Churnex','Upsella'],
+        mythological: ['Mercury','Fortuna','Tyche','Lakshmi','Plutus','Midas','Ceres','Abundia','Ops','Jambhala','Aje','Njord','Freyr','Kuber','Daikoku'],
+        scientific: ['Catalyst','Amplifier','Magnet','Accelerator','Multiplier','Converter','Transformer','Resonator','Conductor','Capacitor','Inductor','Oscillator','Emitter','Transmitter','Booster'],
+        playful: ['Charmy','Smiley','Handshake','Cha-Ching','Goldy','Cashy','Trophy','Shiny','Sparkle','Winner','Champ','Rally','Hustle','Grinder','Blazer'],
+        acronym: ['DEAL','CLOSE','LEAD','PITCH','WIN','GAIN','SELL','GROW','RISE','REACH','PEAK','BOOST','DRIVE','FORGE','THRIVE'],
+        nature: ['Falcon','Cheetah','Tiger','Lion','Stallion','Shark','Bull','Bear','Phoenix','Dragon','Hawk','Panther','Leopard','Mustang','Raptor']
+    },
+    support: {
+        modern: ['Helpra','Resolvex','Ticketix','Assistra','Caredex','Fixly','Solvera','Guidex','Supportra','Respondex','Answera','Remedix','Servicea','Aidex','Reliefa'],
+        mythological: ['Asclepius','Panacea','Hygeia','Chiron','Imhotep','Dhanvantari','Airmed','Eir','Iaso','Aceso','Sulis','Bona Dea','Salus','Sekhmet','Isis'],
+        scientific: ['Remedy','Triage','Protocol','Diagnosis','Antidote','Solution','Formula','Method','Process','System','Module','Interface','Handler','Resolver','Bridge'],
+        playful: ['Helpy','Fixie','Solvey','Huggy','Patchwork','Bandaid','Rescue','Lifeline','Umbrella','Floaty','Cushion','Safety Net','Lifebuoy','Hammock','Pillow'],
+        acronym: ['HELP','CARE','HEAL','MEND','EASE','CALM','REST','SAFE','WARM','KIND','GLOW','LIFT','TEND','HOPE','AIDE'],
+        nature: ['Harbor','Haven','Shelter','Cove','Meadow','Grove','Oasis','Valley','Garden','Lagoon','Willow','Birch','Maple','Clover','Lotus']
+    }
+};
+
+const TAGLINES = {
+    assistant: ['Your always-on copilot','Ready when you are','Smarter help, fewer steps','Your second brain','The assistant that gets it'],
+    analyst: ['Data speaks, I translate','Patterns others miss','Numbers tell stories','Insights on demand','See what the data sees'],
+    creative: ['Where ideas take shape','Imagination, amplified','Create without limits','Your creative spark','Art meets intelligence'],
+    security: ['Always watching, always ready','Your digital guardian','Trust but verify','Zero-trust ally','Threats end here'],
+    devops: ['Ship fast, break nothing','Pipelines that purr','Infrastructure as code, confidence as default','Deploy with confidence','From commit to production'],
+    research: ['Questions drive discovery','Knowledge, systematized','From hypothesis to insight','Curiosity, engineered','Explore the unknown'],
+    sales: ['Close faster, sell smarter','Revenue on autopilot','Every lead, nurtured','Pipeline perfected','Deals that close themselves'],
+    support: ['Help at the speed of need','Every ticket, resolved','Care that scales','Support without wait','Resolution, guaranteed']
+};
+
+let favorites = JSON.parse(localStorage.getItem('agentbox-name-favs') || '[]');
+let totalGenerated = parseInt(localStorage.getItem('agentbox-name-count') || '0');
+
+function getSelection(id) {
+    const el = document.getElementById(id);
+    const active = el.querySelector('.pill.active');
+    return active ? active.dataset.val : null;
+}
+
+document.querySelectorAll('.pill-group').forEach(group => {
+    group.addEventListener('click', e => {
+        if (e.target.classList.contains('pill')) {
+            group.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            e.target.classList.add('active');
+        }
+    });
+});
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function generate() {
+    const purpose = getSelection('purpose');
+    const personality = getSelection('personality');
+    const style = getSelection('style');
+    const pool = NAMES[purpose]?.[style] || NAMES.assistant.modern;
+    const taglines = TAGLINES[purpose] || TAGLINES.assistant;
+
+    const selected = shuffle(pool).slice(0, 6);
+    const resultsEl = document.getElementById('results');
+    resultsEl.innerHTML = '';
+
+    selected.forEach(name => {
+        const tagline = pick(taglines);
+        const tags = [purpose, personality, style];
+        const isFav = favorites.some(f => f.name === name);
+        const card = document.createElement('div');
+        card.className = 'name-card';
+        card.innerHTML = `
+            <button class="copy-btn" onclick="copyName(this, '${name}')">Copy</button>
+            <div class="agent-name">${name}</div>
+            <div class="tagline">"${tagline}"</div>
+            <div class="tags">${tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+            <button class="fav-btn ${isFav ? 'saved' : ''}" onclick="toggleFav(this, '${name}', '${tagline}', '${tags.join(',')}')">${isFav ? '⭐' : '☆'}</button>
+        `;
+        resultsEl.appendChild(card);
+    });
+
+    totalGenerated += 6;
+    localStorage.setItem('agentbox-name-count', totalGenerated);
+    updateHistory();
+}
+
+function copyName(btn, name) {
+    navigator.clipboard.writeText(name).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+    });
+}
+
+function toggleFav(btn, name, tagline, tagsStr) {
+    const idx = favorites.findIndex(f => f.name === name);
+    if (idx >= 0) {
+        favorites.splice(idx, 1);
+        btn.textContent = '☆';
+        btn.classList.remove('saved');
+    } else {
+        favorites.push({ name, tagline, tags: tagsStr.split(',') });
+        btn.textContent = '⭐';
+        btn.classList.add('saved');
+    }
+    localStorage.setItem('agentbox-name-favs', JSON.stringify(favorites));
+    renderFavorites();
+}
+
+function renderFavorites() {
+    const section = document.getElementById('favSection');
+    const list = document.getElementById('favList');
+    if (favorites.length === 0) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    list.innerHTML = '';
+    favorites.forEach(f => {
+        const card = document.createElement('div');
+        card.className = 'name-card';
+        card.innerHTML = `
+            <button class="copy-btn" onclick="copyName(this, '${f.name}')">Copy</button>
+            <div class="agent-name">${f.name}</div>
+            <div class="tagline">"${f.tagline}"</div>
+            <div class="tags">${f.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+            <button class="fav-btn saved" onclick="toggleFav(this, '${f.name}', '${f.tagline}', '${f.tags.join(',')}')">⭐</button>
+        `;
+        list.appendChild(card);
+    });
+}
+
+function clearFavorites() {
+    favorites = [];
+    localStorage.setItem('agentbox-name-favs', '[]');
+    renderFavorites();
+}
+
+function updateHistory() {
+    const bar = document.getElementById('historyBar');
+    bar.style.display = 'flex';
+    document.getElementById('genCount').textContent = `${totalGenerated} names generated total`;
+}
+
+// Init
+renderFavorites();
+if (totalGenerated > 0) updateHistory();
+</script>
+</body>
+</html>
