@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox Flow Builder — Visual Agent Pipeline Designer</title>
+    <meta name="description" content="Design agent workflows visually. Drag and drop nodes, connect them, and export pipelines as JSON.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #fbbf24;
+            --color-error: #f87171;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .back-link { display: inline-block; padding: 1rem; color: var(--color-primary); text-decoration: none; font-size: 0.95rem; }
+        .back-link:hover { text-decoration: underline; }
+        header { text-align: center; padding: 1rem 1rem 0.5rem; }
+        header h1 { font-size: 2rem; }
+        header h1 span { color: var(--color-primary); }
+        header p { color: var(--color-text-muted); font-size: 1rem; margin-top: 0.3rem; }
+        .app { display: flex; flex: 1; overflow: hidden; }
+        .sidebar {
+            width: 240px;
+            background: var(--color-bg-mid);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            padding: 1rem;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .sidebar h3 { font-size: 0.85rem; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 0.75rem; letter-spacing: 0.05em; }
+        .node-palette-item {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.6rem 0.75rem; margin-bottom: 0.5rem;
+            background: var(--color-surface);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            cursor: grab;
+            font-size: 0.9rem;
+            transition: background 0.15s;
+            user-select: none;
+        }
+        .node-palette-item:hover { background: var(--color-surface-hover); }
+        .node-palette-item:active { cursor: grabbing; }
+        .node-palette-item .icon { font-size: 1.3rem; }
+        .canvas-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 50%, rgba(0,212,255,0.03) 0%, transparent 70%),
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 20px 20px, 20px 20px;
+        }
+        canvas { display: block; width: 100%; height: 100%; }
+        .toolbar {
+            position: absolute; top: 0.75rem; right: 0.75rem;
+            display: flex; gap: 0.5rem; z-index: 10;
+        }
+        .toolbar button {
+            padding: 0.5rem 0.9rem;
+            background: var(--color-bg-mid);
+            color: var(--color-text);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.15s;
+        }
+        .toolbar button:hover { background: var(--color-surface-hover); }
+        .toolbar button.danger { color: var(--color-error); }
+        .toolbar button.primary { background: var(--color-primary); color: #000; border-color: var(--color-primary); font-weight: 600; }
+        .props-panel {
+            position: absolute; bottom: 0.75rem; left: 0.75rem;
+            background: var(--color-bg-mid);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            min-width: 260px;
+            max-width: 320px;
+            z-index: 10;
+            display: none;
+        }
+        .props-panel.show { display: block; }
+        .props-panel h4 { font-size: 0.85rem; color: var(--color-primary); margin-bottom: 0.75rem; }
+        .props-panel label { display: block; font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.25rem; margin-top: 0.5rem; }
+        .props-panel input, .props-panel select, .props-panel textarea {
+            width: 100%; padding: 0.4rem 0.6rem;
+            background: var(--color-surface);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 5px;
+            color: var(--color-text);
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+        .props-panel textarea { resize: vertical; min-height: 50px; }
+        .props-panel .delete-btn {
+            margin-top: 0.75rem; padding: 0.35rem 0.7rem;
+            background: transparent; border: 1px solid var(--color-error);
+            color: var(--color-error); border-radius: 5px; cursor: pointer; font-size: 0.8rem;
+        }
+        .toast {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+            background: var(--color-success); color: #000; padding: 0.6rem 1.2rem;
+            border-radius: 8px; font-size: 0.9rem; font-weight: 600; z-index: 100;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+        .presets { margin-top: 1.5rem; }
+        .presets h3 { margin-bottom: 0.5rem; }
+        .preset-btn {
+            display: block; width: 100%; text-align: left;
+            padding: 0.5rem 0.75rem; margin-bottom: 0.4rem;
+            background: var(--color-surface); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 6px; color: var(--color-text); cursor: pointer;
+            font-size: 0.85rem; transition: background 0.15s;
+        }
+        .preset-btn:hover { background: var(--color-surface-hover); }
+        .count-badge {
+            position: absolute; top: 0.75rem; left: 0.75rem;
+            background: var(--color-bg-mid); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 0.4rem 0.8rem; font-size: 0.8rem;
+            color: var(--color-text-muted); z-index: 10;
+        }
+        @media (max-width: 700px) {
+            .sidebar { width: 180px; padding: 0.5rem; }
+            .props-panel { min-width: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to AgentBox</a>
+    <header>
+        <h1>🔀 <span>Flow</span> Builder</h1>
+        <p>Design agent pipelines visually — drag nodes, connect them, export as JSON</p>
+    </header>
+    <div class="app">
+        <div class="sidebar">
+            <h3>📦 Nodes</h3>
+            <div class="node-palette-item" draggable="true" data-type="trigger"><span class="icon">⚡</span> Trigger</div>
+            <div class="node-palette-item" draggable="true" data-type="llm"><span class="icon">🧠</span> LLM Call</div>
+            <div class="node-palette-item" draggable="true" data-type="tool"><span class="icon">🔧</span> Tool Use</div>
+            <div class="node-palette-item" draggable="true" data-type="condition"><span class="icon">🔀</span> Condition</div>
+            <div class="node-palette-item" draggable="true" data-type="memory"><span class="icon">💾</span> Memory</div>
+            <div class="node-palette-item" draggable="true" data-type="http"><span class="icon">🌐</span> HTTP Request</div>
+            <div class="node-palette-item" draggable="true" data-type="transform"><span class="icon">🔄</span> Transform</div>
+            <div class="node-palette-item" draggable="true" data-type="output"><span class="icon">📤</span> Output</div>
+            <div class="node-palette-item" draggable="true" data-type="delay"><span class="icon">⏱️</span> Delay</div>
+            <div class="node-palette-item" draggable="true" data-type="loop"><span class="icon">🔁</span> Loop</div>
+            <div class="presets">
+                <h3>🎯 Presets</h3>
+                <button class="preset-btn" data-preset="chatbot">💬 Chatbot</button>
+                <button class="preset-btn" data-preset="rag">📚 RAG Pipeline</button>
+                <button class="preset-btn" data-preset="classifier">🏷️ Classifier</button>
+                <button class="preset-btn" data-preset="scraper">🕷️ Web Scraper</button>
+            </div>
+        </div>
+        <div class="canvas-area">
+            <canvas id="flowCanvas"></canvas>
+            <div class="count-badge" id="countBadge">0 nodes · 0 edges</div>
+            <div class="toolbar">
+                <button onclick="exportJSON()" class="primary">📋 Export JSON</button>
+                <button onclick="importJSON()">📥 Import</button>
+                <button onclick="autoLayout()">📐 Auto Layout</button>
+                <button onclick="clearAll()" class="danger">🗑️ Clear</button>
+            </div>
+            <div class="props-panel" id="propsPanel">
+                <h4 id="propsTitle">Node Properties</h4>
+                <label>Name</label>
+                <input type="text" id="propName" placeholder="Node name">
+                <label>Description</label>
+                <textarea id="propDesc" placeholder="What does this node do?"></textarea>
+                <div id="propExtra"></div>
+                <button class="delete-btn" onclick="deleteSelected()">🗑️ Delete Node</button>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <input type="file" id="importInput" accept=".json" style="display:none">
+
+    <script>
+    const canvas = document.getElementById('flowCanvas');
+    const ctx = canvas.getContext('2d');
+    const propsPanel = document.getElementById('propsPanel');
+    const countBadge = document.getElementById('countBadge');
+
+    const NODE_W = 160, NODE_H = 60, PORT_R = 6;
+    const nodeColors = {
+        trigger: '#fbbf24', llm: '#00d4ff', tool: '#4ade80', condition: '#a78bfa',
+        memory: '#f472b6', http: '#fb923c', transform: '#38bdf8', output: '#34d399',
+        delay: '#facc15', loop: '#c084fc'
+    };
+    const nodeIcons = {
+        trigger: '⚡', llm: '🧠', tool: '🔧', condition: '🔀', memory: '💾',
+        http: '🌐', transform: '🔄', output: '📤', delay: '⏱️', loop: '🔁'
+    };
+
+    let nodes = [], edges = [], nextId = 1;
+    let selected = null, dragging = null, dragOff = {x:0,y:0};
+    let connecting = null; // {nodeId, port:'out'}
+    let panX = 0, panY = 0, isPanning = false, panStart = {x:0,y:0};
+    let dpr = window.devicePixelRatio || 1;
+
+    function resize() {
+        const r = canvas.parentElement.getBoundingClientRect();
+        canvas.width = r.width * dpr;
+        canvas.height = r.height * dpr;
+        canvas.style.width = r.width + 'px';
+        canvas.style.height = r.height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        draw();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function toCanvas(ex, ey) {
+        const r = canvas.getBoundingClientRect();
+        return { x: ex - r.left - panX, y: ey - r.top - panY };
+    }
+
+    function inPort(n) { return { x: n.x, y: n.y + NODE_H / 2 }; }
+    function outPort(n) { return { x: n.x + NODE_W, y: n.y + NODE_H / 2 }; }
+
+    function draw() {
+        const w = canvas.width / dpr, h = canvas.height / dpr;
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+        ctx.translate(panX, panY);
+
+        // edges
+        for (const e of edges) {
+            const from = nodes.find(n => n.id === e.from);
+            const to = nodes.find(n => n.id === e.to);
+            if (!from || !to) continue;
+            const p1 = outPort(from), p2 = inPort(to);
+            ctx.beginPath();
+            const cx1 = p1.x + 60, cx2 = p2.x - 60;
+            ctx.moveTo(p1.x, p1.y);
+            ctx.bezierCurveTo(cx1, p1.y, cx2, p2.y, p2.x, p2.y);
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            // arrow
+            const angle = Math.atan2(p2.y - (p2.y + cy(cx2, p2.y, p2.x, p2.y)) / 2, 1);
+            drawArrow(p2.x, p2.y, Math.atan2(p2.y - p1.y, p2.x - cx2));
+        }
+
+        // connecting line
+        if (connecting && connecting.mx !== undefined) {
+            const from = nodes.find(n => n.id === connecting.nodeId);
+            if (from) {
+                const p1 = outPort(from);
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(connecting.mx, connecting.my);
+                ctx.strokeStyle = 'rgba(0,212,255,0.6)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        // nodes
+        for (const n of nodes) {
+            const sel = selected === n.id;
+            const col = nodeColors[n.type] || '#888';
+
+            // shadow
+            ctx.shadowColor = sel ? col : 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = sel ? 16 : 8;
+            ctx.shadowOffsetY = 2;
+
+            // body
+            ctx.beginPath();
+            roundRect(ctx, n.x, n.y, NODE_W, NODE_H, 10);
+            ctx.fillStyle = sel ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)';
+            ctx.fill();
+            ctx.strokeStyle = col;
+            ctx.lineWidth = sel ? 2.5 : 1.5;
+            ctx.stroke();
+
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+
+            // color bar
+            ctx.fillStyle = col;
+            ctx.beginPath();
+            ctx.moveTo(n.x + 10, n.y);
+            ctx.lineTo(n.x + NODE_W - 10, n.y);
+            ctx.arcTo(n.x + NODE_W, n.y, n.x + NODE_W, n.y + 4, 10);
+            ctx.lineTo(n.x + NODE_W, n.y + 4);
+            ctx.lineTo(n.x, n.y + 4);
+            ctx.arcTo(n.x, n.y, n.x + 10, n.y, 10);
+            ctx.fill();
+
+            // icon + label
+            ctx.fillStyle = '#fff';
+            ctx.font = '600 13px -apple-system, sans-serif';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(nodeIcons[n.type] + ' ' + (n.name || n.type), n.x + 12, n.y + 30);
+
+            if (n.desc) {
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.font = '11px -apple-system, sans-serif';
+                const t = n.desc.length > 22 ? n.desc.slice(0, 20) + '…' : n.desc;
+                ctx.fillText(t, n.x + 12, n.y + 48);
+            }
+
+            // ports
+            if (n.type !== 'trigger') {
+                const ip = inPort(n);
+                ctx.beginPath();
+                ctx.arc(ip.x, ip.y, PORT_R, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                ctx.strokeStyle = col;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            if (n.type !== 'output') {
+                const op = outPort(n);
+                ctx.beginPath();
+                ctx.arc(op.x, op.y, PORT_R, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                ctx.strokeStyle = col;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        ctx.restore();
+        countBadge.textContent = `${nodes.length} node${nodes.length !== 1 ? 's' : ''} · ${edges.length} edge${edges.length !== 1 ? 's' : ''}`;
+    }
+
+    function cy() { return 0; } // placeholder
+    function drawArrow(x, y, angle) {
+        const sz = 8;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-sz, -sz / 2);
+        ctx.lineTo(-sz, sz / 2);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function roundRect(c, x, y, w, h, r) {
+        c.moveTo(x + r, y);
+        c.lineTo(x + w - r, y); c.arcTo(x + w, y, x + w, y + r, r);
+        c.lineTo(x + w, y + h - r); c.arcTo(x + w, y + h, x + w - r, y + h, r);
+        c.lineTo(x + r, y + h); c.arcTo(x, y + h, x, y + h - r, r);
+        c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r);
+    }
+
+    function hitNode(cx, cy) {
+        for (let i = nodes.length - 1; i >= 0; i--) {
+            const n = nodes[i];
+            if (cx >= n.x && cx <= n.x + NODE_W && cy >= n.y && cy <= n.y + NODE_H) return n;
+        }
+        return null;
+    }
+
+    function hitOutPort(cx, cy) {
+        for (const n of nodes) {
+            if (n.type === 'output') continue;
+            const p = outPort(n);
+            if (Math.hypot(cx - p.x, cy - p.y) <= PORT_R + 4) return n;
+        }
+        return null;
+    }
+
+    function hitInPort(cx, cy) {
+        for (const n of nodes) {
+            if (n.type === 'trigger') continue;
+            const p = inPort(n);
+            if (Math.hypot(cx - p.x, cy - p.y) <= PORT_R + 4) return n;
+        }
+        return null;
+    }
+
+    canvas.addEventListener('mousedown', e => {
+        const pos = toCanvas(e.clientX, e.clientY);
+        const outN = hitOutPort(pos.x, pos.y);
+        if (outN) {
+            connecting = { nodeId: outN.id };
+            return;
+        }
+        const n = hitNode(pos.x, pos.y);
+        if (n) {
+            selected = n.id;
+            dragging = n;
+            dragOff = { x: pos.x - n.x, y: pos.y - n.y };
+            showProps(n);
+        } else {
+            selected = null;
+            propsPanel.classList.remove('show');
+            isPanning = true;
+            panStart = { x: e.clientX - panX, y: e.clientY - panY };
+        }
+        draw();
+    });
+
+    canvas.addEventListener('mousemove', e => {
+        if (connecting) {
+            const pos = toCanvas(e.clientX, e.clientY);
+            connecting.mx = pos.x;
+            connecting.my = pos.y;
+            draw();
+            return;
+        }
+        if (dragging) {
+            const pos = toCanvas(e.clientX, e.clientY);
+            dragging.x = pos.x - dragOff.x;
+            dragging.y = pos.y - dragOff.y;
+            draw();
+        }
+        if (isPanning) {
+            panX = e.clientX - panStart.x;
+            panY = e.clientY - panStart.y;
+            draw();
+        }
+    });
+
+    canvas.addEventListener('mouseup', e => {
+        if (connecting) {
+            const pos = toCanvas(e.clientX, e.clientY);
+            const target = hitInPort(pos.x, pos.y);
+            if (target && target.id !== connecting.nodeId) {
+                const exists = edges.some(e => e.from === connecting.nodeId && e.to === target.id);
+                if (!exists) {
+                    edges.push({ from: connecting.nodeId, to: target.id });
+                }
+            }
+            connecting = null;
+            draw();
+            return;
+        }
+        dragging = null;
+        isPanning = false;
+    });
+
+    // Drag from palette
+    document.querySelectorAll('.node-palette-item').forEach(el => {
+        el.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('nodeType', el.dataset.type);
+        });
+    });
+
+    canvas.addEventListener('dragover', e => e.preventDefault());
+    canvas.addEventListener('drop', e => {
+        e.preventDefault();
+        const type = e.dataTransfer.getData('nodeType');
+        if (!type) return;
+        const pos = toCanvas(e.clientX, e.clientY);
+        addNode(type, pos.x - NODE_W / 2, pos.y - NODE_H / 2);
+    });
+
+    function addNode(type, x, y, name, desc) {
+        const n = { id: nextId++, type, x, y, name: name || type.charAt(0).toUpperCase() + type.slice(1), desc: desc || '' };
+        nodes.push(n);
+        selected = n.id;
+        showProps(n);
+        draw();
+        return n;
+    }
+
+    function showProps(n) {
+        propsPanel.classList.add('show');
+        document.getElementById('propsTitle').textContent = nodeIcons[n.type] + ' ' + n.type.charAt(0).toUpperCase() + n.type.slice(1);
+        document.getElementById('propName').value = n.name;
+        document.getElementById('propDesc').value = n.desc || '';
+        const extra = document.getElementById('propExtra');
+        extra.innerHTML = '';
+
+        if (n.type === 'llm') {
+            extra.innerHTML = '<label>Model</label><select id="propModel"><option>gpt-4o</option><option>claude-3.5-sonnet</option><option>gemini-2</option><option>llama-3</option></select><label>Temperature</label><input type="range" id="propTemp" min="0" max="2" step="0.1" value="' + (n.model_temp || 0.7) + '"><span id="tempVal">' + (n.model_temp || 0.7) + '</span>';
+            setTimeout(() => {
+                const sel = document.getElementById('propModel');
+                if (n.model) sel.value = n.model;
+                sel.onchange = () => { n.model = sel.value; };
+                const sl = document.getElementById('propTemp');
+                sl.oninput = () => { n.model_temp = parseFloat(sl.value); document.getElementById('tempVal').textContent = sl.value; };
+            }, 0);
+        } else if (n.type === 'http') {
+            extra.innerHTML = '<label>Method</label><select id="propMethod"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select><label>URL</label><input type="text" id="propUrl" placeholder="https://api.example.com">';
+            setTimeout(() => {
+                const m = document.getElementById('propMethod');
+                const u = document.getElementById('propUrl');
+                if (n.method) m.value = n.method;
+                if (n.url) u.value = n.url;
+                m.onchange = () => { n.method = m.value; };
+                u.oninput = () => { n.url = u.value; };
+            }, 0);
+        } else if (n.type === 'delay') {
+            extra.innerHTML = '<label>Delay (seconds)</label><input type="number" id="propDelay" min="0" value="' + (n.delaySec || 1) + '">';
+            setTimeout(() => {
+                const d = document.getElementById('propDelay');
+                d.oninput = () => { n.delaySec = parseInt(d.value) || 1; };
+            }, 0);
+        } else if (n.type === 'condition') {
+            extra.innerHTML = '<label>Condition Expression</label><input type="text" id="propCond" placeholder="result.score > 0.8">';
+            setTimeout(() => {
+                const c = document.getElementById('propCond');
+                if (n.condition) c.value = n.condition;
+                c.oninput = () => { n.condition = c.value; };
+            }, 0);
+        }
+
+        document.getElementById('propName').oninput = () => { n.name = document.getElementById('propName').value; draw(); };
+        document.getElementById('propDesc').oninput = () => { n.desc = document.getElementById('propDesc').value; draw(); };
+    }
+
+    function deleteSelected() {
+        if (!selected) return;
+        nodes = nodes.filter(n => n.id !== selected);
+        edges = edges.filter(e => e.from !== selected && e.to !== selected);
+        selected = null;
+        propsPanel.classList.remove('show');
+        draw();
+    }
+
+    function clearAll() {
+        if (nodes.length && !confirm('Clear all nodes and edges?')) return;
+        nodes = []; edges = []; selected = null; nextId = 1;
+        propsPanel.classList.remove('show');
+        draw();
+    }
+
+    function autoLayout() {
+        if (!nodes.length) return;
+        // topological-ish layout
+        const cols = {};
+        const visited = new Set();
+        function getCol(id, depth) {
+            if (visited.has(id)) return;
+            visited.add(id);
+            cols[id] = Math.max(cols[id] || 0, depth);
+            for (const e of edges) {
+                if (e.from === id) getCol(e.to, depth + 1);
+            }
+        }
+        // start from nodes with no incoming
+        const hasIncoming = new Set(edges.map(e => e.to));
+        for (const n of nodes) {
+            if (!hasIncoming.has(n.id)) getCol(n.id, 0);
+        }
+        for (const n of nodes) {
+            if (!visited.has(n.id)) getCol(n.id, 0);
+        }
+
+        const colGroups = {};
+        for (const n of nodes) {
+            const c = cols[n.id] || 0;
+            if (!colGroups[c]) colGroups[c] = [];
+            colGroups[c].push(n);
+        }
+        for (const [c, group] of Object.entries(colGroups)) {
+            const ci = parseInt(c);
+            group.forEach((n, i) => {
+                n.x = 80 + ci * 220;
+                n.y = 60 + i * 100;
+            });
+        }
+        panX = 0; panY = 0;
+        draw();
+        toast('Layout applied');
+    }
+
+    function exportJSON() {
+        const data = {
+            version: '1.0',
+            nodes: nodes.map(n => {
+                const o = { id: n.id, type: n.type, name: n.name };
+                if (n.desc) o.description = n.desc;
+                if (n.model) o.model = n.model;
+                if (n.model_temp !== undefined) o.temperature = n.model_temp;
+                if (n.method) o.method = n.method;
+                if (n.url) o.url = n.url;
+                if (n.delaySec) o.delaySeconds = n.delaySec;
+                if (n.condition) o.condition = n.condition;
+                return o;
+            }),
+            edges: edges.map(e => ({ from: e.from, to: e.to }))
+        };
+        const json = JSON.stringify(data, null, 2);
+        navigator.clipboard.writeText(json).then(() => toast('JSON copied to clipboard!'));
+    }
+
+    function importJSON() {
+        document.getElementById('importInput').click();
+    }
+    document.getElementById('importInput').addEventListener('change', e => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                nodes = []; edges = [];
+                let maxId = 0;
+                for (const n of (data.nodes || [])) {
+                    nodes.push({
+                        id: n.id, type: n.type, name: n.name || n.type,
+                        desc: n.description || '', x: 80, y: 60,
+                        model: n.model, model_temp: n.temperature,
+                        method: n.method, url: n.url,
+                        delaySec: n.delaySeconds, condition: n.condition
+                    });
+                    if (n.id > maxId) maxId = n.id;
+                }
+                nextId = maxId + 1;
+                edges = (data.edges || []).map(e => ({ from: e.from, to: e.to }));
+                autoLayout();
+                toast('Flow imported!');
+            } catch (err) {
+                toast('Invalid JSON file');
+            }
+        };
+        reader.readAsText(f);
+        e.target.value = '';
+    });
+
+    // Presets
+    const presets = {
+        chatbot: { nodes: [
+            { type: 'trigger', name: 'User Message' },
+            { type: 'memory', name: 'Load Context' },
+            { type: 'llm', name: 'Generate Reply', model: 'gpt-4o' },
+            { type: 'output', name: 'Send Response' }
+        ], edges: [[0,1],[1,2],[2,3]] },
+        rag: { nodes: [
+            { type: 'trigger', name: 'User Query' },
+            { type: 'transform', name: 'Embed Query' },
+            { type: 'http', name: 'Vector Search', method: 'POST' },
+            { type: 'llm', name: 'Generate Answer', model: 'claude-3.5-sonnet' },
+            { type: 'output', name: 'Return Answer' }
+        ], edges: [[0,1],[1,2],[2,3],[3,4]] },
+        classifier: { nodes: [
+            { type: 'trigger', name: 'Incoming Text' },
+            { type: 'llm', name: 'Classify Intent', model: 'gpt-4o' },
+            { type: 'condition', name: 'Route by Label', condition: 'intent === "support"' },
+            { type: 'tool', name: 'Create Ticket' },
+            { type: 'output', name: 'Auto Reply' }
+        ], edges: [[0,1],[1,2],[2,3],[2,4]] },
+        scraper: { nodes: [
+            { type: 'trigger', name: 'URL Input' },
+            { type: 'http', name: 'Fetch Page', method: 'GET' },
+            { type: 'transform', name: 'Extract Data' },
+            { type: 'llm', name: 'Summarize', model: 'gemini-2' },
+            { type: 'memory', name: 'Store Result' },
+            { type: 'output', name: 'Return Summary' }
+        ], edges: [[0,1],[1,2],[2,3],[3,4],[4,5]] }
+    };
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const p = presets[btn.dataset.preset];
+            if (!p) return;
+            nodes = []; edges = []; nextId = 1;
+            const ids = [];
+            for (const nd of p.nodes) {
+                const n = addNode(nd.type, 0, 0, nd.name);
+                if (nd.model) n.model = nd.model;
+                if (nd.method) n.method = nd.method;
+                if (nd.condition) n.condition = nd.condition;
+                ids.push(n.id);
+            }
+            for (const [f, t] of p.edges) {
+                edges.push({ from: ids[f], to: ids[t] });
+            }
+            selected = null;
+            propsPanel.classList.remove('show');
+            autoLayout();
+        });
+    });
+
+    function toast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // keyboard
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+            deleteSelected();
+        }
+    });
+
+    draw();
+    </script>
+</body>
+</html>
