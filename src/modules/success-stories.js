@@ -250,11 +250,8 @@ var SuccessStories = (function () {
     }
   }
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML;
-  }
+  // escapeHtml is provided by DOMUtil (src/modules/dom-utils.js).
+  var escapeHtml = DOMUtil.escapeHtml;
 
   function getStories() { return STORIES.slice(); }
   function getActiveFilter() { return _activeFilter; }

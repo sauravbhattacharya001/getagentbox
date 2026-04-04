@@ -13,6 +13,7 @@ if (!fs.existsSync(distDir)) fs.mkdirSync(distDir);
 // Order matters: globals → typing template → all modules → init → top-level src files
 const files = [
   'src/modules/storage.js',
+  'src/modules/dom-utils.js',
   'src/modules/globals.js',
   'src/modules/_typing-indicator-template.js',
   'src/modules/chat-demo.js',
