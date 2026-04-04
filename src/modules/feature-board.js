@@ -326,11 +326,8 @@ var FeatureBoard = (function () {
   }
 
   // ── Helpers ────────────────────────────────────────────────────
-  function escapeHtml(str) {
-    const d = document.createElement("div");
-    d.textContent = str;
-    return d.innerHTML;
-  }
+  // escapeHtml is provided by DOMUtil (src/modules/dom-utils.js).
+  var escapeHtml = DOMUtil.escapeHtml;
 
   function formatDate(dateStr) {
     try {

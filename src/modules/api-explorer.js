@@ -235,11 +235,8 @@ var ApiExplorer = (function () {
     return key;
   }
 
-  function escapeHtml(s) {
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-  }
+  // escapeHtml is provided by DOMUtil (src/modules/dom-utils.js).
+  var escapeHtml = DOMUtil.escapeHtml;
 
   return { init: init };
 })();
