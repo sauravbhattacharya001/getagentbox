@@ -7,6 +7,16 @@
 var PersonalityConfigurator = (function () {
   'use strict';
 
+  // Use shared StorageUtil when available, otherwise inline a minimal shim
+  var _storage = (typeof StorageUtil !== 'undefined') ? StorageUtil : {
+    getJSON: function (key, fallback) {
+      try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; }
+    },
+    setJSON: function (key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota */ }
+    }
+  };
+
   const STORAGE_KEY_PERSONALITY = 'agentbox_personality';
 
   const QUESTIONS = [
@@ -184,23 +194,12 @@ var PersonalityConfigurator = (function () {
   }
 
   function saveToStorage(values) {
-    try {
-      localStorage.setItem(STORAGE_KEY_PERSONALITY, JSON.stringify(values));
-    } catch (e) {
-      /* localStorage unavailable */
-    }
+    _storage.setJSON(STORAGE_KEY_PERSONALITY, values);
   }
 
   function loadFromStorage() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_PERSONALITY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (typeof parsed.formality === 'number') { return parsed; }
-      }
-    } catch (e) {
-      /* localStorage unavailable or corrupted */
-    }
+    const parsed = _storage.getJSON(STORAGE_KEY_PERSONALITY, null);
+    if (parsed && typeof parsed.formality === 'number') { return parsed; }
     return null;
   }
 

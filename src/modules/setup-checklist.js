@@ -4,6 +4,16 @@
 var SetupChecklist = (function () {
   'use strict';
 
+  // Use shared StorageUtil when available, otherwise inline a minimal shim
+  var _storage = (typeof StorageUtil !== 'undefined') ? StorageUtil : {
+    getJSON: function (key, fallback) {
+      try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; }
+    },
+    setJSON: function (key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota */ }
+    }
+  };
+
   var STORAGE_KEY = 'agentbox_setup_checklist';
 
   var STEPS = [
@@ -69,18 +79,11 @@ var SetupChecklist = (function () {
   var saved = {};
 
   function load() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
+    return _storage.getJSON(STORAGE_KEY, {});
   }
 
   function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-    } catch (e) { /* quota */ }
+    _storage.setJSON(STORAGE_KEY, saved);
   }
 
   function completedCount() {

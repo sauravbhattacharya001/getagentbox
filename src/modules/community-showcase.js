@@ -5,6 +5,16 @@
 var CommunityShowcase = (function () {
   "use strict";
 
+  // Use shared StorageUtil when available, otherwise inline a minimal shim
+  var _storage = (typeof StorageUtil !== 'undefined') ? StorageUtil : {
+    getJSON: function (key, fallback) {
+      try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; }
+    },
+    setJSON: function (key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota */ }
+    }
+  };
+
   var STORAGE_KEY = "agentbox_showcase_likes";
 
   var CATEGORIES = ["All", "Productivity", "Developer", "Creative", "Business", "Research"];
@@ -87,24 +97,17 @@ var CommunityShowcase = (function () {
   var _likes = {};
 
   function _loadLikes() {
-    try {
-      var stored = localStorage.getItem(STORAGE_KEY);
-      var parsed = stored ? JSON.parse(stored) : null;
-      _likes = Object.create(null);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        for (var k in parsed) {
-          if (Object.prototype.hasOwnProperty.call(parsed, k)) _likes[k] = !!parsed[k];
-        }
+    var parsed = _storage.getJSON(STORAGE_KEY, null);
+    _likes = Object.create(null);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      for (var k in parsed) {
+        if (Object.prototype.hasOwnProperty.call(parsed, k)) _likes[k] = !!parsed[k];
       }
-    } catch (e) {
-      _likes = Object.create(null);
     }
   }
 
   function _saveLikes() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(_likes));
-    } catch (e) { /* quota */ }
+    _storage.setJSON(STORAGE_KEY, _likes);
   }
 
   function _escapeHtml(str) {
