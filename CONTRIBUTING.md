@@ -6,6 +6,17 @@ Thanks for your interest in improving the AgentBox landing page! This guide will
 
 Be respectful, constructive, and inclusive. We're building something cool together — treat fellow contributors the way you'd want to be treated. Harassment, trolling, or dismissive behavior won't be tolerated.
 
+## First-Time Contributors
+
+New to this project? Here's how to find your first contribution:
+
+1. **Browse [good first issues](https://github.com/sauravbhattacharya001/getagentbox/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)** — these are scoped, well-described tasks ideal for newcomers
+2. **Pick a test file** — look at `__tests__/` for modules with low coverage and add missing test cases
+3. **Fix an accessibility gap** — run a screen reader or keyboard-only navigation through the site and file issues or fixes for anything broken
+4. **Improve documentation** — typos, unclear instructions, or missing examples in `docs/`
+
+If you're unsure whether something is worth a PR, open an issue first to discuss.
+
 ## Quick Start
 
 ```bash
@@ -153,6 +164,68 @@ npx jest __tests__/feedback.test.js
 - Maintain color contrast ratios for both dark and light themes
 - Support `prefers-reduced-motion` — disable animations when set
 
+## Local Development Workflow
+
+### Running the Site Locally
+
+The site has no build step for development — just serve the files:
+
+```bash
+# Option 1: npx serve (recommended)
+npx serve . -l 3000
+# Then open http://localhost:3000
+
+# Option 2: Python
+python3 -m http.server 3000
+
+# Option 3: Build the minified version
+npm run build
+# This runs build.js which processes src/ into dist/
+```
+
+### Docker Development
+
+To test the production container locally:
+
+```bash
+docker build -t agentbox-landing .
+docker run -p 8080:80 agentbox-landing
+# Visit http://localhost:8080
+```
+
+The Dockerfile uses multi-stage builds: stage 1 runs `npm test`, stage 2 copies static assets into an nginx container with security headers. If tests fail, the image won't build — this is intentional.
+
+### npm Package Development
+
+The `src/` directory contains the reusable npm package (FAQ accordion, pricing toggle, animated stats). To test changes to the package:
+
+```bash
+# Run package-specific tests
+npx jest __tests__/lib.test.js
+
+# Test the UMD bundle locally
+node -e "var m = require('./src/index.js'); console.log(Object.keys(m));"
+
+# Dry-run publish to check what gets included
+npm pack --dry-run
+```
+
+The `"files"` field in `package.json` limits the published package to `src/` and `LICENSE` only — HTML pages and tests are excluded.
+
+## Release Process
+
+Releases are tagged with semver and published to npm automatically via GitHub Actions:
+
+1. Update `version` in `package.json`
+2. Add an entry to `CHANGELOG.md` under the new version
+3. Commit: `chore: bump version to x.y.z`
+4. Create a GitHub Release with tag `vx.y.z` — the `npm-publish` workflow handles the rest
+
+**When to bump which version:**
+- **Patch** (x.y.Z): Bug fixes, accessibility improvements, test additions
+- **Minor** (x.Y.0): New landing page sections, new npm-exported modules, new features
+- **Major** (X.0.0): Breaking changes to the npm package API (rare)
+
 ## Pull Request Process
 
 1. **Fork** the repo and create a feature branch
@@ -234,6 +307,25 @@ Ensure your `beforeEach` sets up `document.body.innerHTML` with the required ele
 
 **Docker build fails:**
 Verify `Dockerfile` syntax and that you're running `docker build` from the repo root. The nginx config expects `index.html` at the container's web root.
+
+## CI Pipeline
+
+Every PR and push triggers the following checks (see `.github/workflows/`):
+
+- **CI** — `npm test` on Node 18/20/22, lint checks
+- **CodeQL** — security scanning for JavaScript vulnerabilities
+- **Docker** — container builds successfully with passing tests
+- **Pages** — deploys to GitHub Pages on merge to master
+
+All checks must pass before merging. If CI fails on your PR, check the Actions tab for details — most failures are test regressions or CSP violations.
+
+## Getting Help
+
+Stuck on something? Here's where to ask:
+
+- **[GitHub Discussions](https://github.com/sauravbhattacharya001/getagentbox/discussions)** — general questions, ideas, architecture discussions
+- **[Issues](https://github.com/sauravbhattacharya001/getagentbox/issues)** — bug reports and feature requests
+- Tag your issue with relevant labels (`bug`, `enhancement`, `accessibility`, `documentation`)
 
 ## License
 
