@@ -309,6 +309,9 @@ var CommunityShowcase = (function () {
     if (modal) modal.remove();
   }
 
+  // Cap user-submitted showcase items to prevent unbounded localStorage growth.
+  var MAX_USER_SUBMISSIONS = 20;
+
   function _handleSubmit() {
     var title = document.getElementById("scTitle").value.trim();
     var author = document.getElementById("scAuthor").value.trim();
@@ -317,6 +320,26 @@ var CommunityShowcase = (function () {
     var tagsRaw = document.getElementById("scTags").value.trim();
 
     if (!title || !author || !category || !desc) return;
+
+    // Enforce length limits defensively (in case maxlength attrs are bypassed)
+    if (title.length > 60) title = title.slice(0, 60);
+    if (author.length > 30) author = author.slice(0, 30);
+    if (desc.length > 300) desc = desc.slice(0, 300);
+
+    // Prevent localStorage flooding via unlimited submissions
+    var userCount = 0;
+    for (var k = 0; k < SHOWCASES.length; k++) {
+      if (SHOWCASES[k].id && SHOWCASES[k].id.indexOf('sc-user-') === 0) userCount++;
+    }
+    if (userCount >= MAX_USER_SUBMISSIONS) {
+      var toast = document.getElementById("showcaseToast");
+      if (toast) {
+        toast.textContent = "Submission limit reached. Remove some projects first.";
+        toast.classList.add("visible");
+        setTimeout(function () { toast.classList.remove("visible"); }, 3000);
+      }
+      return;
+    }
 
     var tags = tagsRaw ? tagsRaw.split(",").map(function (t) { return t.trim(); }).filter(Boolean).slice(0, 5) : [];
     var initials = author.split(" ").map(function (w) { return w[0] || ""; }).join("").toUpperCase().slice(0, 2);
