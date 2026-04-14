@@ -205,11 +205,12 @@ var CommandReference = (function () {
 
   // ---- Helpers ----
 
-  function escapeHTML(str) {
+  // Use shared DOMUtil.escapeHtml when available (bundle), inline fallback for standalone/test
+  var escapeHTML = (typeof DOMUtil !== 'undefined' && DOMUtil.escapeHtml) ? DOMUtil.escapeHtml : function (str) {
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
-  }
+  };
 
   function getCategoryById(id) {
     for (var i = 0; i < CATEGORIES.length; i++) {

@@ -373,8 +373,12 @@ function initExplorer() {
     document.body.style.overflow = '';
   }
 
+  // Use shared DOMUtil.escapeHtml when available (bundle), inline fallback for standalone/test
+  var _escape = (typeof DOMUtil !== 'undefined' && DOMUtil.escapeHtml) ? DOMUtil.escapeHtml : function (str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  };
   function escapeHtml(text) {
-    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    return _escape(text).replace(/\n/g, '<br>');
   }
 
   // Event listeners
