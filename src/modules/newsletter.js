@@ -79,7 +79,6 @@ var Newsletter = (function () {
       if (typeof parsed[i] === 'string') safe.push(parsed[i]);
     }
     return safe;
-    }
   }
 
   return { init: init, getSubscribers: getSubscribers };

@@ -149,7 +149,6 @@ var FeatureBoard = (function () {
           typeof item.id === 'string' && typeof item.title === 'string') {
         safe.push(item);
       }
-        }
     }
     return safe;
   }
