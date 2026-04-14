@@ -280,11 +280,12 @@
 
     // ── Helpers ──────────────────────────────────────────────────
 
-    function escapeHtml(str) {
+    // Use shared DOMUtil.escapeHtml when available (bundle), inline fallback for standalone/test
+    var escapeHtml = (typeof DOMUtil !== 'undefined' && DOMUtil.escapeHtml) ? DOMUtil.escapeHtml : function (str) {
         var div = document.createElement('div');
         div.appendChild(document.createTextNode(str));
         return div.innerHTML;
-    }
+    };
 
     // ── Styles ──────────────────────────────────────────────────
 
