@@ -54,16 +54,26 @@ var AIGlossary = (function () {
     return cats;
   }
 
+  /** Pre-built lowercase search corpus per term — avoids repeated string
+   *  concatenation and toLowerCase() on every keystroke. */
+  var _searchIndex = null;
+  function ensureSearchIndex() {
+    if (_searchIndex) return;
+    _searchIndex = new Array(TERMS.length);
+    for (var i = 0; i < TERMS.length; i++) {
+      var t = TERMS[i];
+      _searchIndex[i] = (t.term + " " + t.definition + " " + (t.related || []).join(" ")).toLowerCase();
+    }
+  }
+
   function filteredTerms() {
+    ensureSearchIndex();
     var q = searchQuery.toLowerCase();
     var results = [];
     for (var i = 0; i < TERMS.length; i++) {
       var t = TERMS[i];
       if (activeCategory !== "all" && t.category !== activeCategory) continue;
-      if (q) {
-        var hay = (t.term + " " + t.definition + " " + (t.related || []).join(" ")).toLowerCase();
-        if (hay.indexOf(q) === -1) continue;
-      }
+      if (q && _searchIndex[i].indexOf(q) === -1) continue;
       results.push(t);
     }
     results.sort(function (a, b) { return a.term.localeCompare(b.term); });
@@ -156,10 +166,14 @@ var AIGlossary = (function () {
     renderList();
 
     var searchInput = document.getElementById("glossarySearch");
+    var _searchDebounce = null;
     if (searchInput) {
       searchInput.addEventListener("input", function () {
-        searchQuery = this.value.trim();
-        renderList();
+        var val = this.value.trim();
+        if (val === searchQuery) return;
+        searchQuery = val;
+        if (_searchDebounce) clearTimeout(_searchDebounce);
+        _searchDebounce = setTimeout(renderList, 120);
       });
     }
 

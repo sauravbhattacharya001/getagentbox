@@ -142,10 +142,13 @@ var DOMUtil = (function () {
    * @param {string} str - Raw string to escape.
    * @returns {string} HTML-safe string.
    */
+  /** Reusable element for escapeHtml — avoids creating a new DOM node per call. */
+  var _escapeEl = null;
+
   function escapeHtml(str) {
-    var d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
+    if (!_escapeEl) _escapeEl = document.createElement('div');
+    _escapeEl.textContent = str;
+    return _escapeEl.innerHTML;
   }
 
   return {
@@ -1695,7 +1698,6 @@ var Newsletter = (function () {
       if (typeof parsed[i] === 'string') safe.push(parsed[i]);
     }
     return safe;
-    }
   }
 
   return { init: init, getSubscribers: getSubscribers };
@@ -3099,10 +3101,11 @@ var ActivityFeed = (function () {
     const act = nextActivity();
     const newItem = createItem(act);
 
-    // Age existing time labels
-    const items = feedEl.querySelectorAll('.activity-item');
+    // Age existing time labels — use children instead of querySelectorAll
+    // and lastElementChild instead of nested querySelector for each item.
+    const items = feedEl.children;
     for (var i = 0; i < items.length; i++) {
-      const timeEl = items[i].querySelector('.activity-time');
+      const timeEl = items[i].lastElementChild; // .activity-time is always the last child
       if (timeEl) {
         const age = (i + 1) * (CYCLE_INTERVAL / 1000);
         if (age < 60) {
@@ -3452,6 +3455,16 @@ var PromptGallery = (function () {
 var PersonalityConfigurator = (function () {
   'use strict';
 
+  // Use shared StorageUtil when available, otherwise inline a minimal shim
+  var _storage = (typeof StorageUtil !== 'undefined') ? StorageUtil : {
+    getJSON: function (key, fallback) {
+      try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; }
+    },
+    setJSON: function (key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota */ }
+    }
+  };
+
   const STORAGE_KEY_PERSONALITY = 'agentbox_personality';
 
   const QUESTIONS = [
@@ -3629,23 +3642,12 @@ var PersonalityConfigurator = (function () {
   }
 
   function saveToStorage(values) {
-    try {
-      localStorage.setItem(STORAGE_KEY_PERSONALITY, JSON.stringify(values));
-    } catch (e) {
-      /* localStorage unavailable */
-    }
+    _storage.setJSON(STORAGE_KEY_PERSONALITY, values);
   }
 
   function loadFromStorage() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_PERSONALITY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (typeof parsed.formality === 'number') { return parsed; }
-      }
-    } catch (e) {
-      /* localStorage unavailable or corrupted */
-    }
+    const parsed = _storage.getJSON(STORAGE_KEY_PERSONALITY, null);
+    if (parsed && typeof parsed.formality === 'number') { return parsed; }
     return null;
   }
 
@@ -6582,7 +6584,6 @@ var FeatureBoard = (function () {
           typeof item.id === 'string' && typeof item.title === 'string') {
         safe.push(item);
       }
-        }
     }
     return safe;
   }
@@ -6885,16 +6886,26 @@ var AIGlossary = (function () {
     return cats;
   }
 
+  /** Pre-built lowercase search corpus per term — avoids repeated string
+   *  concatenation and toLowerCase() on every keystroke. */
+  var _searchIndex = null;
+  function ensureSearchIndex() {
+    if (_searchIndex) return;
+    _searchIndex = new Array(TERMS.length);
+    for (var i = 0; i < TERMS.length; i++) {
+      var t = TERMS[i];
+      _searchIndex[i] = (t.term + " " + t.definition + " " + (t.related || []).join(" ")).toLowerCase();
+    }
+  }
+
   function filteredTerms() {
+    ensureSearchIndex();
     var q = searchQuery.toLowerCase();
     var results = [];
     for (var i = 0; i < TERMS.length; i++) {
       var t = TERMS[i];
       if (activeCategory !== "all" && t.category !== activeCategory) continue;
-      if (q) {
-        var hay = (t.term + " " + t.definition + " " + (t.related || []).join(" ")).toLowerCase();
-        if (hay.indexOf(q) === -1) continue;
-      }
+      if (q && _searchIndex[i].indexOf(q) === -1) continue;
       results.push(t);
     }
     results.sort(function (a, b) { return a.term.localeCompare(b.term); });
@@ -6987,10 +6998,14 @@ var AIGlossary = (function () {
     renderList();
 
     var searchInput = document.getElementById("glossarySearch");
+    var _searchDebounce = null;
     if (searchInput) {
       searchInput.addEventListener("input", function () {
-        searchQuery = this.value.trim();
-        renderList();
+        var val = this.value.trim();
+        if (val === searchQuery) return;
+        searchQuery = val;
+        if (_searchDebounce) clearTimeout(_searchDebounce);
+        _searchDebounce = setTimeout(renderList, 120);
       });
     }
 
@@ -7236,6 +7251,16 @@ var PipelineBuilder = (function () {
 var CommunityShowcase = (function () {
   "use strict";
 
+  // Use shared StorageUtil when available, otherwise inline a minimal shim
+  var _storage = (typeof StorageUtil !== 'undefined') ? StorageUtil : {
+    getJSON: function (key, fallback) {
+      try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; }
+    },
+    setJSON: function (key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota */ }
+    }
+  };
+
   var STORAGE_KEY = "agentbox_showcase_likes";
 
   var CATEGORIES = ["All", "Productivity", "Developer", "Creative", "Business", "Research"];
@@ -7318,24 +7343,17 @@ var CommunityShowcase = (function () {
   var _likes = {};
 
   function _loadLikes() {
-    try {
-      var stored = localStorage.getItem(STORAGE_KEY);
-      var parsed = stored ? JSON.parse(stored) : null;
-      _likes = Object.create(null);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        for (var k in parsed) {
-          if (Object.prototype.hasOwnProperty.call(parsed, k)) _likes[k] = !!parsed[k];
-        }
+    var parsed = _storage.getJSON(STORAGE_KEY, null);
+    _likes = Object.create(null);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      for (var k in parsed) {
+        if (Object.prototype.hasOwnProperty.call(parsed, k)) _likes[k] = !!parsed[k];
       }
-    } catch (e) {
-      _likes = Object.create(null);
     }
   }
 
   function _saveLikes() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(_likes));
-    } catch (e) { /* quota */ }
+    _storage.setJSON(STORAGE_KEY, _likes);
   }
 
   function _escapeHtml(str) {
@@ -7537,6 +7555,9 @@ var CommunityShowcase = (function () {
     if (modal) modal.remove();
   }
 
+  // Cap user-submitted showcase items to prevent unbounded localStorage growth.
+  var MAX_USER_SUBMISSIONS = 20;
+
   function _handleSubmit() {
     var title = document.getElementById("scTitle").value.trim();
     var author = document.getElementById("scAuthor").value.trim();
@@ -7545,6 +7566,26 @@ var CommunityShowcase = (function () {
     var tagsRaw = document.getElementById("scTags").value.trim();
 
     if (!title || !author || !category || !desc) return;
+
+    // Enforce length limits defensively (in case maxlength attrs are bypassed)
+    if (title.length > 60) title = title.slice(0, 60);
+    if (author.length > 30) author = author.slice(0, 30);
+    if (desc.length > 300) desc = desc.slice(0, 300);
+
+    // Prevent localStorage flooding via unlimited submissions
+    var userCount = 0;
+    for (var k = 0; k < SHOWCASES.length; k++) {
+      if (SHOWCASES[k].id && SHOWCASES[k].id.indexOf('sc-user-') === 0) userCount++;
+    }
+    if (userCount >= MAX_USER_SUBMISSIONS) {
+      var toast = document.getElementById("showcaseToast");
+      if (toast) {
+        toast.textContent = "Submission limit reached. Remove some projects first.";
+        toast.classList.add("visible");
+        setTimeout(function () { toast.classList.remove("visible"); }, 3000);
+      }
+      return;
+    }
 
     var tags = tagsRaw ? tagsRaw.split(",").map(function (t) { return t.trim(); }).filter(Boolean).slice(0, 5) : [];
     var initials = author.split(" ").map(function (w) { return w[0] || ""; }).join("").toUpperCase().slice(0, 2);
@@ -9524,11 +9565,12 @@ var CommandReference = (function () {
 
   // ---- Helpers ----
 
-  function escapeHTML(str) {
+  // Use shared DOMUtil.escapeHtml when available (bundle), inline fallback for standalone/test
+  var escapeHTML = (typeof DOMUtil !== 'undefined' && DOMUtil.escapeHtml) ? DOMUtil.escapeHtml : function (str) {
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
-  }
+  };
 
   function getCategoryById(id) {
     for (var i = 0; i < CATEGORIES.length; i++) {
@@ -10196,11 +10238,12 @@ if (typeof window !== 'undefined') { window.RoleDemoPicker = RoleDemoPicker; }
 
     // ── Helpers ──────────────────────────────────────────────────
 
-    function escapeHtml(str) {
+    // Use shared DOMUtil.escapeHtml when available (bundle), inline fallback for standalone/test
+    var escapeHtml = (typeof DOMUtil !== 'undefined' && DOMUtil.escapeHtml) ? DOMUtil.escapeHtml : function (str) {
         var div = document.createElement('div');
         div.appendChild(document.createTextNode(str));
         return div.innerHTML;
-    }
+    };
 
     // ── Styles ──────────────────────────────────────────────────
 
@@ -10926,6 +10969,16 @@ if (typeof module !== 'undefined' && module.exports) {
 var SetupChecklist = (function () {
   'use strict';
 
+  // Use shared StorageUtil when available, otherwise inline a minimal shim
+  var _storage = (typeof StorageUtil !== 'undefined') ? StorageUtil : {
+    getJSON: function (key, fallback) {
+      try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; }
+    },
+    setJSON: function (key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota */ }
+    }
+  };
+
   var STORAGE_KEY = 'agentbox_setup_checklist';
 
   var STEPS = [
@@ -10991,18 +11044,11 @@ var SetupChecklist = (function () {
   var saved = {};
 
   function load() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
+    return _storage.getJSON(STORAGE_KEY, {});
   }
 
   function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-    } catch (e) { /* quota */ }
+    _storage.setJSON(STORAGE_KEY, saved);
   }
 
   function completedCount() {
