@@ -101,10 +101,11 @@ var ActivityFeed = (function () {
     const act = nextActivity();
     const newItem = createItem(act);
 
-    // Age existing time labels
-    const items = feedEl.querySelectorAll('.activity-item');
+    // Age existing time labels — use children instead of querySelectorAll
+    // and lastElementChild instead of nested querySelector for each item.
+    const items = feedEl.children;
     for (var i = 0; i < items.length; i++) {
-      const timeEl = items[i].querySelector('.activity-time');
+      const timeEl = items[i].lastElementChild; // .activity-time is always the last child
       if (timeEl) {
         const age = (i + 1) * (CYCLE_INTERVAL / 1000);
         if (age < 60) {

@@ -20,10 +20,13 @@ var DOMUtil = (function () {
    * @param {string} str - Raw string to escape.
    * @returns {string} HTML-safe string.
    */
+  /** Reusable element for escapeHtml — avoids creating a new DOM node per call. */
+  var _escapeEl = null;
+
   function escapeHtml(str) {
-    var d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
+    if (!_escapeEl) _escapeEl = document.createElement('div');
+    _escapeEl.textContent = str;
+    return _escapeEl.innerHTML;
   }
 
   return {
