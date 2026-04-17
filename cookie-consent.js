@@ -1,6 +1,6 @@
 /* ── Cookie Consent Banner ──────────────────────────────────────── */
 /* GDPR-style cookie consent with accept/reject + preferences.     */
-/* Choice is stored in localStorage; banner won't reappear after.  */
+/* Choice is stored via StorageUtil; banner won't reappear after.  */
 
 (function () {
   'use strict';
@@ -8,21 +8,14 @@
   var STORAGE_KEY = 'agentbox_cookie_consent';
 
   function getConsent() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch (_) {
-      return null;
-    }
+    return StorageUtil.getJSON(STORAGE_KEY, null);
   }
 
   function setConsent(choice) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        choice: choice,         // 'all' | 'essential' | 'custom'
-        timestamp: Date.now()
-      }));
-    } catch (_) { /* quota exceeded – silently ignore */ }
+    StorageUtil.setJSON(STORAGE_KEY, {
+      choice: choice,         // 'all' | 'essential' | 'custom'
+      timestamp: Date.now()
+    });
   }
 
   // If already consented, don't show banner
