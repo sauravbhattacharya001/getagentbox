@@ -221,11 +221,9 @@
         return;
       }
       // Store locally (demo — in production this would hit an API)
-      try {
-        var subs = JSON.parse(localStorage.getItem('agentbox_event_subs') || '[]');
-        if (subs.indexOf(val) === -1) subs.push(val);
-        localStorage.setItem('agentbox_event_subs', JSON.stringify(subs));
-      } catch(e) { /* ignore */ }
+      var subs = StorageUtil.getJSON('agentbox_event_subs', []);
+      if (subs.indexOf(val) === -1) subs.push(val);
+      StorageUtil.setJSON('agentbox_event_subs', subs);
       msg.textContent = '✅ You\'re subscribed! We\'ll notify you about upcoming events.';
       msg.style.color = '#2ecc71';
       msg.style.display = 'block';
