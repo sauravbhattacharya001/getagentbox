@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox Watchdog Configurator — Autonomous Monitoring Rules</title>
+    <meta name="description" content="Build autonomous monitoring rules for your AgentBox agents. Define conditions, thresholds, and automated actions with live simulation.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #facc15;
+            --color-danger: #ef4444;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+        .page-header { text-align: center; margin-bottom: 1.5rem; }
+        .page-header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.3rem;
+        }
+        .page-header p { color: var(--color-text-muted); font-size: 0.95rem; }
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+        .panel {
+            background: var(--color-bg-mid);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+        .panel h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--color-primary);
+        }
+        .form-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; align-items: center; flex-wrap: wrap; }
+        .form-row label { font-size: 0.8rem; color: var(--color-text-muted); min-width: 80px; }
+        input, select, textarea {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 6px;
+            color: #fff;
+            padding: 0.45rem 0.6rem;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--color-primary); }
+        select { cursor: pointer; }
+        textarea { width: 100%; min-height: 60px; resize: vertical; }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            background: var(--color-surface);
+            color: var(--color-text);
+            cursor: pointer;
+            font-size: 0.82rem;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: var(--color-surface-hover); }
+        .btn-primary { border-color: var(--color-primary); background: rgba(0,212,255,0.15); color: var(--color-primary); }
+        .btn-danger { border-color: var(--color-danger); background: rgba(239,68,68,0.15); color: var(--color-danger); }
+        .btn-success { border-color: var(--color-success); background: rgba(74,222,128,0.15); color: var(--color-success); }
+        .btn-warning { border-color: var(--color-warning); background: rgba(250,204,21,0.15); color: var(--color-warning); }
+        .rule-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; max-height: 500px; overflow-y: auto; }
+        .rule-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 0.9rem;
+            position: relative;
+            transition: border-color 0.3s;
+        }
+        .rule-card.firing { border-color: var(--color-danger); box-shadow: 0 0 12px rgba(239,68,68,0.3); }
+        .rule-card .rule-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .rule-card .rule-detail { font-size: 0.78rem; color: var(--color-text-muted); }
+        .rule-card .rule-actions-bar { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+        .tag {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+        .tag-alert { background: rgba(239,68,68,0.2); color: var(--color-danger); }
+        .tag-restart { background: rgba(250,204,21,0.2); color: var(--color-warning); }
+        .tag-scale { background: rgba(74,222,128,0.2); color: var(--color-success); }
+        .tag-webhook { background: rgba(100,108,255,0.2); color: var(--color-primary-alt); }
+        .tag-cooldown { background: rgba(255,255,255,0.1); color: var(--color-text-muted); }
+        .sim-log {
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.78rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            max-height: 320px;
+            overflow-y: auto;
+            margin-top: 0.75rem;
+            line-height: 1.6;
+        }
+        .sim-log .log-ok { color: var(--color-success); }
+        .sim-log .log-warn { color: var(--color-warning); }
+        .sim-log .log-fire { color: var(--color-danger); }
+        .sim-log .log-action { color: var(--color-primary); }
+        .sim-log .log-muted { color: var(--color-text-muted); }
+        .sim-bar { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; align-items: center; flex-wrap: wrap; }
+        .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+        .kpi { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 0.6rem; text-align: center; }
+        .kpi .val { font-size: 1.3rem; font-weight: 700; }
+        .kpi .lbl { font-size: 0.7rem; color: var(--color-text-muted); }
+        .preset-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .full-width { grid-column: 1 / -1; }
+        .export-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+        .empty-state { text-align: center; padding: 2rem; color: var(--color-text-muted); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>🐕 Watchdog Configurator</h1>
+        <p>Build autonomous monitoring rules — define conditions, thresholds & automated responses</p>
+    </div>
+
+    <div class="preset-bar" style="justify-content:center; margin-bottom:1.5rem;">
+        <button class="btn" onclick="loadPreset('basic')">📦 Basic Preset</button>
+        <button class="btn" onclick="loadPreset('production')">🏭 Production Preset</button>
+        <button class="btn" onclick="loadPreset('aggressive')">⚡ Aggressive Preset</button>
+        <button class="btn btn-danger" onclick="clearAllRules()">🗑️ Clear All</button>
+    </div>
+
+    <div class="main-grid">
+        <!-- Rule Builder Panel -->
+        <div class="panel">
+            <h2>📐 Rule Builder</h2>
+            <div class="form-row">
+                <label>Name</label>
+                <input type="text" id="ruleName" placeholder="e.g. High Latency Alert" style="flex:1">
+            </div>
+            <div class="form-row">
+                <label>Metric</label>
+                <select id="ruleMetric">
+                    <option value="latency">Latency (ms)</option>
+                    <option value="error_rate">Error Rate (%)</option>
+                    <option value="cpu">CPU Usage (%)</option>
+                    <option value="memory">Memory Usage (%)</option>
+                    <option value="throughput">Throughput (req/s)</option>
+                    <option value="queue_depth">Queue Depth</option>
+                    <option value="response_time_p99">P99 Response (ms)</option>
+                    <option value="active_agents">Active Agents</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Condition</label>
+                <select id="ruleOp" style="width:60px">
+                    <option value=">">&gt;</option>
+                    <option value=">=">&ge;</option>
+                    <option value="<">&lt;</option>
+                    <option value="<=">&le;</option>
+                    <option value="==">==</option>
+                </select>
+                <input type="number" id="ruleThreshold" placeholder="Threshold" style="width:100px">
+            </div>
+            <div class="form-row">
+                <label>Duration</label>
+                <input type="number" id="ruleDuration" value="3" min="1" max="30" style="width:60px">
+                <span style="font-size:0.8rem;color:var(--color-text-muted)">consecutive checks before firing</span>
+            </div>
+            <div class="form-row">
+                <label>Cooldown</label>
+                <input type="number" id="ruleCooldown" value="60" min="0" style="width:70px">
+                <span style="font-size:0.8rem;color:var(--color-text-muted)">seconds between actions</span>
+            </div>
+            <div class="form-row">
+                <label>Severity</label>
+                <select id="ruleSeverity">
+                    <option value="info">ℹ️ Info</option>
+                    <option value="warning" selected>⚠️ Warning</option>
+                    <option value="critical">🔴 Critical</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Actions</label>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+                    <label style="min-width:auto;font-size:0.82rem"><input type="checkbox" id="actAlert" checked> 🔔 Alert</label>
+                    <label style="min-width:auto;font-size:0.82rem"><input type="checkbox" id="actRestart"> 🔄 Restart</label>
+                    <label style="min-width:auto;font-size:0.82rem"><input type="checkbox" id="actScale"> 📈 Scale Up</label>
+                    <label style="min-width:auto;font-size:0.82rem"><input type="checkbox" id="actWebhook"> 🌐 Webhook</label>
+                </div>
+            </div>
+            <div class="form-row">
+                <label>Webhook</label>
+                <input type="text" id="ruleWebhook" placeholder="https://hooks.example.com/..." style="flex:1">
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:0.75rem">
+                <button class="btn btn-primary" onclick="addRule()">➕ Add Rule</button>
+            </div>
+
+            <div class="rule-list" id="ruleList">
+                <div class="empty-state">No rules yet. Add one above or load a preset.</div>
+            </div>
+        </div>
+
+        <!-- Simulation Panel -->
+        <div class="panel">
+            <h2>🧪 Live Simulation</h2>
+            <div class="kpi-row">
+                <div class="kpi"><div class="val" id="kpiRules">0</div><div class="lbl">Rules</div></div>
+                <div class="kpi"><div class="val" id="kpiFiring" style="color:var(--color-danger)">0</div><div class="lbl">Firing</div></div>
+                <div class="kpi"><div class="val" id="kpiActions" style="color:var(--color-primary)">0</div><div class="lbl">Actions Taken</div></div>
+                <div class="kpi"><div class="val" id="kpiUptime" style="color:var(--color-success)">100%</div><div class="lbl">Sim Uptime</div></div>
+            </div>
+            <div class="sim-bar">
+                <button class="btn btn-success" id="simBtn" onclick="toggleSim()">▶ Start Simulation</button>
+                <select id="simScenario">
+                    <option value="normal">🟢 Normal Traffic</option>
+                    <option value="spike">🟡 Traffic Spike</option>
+                    <option value="degraded">🟠 Degraded Service</option>
+                    <option value="outage">🔴 Cascading Failure</option>
+                    <option value="random">🎲 Random Chaos</option>
+                </select>
+                <button class="btn" onclick="clearLog()">Clear Log</button>
+            </div>
+            <div class="sim-log" id="simLog">
+                <div class="log-muted">Simulation idle. Press Start to begin generating metrics.</div>
+            </div>
+
+            <div class="export-bar">
+                <button class="btn" onclick="exportRules('json')">📋 Export JSON</button>
+                <button class="btn" onclick="exportRules('yaml')">📄 Export YAML</button>
+                <button class="btn" onclick="importRules()">📥 Import JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+
+    <script>
+    const rules = [];
+    let simInterval = null;
+    let totalActions = 0;
+    let simTick = 0;
+    let simHealthy = 0;
+    let simTotal = 0;
+
+    const METRIC_LABELS = {
+        latency: 'Latency', error_rate: 'Error Rate', cpu: 'CPU', memory: 'Memory',
+        throughput: 'Throughput', queue_depth: 'Queue Depth',
+        response_time_p99: 'P99 Response', active_agents: 'Active Agents'
+    };
+
+    const SCENARIOS = {
+        normal:   { latency: [30,80],  error_rate: [0,2],   cpu: [20,50],  memory: [30,55], throughput: [80,150],  queue_depth: [0,5],   response_time_p99: [50,120],  active_agents: [3,8] },
+        spike:    { latency: [80,300], error_rate: [1,8],   cpu: [50,90],  memory: [50,80], throughput: [200,500], queue_depth: [5,30],  response_time_p99: [150,600], active_agents: [5,15] },
+        degraded: { latency: [100,500],error_rate: [5,25],  cpu: [60,95],  memory: [60,90], throughput: [30,80],   queue_depth: [10,50], response_time_p99: [300,1200],active_agents: [2,5] },
+        outage:   { latency: [200,2000],error_rate:[15,60], cpu: [80,100], memory: [75,99], throughput: [0,20],    queue_depth: [30,100],response_time_p99: [800,5000],active_agents: [0,3] },
+        random:   { latency: [10,1000],error_rate: [0,40],  cpu: [10,100], memory: [20,99], throughput: [5,400],   queue_depth: [0,80],  response_time_p99: [30,3000], active_agents: [0,15] }
+    };
+
+    function genMetric(scenario, metric) {
+        const [lo, hi] = SCENARIOS[scenario][metric];
+        return Math.round((lo + Math.random() * (hi - lo)) * 100) / 100;
+    }
+
+    function addRule() {
+        const name = document.getElementById('ruleName').value.trim();
+        if (!name) return alert('Rule name is required');
+        const actions = [];
+        if (document.getElementById('actAlert').checked) actions.push('alert');
+        if (document.getElementById('actRestart').checked) actions.push('restart');
+        if (document.getElementById('actScale').checked) actions.push('scale');
+        if (document.getElementById('actWebhook').checked) actions.push('webhook');
+        if (!actions.length) return alert('Select at least one action');
+
+        rules.push({
+            id: Date.now(),
+            name,
+            metric: document.getElementById('ruleMetric').value,
+            op: document.getElementById('ruleOp').value,
+            threshold: parseFloat(document.getElementById('ruleThreshold').value) || 0,
+            duration: parseInt(document.getElementById('ruleDuration').value) || 3,
+            cooldown: parseInt(document.getElementById('ruleCooldown').value) || 60,
+            severity: document.getElementById('ruleSeverity').value,
+            actions,
+            webhook: document.getElementById('ruleWebhook').value.trim(),
+            // runtime state
+            hitCount: 0,
+            lastFired: 0,
+            firing: false
+        });
+        document.getElementById('ruleName').value = '';
+        renderRules();
+    }
+
+    function removeRule(id) {
+        const idx = rules.findIndex(r => r.id === id);
+        if (idx > -1) rules.splice(idx, 1);
+        renderRules();
+    }
+
+    function renderRules() {
+        const el = document.getElementById('ruleList');
+        document.getElementById('kpiRules').textContent = rules.length;
+        if (!rules.length) {
+            el.innerHTML = '<div class="empty-state">No rules yet. Add one above or load a preset.</div>';
+            return;
+        }
+        el.innerHTML = rules.map(r => `
+            <div class="rule-card${r.firing ? ' firing' : ''}" id="rc-${r.id}">
+                <div class="rule-name">${esc(r.name)}</div>
+                <div class="rule-detail">
+                    If <b>${METRIC_LABELS[r.metric]}</b> ${esc(r.op)} <b>${r.threshold}</b> for <b>${r.duration}</b> checks
+                    &nbsp;·&nbsp; Cooldown: ${r.cooldown}s &nbsp;·&nbsp; ${r.severity === 'critical' ? '🔴' : r.severity === 'warning' ? '⚠️' : 'ℹ️'} ${r.severity}
+                </div>
+                <div class="rule-actions-bar">
+                    ${r.actions.map(a => `<span class="tag tag-${a}">${a}</span>`).join('')}
+                    ${r.cooldown ? `<span class="tag tag-cooldown">${r.cooldown}s cooldown</span>` : ''}
+                    <button class="btn btn-danger" style="margin-left:auto;padding:0.2rem 0.5rem;font-size:0.72rem" onclick="removeRule(${r.id})">✕</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function toggleSim() {
+        if (simInterval) { stopSim(); } else { startSim(); }
+    }
+
+    function startSim() {
+        const btn = document.getElementById('simBtn');
+        btn.textContent = '⏹ Stop'; btn.className = 'btn btn-danger';
+        totalActions = 0; simTick = 0; simHealthy = 0; simTotal = 0;
+        rules.forEach(r => { r.hitCount = 0; r.lastFired = 0; r.firing = false; });
+        log('log-ok', '▶ Simulation started');
+        simInterval = setInterval(simStep, 1500);
+    }
+
+    function stopSim() {
+        clearInterval(simInterval); simInterval = null;
+        const btn = document.getElementById('simBtn');
+        btn.textContent = '▶ Start Simulation'; btn.className = 'btn btn-success';
+        rules.forEach(r => { r.firing = false; });
+        renderRules();
+        log('log-muted', '⏹ Simulation stopped');
+    }
+
+    function simStep() {
+        simTick++;
+        simTotal++;
+        const scenario = document.getElementById('simScenario').value;
+        const metrics = {};
+        for (const m of Object.keys(METRIC_LABELS)) metrics[m] = genMetric(scenario, m);
+
+        let anyFiring = false;
+        const now = simTick * 1.5; // seconds
+
+        for (const r of rules) {
+            const val = metrics[r.metric];
+            const hit = evalCond(val, r.op, r.threshold);
+            if (hit) {
+                r.hitCount++;
+                if (r.hitCount >= r.duration && (now - r.lastFired) >= r.cooldown) {
+                    r.firing = true;
+                    anyFiring = true;
+                    r.lastFired = now;
+                    r.hitCount = 0;
+                    totalActions++;
+                    log('log-fire', `🔥 RULE FIRED: "${r.name}" — ${METRIC_LABELS[r.metric]}=${val} ${r.op} ${r.threshold}`);
+                    for (const a of r.actions) {
+                        log('log-action', `  → Action: ${a}${a === 'webhook' && r.webhook ? ' (' + r.webhook.slice(0,40) + '...)' : ''}`);
+                    }
+                }
+            } else {
+                if (r.hitCount > 0) r.hitCount = Math.max(0, r.hitCount - 1);
+                r.firing = false;
+            }
+        }
+
+        if (!anyFiring) simHealthy++;
+        const uptime = simTotal > 0 ? Math.round(simHealthy / simTotal * 100) : 100;
+
+        // Periodic metric summary
+        if (simTick % 4 === 0) {
+            const parts = Object.entries(metrics).map(([k,v]) => `${METRIC_LABELS[k]}=${v}`).join(' · ');
+            log('log-muted', `📊 [tick ${simTick}] ${parts}`);
+        }
+
+        document.getElementById('kpiFiring').textContent = rules.filter(r => r.firing).length;
+        document.getElementById('kpiActions').textContent = totalActions;
+        document.getElementById('kpiUptime').textContent = uptime + '%';
+        renderRules();
+    }
+
+    function evalCond(val, op, threshold) {
+        switch(op) {
+            case '>': return val > threshold;
+            case '>=': return val >= threshold;
+            case '<': return val < threshold;
+            case '<=': return val <= threshold;
+            case '==': return val === threshold;
+        }
+        return false;
+    }
+
+    function log(cls, msg) {
+        const el = document.getElementById('simLog');
+        const t = new Date().toLocaleTimeString();
+        el.innerHTML += `<div class="${cls}">[${t}] ${esc(msg)}</div>`;
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function clearLog() {
+        document.getElementById('simLog').innerHTML = '<div class="log-muted">Log cleared.</div>';
+    }
+
+    // Presets
+    function loadPreset(name) {
+        rules.length = 0;
+        const base = { hitCount: 0, lastFired: 0, firing: false, webhook: '' };
+        if (name === 'basic') {
+            rules.push({ ...base, id: Date.now(), name: 'High Latency', metric: 'latency', op: '>', threshold: 200, duration: 3, cooldown: 60, severity: 'warning', actions: ['alert'] });
+            rules.push({ ...base, id: Date.now()+1, name: 'Error Spike', metric: 'error_rate', op: '>', threshold: 10, duration: 2, cooldown: 60, severity: 'critical', actions: ['alert','restart'] });
+            rules.push({ ...base, id: Date.now()+2, name: 'CPU Overload', metric: 'cpu', op: '>', threshold: 85, duration: 5, cooldown: 120, severity: 'warning', actions: ['alert'] });
+        } else if (name === 'production') {
+            rules.push({ ...base, id: Date.now(), name: 'P99 Latency SLA', metric: 'response_time_p99', op: '>', threshold: 500, duration: 3, cooldown: 30, severity: 'critical', actions: ['alert','webhook'] });
+            rules.push({ ...base, id: Date.now()+1, name: 'Error Budget Burn', metric: 'error_rate', op: '>', threshold: 5, duration: 2, cooldown: 30, severity: 'critical', actions: ['alert','restart','webhook'] });
+            rules.push({ ...base, id: Date.now()+2, name: 'Memory Pressure', metric: 'memory', op: '>', threshold: 80, duration: 4, cooldown: 90, severity: 'warning', actions: ['alert','scale'] });
+            rules.push({ ...base, id: Date.now()+3, name: 'Queue Backlog', metric: 'queue_depth', op: '>', threshold: 20, duration: 3, cooldown: 60, severity: 'warning', actions: ['alert','scale'] });
+            rules.push({ ...base, id: Date.now()+4, name: 'Low Agents', metric: 'active_agents', op: '<', threshold: 2, duration: 2, cooldown: 30, severity: 'critical', actions: ['alert','scale'] });
+        } else if (name === 'aggressive') {
+            rules.push({ ...base, id: Date.now(), name: 'Any Latency Rise', metric: 'latency', op: '>', threshold: 100, duration: 1, cooldown: 15, severity: 'warning', actions: ['alert'] });
+            rules.push({ ...base, id: Date.now()+1, name: 'Zero Tolerance Errors', metric: 'error_rate', op: '>', threshold: 1, duration: 1, cooldown: 10, severity: 'critical', actions: ['alert','restart','scale'] });
+            rules.push({ ...base, id: Date.now()+2, name: 'CPU Warning', metric: 'cpu', op: '>', threshold: 60, duration: 2, cooldown: 20, severity: 'warning', actions: ['alert'] });
+            rules.push({ ...base, id: Date.now()+3, name: 'CPU Critical', metric: 'cpu', op: '>', threshold: 85, duration: 1, cooldown: 10, severity: 'critical', actions: ['alert','restart'] });
+            rules.push({ ...base, id: Date.now()+4, name: 'Memory Critical', metric: 'memory', op: '>', threshold: 70, duration: 2, cooldown: 15, severity: 'critical', actions: ['alert','scale'] });
+            rules.push({ ...base, id: Date.now()+5, name: 'Throughput Drop', metric: 'throughput', op: '<', threshold: 50, duration: 2, cooldown: 20, severity: 'warning', actions: ['alert','scale'] });
+        }
+        renderRules();
+    }
+
+    function exportRules(fmt) {
+        const clean = rules.map(({id,hitCount,lastFired,firing,...r}) => r);
+        let text, mime, ext;
+        if (fmt === 'yaml') {
+            text = clean.map(r => {
+                let y = `- name: "${r.name}"\n  metric: ${r.metric}\n  condition: "${r.op} ${r.threshold}"\n  duration: ${r.duration}\n  cooldown: ${r.cooldown}\n  severity: ${r.severity}\n  actions: [${r.actions.join(', ')}]`;
+                if (r.webhook) y += `\n  webhook: "${r.webhook}"`;
+                return y;
+            }).join('\n');
+            text = 'rules:\n' + text; mime = 'text/yaml'; ext = 'yaml';
+        } else {
+            text = JSON.stringify({ rules: clean }, null, 2);
+            mime = 'application/json'; ext = 'json';
+        }
+        const blob = new Blob([text], { type: mime });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = `watchdog-rules.${ext}`; a.click();
+    }
+
+    function importRules() { document.getElementById('importFile').click(); }
+    function handleImport(e) {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const data = JSON.parse(reader.result);
+                if (data.rules && Array.isArray(data.rules)) {
+                    rules.length = 0;
+                    data.rules.forEach(r => rules.push({ ...r, id: Date.now() + Math.random(), hitCount: 0, lastFired: 0, firing: false }));
+                    renderRules();
+                    log('log-ok', `✅ Imported ${rules.length} rules`);
+                }
+            } catch(err) { alert('Invalid JSON file'); }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    }
+
+    function clearAllRules() { rules.length = 0; renderRules(); }
+
+    // Init
+    renderRules();
+    </script>
+</body>
+</html>
