@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox Metrics Simulator — Live Agent Performance Dashboard</title>
+    <meta name="description" content="Watch simulated agent metrics in real-time. See latency, throughput, error rates, and anomaly detection with auto-scaling recommendations.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #facc15;
+            --color-danger: #ef4444;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+        .page-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .page-header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.3rem;
+        }
+        .page-header p { color: var(--color-text-muted); font-size: 0.95rem; }
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .controls button {
+            padding: 0.5rem 1.2rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            background: var(--color-surface);
+            color: var(--color-text);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .controls button:hover { background: var(--color-surface-hover); }
+        .controls button.active {
+            border-color: var(--color-primary);
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--color-primary);
+        }
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .kpi-card {
+            background: var(--color-bg-mid);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .kpi-card .label { font-size: 0.75rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-card .value { font-size: 1.8rem; font-weight: 700; margin: 0.3rem 0; }
+        .kpi-card .trend { font-size: 0.8rem; }
+        .trend.up { color: var(--color-danger); }
+        .trend.down { color: var(--color-success); }
+        .trend.stable { color: var(--color-text-muted); }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto 1.5rem;
+        }
+        @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+        .chart-panel {
+            background: var(--color-bg-mid);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        .chart-panel h3 { font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.75rem; }
+        canvas { width: 100%; height: 200px; }
+        .alerts-panel {
+            max-width: 1200px;
+            margin: 0 auto 1.5rem;
+            background: var(--color-bg-mid);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        .alerts-panel h3 { font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.75rem; }
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .alert-item.anomaly { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--color-danger); }
+        .alert-item.warning { background: rgba(250, 204, 21, 0.1); border-left: 3px solid var(--color-warning); }
+        .alert-item.info { background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--color-primary); }
+        .alert-item.scaling { background: rgba(100, 108, 255, 0.1); border-left: 3px solid var(--color-primary-alt); }
+        .alert-icon { font-size: 1.1rem; }
+        .alert-time { color: var(--color-text-muted); font-size: 0.75rem; margin-left: auto; white-space: nowrap; }
+        .agents-table {
+            max-width: 1200px;
+            margin: 0 auto 1.5rem;
+            background: var(--color-bg-mid);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        .agents-table h3 { font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.75rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: left; padding: 0.5rem; color: var(--color-text-muted); font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        td { padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+        .status-dot.healthy { background: var(--color-success); }
+        .status-dot.degraded { background: var(--color-warning); }
+        .status-dot.down { background: var(--color-danger); }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin: 1rem auto;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .scenario-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        .scenario-badge.normal { background: rgba(74, 222, 128, 0.15); color: var(--color-success); }
+        .scenario-badge.spike { background: rgba(250, 204, 21, 0.15); color: var(--color-warning); }
+        .scenario-badge.outage { background: rgba(239, 68, 68, 0.15); color: var(--color-danger); }
+        .scenario-badge.scaling { background: rgba(100, 108, 255, 0.15); color: var(--color-primary-alt); }
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <h1>📊 Agent Metrics Simulator</h1>
+    <p>Watch real-time agent performance metrics, anomaly detection, and auto-scaling recommendations</p>
+</div>
+
+<div class="controls">
+    <button class="active" onclick="setScenario('normal')">🟢 Normal Load</button>
+    <button onclick="setScenario('spike')">🟡 Traffic Spike</button>
+    <button onclick="setScenario('outage')">🔴 Partial Outage</button>
+    <button onclick="setScenario('scaling')">🔵 Auto-Scale Event</button>
+    <button onclick="togglePause()" id="pauseBtn">⏸ Pause</button>
+</div>
+
+<div class="kpi-row">
+    <div class="kpi-card"><div class="label">Requests / sec</div><div class="value" id="kpi-rps">0</div><div class="trend stable" id="kpi-rps-trend">—</div></div>
+    <div class="kpi-card"><div class="label">Avg Latency</div><div class="value" id="kpi-latency">0ms</div><div class="trend stable" id="kpi-latency-trend">—</div></div>
+    <div class="kpi-card"><div class="label">Error Rate</div><div class="value" id="kpi-error">0%</div><div class="trend stable" id="kpi-error-trend">—</div></div>
+    <div class="kpi-card"><div class="label">Active Agents</div><div class="value" id="kpi-agents">5</div><div class="trend stable" id="kpi-agents-trend">—</div></div>
+    <div class="kpi-card"><div class="label">Anomaly Score</div><div class="value" id="kpi-anomaly">0.0</div><div class="trend stable" id="kpi-anomaly-trend">—</div></div>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-panel"><h3>📈 Throughput (req/s)</h3><canvas id="chart-throughput"></canvas></div>
+    <div class="chart-panel"><h3>⏱ Latency (ms)</h3><canvas id="chart-latency"></canvas></div>
+    <div class="chart-panel"><h3>❌ Error Rate (%)</h3><canvas id="chart-errors"></canvas></div>
+    <div class="chart-panel"><h3>🧠 Anomaly Score</h3><canvas id="chart-anomaly"></canvas></div>
+</div>
+
+<div class="alerts-panel">
+    <h3>🔔 Live Alerts & Recommendations</h3>
+    <div id="alerts-feed"></div>
+</div>
+
+<div class="agents-table">
+    <h3>🤖 Agent Fleet Status</h3>
+    <table>
+        <thead><tr><th>Agent</th><th>Status</th><th>Uptime</th><th>Req Handled</th><th>Avg Latency</th><th>Errors</th></tr></thead>
+        <tbody id="agents-tbody"></tbody>
+    </table>
+</div>
+
+<a href="index.html" class="back-link">← Back to AgentBox Home</a>
+
+<script>
+(function() {
+    const HISTORY_LEN = 60;
+    let scenario = 'normal';
+    let paused = false;
+    let tick = 0;
+    let alerts = [];
+    let prevKpi = { rps: 0, latency: 0, error: 0, agents: 5, anomaly: 0 };
+
+    const series = {
+        throughput: new Array(HISTORY_LEN).fill(0),
+        latency: new Array(HISTORY_LEN).fill(0),
+        errors: new Array(HISTORY_LEN).fill(0),
+        anomaly: new Array(HISTORY_LEN).fill(0)
+    };
+
+    const agentNames = ['agent-alpha', 'agent-beta', 'agent-gamma', 'agent-delta', 'agent-epsilon'];
+    let agentState = agentNames.map(name => ({
+        name, status: 'healthy', uptime: 99.9 + Math.random() * 0.1,
+        reqHandled: Math.floor(Math.random() * 5000) + 1000,
+        avgLatency: 40 + Math.random() * 30, errors: Math.floor(Math.random() * 5)
+    }));
+
+    function rand(min, max) { return min + Math.random() * (max - min); }
+
+    function generateMetrics() {
+        let rps, latency, errorRate, anomalyScore, activeAgents;
+        const t = tick;
+
+        switch (scenario) {
+            case 'normal':
+                rps = rand(80, 150) + Math.sin(t * 0.1) * 20;
+                latency = rand(30, 80);
+                errorRate = rand(0.1, 1.5);
+                anomalyScore = rand(0, 0.3);
+                activeAgents = 5;
+                break;
+            case 'spike':
+                rps = rand(200, 500) + Math.sin(t * 0.2) * 100;
+                latency = rand(100, 300) + (t % 20 < 5 ? rand(100, 200) : 0);
+                errorRate = rand(2, 8);
+                anomalyScore = rand(0.5, 0.9);
+                activeAgents = 5;
+                break;
+            case 'outage':
+                const downAgent = Math.floor(t / 15) % 5;
+                rps = rand(40, 80);
+                latency = rand(150, 500);
+                errorRate = rand(10, 30);
+                anomalyScore = rand(0.7, 1.0);
+                activeAgents = 4;
+                agentState[downAgent].status = 'down';
+                break;
+            case 'scaling':
+                const phase = (t % 40);
+                if (phase < 10) { rps = rand(150, 300); activeAgents = 5; }
+                else if (phase < 20) { rps = rand(300, 500); activeAgents = 5; }
+                else if (phase < 30) { rps = rand(300, 500); activeAgents = 7 + Math.floor(phase / 10); }
+                else { rps = rand(200, 350); activeAgents = 6; }
+                latency = rand(50, 150) * (5 / activeAgents);
+                errorRate = rand(0.5, 3);
+                anomalyScore = phase > 10 && phase < 25 ? rand(0.4, 0.7) : rand(0.1, 0.3);
+                break;
+        }
+
+        return {
+            rps: Math.max(0, Math.round(rps)),
+            latency: Math.max(5, Math.round(latency)),
+            errorRate: Math.max(0, parseFloat(errorRate.toFixed(1))),
+            anomalyScore: parseFloat(Math.min(1, anomalyScore).toFixed(2)),
+            activeAgents
+        };
+    }
+
+    function updateAgents(metrics) {
+        if (scenario !== 'outage') {
+            agentState.forEach(a => a.status = 'healthy');
+        }
+        const extraCount = metrics.activeAgents - agentNames.length;
+        if (extraCount > 0) {
+            while (agentState.length < metrics.activeAgents) {
+                const i = agentState.length;
+                agentState.push({
+                    name: `agent-scale-${i}`, status: 'healthy', uptime: 99.5 + Math.random() * 0.5,
+                    reqHandled: Math.floor(Math.random() * 500), avgLatency: 50 + Math.random() * 20, errors: 0
+                });
+            }
+        } else {
+            agentState = agentState.slice(0, Math.max(5, metrics.activeAgents));
+        }
+        agentState.forEach(a => {
+            if (a.status !== 'down') {
+                a.reqHandled += Math.floor(metrics.rps / metrics.activeAgents);
+                a.avgLatency = a.avgLatency * 0.8 + metrics.latency * 0.2 + rand(-5, 5);
+                if (Math.random() < metrics.errorRate / 100) a.errors++;
+                a.status = a.avgLatency > 200 ? 'degraded' : 'healthy';
+            }
+        });
+    }
+
+    function checkAnomalies(m) {
+        if (m.anomalyScore > 0.8 && Math.random() < 0.3) {
+            addAlert('anomaly', '🚨 High anomaly score detected — possible system degradation');
+        }
+        if (m.errorRate > 15 && Math.random() < 0.4) {
+            addAlert('anomaly', `❌ Error rate spike: ${m.errorRate}% — investigating root cause`);
+        }
+        if (m.latency > 300 && Math.random() < 0.3) {
+            addAlert('warning', `⚠️ Latency above threshold: ${m.latency}ms (SLA: 200ms)`);
+        }
+        if (m.rps > 400 && Math.random() < 0.2) {
+            addAlert('scaling', `📐 Auto-scale recommendation: Add ${Math.ceil(m.rps / 100) - m.activeAgents} agents to handle ${m.rps} req/s`);
+        }
+        if (scenario === 'scaling' && tick % 40 === 20) {
+            addAlert('info', '🔵 Auto-scaling triggered — provisioning new agent instances');
+        }
+        if (scenario === 'outage') {
+            const down = agentState.find(a => a.status === 'down');
+            if (down && Math.random() < 0.2) {
+                addAlert('anomaly', `💀 ${down.name} unresponsive — failover in progress`);
+            }
+        }
+    }
+
+    function addAlert(type, message) {
+        const now = new Date();
+        const time = now.toLocaleTimeString();
+        alerts.unshift({ type, message, time });
+        if (alerts.length > 15) alerts.pop();
+        renderAlerts();
+    }
+
+    function renderAlerts() {
+        const el = document.getElementById('alerts-feed');
+        el.innerHTML = alerts.length === 0
+            ? '<div style="color:var(--color-text-muted);font-size:0.85rem;">No alerts yet — metrics are nominal</div>'
+            : alerts.map(a => `<div class="alert-item ${a.type}"><span class="alert-icon">${
+                a.type === 'anomaly' ? '🔴' : a.type === 'warning' ? '🟡' : a.type === 'scaling' ? '🔵' : 'ℹ️'
+            }</span><span>${a.message}</span><span class="alert-time">${a.time}</span></div>`).join('');
+    }
+
+    function updateKPI(m) {
+        const set = (id, val, prev, invert) => {
+            document.getElementById(id).textContent = val;
+            const trendEl = document.getElementById(id + '-trend');
+            const diff = parseFloat(String(val).replace(/[^0-9.\-]/g, '')) - prev;
+            if (Math.abs(diff) < 0.5) { trendEl.textContent = '—'; trendEl.className = 'trend stable'; }
+            else if (diff > 0) { trendEl.textContent = '▲ ' + Math.abs(diff).toFixed(1); trendEl.className = invert ? 'trend up' : 'trend down'; }
+            else { trendEl.textContent = '▼ ' + Math.abs(diff).toFixed(1); trendEl.className = invert ? 'trend down' : 'trend up'; }
+        };
+        set('kpi-rps', m.rps, prevKpi.rps, false);
+        set('kpi-latency', m.latency + 'ms', prevKpi.latency, true);
+        set('kpi-error', m.errorRate + '%', prevKpi.error, true);
+        set('kpi-agents', m.activeAgents, prevKpi.agents, false);
+        set('kpi-anomaly', m.anomalyScore, prevKpi.anomaly, true);
+        prevKpi = { rps: m.rps, latency: m.latency, error: m.errorRate, agents: m.activeAgents, anomaly: m.anomalyScore };
+    }
+
+    function pushSeries(m) {
+        series.throughput.push(m.rps); series.throughput.shift();
+        series.latency.push(m.latency); series.latency.shift();
+        series.errors.push(m.errorRate); series.errors.shift();
+        series.anomaly.push(m.anomalyScore); series.anomaly.shift();
+    }
+
+    function drawChart(canvasId, data, color, maxOverride) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        const w = rect.width, h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const max = maxOverride || Math.max(...data, 1) * 1.2;
+        const step = w / (data.length - 1);
+
+        // Fill
+        ctx.beginPath();
+        ctx.moveTo(0, h);
+        data.forEach((v, i) => ctx.lineTo(i * step, h - (v / max) * h * 0.9));
+        ctx.lineTo(w, h);
+        ctx.closePath();
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, color + '40');
+        grad.addColorStop(1, color + '05');
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Line
+        ctx.beginPath();
+        data.forEach((v, i) => {
+            const x = i * step, y = h - (v / max) * h * 0.9;
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Latest value label
+        const last = data[data.length - 1];
+        ctx.fillStyle = color;
+        ctx.font = '11px sans-serif';
+        ctx.fillText(typeof last === 'number' ? (last % 1 === 0 ? last : last.toFixed(1)) : last, w - 40, 15);
+    }
+
+    function renderAgentsTable() {
+        const tbody = document.getElementById('agents-tbody');
+        tbody.innerHTML = agentState.map(a => `<tr>
+            <td><span class="status-dot ${a.status}"></span>${a.name}</td>
+            <td>${a.status}</td>
+            <td>${a.uptime.toFixed(1)}%</td>
+            <td>${a.reqHandled.toLocaleString()}</td>
+            <td>${Math.round(a.avgLatency)}ms</td>
+            <td>${a.errors}</td>
+        </tr>`).join('');
+    }
+
+    function update() {
+        if (paused) return;
+        tick++;
+        const m = generateMetrics();
+        updateKPI(m);
+        pushSeries(m);
+        updateAgents(m);
+        checkAnomalies(m);
+
+        drawChart('chart-throughput', series.throughput, '#00d4ff');
+        drawChart('chart-latency', series.latency, '#facc15');
+        drawChart('chart-errors', series.errors, '#ef4444');
+        drawChart('chart-anomaly', series.anomaly, '#7b2cbf', 1.0);
+        renderAgentsTable();
+    }
+
+    window.setScenario = function(s) {
+        scenario = s;
+        alerts = [];
+        tick = 0;
+        renderAlerts();
+        document.querySelectorAll('.controls button').forEach(b => {
+            b.classList.toggle('active', b.textContent.toLowerCase().includes(s));
+        });
+    };
+
+    window.togglePause = function() {
+        paused = !paused;
+        document.getElementById('pauseBtn').textContent = paused ? '▶ Resume' : '⏸ Pause';
+    };
+
+    renderAlerts();
+    setInterval(update, 1000);
+    update();
+})();
+</script>
+</body>
+</html>
