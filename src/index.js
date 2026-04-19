@@ -287,9 +287,14 @@
 
         /**
          * Load all feedback entries from localStorage.
+         * Uses StorageUtil when available for consistent error handling.
          * @returns {Array<{score: number, comment: string, timestamp: number}>}
          */
         _load: function () {
+            if (typeof StorageUtil !== 'undefined') {
+                var parsed = StorageUtil.getJSON(Feedback._STORAGE_KEY, []);
+                return Array.isArray(parsed) ? parsed : [];
+            }
             if (typeof localStorage === 'undefined') return [];
             try {
                 var raw = localStorage.getItem(Feedback._STORAGE_KEY);
@@ -299,9 +304,14 @@
 
         /**
          * Save feedback entries to localStorage.
+         * Uses StorageUtil when available for consistent error handling.
          * @param {Array} entries
          */
         _save: function (entries) {
+            if (typeof StorageUtil !== 'undefined') {
+                StorageUtil.setJSON(Feedback._STORAGE_KEY, entries);
+                return;
+            }
             if (typeof localStorage === 'undefined') return;
             try { localStorage.setItem(Feedback._STORAGE_KEY, JSON.stringify(entries)); } catch (e) { /* quota */ }
         },
