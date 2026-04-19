@@ -100,10 +100,10 @@ var CapacityPlanner = (function () {
       _resultMessages.textContent = totalMonthly.toLocaleString() + ' msgs/month';
     }
 
-    // Find the best plan
+    // Find the best plan based on per-user daily usage (msgLimit is per-user)
     var bestPlan = PLANS[PLANS.length - 1];
     for (var j = 0; j < PLANS.length; j++) {
-      if (PLANS[j].msgLimit >= totalDaily) {
+      if (PLANS[j].msgLimit >= effectiveDaily) {
         bestPlan = PLANS[j];
         break;
       }
@@ -120,8 +120,8 @@ var CapacityPlanner = (function () {
       _resultCost.textContent = totalCost === 0 ? 'Free!' : '$' + totalCost + '/mo';
     }
 
-    // Utilization bar
-    var utilization = Math.min(100, Math.round((totalDaily / bestPlan.msgLimit) * 100));
+    // Utilization bar (per-user usage vs per-user plan limit)
+    var utilization = Math.min(100, Math.round((effectiveDaily / bestPlan.msgLimit) * 100));
     if (_resultBar) {
       _resultBar.style.width = utilization + '%';
       _resultBar.style.backgroundColor = utilization > 85 ? '#dc3545' : utilization > 60 ? '#ffc107' : '#198754';
