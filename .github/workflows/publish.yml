@@ -1,4 +1,4 @@
-name: Publish to npm
+name: Publish to npm & GitHub Packages
 
 on:
   release:
@@ -8,15 +8,16 @@ on:
 permissions:
   contents: read
   id-token: write
+  packages: write
 
 jobs:
-  publish:
-    name: Publish
+  publish-npm:
+    name: Publish to npm
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
@@ -27,7 +28,42 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Verify package contents
+        run: npm pack --dry-run
+
       - name: Publish to npm
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-gpr:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    needs: publish-npm
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          scope: '@sauravbhattacharya001'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Publish to GitHub Packages
+        run: |
+          # Scope the package for GitHub Packages
+          node -e "
+            const pkg = require('./package.json');
+            pkg.name = '@sauravbhattacharya001/agentbox-landing';
+            pkg.publishConfig = { registry: 'https://npm.pkg.github.com' };
+            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
