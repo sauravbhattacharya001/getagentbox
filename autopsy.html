@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Autopsy — Post-Mortem Diagnosis Tool | AgentBox</title>
+    <meta name="description" content="Interactive post-mortem diagnosis for failed agent runs. Walk through root cause analysis, blame assignment, and prevention planning.">
+    <style>
+        :root{--color-primary:#00d4ff;--color-primary-alt:#646cff;--color-accent:#7b2cbf;--color-success:#4ade80;--color-warning:#facc15;--color-danger:#ef4444;--bg:#0a0a1a;--bg-card:#12122a;--bg-card-hover:#1a1a3a;--text:#e0e0f0;--text-dim:#8888aa;--border:#2a2a4a;--radius:12px}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+        a{color:var(--color-primary);text-decoration:none}
+        .nav{background:#08081a;border-bottom:1px solid var(--border);padding:0.8rem 2rem;display:flex;align-items:center;gap:1.5rem;position:sticky;top:0;z-index:100}
+        .nav-logo{font-size:1.2rem;font-weight:700}
+        .nav-title{font-size:0.95rem;color:var(--text-dim)}
+        .container{max-width:1200px;margin:0 auto;padding:2rem 1.5rem}
+        .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+        .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center}
+        .stat-card .val{font-size:1.8rem;font-weight:700;color:var(--color-primary)}
+        .stat-card .lbl{font-size:0.8rem;color:var(--text-dim);margin-top:0.25rem}
+        .layout{display:grid;grid-template-columns:280px 1fr;gap:1.5rem}
+        .sidebar{display:flex;flex-direction:column;gap:0.5rem}
+        .sidebar h3{font-size:0.9rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem}
+        .history-item{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.7rem;cursor:pointer;transition:all 0.2s}
+        .history-item:hover{border-color:var(--color-primary);background:var(--bg-card-hover)}
+        .history-item .hi-id{font-weight:600;font-size:0.85rem;color:var(--color-primary)}
+        .history-item .hi-type{font-size:0.75rem;color:var(--text-dim)}
+        .history-item .hi-date{font-size:0.7rem;color:var(--text-dim)}
+        .history-empty{font-size:0.85rem;color:var(--text-dim);font-style:italic}
+        .main{display:flex;flex-direction:column;gap:1.5rem}
+        .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}
+        .card h2{font-size:1.1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .form-group{display:flex;flex-direction:column;gap:0.3rem}
+        .form-group.full{grid-column:1/-1}
+        label{font-size:0.85rem;color:var(--text-dim)}
+        input,select,textarea{background:#0e0e22;border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.8rem;color:var(--text);font-size:0.9rem;font-family:inherit}
+        input:focus,select:focus,textarea:focus{outline:none;border-color:var(--color-primary)}
+        textarea{resize:vertical;min-height:80px}
+        .stars{display:flex;gap:0.3rem;cursor:pointer}
+        .stars span{font-size:1.5rem;color:var(--border);transition:color 0.15s}
+        .stars span.active{color:var(--color-warning)}
+        .btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.7rem 1.5rem;border:none;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+        .btn-primary{background:linear-gradient(135deg,var(--color-primary),var(--color-primary-alt));color:#000}
+        .btn-primary:hover{opacity:0.9;transform:translateY(-1px)}
+        .btn-secondary{background:var(--bg-card-hover);color:var(--text);border:1px solid var(--border)}
+        .btn-secondary:hover{border-color:var(--color-primary)}
+        .btn-sm{padding:0.4rem 0.8rem;font-size:0.8rem}
+        .steps{display:flex;flex-direction:column;gap:1rem}
+        .step{background:#0e0e22;border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem;opacity:0;transform:translateY(20px);transition:all 0.5s ease}
+        .step.visible{opacity:1;transform:translateY(0)}
+        .step-header{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem}
+        .step-num{width:28px;height:28px;border-radius:50%;background:var(--color-primary);color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem}
+        .step-title{font-weight:600;font-size:0.95rem}
+        .step-status{margin-left:auto;font-size:0.8rem;padding:0.2rem 0.6rem;border-radius:20px}
+        .step-status.running{background:rgba(0,212,255,0.15);color:var(--color-primary);animation:pulse 1.5s infinite}
+        .step-status.done{background:rgba(74,222,128,0.15);color:var(--color-success)}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        .qa-block{margin:0.5rem 0}
+        .qa-q{font-size:0.9rem;margin-bottom:0.5rem}
+        .qa-btns{display:flex;gap:0.5rem}
+        .qa-btn{padding:0.4rem 1.2rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text);cursor:pointer;font-size:0.85rem;transition:all 0.2s}
+        .qa-btn:hover{border-color:var(--color-primary)}
+        .qa-btn.selected{background:var(--color-primary);color:#000;border-color:var(--color-primary)}
+        .timeline{position:relative;padding-left:2rem;margin:0.5rem 0}
+        .timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+        .tl-event{position:relative;margin-bottom:0.8rem;padding:0.5rem 0.8rem;background:var(--bg-card);border-radius:8px;font-size:0.85rem}
+        .tl-event::before{content:'';position:absolute;left:-1.65rem;top:0.7rem;width:10px;height:10px;border-radius:50%;background:var(--color-primary)}
+        .tl-event.tl-warn::before{background:var(--color-warning)}
+        .tl-event.tl-err::before{background:var(--color-danger)}
+        .tl-time{font-size:0.75rem;color:var(--text-dim)}
+        canvas{max-width:100%}
+        .prevention li{margin:0.4rem 0;padding:0.5rem;background:var(--bg-card);border-radius:6px;font-size:0.9rem;list-style:none}
+        .prevention li::before{content:'🛡️';margin-right:0.5rem}
+        .self-assess{background:linear-gradient(135deg,rgba(123,44,191,0.1),rgba(0,212,255,0.1));border:1px solid var(--color-accent);border-radius:var(--radius);padding:1.2rem;margin-top:0.8rem;font-style:italic;font-size:0.9rem;line-height:1.7}
+        .risk-forecast{margin-top:0.8rem;padding:1rem;background:#0e0e22;border-radius:8px}
+        .risk-bar{display:flex;align-items:center;gap:0.5rem;margin:0.3rem 0;font-size:0.85rem}
+        .risk-bar-fill{height:18px;border-radius:4px;min-width:4px;transition:width 0.5s}
+        .risk-bar-label{min-width:110px;color:var(--text-dim)}
+        .report-box{background:#0e0e22;border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'Courier New',monospace;font-size:0.82rem;white-space:pre-wrap;max-height:400px;overflow-y:auto;line-height:1.5}
+        .hidden{display:none}
+        @media(max-width:768px){.layout{grid-template-columns:1fr}.stats-bar{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr}.sidebar{order:2}}
+    </style>
+</head>
+<body>
+<nav class="nav">
+    <a href="index.html" class="nav-logo">🤖 AgentBox</a>
+    <span class="nav-title">Agent Autopsy — Post-Mortem Diagnosis</span>
+</nav>
+<div class="container">
+    <div class="stats-bar" id="statsBar">
+        <div class="stat-card"><div class="val" id="statTotal">0</div><div class="lbl">Total Autopsies</div></div>
+        <div class="stat-card"><div class="val" id="statCommonType">—</div><div class="lbl">Most Common Failure</div></div>
+        <div class="stat-card"><div class="val" id="statTopBlame">—</div><div class="lbl">Most Blamed</div></div>
+        <div class="stat-card"><div class="val" id="statAvgSev">—</div><div class="lbl">Avg Severity</div></div>
+    </div>
+    <div class="layout">
+        <aside class="sidebar">
+            <h3>📂 History</h3>
+            <div id="historyList"><div class="history-empty">No autopsies yet</div></div>
+        </aside>
+        <div class="main">
+            <div class="card" id="inputCard">
+                <h2>🔬 New Autopsy</h2>
+                <div class="form-grid">
+                    <div class="form-group"><label>Agent Name</label><input id="agentName" type="text" placeholder="e.g. ResearchBot-7"></div>
+                    <div class="form-group"><label>Failure Type</label>
+                        <select id="failureType">
+                            <option value="timeout">⏱️ Timeout</option>
+                            <option value="crash">💥 Crash</option>
+                            <option value="wrong_output">❌ Wrong Output</option>
+                            <option value="infinite_loop">🔄 Infinite Loop</option>
+                            <option value="rate_limited">🚦 Rate Limited</option>
+                            <option value="memory_exceeded">🧠 Memory Exceeded</option>
+                            <option value="auth_failure">🔒 Auth Failure</option>
+                            <option value="unknown">❓ Unknown</option>
+                        </select>
+                    </div>
+                    <div class="form-group full"><label>Error Message</label><textarea id="errorMsg" placeholder="Paste the error output or describe what happened..."></textarea></div>
+                    <div class="form-group"><label>Timestamp</label><input id="timestamp" type="text" readonly></div>
+                    <div class="form-group"><label>Severity</label><div class="stars" id="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div></div>
+                </div>
+                <div style="margin-top:1rem;display:flex;gap:0.8rem">
+                    <button class="btn btn-primary" id="beginBtn">🔬 Begin Autopsy</button>
+                    <button class="btn btn-secondary" id="clearBtn">Clear</button>
+                </div>
+            </div>
+            <div class="card hidden" id="autopsyCard">
+                <h2>🩺 Autopsy in Progress</h2>
+                <div class="steps" id="stepsContainer"></div>
+            </div>
+            <div class="card hidden" id="reportCard">
+                <h2>📋 Autopsy Report</h2>
+                <div class="report-box" id="reportBox"></div>
+                <div style="margin-top:1rem;display:flex;gap:0.8rem">
+                    <button class="btn btn-primary btn-sm" id="copyBtn">📋 Copy Report</button>
+                    <button class="btn btn-secondary btn-sm" id="newBtn">🔬 New Autopsy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    const STORAGE_KEY='agentbox_autopsies';
+    let severity=3;
+    let history=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+    let currentAutopsy=null;
+
+    const $=id=>document.getElementById(id);
+    const ts=$('timestamp');
+    ts.value=new Date().toISOString().replace('T',' ').slice(0,19)+' UTC';
+
+    // Stars
+    const starsEl=$('stars');
+    const starSpans=starsEl.querySelectorAll('span');
+    function setSev(n){severity=n;starSpans.forEach((s,i)=>s.classList.toggle('active',i<n));}
+    setSev(3);
+    starSpans.forEach((s,i)=>s.addEventListener('click',()=>setSev(i+1)));
+
+    // Stats
+    function updateStats(){
+        $('statTotal').textContent=history.length;
+        if(history.length===0){$('statCommonType').textContent='—';$('statTopBlame').textContent='—';$('statAvgSev').textContent='—';return;}
+        const fc={};history.forEach(h=>{fc[h.failureType]=(fc[h.failureType]||0)+1;});
+        $('statCommonType').textContent=Object.entries(fc).sort((a,b)=>b[1]-a[1])[0][0].replace('_',' ');
+        const bc={};history.forEach(h=>{if(h.blame){Object.entries(h.blame).forEach(([k,v])=>{bc[k]=(bc[k]||0)+v;});}});
+        const topB=Object.entries(bc).sort((a,b)=>b[1]-a[1]);
+        $('statTopBlame').textContent=topB.length?topB[0][0]:'—';
+        $('statAvgSev').textContent=(history.reduce((a,h)=>a+h.severity,0)/history.length).toFixed(1)+'★';
+    }
+
+    // History sidebar
+    function renderHistory(){
+        const el=$('historyList');
+        if(history.length===0){el.innerHTML='<div class="history-empty">No autopsies yet</div>';return;}
+        el.innerHTML=history.slice().reverse().map((h,i)=>`<div class="history-item" data-idx="${history.length-1-i}"><div class="hi-id">${h.caseId}</div><div class="hi-type">${h.failureType.replace('_',' ')} — ${h.agentName}</div><div class="hi-date">${h.timestamp}</div></div>`).join('');
+        el.querySelectorAll('.history-item').forEach(item=>{
+            item.addEventListener('click',()=>{
+                const idx=parseInt(item.dataset.idx);
+                showReport(history[idx]);
+            });
+        });
+    }
+
+    // Diagnosis logic
+    const CAUSES={
+        timeout:{primary:'Infrastructure',questions:['Was the agent waiting on an external API?','Did the task involve large data processing?','Has this timeout happened before?'],causes:['API response delay exceeded configured timeout','Resource contention causing slow execution','Network latency spike to downstream service'],narratives:['I was just sitting there, waiting... and waiting. The API I depend on ghosted me like a bad date.','Look, I tried my best. But when your infrastructure gives me a straw to drink the ocean, what do you expect?']},
+        crash:{primary:'Agent Logic',questions:['Did the crash happen during initialization?','Was there a stack trace mentioning null/undefined?','Was the agent recently updated?'],causes:['Unhandled exception in business logic','Null reference in data pipeline','Memory corruption from unsafe operation'],narratives:['One moment I was happily processing data, the next — darkness. No warning, no graceful exit. Just... void.','I blame the developer. They forgot to handle the edge case where reality doesn\'t match their optimistic assumptions.']},
+        wrong_output:{primary:'Data Quality',questions:['Was the input data recently changed?','Does the output look partially correct?','Were any data sources unavailable?'],causes:['Input data schema drift caused misinterpretation','Stale cache served outdated results','Missing validation allowed garbage-in-garbage-out'],narratives:['I gave you exactly what you asked for. Unfortunately, what you asked for was based on garbage data. GIGO, baby.','I\'m not wrong — I\'m creatively interpreting ambiguous requirements.']},
+        infinite_loop:{primary:'Agent Logic',questions:['Does the agent have recursion?','Was there a retry mechanism involved?','Did resource usage spike before detection?'],causes:['Unbounded retry loop without backoff','Recursive call missing base case','Circular dependency in task graph'],narratives:['Round and round I went, like a dog chasing its tail. Except I\'m an agent and tails are abstract concepts.','I was stuck in an existential loop, questioning whether I was looping because I was supposed to or because nobody told me to stop.']},
+        rate_limited:{primary:'External API',questions:['Were multiple agents sharing the same API key?','Did request volume recently increase?','Was there a retry-after header?'],causes:['Burst traffic exceeded API rate limit','Missing rate limiter in agent pipeline','Shared API key exhausted quota'],narratives:['They told me to go fast. The API told me to slow down. I was caught in the middle, a victim of conflicting priorities.','429 Too Many Requests. Story of my life.']},
+        memory_exceeded:{primary:'Infrastructure',questions:['Was the agent processing large files?','Did memory grow gradually or spike suddenly?','Were there memory limits configured?'],causes:['Unbounded data accumulation in memory','Large payload loaded entirely into RAM','Memory leak from unclosed resources'],narratives:['I tried to fit the entire dataset in my brain. Turns out even digital brains have limits. Who knew?','I was hoarding data like a digital pack rat until the OOM killer came knocking.']},
+        auth_failure:{primary:'Configuration',questions:['Were credentials recently rotated?','Is this a new deployment?','Did other agents authenticate successfully?'],causes:['Expired or rotated API credentials','Misconfigured service account permissions','Token refresh mechanism failure'],narratives:['They changed the locks and forgot to give me the new key. Classic.','I showed up to work and security said I don\'t work here anymore. Very existential.']},
+        unknown:{primary:'Agent Logic',questions:['Were there any logs before the failure?','Did the agent respond to health checks?','Was the environment recently changed?'],causes:['Silent failure with insufficient logging','Transient infrastructure issue','Undocumented dependency failure'],narratives:['I don\'t even know what happened. One moment I existed, the next... I didn\'t. Philosophy majors call this "being".','Error: unknown. Cause: unknown. Recommendation: know things better next time.']}
+    };
+
+    const BLAME_CATS=['Agent Logic','Infrastructure','External API','Configuration','Data Quality'];
+
+    function generateBlame(type,answers){
+        const base={};BLAME_CATS.forEach(c=>base[c]=10);
+        base[CAUSES[type].primary]=35;
+        // Adjust based on answers
+        if(answers[0]){base['External API']+=15;base['Agent Logic']-=10;}
+        if(answers[1]){base['Infrastructure']+=10;base['Data Quality']+=5;}
+        if(answers[2]){base['Configuration']+=10;}
+        const total=Object.values(base).reduce((a,b)=>a+b,0);
+        Object.keys(base).forEach(k=>base[k]=Math.round(base[k]/total*100));
+        // Ensure sums to 100
+        const diff=100-Object.values(base).reduce((a,b)=>a+b,0);
+        base[CAUSES[type].primary]+=diff;
+        return base;
+    }
+
+    function generateTimeline(type,agentName){
+        const events=[
+            {t:'-5:00',text:`${agentName} initialized successfully`,cls:''},
+            {t:'-4:30',text:'Configuration loaded, dependencies resolved',cls:''},
+            {t:'-3:00',text:'Task received, beginning execution',cls:''},
+        ];
+        const mid={
+            timeout:[{t:'-2:00',text:'External API call initiated',cls:'tl-warn'},{t:'-1:00',text:'Still waiting for response...',cls:'tl-warn'},{t:'0:00',text:'Timeout threshold exceeded — agent terminated',cls:'tl-err'}],
+            crash:[{t:'-2:00',text:'Processing data batch #47',cls:''},{t:'-0:30',text:'Unexpected null reference encountered',cls:'tl-warn'},{t:'0:00',text:'Unhandled exception — process crashed',cls:'tl-err'}],
+            wrong_output:[{t:'-2:00',text:'Input data received and parsed',cls:''},{t:'-1:00',text:'Transformation pipeline completed',cls:'tl-warn'},{t:'0:00',text:'Output delivered — validation failed downstream',cls:'tl-err'}],
+            infinite_loop:[{t:'-2:00',text:'Entering retry logic',cls:''},{t:'-1:00',text:'CPU usage: 98%, iteration count: 50,000',cls:'tl-warn'},{t:'0:00',text:'Watchdog killed process after loop detection',cls:'tl-err'}],
+            rate_limited:[{t:'-2:00',text:'Burst of 500 requests sent',cls:'tl-warn'},{t:'-1:00',text:'429 responses received, retrying...',cls:'tl-warn'},{t:'0:00',text:'All retries exhausted, operation failed',cls:'tl-err'}],
+            memory_exceeded:[{t:'-2:00',text:'Loading dataset into memory',cls:''},{t:'-1:00',text:'Memory usage: 3.8GB / 4GB limit',cls:'tl-warn'},{t:'0:00',text:'OOM killer terminated process',cls:'tl-err'}],
+            auth_failure:[{t:'-2:00',text:'Requesting auth token refresh',cls:''},{t:'-1:00',text:'Token refresh returned 401',cls:'tl-warn'},{t:'0:00',text:'All authentication attempts failed',cls:'tl-err'}],
+            unknown:[{t:'-2:00',text:'Last known activity logged',cls:''},{t:'-1:00',text:'Heartbeat check missed',cls:'tl-warn'},{t:'0:00',text:'Agent unresponsive — declared dead',cls:'tl-err'}]
+        };
+        return events.concat(mid[type]||mid.unknown);
+    }
+
+    function generatePrevention(type,answers){
+        const plans={
+            timeout:['Implement circuit breaker pattern with configurable timeout thresholds','Add request deadline propagation across service boundaries','Set up adaptive timeout based on historical P95 latency','Configure fallback responses for degraded mode operation','Add timeout alerting with Slack/webhook notifications'],
+            crash:['Add comprehensive null checks and input validation','Implement graceful shutdown handlers','Add structured error logging with full context capture','Set up crash recovery with automatic restart','Write unit tests for edge cases in failure path'],
+            wrong_output:['Implement input schema validation with JSON Schema','Add output assertion checks before delivery','Set up data drift monitoring on input sources','Add checksums/hashes for data integrity verification','Create golden test datasets for regression testing'],
+            infinite_loop:['Add maximum iteration guards on all loops','Implement exponential backoff for retry logic','Set up CPU/memory watchdog with auto-kill','Add cycle detection in task dependency graphs','Log iteration counts for anomaly detection'],
+            rate_limited:['Implement token bucket rate limiter','Add rate limit headers to monitoring dashboard','Use separate API keys per agent instance','Implement request queuing with priority levels','Add rate limit forecasting based on usage patterns'],
+            memory_exceeded:['Implement streaming/chunked processing for large data','Add memory usage monitoring with soft limits','Set up garbage collection tuning','Use memory-mapped files for large datasets','Implement data pagination in processing pipelines'],
+            auth_failure:['Set up credential rotation alerts 7 days before expiry','Implement automatic token refresh with jitter','Add credential health checks to startup sequence','Use vault/secret manager with auto-rotation','Implement fallback authentication methods'],
+            unknown:['Add comprehensive structured logging at all decision points','Implement distributed tracing with correlation IDs','Set up health check endpoints with deep checks','Add pre-mortem logging that captures state periodically','Implement agent self-diagnostics on startup']
+        };
+        return (plans[type]||plans.unknown).slice(0,4+Math.min(answers.filter(Boolean).length,1));
+    }
+
+    // Run autopsy
+    async function beginAutopsy(){
+        const agentName=$('agentName').value.trim()||'UnnamedAgent';
+        const failureType=$('failureType').value;
+        const errorMsg=$('errorMsg').value.trim()||'No error message provided';
+        const timestamp=$('timestamp').value;
+
+        $('autopsyCard').classList.remove('hidden');
+        $('reportCard').classList.add('hidden');
+        const stepsEl=$('stepsContainer');
+        stepsEl.innerHTML='';
+
+        const caseId='AX-'+Date.now().toString(36).toUpperCase().slice(-6);
+        const cause=CAUSES[failureType];
+
+        // Step 1: Symptom Classification
+        const s1=createStep(1,'Symptom Classification','Analyzing failure signature...');
+        stepsEl.appendChild(s1.el);
+        await delay(400);s1.el.classList.add('visible');
+        await delay(800);
+        const keywords=errorMsg.toLowerCase();
+        let symptomClass=failureType.replace('_',' ');
+        if(keywords.includes('timeout')||keywords.includes('timed out'))symptomClass='timeout';
+        if(keywords.includes('null')||keywords.includes('undefined')||keywords.includes('segfault'))symptomClass='null reference / crash';
+        if(keywords.includes('oom')||keywords.includes('memory'))symptomClass='memory exhaustion';
+        if(keywords.includes('429')||keywords.includes('rate'))symptomClass='rate limiting';
+        s1.body.innerHTML=`<div style="margin-top:0.5rem"><strong>Classification:</strong> ${symptomClass}<br><strong>Primary suspect:</strong> ${cause.primary}<br><strong>Error fingerprint:</strong> <code style="color:var(--color-danger)">${errorMsg.slice(0,80)}${errorMsg.length>80?'...':''}</code></div>`;
+        s1.status('done','✓ Done');
+
+        // Step 2: Root Cause Analysis (interactive Q&A)
+        const s2=createStep(2,'Root Cause Analysis','Answer these questions to narrow down the cause...');
+        stepsEl.appendChild(s2.el);
+        await delay(300);s2.el.classList.add('visible');
+        const answers=[];
+        for(let i=0;i<cause.questions.length;i++){
+            const ans=await askQuestion(s2.body,cause.questions[i],i);
+            answers.push(ans);
+            await delay(300);
+        }
+        const rootCause=cause.causes[Math.min(answers.filter(Boolean).length,cause.causes.length-1)];
+        const rcDiv=document.createElement('div');
+        rcDiv.style.cssText='margin-top:0.8rem;padding:0.6rem;background:rgba(239,68,68,0.1);border-radius:8px;border-left:3px solid var(--color-danger)';
+        rcDiv.innerHTML=`<strong>Root Cause:</strong> ${rootCause}`;
+        s2.body.appendChild(rcDiv);
+        s2.status('done','✓ Done');
+
+        // Step 3: Blame Assignment (pie chart)
+        const s3=createStep(3,'Blame Assignment','Calculating responsibility distribution...');
+        stepsEl.appendChild(s3.el);
+        await delay(300);s3.el.classList.add('visible');
+        await delay(600);
+        const blame=generateBlame(failureType,answers);
+        const canvas=document.createElement('canvas');
+        canvas.width=300;canvas.height=200;
+        canvas.style.cssText='margin:0.5rem auto;display:block';
+        s3.body.appendChild(canvas);
+        drawPieChart(canvas,blame);
+        const legendDiv=document.createElement('div');
+        legendDiv.style.cssText='display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-top:0.5rem';
+        const colors=['#00d4ff','#646cff','#7b2cbf','#4ade80','#facc15'];
+        BLAME_CATS.forEach((c,i)=>{
+            legendDiv.innerHTML+=`<span style="font-size:0.8rem;display:flex;align-items:center;gap:0.3rem"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};display:inline-block"></span>${c}: ${blame[c]}%</span>`;
+        });
+        s3.body.appendChild(legendDiv);
+        s3.status('done','✓ Done');
+
+        // Step 4: Timeline Reconstruction
+        const s4=createStep(4,'Timeline Reconstruction','Rebuilding events leading to failure...');
+        stepsEl.appendChild(s4.el);
+        await delay(300);s4.el.classList.add('visible');
+        await delay(500);
+        const timeline=generateTimeline(failureType,agentName);
+        const tlDiv=document.createElement('div');tlDiv.className='timeline';
+        timeline.forEach(ev=>{
+            tlDiv.innerHTML+=`<div class="tl-event ${ev.cls}"><div class="tl-time">${ev.t}</div>${ev.text}</div>`;
+        });
+        s4.body.appendChild(tlDiv);
+        s4.status('done','✓ Done');
+
+        // Step 5: Prevention Plan
+        const s5=createStep(5,'Prevention Plan','Generating actionable recommendations...');
+        stepsEl.appendChild(s5.el);
+        await delay(300);s5.el.classList.add('visible');
+        await delay(500);
+        const prevention=generatePrevention(failureType,answers);
+        const ulEl=document.createElement('ul');ulEl.className='prevention';
+        prevention.forEach(p=>{const li=document.createElement('li');li.textContent=p;ulEl.appendChild(li);});
+        s5.body.appendChild(ulEl);
+
+        // Self-assessment
+        const selfDiv=document.createElement('div');selfDiv.className='self-assess';
+        const narrative=cause.narratives[Math.floor(Math.random()*cause.narratives.length)];
+        selfDiv.innerHTML=`<strong>🤖 Agent's Self-Assessment:</strong><br>"${narrative}"`;
+        s5.body.appendChild(selfDiv);
+
+        // Risk Forecast
+        if(history.length>0){
+            const riskDiv=document.createElement('div');riskDiv.className='risk-forecast';
+            riskDiv.innerHTML='<strong>📊 Risk Forecast</strong> (based on past autopsies)<br>';
+            const freq={};history.forEach(h=>{freq[h.failureType]=(freq[h.failureType]||0)+1;});
+            freq[failureType]=(freq[failureType]||0)+1;
+            const total=Object.values(freq).reduce((a,b)=>a+b,0);
+            const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+            const barColors=['var(--color-danger)','var(--color-warning)','var(--color-primary)','var(--color-success)','var(--text-dim)'];
+            sorted.slice(0,5).forEach(([k,v],i)=>{
+                const pct=Math.round(v/total*100);
+                riskDiv.innerHTML+=`<div class="risk-bar"><span class="risk-bar-label">${k.replace('_',' ')}</span><div class="risk-bar-fill" style="width:${pct*2}px;background:${barColors[i]}"></div><span>${pct}%</span></div>`;
+            });
+            s5.body.appendChild(riskDiv);
+        }
+        s5.status('done','✓ Done');
+
+        // Save
+        currentAutopsy={caseId,agentName,failureType,errorMsg,timestamp,severity,rootCause,blame,prevention,narrative,savedAt:new Date().toISOString()};
+        history.push(currentAutopsy);
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(history));
+        updateStats();renderHistory();
+
+        // Show report
+        await delay(500);
+        showReport(currentAutopsy);
+    }
+
+    function showReport(a){
+        $('reportCard').classList.remove('hidden');
+        const report=`# Agent Autopsy Report
+Case ID: ${a.caseId}
+Agent: ${a.agentName}
+Failure: ${a.failureType.replace('_',' ')}
+Severity: ${'★'.repeat(a.severity)}${'☆'.repeat(5-a.severity)}
+Timestamp: ${a.timestamp}
+
+## Error
+${a.errorMsg}
+
+## Root Cause
+${a.rootCause}
+
+## Blame Distribution
+${BLAME_CATS.map(c=>`- ${c}: ${a.blame[c]}%`).join('\n')}
+
+## Prevention Plan
+${a.prevention.map((p,i)=>`${i+1}. ${p}`).join('\n')}
+
+## Agent's Self-Assessment
+"${a.narrative}"
+
+---
+Generated by AgentBox Autopsy Tool`;
+        $('reportBox').textContent=report;
+        $('reportCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+
+    function createStep(num,title,desc){
+        const el=document.createElement('div');el.className='step';
+        const body=document.createElement('div');
+        const statusEl=document.createElement('span');statusEl.className='step-status running';statusEl.textContent='● Analyzing';
+        el.innerHTML=`<div class="step-header"><span class="step-num">${num}</span><span class="step-title">${title}</span></div>`;
+        el.querySelector('.step-header').appendChild(statusEl);
+        const descEl=document.createElement('div');descEl.style.cssText='font-size:0.85rem;color:var(--text-dim);margin-bottom:0.5rem';descEl.textContent=desc;
+        el.appendChild(descEl);el.appendChild(body);
+        return{el,body,status:(cls,txt)=>{statusEl.className='step-status '+cls;statusEl.textContent=txt;}};
+    }
+
+    function askQuestion(parent,question,idx){
+        return new Promise(resolve=>{
+            const block=document.createElement('div');block.className='qa-block';
+            block.innerHTML=`<div class="qa-q">${idx+1}. ${question}</div><div class="qa-btns"><button class="qa-btn" data-val="yes">Yes</button><button class="qa-btn" data-val="no">No</button></div>`;
+            parent.appendChild(block);
+            block.querySelectorAll('.qa-btn').forEach(btn=>{
+                btn.addEventListener('click',()=>{
+                    block.querySelectorAll('.qa-btn').forEach(b=>b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    block.querySelectorAll('.qa-btn').forEach(b=>{b.style.pointerEvents='none';});
+                    resolve(btn.dataset.val==='yes');
+                });
+            });
+        });
+    }
+
+    function drawPieChart(canvas,blame){
+        const ctx=canvas.getContext('2d');
+        const cx=150,cy=100,r=80;
+        const colors=['#00d4ff','#646cff','#7b2cbf','#4ade80','#facc15'];
+        let startAngle=-Math.PI/2;
+        BLAME_CATS.forEach((cat,i)=>{
+            const slice=blame[cat]/100*Math.PI*2;
+            ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,startAngle,startAngle+slice);ctx.closePath();
+            ctx.fillStyle=colors[i];ctx.fill();
+            ctx.strokeStyle='#0a0a1a';ctx.lineWidth=2;ctx.stroke();
+            startAngle+=slice;
+        });
+    }
+
+    function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+    // Event listeners
+    $('beginBtn').addEventListener('click',beginAutopsy);
+    $('clearBtn').addEventListener('click',()=>{
+        $('agentName').value='';$('errorMsg').value='';setSev(3);
+        $('autopsyCard').classList.add('hidden');$('reportCard').classList.add('hidden');
+    });
+    $('copyBtn').addEventListener('click',()=>{
+        navigator.clipboard.writeText($('reportBox').textContent).then(()=>{
+            $('copyBtn').textContent='✅ Copied!';setTimeout(()=>{$('copyBtn').textContent='📋 Copy Report';},1500);
+        });
+    });
+    $('newBtn').addEventListener('click',()=>{
+        $('agentName').value='';$('errorMsg').value='';setSev(3);
+        $('autopsyCard').classList.add('hidden');$('reportCard').classList.add('hidden');
+        ts.value=new Date().toISOString().replace('T',' ').slice(0,19)+' UTC';
+        $('inputCard').scrollIntoView({behavior:'smooth'});
+    });
+
+    updateStats();renderHistory();
+})();
+</script>
+</body>
+</html>
