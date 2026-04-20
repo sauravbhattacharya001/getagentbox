@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox Knowledge Graph — Interactive Agent Knowledge Visualization</title>
+    <meta name="description" content="Visualize and explore your AgentBox agent's knowledge as an interactive force-directed graph. Discover connections, identify gaps, and get proactive recommendations.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #facc15;
+            --color-danger: #ef4444;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+        .page-header { text-align: center; margin-bottom: 1.5rem; }
+        .page-header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.3rem;
+        }
+        .page-header p { color: var(--color-text-muted); font-size: 0.95rem; }
+        .toolbar {
+            display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;
+            max-width: 1400px; margin: 0 auto 1rem;
+        }
+        .toolbar button, .toolbar select {
+            background: var(--color-bg-mid); color: var(--color-text);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+            padding: 0.5rem 1rem; cursor: pointer; font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .toolbar button:hover, .toolbar select:hover { border-color: var(--color-primary); background: var(--color-surface-hover); }
+        .toolbar button.active { border-color: var(--color-primary); background: rgba(0,212,255,0.15); }
+        .main-layout {
+            display: grid; grid-template-columns: 280px 1fr 300px;
+            gap: 1rem; max-width: 1400px; margin: 0 auto; height: calc(100vh - 180px);
+        }
+        @media (max-width: 1000px) { .main-layout { grid-template-columns: 1fr; height: auto; } }
+        .panel {
+            background: var(--color-bg-mid);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 1rem; overflow-y: auto;
+        }
+        .panel h3 {
+            font-size: 0.9rem; color: var(--color-primary);
+            margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        canvas#graphCanvas {
+            width: 100%; height: 100%; border-radius: 12px;
+            background: var(--color-bg-mid); border: 1px solid rgba(255,255,255,0.08);
+            cursor: grab;
+        }
+        canvas#graphCanvas:active { cursor: grabbing; }
+        .node-list-item {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.4rem 0.6rem; border-radius: 6px; cursor: pointer;
+            font-size: 0.82rem; transition: background 0.15s; margin-bottom: 2px;
+        }
+        .node-list-item:hover { background: var(--color-surface-hover); }
+        .node-list-item.selected { background: rgba(0,212,255,0.15); }
+        .node-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .stat-row { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.82rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .stat-label { color: var(--color-text-muted); }
+        .stat-value { font-weight: 600; }
+        .badge {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px;
+            font-size: 0.72rem; font-weight: 600;
+        }
+        .badge-primary { background: rgba(0,212,255,0.2); color: var(--color-primary); }
+        .badge-warning { background: rgba(250,204,21,0.2); color: var(--color-warning); }
+        .badge-danger { background: rgba(239,68,68,0.2); color: var(--color-danger); }
+        .badge-success { background: rgba(74,222,128,0.2); color: var(--color-success); }
+        .recommendation {
+            background: var(--color-surface); border-radius: 8px; padding: 0.6rem;
+            margin-bottom: 0.5rem; font-size: 0.8rem; border-left: 3px solid var(--color-primary);
+        }
+        .recommendation.warning { border-left-color: var(--color-warning); }
+        .recommendation.danger { border-left-color: var(--color-danger); }
+        .recommendation .rec-title { font-weight: 600; margin-bottom: 0.2rem; }
+        .recommendation .rec-desc { color: var(--color-text-muted); font-size: 0.75rem; }
+        .gap-item {
+            background: var(--color-surface); border-radius: 8px; padding: 0.5rem;
+            margin-bottom: 0.4rem; font-size: 0.8rem;
+        }
+        .gap-item .gap-name { font-weight: 600; }
+        .gap-item .gap-reason { color: var(--color-text-muted); font-size: 0.72rem; margin-top: 0.15rem; }
+        .search-box {
+            width: 100%; padding: 0.5rem; border-radius: 6px;
+            background: var(--color-surface); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--color-text); font-size: 0.82rem; margin-bottom: 0.75rem;
+        }
+        .search-box::placeholder { color: var(--color-text-muted); }
+        .section { margin-bottom: 1rem; }
+        .cluster-tag {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px;
+            font-size: 0.7rem; margin: 0.1rem; cursor: pointer; transition: all 0.15s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .cluster-tag:hover { border-color: var(--color-primary); }
+        .cluster-tag.active { background: rgba(0,212,255,0.15); border-color: var(--color-primary); }
+        .health-bar {
+            width: 100%; height: 6px; background: rgba(255,255,255,0.1);
+            border-radius: 3px; overflow: hidden; margin-top: 0.3rem;
+        }
+        .health-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+        .back-link {
+            display: inline-block; margin-bottom: 1rem; color: var(--color-primary);
+            text-decoration: none; font-size: 0.85rem;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to AgentBox</a>
+    <div class="page-header">
+        <h1>🧠 Agent Knowledge Graph</h1>
+        <p>Visualize agent knowledge connections, discover gaps, and get proactive recommendations</p>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+        <select id="presetSelect">
+            <option value="customer-support">Customer Support Agent</option>
+            <option value="devops">DevOps Agent</option>
+            <option value="research">Research Agent</option>
+            <option value="sales">Sales Agent</option>
+            <option value="custom">Custom (empty)</option>
+        </select>
+        <button onclick="togglePhysics()" id="btnPhysics" class="active">⚡ Physics</button>
+        <button onclick="toggleLabels()" id="btnLabels" class="active">🏷️ Labels</button>
+        <button onclick="autoCluster()">🔮 Auto-Cluster</button>
+        <button onclick="runGapAnalysis()">🔍 Gap Analysis</button>
+        <button onclick="addNodePrompt()">➕ Add Node</button>
+        <button onclick="exportGraph()">📤 Export JSON</button>
+        <button onclick="exportPNG()">🖼️ Export PNG</button>
+    </div>
+
+    <div class="main-layout">
+        <!-- Left: Node list + clusters -->
+        <div class="panel" id="leftPanel">
+            <h3>Knowledge Nodes</h3>
+            <input type="text" class="search-box" id="searchBox" placeholder="Search nodes..." oninput="filterNodes()">
+            <div class="section" id="clusterTags"></div>
+            <div id="nodeList"></div>
+        </div>
+
+        <!-- Center: Graph canvas -->
+        <canvas id="graphCanvas"></canvas>
+
+        <!-- Right: Details + recommendations -->
+        <div class="panel" id="rightPanel">
+            <div id="graphStats" class="section">
+                <h3>Graph Health</h3>
+                <div id="healthStats"></div>
+            </div>
+            <div id="selectedInfo" class="section" style="display:none">
+                <h3>Selected Node</h3>
+                <div id="nodeDetails"></div>
+            </div>
+            <div id="gapSection" class="section">
+                <h3>🔍 Knowledge Gaps</h3>
+                <div id="gapList"><p style="color:var(--color-text-muted);font-size:0.8rem">Click "Gap Analysis" to detect missing knowledge areas</p></div>
+            </div>
+            <div id="recSection" class="section">
+                <h3>💡 Recommendations</h3>
+                <div id="recList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ── Data ──
+    const PRESETS = {
+        'customer-support': {
+            nodes: [
+                { id: 'products', label: 'Products', cluster: 'core', weight: 10 },
+                { id: 'pricing', label: 'Pricing', cluster: 'core', weight: 8 },
+                { id: 'billing', label: 'Billing', cluster: 'operations', weight: 9 },
+                { id: 'refunds', label: 'Refunds', cluster: 'operations', weight: 7 },
+                { id: 'shipping', label: 'Shipping', cluster: 'operations', weight: 8 },
+                { id: 'returns', label: 'Returns', cluster: 'operations', weight: 7 },
+                { id: 'faq', label: 'FAQ', cluster: 'content', weight: 6 },
+                { id: 'troubleshoot', label: 'Troubleshooting', cluster: 'technical', weight: 9 },
+                { id: 'escalation', label: 'Escalation', cluster: 'process', weight: 8 },
+                { id: 'tone', label: 'Tone & Voice', cluster: 'soft-skills', weight: 5 },
+                { id: 'empathy', label: 'Empathy Scripts', cluster: 'soft-skills', weight: 6 },
+                { id: 'coupons', label: 'Coupons/Promos', cluster: 'core', weight: 5 },
+                { id: 'account', label: 'Account Mgmt', cluster: 'operations', weight: 7 },
+                { id: 'feedback', label: 'Feedback Loop', cluster: 'process', weight: 4 },
+                { id: 'sla', label: 'SLA Rules', cluster: 'process', weight: 6 },
+                { id: 'loyalty', label: 'Loyalty Program', cluster: 'core', weight: 4 },
+                { id: 'integration', label: 'CRM Integration', cluster: 'technical', weight: 5 },
+                { id: 'analytics', label: 'Analytics', cluster: 'technical', weight: 3 },
+                { id: 'compliance', label: 'Compliance', cluster: 'process', weight: 7 },
+                { id: 'localization', label: 'Localization', cluster: 'content', weight: 3 }
+            ],
+            edges: [
+                ['products','pricing'],['products','troubleshoot'],['pricing','billing'],
+                ['billing','refunds'],['billing','coupons'],['shipping','returns'],
+                ['returns','refunds'],['troubleshoot','escalation'],['escalation','sla'],
+                ['tone','empathy'],['account','billing'],['account','loyalty'],
+                ['feedback','analytics'],['sla','compliance'],['integration','analytics'],
+                ['faq','products'],['faq','troubleshoot'],['coupons','loyalty'],
+                ['localization','tone'],['compliance','refunds']
+            ]
+        },
+        'devops': {
+            nodes: [
+                { id: 'ci', label: 'CI Pipeline', cluster: 'build', weight: 9 },
+                { id: 'cd', label: 'CD Pipeline', cluster: 'deploy', weight: 9 },
+                { id: 'docker', label: 'Docker', cluster: 'infra', weight: 8 },
+                { id: 'k8s', label: 'Kubernetes', cluster: 'infra', weight: 10 },
+                { id: 'terraform', label: 'Terraform', cluster: 'infra', weight: 7 },
+                { id: 'monitoring', label: 'Monitoring', cluster: 'observe', weight: 9 },
+                { id: 'logging', label: 'Logging', cluster: 'observe', weight: 7 },
+                { id: 'alerting', label: 'Alerting', cluster: 'observe', weight: 8 },
+                { id: 'git', label: 'Git Workflows', cluster: 'build', weight: 6 },
+                { id: 'secrets', label: 'Secrets Mgmt', cluster: 'security', weight: 8 },
+                { id: 'iam', label: 'IAM / RBAC', cluster: 'security', weight: 7 },
+                { id: 'incidents', label: 'Incident Response', cluster: 'process', weight: 9 },
+                { id: 'runbooks', label: 'Runbooks', cluster: 'process', weight: 6 },
+                { id: 'slo', label: 'SLO/SLA', cluster: 'process', weight: 7 },
+                { id: 'databases', label: 'Databases', cluster: 'infra', weight: 6 },
+                { id: 'networking', label: 'Networking', cluster: 'infra', weight: 5 },
+                { id: 'cost', label: 'Cost Optimization', cluster: 'process', weight: 4 },
+                { id: 'chaos', label: 'Chaos Engineering', cluster: 'observe', weight: 3 }
+            ],
+            edges: [
+                ['ci','cd'],['ci','git'],['cd','docker'],['cd','k8s'],
+                ['docker','k8s'],['k8s','terraform'],['monitoring','alerting'],
+                ['monitoring','logging'],['alerting','incidents'],['incidents','runbooks'],
+                ['secrets','iam'],['iam','k8s'],['slo','alerting'],['slo','incidents'],
+                ['databases','monitoring'],['networking','k8s'],['cost','monitoring'],
+                ['chaos','monitoring'],['terraform','networking'],['runbooks','slo']
+            ]
+        },
+        'research': {
+            nodes: [
+                { id: 'search', label: 'Web Search', cluster: 'gather', weight: 9 },
+                { id: 'papers', label: 'Paper Analysis', cluster: 'gather', weight: 8 },
+                { id: 'summarize', label: 'Summarization', cluster: 'process', weight: 10 },
+                { id: 'citations', label: 'Citation Mgmt', cluster: 'process', weight: 7 },
+                { id: 'qa', label: 'Q&A Extraction', cluster: 'process', weight: 8 },
+                { id: 'hypothesis', label: 'Hypothesis Gen', cluster: 'reason', weight: 6 },
+                { id: 'comparison', label: 'Comparison', cluster: 'reason', weight: 7 },
+                { id: 'trends', label: 'Trend Analysis', cluster: 'reason', weight: 5 },
+                { id: 'writing', label: 'Report Writing', cluster: 'output', weight: 9 },
+                { id: 'charts', label: 'Data Viz', cluster: 'output', weight: 6 },
+                { id: 'export', label: 'Export Formats', cluster: 'output', weight: 4 },
+                { id: 'bias', label: 'Bias Detection', cluster: 'quality', weight: 5 },
+                { id: 'factcheck', label: 'Fact-Checking', cluster: 'quality', weight: 7 },
+                { id: 'sources', label: 'Source Eval', cluster: 'quality', weight: 6 },
+                { id: 'collab', label: 'Collaboration', cluster: 'output', weight: 3 }
+            ],
+            edges: [
+                ['search','papers'],['papers','summarize'],['papers','citations'],
+                ['summarize','qa'],['qa','hypothesis'],['hypothesis','comparison'],
+                ['comparison','trends'],['writing','charts'],['writing','export'],
+                ['writing','citations'],['bias','factcheck'],['factcheck','sources'],
+                ['sources','papers'],['summarize','writing'],['trends','charts'],
+                ['collab','writing'],['search','trends']
+            ]
+        },
+        'sales': {
+            nodes: [
+                { id: 'leads', label: 'Lead Scoring', cluster: 'pipeline', weight: 9 },
+                { id: 'outreach', label: 'Outreach', cluster: 'pipeline', weight: 8 },
+                { id: 'qualify', label: 'Qualification', cluster: 'pipeline', weight: 8 },
+                { id: 'demo', label: 'Demo Prep', cluster: 'engage', weight: 7 },
+                { id: 'objections', label: 'Objection Handling', cluster: 'engage', weight: 9 },
+                { id: 'pricing-s', label: 'Pricing Strategy', cluster: 'close', weight: 8 },
+                { id: 'proposals', label: 'Proposals', cluster: 'close', weight: 7 },
+                { id: 'contracts', label: 'Contracts', cluster: 'close', weight: 6 },
+                { id: 'followup', label: 'Follow-Up', cluster: 'retain', weight: 7 },
+                { id: 'upsell', label: 'Upsell/Cross-Sell', cluster: 'retain', weight: 6 },
+                { id: 'competitor', label: 'Competitor Intel', cluster: 'engage', weight: 5 },
+                { id: 'crm-s', label: 'CRM Updates', cluster: 'ops', weight: 4 },
+                { id: 'forecast', label: 'Forecasting', cluster: 'ops', weight: 5 },
+                { id: 'territory', label: 'Territory Plan', cluster: 'ops', weight: 3 }
+            ],
+            edges: [
+                ['leads','outreach'],['outreach','qualify'],['qualify','demo'],
+                ['demo','objections'],['objections','pricing-s'],['pricing-s','proposals'],
+                ['proposals','contracts'],['contracts','followup'],['followup','upsell'],
+                ['competitor','objections'],['competitor','demo'],['crm-s','leads'],
+                ['crm-s','forecast'],['forecast','territory'],['qualify','leads']
+            ]
+        },
+        'custom': { nodes: [], edges: [] }
+    };
+
+    const CLUSTER_COLORS = {
+        'core': '#00d4ff', 'operations': '#646cff', 'content': '#4ade80',
+        'technical': '#facc15', 'process': '#ef4444', 'soft-skills': '#c084fc',
+        'build': '#00d4ff', 'deploy': '#646cff', 'infra': '#facc15',
+        'observe': '#4ade80', 'security': '#ef4444',
+        'gather': '#00d4ff', 'reason': '#646cff', 'output': '#4ade80', 'quality': '#ef4444',
+        'pipeline': '#00d4ff', 'engage': '#646cff', 'close': '#4ade80',
+        'retain': '#facc15', 'ops': '#c084fc',
+    };
+    const DEFAULT_COLOR = '#7b2cbf';
+
+    // ── State ──
+    let nodes = [], edges = [];
+    let physicsOn = true, labelsOn = true;
+    let selectedNode = null, hoveredNode = null;
+    let dragNode = null, panX = 0, panY = 0, zoom = 1;
+    let isPanning = false, lastMouse = {x:0,y:0};
+    let animFrame = null;
+
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function clusterColor(c) { return CLUSTER_COLORS[c] || DEFAULT_COLOR; }
+
+    // ── Initialize ──
+    function loadPreset(name) {
+        const p = PRESETS[name];
+        nodes = p.nodes.map(n => ({
+            ...n,
+            x: Math.random() * 600 + 100,
+            y: Math.random() * 400 + 100,
+            vx: 0, vy: 0,
+            r: 6 + (n.weight || 5) * 1.5
+        }));
+        edges = p.edges.map(([s,t]) => ({source: s, target: t}));
+        selectedNode = null;
+        renderNodeList();
+        renderClusterTags();
+        updateStats();
+        updateRecommendations();
+        document.getElementById('gapList').innerHTML = '<p style="color:var(--color-text-muted);font-size:0.8rem">Click "Gap Analysis" to detect missing knowledge areas</p>';
+        document.getElementById('selectedInfo').style.display = 'none';
+    }
+
+    document.getElementById('presetSelect').addEventListener('change', e => loadPreset(e.target.value));
+
+    // ── Rendering ──
+    function resizeCanvas() {
+        const rect = canvas.parentElement ? canvas.getBoundingClientRect() : {width: 800, height: 600};
+        canvas.width = canvas.clientWidth * devicePixelRatio;
+        canvas.height = canvas.clientHeight * devicePixelRatio;
+        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    }
+
+    function draw() {
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+        ctx.translate(panX + w/2, panY + h/2);
+        ctx.scale(zoom, zoom);
+        ctx.translate(-w/2, -h/2);
+
+        // Edges
+        for (const e of edges) {
+            const s = nodes.find(n => n.id === e.source);
+            const t = nodes.find(n => n.id === e.target);
+            if (!s || !t) continue;
+            const isHighlight = selectedNode && (selectedNode.id === s.id || selectedNode.id === t.id);
+            ctx.beginPath();
+            ctx.moveTo(s.x, s.y);
+            ctx.lineTo(t.x, t.y);
+            ctx.strokeStyle = isHighlight ? 'rgba(0,212,255,0.6)' : 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = isHighlight ? 2 : 1;
+            ctx.stroke();
+        }
+
+        // Nodes
+        for (const n of nodes) {
+            const isSelected = selectedNode && selectedNode.id === n.id;
+            const isHovered = hoveredNode && hoveredNode.id === n.id;
+            const isConnected = selectedNode && edges.some(e =>
+                (e.source === selectedNode.id && e.target === n.id) ||
+                (e.target === selectedNode.id && e.source === n.id)
+            );
+            const dimmed = selectedNode && !isSelected && !isConnected;
+
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+            const col = clusterColor(n.cluster);
+            ctx.fillStyle = dimmed ? col + '33' : col;
+            ctx.fill();
+
+            if (isSelected || isHovered) {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.r + 4, 0, Math.PI * 2);
+                ctx.strokeStyle = col;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            if (labelsOn && !dimmed) {
+                ctx.font = `${isSelected ? 'bold ' : ''}11px -apple-system, sans-serif`;
+                ctx.fillStyle = dimmed ? 'rgba(255,255,255,0.2)' : '#fff';
+                ctx.textAlign = 'center';
+                ctx.fillText(n.label, n.x, n.y + n.r + 14);
+            }
+        }
+
+        ctx.restore();
+        if (physicsOn) simulate();
+        animFrame = requestAnimationFrame(draw);
+    }
+
+    // ── Physics ──
+    function simulate() {
+        const cw = canvas.clientWidth, ch = canvas.clientHeight;
+        const centerX = cw / 2, centerY = ch / 2;
+        const repulsion = 3000, attraction = 0.005, damping = 0.9, gravity = 0.01;
+
+        for (let i = 0; i < nodes.length; i++) {
+            if (nodes[i] === dragNode) continue;
+            let fx = 0, fy = 0;
+
+            // Gravity toward center
+            fx += (centerX - nodes[i].x) * gravity;
+            fy += (centerY - nodes[i].y) * gravity;
+
+            // Repulsion
+            for (let j = 0; j < nodes.length; j++) {
+                if (i === j) continue;
+                let dx = nodes[i].x - nodes[j].x;
+                let dy = nodes[i].y - nodes[j].y;
+                let dist = Math.sqrt(dx*dx + dy*dy) || 1;
+                let force = repulsion / (dist * dist);
+                fx += (dx / dist) * force;
+                fy += (dy / dist) * force;
+            }
+
+            // Attraction along edges
+            for (const e of edges) {
+                let other = null;
+                if (e.source === nodes[i].id) other = nodes.find(n => n.id === e.target);
+                else if (e.target === nodes[i].id) other = nodes.find(n => n.id === e.source);
+                if (!other) continue;
+                let dx = other.x - nodes[i].x;
+                let dy = other.y - nodes[i].y;
+                fx += dx * attraction;
+                fy += dy * attraction;
+            }
+
+            nodes[i].vx = (nodes[i].vx + fx) * damping;
+            nodes[i].vy = (nodes[i].vy + fy) * damping;
+            nodes[i].x += nodes[i].vx;
+            nodes[i].y += nodes[i].vy;
+        }
+    }
+
+    // ── Interaction ──
+    function getNodeAt(mx, my) {
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        const cx = (mx - panX - w/2) / zoom + w/2;
+        const cy = (my - panY - h/2) / zoom + h/2;
+        for (let i = nodes.length - 1; i >= 0; i--) {
+            const dx = cx - nodes[i].x, dy = cy - nodes[i].y;
+            if (dx*dx + dy*dy <= (nodes[i].r + 4) ** 2) return nodes[i];
+        }
+        return null;
+    }
+
+    canvas.addEventListener('mousedown', e => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        const node = getNodeAt(mx, my);
+        if (node) {
+            dragNode = node;
+            selectNode(node);
+        } else {
+            isPanning = true;
+            selectNode(null);
+        }
+        lastMouse = {x: e.clientX, y: e.clientY};
+    });
+
+    canvas.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+        if (dragNode) {
+            const w = canvas.clientWidth, h = canvas.clientHeight;
+            dragNode.x = (mx - panX - w/2) / zoom + w/2;
+            dragNode.y = (my - panY - h/2) / zoom + h/2;
+            dragNode.vx = 0; dragNode.vy = 0;
+        } else if (isPanning) {
+            panX += e.clientX - lastMouse.x;
+            panY += e.clientY - lastMouse.y;
+        } else {
+            hoveredNode = getNodeAt(mx, my);
+            canvas.style.cursor = hoveredNode ? 'pointer' : 'grab';
+        }
+        lastMouse = {x: e.clientX, y: e.clientY};
+    });
+
+    canvas.addEventListener('mouseup', () => { dragNode = null; isPanning = false; });
+    canvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        zoom *= e.deltaY < 0 ? 1.1 : 0.9;
+        zoom = Math.max(0.2, Math.min(5, zoom));
+    }, {passive: false});
+
+    function selectNode(node) {
+        selectedNode = node;
+        document.querySelectorAll('.node-list-item').forEach(el => el.classList.remove('selected'));
+        if (node) {
+            const el = document.querySelector(`[data-id="${node.id}"]`);
+            if (el) el.classList.add('selected');
+            showNodeDetails(node);
+        } else {
+            document.getElementById('selectedInfo').style.display = 'none';
+        }
+    }
+
+    function showNodeDetails(node) {
+        const neighbors = edges.filter(e => e.source === node.id || e.target === node.id)
+            .map(e => e.source === node.id ? e.target : e.source);
+        const degree = neighbors.length;
+        const maxDeg = Math.max(...nodes.map(n => edges.filter(e => e.source === n.id || e.target === n.id).length));
+        const centrality = maxDeg > 0 ? (degree / maxDeg * 100).toFixed(0) : 0;
+
+        document.getElementById('selectedInfo').style.display = 'block';
+        document.getElementById('nodeDetails').innerHTML = `
+            <div style="margin-bottom:0.5rem"><strong style="font-size:1rem">${node.label}</strong>
+            <span class="badge badge-primary">${node.cluster}</span></div>
+            <div class="stat-row"><span class="stat-label">Weight</span><span class="stat-value">${node.weight}/10</span></div>
+            <div class="stat-row"><span class="stat-label">Connections</span><span class="stat-value">${degree}</span></div>
+            <div class="stat-row"><span class="stat-label">Centrality</span><span class="stat-value">${centrality}%</span></div>
+            <div style="margin-top:0.5rem"><span class="stat-label">Connected to:</span></div>
+            <div style="margin-top:0.3rem">${neighbors.map(id => {
+                const n2 = nodes.find(n => n.id === id);
+                return `<span class="badge badge-primary" style="cursor:pointer;margin:2px" onclick="selectNode(nodes.find(n=>n.id==='${id}'))">${n2 ? n2.label : id}</span>`;
+            }).join('')}</div>
+            <button onclick="removeNode('${node.id}')" style="margin-top:0.5rem;padding:0.3rem 0.6rem;background:rgba(239,68,68,0.2);color:var(--color-danger);border:1px solid var(--color-danger);border-radius:6px;cursor:pointer;font-size:0.75rem">🗑️ Remove Node</button>
+        `;
+    }
+
+    // ── Node list ──
+    function renderNodeList() {
+        const list = document.getElementById('nodeList');
+        list.innerHTML = nodes.map(n => `
+            <div class="node-list-item" data-id="${n.id}" data-cluster="${n.cluster}" onclick="selectNode(nodes.find(x=>x.id==='${n.id}'))">
+                <div class="node-dot" style="background:${clusterColor(n.cluster)}"></div>
+                <span>${n.label}</span>
+                <span style="margin-left:auto;font-size:0.7rem;color:var(--color-text-muted)">${n.weight}</span>
+            </div>
+        `).join('');
+    }
+
+    function renderClusterTags() {
+        const clusters = [...new Set(nodes.map(n => n.cluster))];
+        document.getElementById('clusterTags').innerHTML = clusters.map(c =>
+            `<span class="cluster-tag" style="background:${clusterColor(c)}22;color:${clusterColor(c)}" data-cluster="${c}" onclick="toggleClusterFilter(this)">${c} (${nodes.filter(n => n.cluster === c).length})</span>`
+        ).join('');
+    }
+
+    function filterNodes() {
+        const q = document.getElementById('searchBox').value.toLowerCase();
+        document.querySelectorAll('.node-list-item').forEach(el => {
+            el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    }
+
+    let activeCluster = null;
+    function toggleClusterFilter(el) {
+        const c = el.dataset.cluster;
+        if (activeCluster === c) {
+            activeCluster = null;
+            document.querySelectorAll('.cluster-tag').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.node-list-item').forEach(el => el.style.display = '');
+        } else {
+            activeCluster = c;
+            document.querySelectorAll('.cluster-tag').forEach(t => t.classList.toggle('active', t.dataset.cluster === c));
+            document.querySelectorAll('.node-list-item').forEach(el => {
+                el.style.display = el.dataset.cluster === c ? '' : 'none';
+            });
+        }
+    }
+
+    // ── Stats ──
+    function updateStats() {
+        const nCount = nodes.length;
+        const eCount = edges.length;
+        const maxEdges = nCount * (nCount - 1) / 2;
+        const density = maxEdges > 0 ? (eCount / maxEdges * 100).toFixed(1) : 0;
+        const clusters = [...new Set(nodes.map(n => n.cluster))].length;
+        const avgDeg = nCount > 0 ? (2 * eCount / nCount).toFixed(1) : 0;
+
+        // Connected components via BFS
+        const visited = new Set();
+        let components = 0;
+        for (const n of nodes) {
+            if (visited.has(n.id)) continue;
+            components++;
+            const queue = [n.id];
+            while (queue.length) {
+                const cur = queue.shift();
+                if (visited.has(cur)) continue;
+                visited.add(cur);
+                for (const e of edges) {
+                    if (e.source === cur && !visited.has(e.target)) queue.push(e.target);
+                    if (e.target === cur && !visited.has(e.source)) queue.push(e.source);
+                }
+            }
+        }
+
+        const healthScore = Math.min(100, Math.round(
+            (density > 0 ? Math.min(30, density * 1.5) : 0) +
+            (components <= 1 ? 30 : Math.max(0, 30 - (components - 1) * 10)) +
+            (avgDeg >= 2 ? 20 : avgDeg * 10) +
+            (nCount >= 10 ? 20 : nCount * 2)
+        ));
+
+        const hColor = healthScore >= 70 ? 'var(--color-success)' : healthScore >= 40 ? 'var(--color-warning)' : 'var(--color-danger)';
+
+        document.getElementById('healthStats').innerHTML = `
+            <div class="stat-row"><span class="stat-label">Nodes</span><span class="stat-value">${nCount}</span></div>
+            <div class="stat-row"><span class="stat-label">Edges</span><span class="stat-value">${eCount}</span></div>
+            <div class="stat-row"><span class="stat-label">Clusters</span><span class="stat-value">${clusters}</span></div>
+            <div class="stat-row"><span class="stat-label">Avg Degree</span><span class="stat-value">${avgDeg}</span></div>
+            <div class="stat-row"><span class="stat-label">Density</span><span class="stat-value">${density}%</span></div>
+            <div class="stat-row"><span class="stat-label">Components</span><span class="stat-value">${components}</span></div>
+            <div class="stat-row"><span class="stat-label">Health Score</span><span class="stat-value" style="color:${hColor}">${healthScore}/100</span></div>
+            <div class="health-bar"><div class="health-bar-fill" style="width:${healthScore}%;background:${hColor}"></div></div>
+        `;
+    }
+
+    // ── Gap Analysis (proactive) ──
+    function runGapAnalysis() {
+        const gaps = [];
+        const clusters = [...new Set(nodes.map(n => n.cluster))];
+
+        // 1. Isolated nodes (degree 0)
+        for (const n of nodes) {
+            const deg = edges.filter(e => e.source === n.id || e.target === n.id).length;
+            if (deg === 0) gaps.push({ name: n.label, severity: 'danger', reason: 'Isolated node — no connections. This knowledge is unreachable.' });
+        }
+
+        // 2. Weakly connected clusters
+        for (const c of clusters) {
+            const cNodes = nodes.filter(n => n.cluster === c);
+            const crossEdges = edges.filter(e => {
+                const s = nodes.find(n => n.id === e.source);
+                const t = nodes.find(n => n.id === e.target);
+                return s && t && ((s.cluster === c && t.cluster !== c) || (t.cluster === c && s.cluster !== c));
+            });
+            if (cNodes.length > 1 && crossEdges.length === 0) {
+                gaps.push({ name: `"${c}" cluster`, severity: 'warning', reason: 'No cross-cluster connections. Knowledge silo detected.' });
+            }
+        }
+
+        // 3. Low-weight high-degree (potential shallow knowledge)
+        for (const n of nodes) {
+            const deg = edges.filter(e => e.source === n.id || e.target === n.id).length;
+            if (deg >= 3 && n.weight <= 3) {
+                gaps.push({ name: n.label, severity: 'warning', reason: `Hub node (${deg} connections) but low weight (${n.weight}/10). Potentially shallow knowledge at a critical junction.` });
+            }
+        }
+
+        // 4. Bridge detection (removing node disconnects graph)
+        for (const n of nodes) {
+            const remaining = nodes.filter(x => x.id !== n.id);
+            const remEdges = edges.filter(e => e.source !== n.id && e.target !== n.id);
+            if (remaining.length < 2) continue;
+            const visited = new Set();
+            const queue = [remaining[0].id];
+            while (queue.length) {
+                const cur = queue.shift();
+                if (visited.has(cur)) continue;
+                visited.add(cur);
+                for (const e of remEdges) {
+                    if (e.source === cur && !visited.has(e.target)) queue.push(e.target);
+                    if (e.target === cur && !visited.has(e.source)) queue.push(e.source);
+                }
+            }
+            if (visited.size < remaining.length) {
+                gaps.push({ name: n.label, severity: 'danger', reason: 'Bridge node — removing it disconnects the graph. Critical single point of failure.' });
+            }
+        }
+
+        // Suggested missing topics based on preset
+        const preset = document.getElementById('presetSelect').value;
+        const existing = new Set(nodes.map(n => n.label.toLowerCase()));
+        const suggestions = {
+            'customer-support': ['Knowledge Base', 'Chatbot Handoff', 'Sentiment Analysis', 'Customer Segmentation'],
+            'devops': ['Service Mesh', 'Feature Flags', 'Canary Deploys', 'Disaster Recovery'],
+            'research': ['Peer Review', 'Reproducibility', 'Dataset Curation', 'Ethics Review'],
+            'sales': ['Social Selling', 'ROI Calculator', 'Customer Success', 'Referral Program']
+        };
+        if (suggestions[preset]) {
+            for (const s of suggestions[preset]) {
+                if (!existing.has(s.toLowerCase())) {
+                    gaps.push({ name: s, severity: 'info', reason: 'Suggested knowledge area commonly found in similar agents.' });
+                }
+            }
+        }
+
+        const sevOrder = {danger: 0, warning: 1, info: 2};
+        gaps.sort((a, b) => (sevOrder[a.severity] ?? 3) - (sevOrder[b.severity] ?? 3));
+
+        document.getElementById('gapList').innerHTML = gaps.length === 0
+            ? '<p style="color:var(--color-success);font-size:0.8rem">✅ No significant gaps detected!</p>'
+            : gaps.map(g => `
+                <div class="gap-item">
+                    <span class="badge badge-${g.severity === 'info' ? 'primary' : g.severity}">${g.severity}</span>
+                    <span class="gap-name">${g.name}</span>
+                    <div class="gap-reason">${g.reason}</div>
+                </div>
+            `).join('');
+    }
+
+    // ── Recommendations (proactive) ──
+    function updateRecommendations() {
+        const recs = [];
+        const nCount = nodes.length;
+        const eCount = edges.length;
+
+        if (nCount === 0) {
+            recs.push({ title: 'Start Building', desc: 'Load a preset or add nodes to begin mapping your agent\'s knowledge.', type: '' });
+        } else {
+            const avgDeg = 2 * eCount / nCount;
+            if (avgDeg < 2) recs.push({ title: 'Add More Connections', desc: `Average degree is ${avgDeg.toFixed(1)}. Aim for ≥2 to ensure knowledge flows between topics.`, type: 'warning' });
+
+            const clusters = [...new Set(nodes.map(n => n.cluster))];
+            if (clusters.length === 1 && nCount > 5) recs.push({ title: 'Diversify Clusters', desc: 'All nodes share one cluster. Organize into distinct knowledge domains.', type: 'warning' });
+
+            const maxDeg = Math.max(...nodes.map(n => edges.filter(e => e.source === n.id || e.target === n.id).length));
+            if (maxDeg > nCount * 0.6) recs.push({ title: 'Reduce Hub Dependency', desc: 'One node has >60% of all connections. Distribute edges more evenly.', type: 'warning' });
+
+            const lowWeight = nodes.filter(n => n.weight <= 3);
+            if (lowWeight.length > nCount * 0.4) recs.push({ title: 'Deepen Knowledge', desc: `${lowWeight.length} of ${nCount} nodes have low weight. Invest in deepening these areas.`, type: '' });
+
+            if (nCount >= 8 && eCount >= nCount) recs.push({ title: 'Graph Looks Healthy', desc: 'Good node count and connectivity. Run Gap Analysis for deeper insights.', type: 'success' });
+        }
+
+        document.getElementById('recList').innerHTML = recs.map(r => `
+            <div class="recommendation ${r.type}">
+                <div class="rec-title">${r.title}</div>
+                <div class="rec-desc">${r.desc}</div>
+            </div>
+        `).join('');
+    }
+
+    // ── Auto-Cluster (Louvain-like community detection) ──
+    function autoCluster() {
+        if (nodes.length < 3) return;
+        // Simple label propagation
+        const labels = {};
+        nodes.forEach(n => labels[n.id] = n.id);
+
+        for (let iter = 0; iter < 10; iter++) {
+            let changed = false;
+            const shuffled = [...nodes].sort(() => Math.random() - 0.5);
+            for (const n of shuffled) {
+                const neighborLabels = {};
+                for (const e of edges) {
+                    if (e.source === n.id) neighborLabels[labels[e.target]] = (neighborLabels[labels[e.target]] || 0) + 1;
+                    if (e.target === n.id) neighborLabels[labels[e.source]] = (neighborLabels[labels[e.source]] || 0) + 1;
+                }
+                const best = Object.entries(neighborLabels).sort((a,b) => b[1] - a[1])[0];
+                if (best && best[0] !== labels[n.id]) {
+                    labels[n.id] = best[0];
+                    changed = true;
+                }
+            }
+            if (!changed) break;
+        }
+
+        // Map labels to cluster names
+        const labelGroups = {};
+        for (const [id, label] of Object.entries(labels)) {
+            if (!labelGroups[label]) labelGroups[label] = [];
+            labelGroups[label].push(id);
+        }
+        const clusterNames = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta'];
+        let ci = 0;
+        for (const [label, ids] of Object.entries(labelGroups)) {
+            const name = clusterNames[ci++ % clusterNames.length];
+            for (const id of ids) {
+                const n = nodes.find(x => x.id === id);
+                if (n) n.cluster = name;
+            }
+        }
+        // Add colors for new cluster names
+        clusterNames.forEach((name, i) => {
+            if (!CLUSTER_COLORS[name]) CLUSTER_COLORS[name] = ['#00d4ff','#646cff','#4ade80','#facc15','#ef4444','#c084fc','#f97316','#06b6d4'][i % 8];
+        });
+
+        renderNodeList();
+        renderClusterTags();
+        updateStats();
+        updateRecommendations();
+    }
+
+    // ── Add/Remove ──
+    function addNodePrompt() {
+        const label = prompt('Node label:');
+        if (!label) return;
+        const cluster = prompt('Cluster name:', 'general') || 'general';
+        const weight = parseInt(prompt('Weight (1-10):', '5')) || 5;
+        const id = label.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        if (nodes.find(n => n.id === id)) { alert('Node already exists!'); return; }
+        nodes.push({
+            id, label, cluster, weight: Math.max(1, Math.min(10, weight)),
+            x: canvas.clientWidth / 2 + (Math.random() - 0.5) * 100,
+            y: canvas.clientHeight / 2 + (Math.random() - 0.5) * 100,
+            vx: 0, vy: 0,
+            r: 6 + Math.max(1, Math.min(10, weight)) * 1.5
+        });
+
+        // Auto-connect to nearest cluster sibling
+        const siblings = nodes.filter(n => n.cluster === cluster && n.id !== id);
+        if (siblings.length > 0) {
+            edges.push({source: id, target: siblings[0].id});
+        }
+
+        renderNodeList(); renderClusterTags(); updateStats(); updateRecommendations();
+    }
+
+    function removeNode(id) {
+        nodes = nodes.filter(n => n.id !== id);
+        edges = edges.filter(e => e.source !== id && e.target !== id);
+        selectedNode = null;
+        document.getElementById('selectedInfo').style.display = 'none';
+        renderNodeList(); renderClusterTags(); updateStats(); updateRecommendations();
+    }
+
+    // ── Toggle ──
+    function togglePhysics() {
+        physicsOn = !physicsOn;
+        document.getElementById('btnPhysics').classList.toggle('active', physicsOn);
+    }
+    function toggleLabels() {
+        labelsOn = !labelsOn;
+        document.getElementById('btnLabels').classList.toggle('active', labelsOn);
+    }
+
+    // ── Export ──
+    function exportGraph() {
+        const data = {
+            nodes: nodes.map(n => ({id: n.id, label: n.label, cluster: n.cluster, weight: n.weight})),
+            edges: edges.map(e => ({source: e.source, target: e.target}))
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'knowledge-graph.json';
+        a.click();
+    }
+
+    function exportPNG() {
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = 'knowledge-graph.png';
+        a.click();
+    }
+
+    // ── Boot ──
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    loadPreset('customer-support');
+    draw();
+    </script>
+</body>
+</html>
