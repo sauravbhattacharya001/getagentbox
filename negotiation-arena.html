@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Negotiation Arena - AgentBox</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--card:#131829;--border:#1e2642;--accent:#6c5ce7;--accent2:#00cec9;--accent3:#fd79a8;--accent4:#fdcb6e;--text:#e2e8f0;--dim:#64748b;--success:#00b894;--danger:#d63031;--warn:#fdcb6e}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.header{text-align:center;padding:2rem 1rem 1rem;border-bottom:1px solid var(--border)}
+.header h1{font-size:2rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.3rem}
+.header p{color:var(--dim);font-size:.95rem}
+.container{max-width:1400px;margin:0 auto;padding:1rem}
+.top-bar{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
+.top-bar label{color:var(--dim);font-size:.85rem}
+.top-bar select,.top-bar input,.top-bar button{background:var(--card);border:1px solid var(--border);color:var(--text);padding:.4rem .8rem;border-radius:6px;font-size:.85rem}
+.top-bar button{cursor:pointer;font-weight:600;transition:all .2s}
+.btn-start{background:var(--accent);border-color:var(--accent)}
+.btn-start:hover{filter:brightness(1.2)}
+.btn-reset{background:var(--danger);border-color:var(--danger)}
+.btn-pause{background:var(--warn);border-color:var(--warn);color:#222}
+.main-grid{display:grid;grid-template-columns:1fr 360px;gap:1rem}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+.arena-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative}
+canvas#arena{width:100%;display:block;cursor:crosshair}
+.sidebar{display:flex;flex-direction:column;gap:.8rem}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem}
+.panel h3{font-size:.9rem;color:var(--accent2);margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem}
+.scoreboard{width:100%}
+.scoreboard th{text-align:left;color:var(--dim);font-size:.75rem;padding:.3rem .4rem;border-bottom:1px solid var(--border)}
+.scoreboard td{padding:.3rem .4rem;font-size:.85rem}
+.scoreboard tr:hover{background:rgba(108,92,231,.1)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:.3rem;vertical-align:middle}
+.log-area{max-height:200px;overflow-y:auto;font-size:.78rem;color:var(--dim);line-height:1.6}
+.log-area .entry{padding:.15rem 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.log-area .deal{color:var(--success)}
+.log-area .fail{color:var(--danger)}
+.log-area .offer{color:var(--accent4)}
+.stat-row{display:flex;justify-content:space-between;font-size:.85rem;padding:.2rem 0}
+.stat-row .val{font-weight:600;color:var(--accent)}
+.bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:.2rem}
+.bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.preset-btn{display:inline-block;padding:.3rem .6rem;margin:.2rem;font-size:.75rem;background:var(--border);border:1px solid var(--border);color:var(--text);border-radius:4px;cursor:pointer}
+.preset-btn:hover,.preset-btn.active{background:var(--accent);border-color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.5rem;font-size:.78rem;color:var(--dim)}
+.legend span{display:flex;align-items:center;gap:.3rem}
+.tooltip{position:absolute;background:#1a1f35;border:1px solid var(--accent);border-radius:8px;padding:.6rem;font-size:.78rem;pointer-events:none;display:none;z-index:10;max-width:220px}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🤝 Agent Negotiation Arena</h1>
+<p>Watch AI agents negotiate resource allocation using different strategies in real-time</p>
+</div>
+<div class="container">
+<div class="top-bar">
+<label>Agents: <input type="number" id="numAgents" value="6" min="3" max="12" style="width:50px"></label>
+<label>Resources: <input type="number" id="numResources" value="100" min="20" max="500" style="width:60px"></label>
+<label>Rounds: <input type="number" id="numRounds" value="50" min="10" max="200" style="width:60px"></label>
+<label>Speed:
+<select id="speed"><option value="800">Slow</option><option value="400" selected>Normal</option><option value="150">Fast</option><option value="50">Turbo</option></select>
+</label>
+<label>Presets:</label>
+<span class="preset-btn" onclick="loadPreset('cooperative')">🕊️ Peaceful</span>
+<span class="preset-btn" onclick="loadPreset('cutthroat')">🗡️ Cutthroat</span>
+<span class="preset-btn" onclick="loadPreset('mixed')">🎲 Mixed</span>
+<span class="preset-btn" onclick="loadPreset('tournament')">🏆 Tournament</span>
+<button class="btn-start" id="btnStart" onclick="startSim()">▶ Start</button>
+<button class="btn-pause" id="btnPause" onclick="togglePause()" style="display:none">⏸ Pause</button>
+<button class="btn-reset" onclick="resetSim()">↺ Reset</button>
+</div>
+<div class="main-grid">
+<div class="arena-wrap">
+<canvas id="arena" width="800" height="600"></canvas>
+<div class="tooltip" id="tooltip"></div>
+</div>
+<div class="sidebar">
+<div class="panel">
+<h3>📊 Scoreboard <span style="font-size:.7rem;color:var(--dim)" id="roundLabel">Round 0/50</span></h3>
+<table class="scoreboard" id="scoreboard">
+<thead><tr><th>Agent</th><th>Strategy</th><th>Resources</th><th>Deals</th><th>Rep</th></tr></thead>
+<tbody id="scoreBody"></tbody>
+</table>
+</div>
+<div class="panel">
+<h3>📈 Market Stats</h3>
+<div id="marketStats">
+<div class="stat-row"><span>Total Deals</span><span class="val" id="totalDeals">0</span></div>
+<div class="stat-row"><span>Failed Negotiations</span><span class="val" id="totalFails">0</span></div>
+<div class="stat-row"><span>Avg Deal Size</span><span class="val" id="avgDeal">0</span></div>
+<div class="stat-row"><span>Market Gini Index</span><span class="val" id="giniIndex">0.00</span></div>
+<div class="stat-row"><span>Cooperation Rate</span><span class="val" id="coopRate">0%</span></div>
+</div>
+</div>
+<div class="panel">
+<h3>📜 Negotiation Log</h3>
+<div class="log-area" id="logArea"></div>
+</div>
+<div class="panel">
+<h3>💡 Insights</h3>
+<div id="insights" style="font-size:.82rem;color:var(--dim);line-height:1.5">
+Start a simulation to see real-time strategic insights and emergent behavior analysis.
+</div>
+</div>
+</div>
+</div>
+<div class="legend">
+<span><span class="dot" style="background:#6c5ce7"></span>Cooperative</span>
+<span><span class="dot" style="background:#d63031"></span>Aggressive</span>
+<span><span class="dot" style="background:#fdcb6e"></span>Tit-for-Tat</span>
+<span><span class="dot" style="background:#00cec9"></span>Fair-Share</span>
+<span><span class="dot" style="background:#e17055"></span>Grudger</span>
+<span><span class="dot" style="background:#a29bfe"></span>Random</span>
+<span>— Green lines = deal | Red lines = failed | Line thickness = deal size</span>
+</div>
+</div>
+
+<script>
+const STRATEGIES = {
+  cooperative: {color:'#6c5ce7',emoji:'🕊️',desc:'Offers generously, accepts most deals',offerGen:.55,acceptThresh:.35},
+  aggressive: {color:'#d63031',emoji:'🗡️',desc:'Demands more, rejects unfair deals',offerGen:.3,acceptThresh:.55},
+  titfortat: {color:'#fdcb6e',emoji:'🔄',desc:'Mirrors opponent\'s last behavior',offerGen:.5,acceptThresh:.45},
+  fairshare: {color:'#00cec9',emoji:'⚖️',desc:'Always offers 50/50 splits',offerGen:.5,acceptThresh:.42},
+  grudger: {color:'#e17055',emoji:'😤',desc:'Cooperates until betrayed, then always defects',offerGen:.5,acceptThresh:.4},
+  random: {color:'#a29bfe',emoji:'🎲',desc:'Unpredictable offers and thresholds',offerGen:.5,acceptThresh:.5}
+};
+const STRAT_KEYS = Object.keys(STRATEGIES);
+const NAMES = ['Alpha','Beta','Gamma','Delta','Epsilon','Zeta','Eta','Theta','Iota','Kappa','Lambda','Mu'];
+
+let agents=[], sim=null, paused=false, round=0, maxRounds=50, totalDeals=0, totalFails=0, dealSizes=[];
+let animations=[], hoverAgent=null;
+const canvas=document.getElementById('arena'), ctx=canvas.getContext('2d');
+const tooltip=document.getElementById('tooltip');
+
+function resize(){
+  const r=canvas.parentElement.getBoundingClientRect();
+  canvas.width=r.width; canvas.height=Math.max(500,r.width*0.6);
+}
+window.addEventListener('resize',resize); resize();
+
+class Agent {
+  constructor(i,n,strat,resources){
+    this.id=i; this.name=n; this.strategy=strat; this.resources=resources;
+    this.startResources=resources; this.deals=0; this.fails=0; this.reputation=0.5;
+    this.history={}; this.grudges=new Set();
+    const ang=((Math.PI*2)/parseInt(document.getElementById('numAgents').value))*i;
+    const cx=canvas.width/2, cy=canvas.height/2, rad=Math.min(cx,cy)*0.65;
+    this.x=cx+Math.cos(ang)*rad; this.y=cy+Math.sin(ang)*rad;
+    this.tx=this.x; this.ty=this.y; this.radius=22;
+    this.resourceHistory=[resources];
+  }
+  generateOffer(other,pool){
+    const s=STRATEGIES[this.strategy];
+    let share=s.offerGen;
+    if(this.strategy==='titfortat'){
+      const last=this.history[other.id];
+      if(last!==undefined) share=last>.5?.55:.35;
+    }
+    if(this.strategy==='grudger'&&this.grudges.has(other.id)) share=.25;
+    if(this.strategy==='random') share=.2+Math.random()*.6;
+    share+=((Math.random()-.5)*.1);
+    return Math.max(.1,Math.min(.9,share))*pool;
+  }
+  wouldAccept(offered,pool){
+    const s=STRATEGIES[this.strategy];
+    let thresh=s.acceptThresh;
+    if(this.strategy==='titfortat'){/* already adaptive */}
+    if(this.strategy==='random') thresh=.2+Math.random()*.6;
+    if(this.strategy==='grudger') thresh=.55;
+    const ratio=offered/pool;
+    return ratio>=thresh+(Math.random()-.5)*.1;
+  }
+  recordOutcome(otherId,myShare,pool){
+    const ratio=myShare/pool;
+    this.history[otherId]=ratio;
+    if(ratio<.3&&this.strategy==='grudger') this.grudges.add(otherId);
+    this.reputation=Math.max(0,Math.min(1,this.reputation+(ratio>.45?.02:-.02)));
+  }
+}
+
+function initAgents(){
+  const n=parseInt(document.getElementById('numAgents').value);
+  const res=parseInt(document.getElementById('numResources').value)/n;
+  agents=[];
+  for(let i=0;i<n;i++){
+    const strat=STRAT_KEYS[i%STRAT_KEYS.length];
+    agents.push(new Agent(i,NAMES[i],strat,Math.round(res)));
+  }
+}
+
+function negotiate(a,b){
+  const pool=Math.round(5+Math.random()*15);
+  const offerToB=a.generateOffer(b,pool);
+  const offerToA=pool-offerToB;
+  const accepted=b.wouldAccept(offerToA,pool);
+  if(accepted){
+    const aGets=Math.round(pool-offerToB);
+    const bGets=Math.round(offerToB);
+    a.resources+=aGets; b.resources+=bGets;
+    a.deals++; b.deals++;
+    a.recordOutcome(b.id,aGets,pool);
+    b.recordOutcome(a.id,bGets,pool);
+    totalDeals++; dealSizes.push(pool);
+    animations.push({type:'deal',ax:a.x,ay:a.y,bx:b.x,by:b.y,t:0,size:pool});
+    addLog(`${a.name} ${STRATEGIES[a.strategy].emoji} ↔ ${b.name} ${STRATEGIES[b.strategy].emoji}: Deal! (${aGets}/${bGets} split of ${pool})`,'deal');
+    return true;
+  } else {
+    a.fails++; b.fails++;
+    totalFails++;
+    a.recordOutcome(b.id,0,pool);
+    b.recordOutcome(a.id,0,pool);
+    animations.push({type:'fail',ax:a.x,ay:a.y,bx:b.x,by:b.y,t:0});
+    addLog(`${a.name} ${STRATEGIES[a.strategy].emoji} ✗ ${b.name} ${STRATEGIES[b.strategy].emoji}: Rejected (offered ${Math.round(offerToA)}/${pool})`,'fail');
+    return false;
+  }
+}
+
+function runRound(){
+  if(paused) return;
+  if(round>=maxRounds){endSim();return}
+  round++;
+  document.getElementById('roundLabel').textContent=`Round ${round}/${maxRounds}`;
+  // each agent negotiates with 1-3 random others
+  const shuffled=[...agents].sort(()=>Math.random()-.5);
+  for(let i=0;i<shuffled.length-1;i+=2){
+    negotiate(shuffled[i],shuffled[i+1]);
+  }
+  agents.forEach(a=>a.resourceHistory.push(a.resources));
+  updateScoreboard();
+  updateMarketStats();
+  if(round%10===0) updateInsights();
+}
+
+function startSim(){
+  if(sim) return;
+  maxRounds=parseInt(document.getElementById('numRounds').value);
+  if(round===0) initAgents();
+  updateScoreboard();
+  document.getElementById('btnStart').style.display='none';
+  document.getElementById('btnPause').style.display='';
+  paused=false;
+  const speed=parseInt(document.getElementById('speed').value);
+  sim=setInterval(runRound,speed);
+}
+
+function togglePause(){
+  paused=!paused;
+  document.getElementById('btnPause').textContent=paused?'▶ Resume':'⏸ Pause';
+}
+
+function endSim(){
+  clearInterval(sim); sim=null;
+  document.getElementById('btnStart').style.display='';
+  document.getElementById('btnPause').style.display='none';
+  updateInsights(true);
+}
+
+function resetSim(){
+  clearInterval(sim); sim=null; round=0; totalDeals=0; totalFails=0; dealSizes=[];
+  animations=[]; paused=false;
+  document.getElementById('btnStart').style.display='';
+  document.getElementById('btnPause').style.display='none';
+  document.getElementById('roundLabel').textContent='Round 0/50';
+  document.getElementById('logArea').innerHTML='';
+  document.getElementById('insights').innerHTML='Start a simulation to see real-time strategic insights.';
+  initAgents(); updateScoreboard(); updateMarketStats();
+}
+
+function updateScoreboard(){
+  const sorted=[...agents].sort((a,b)=>b.resources-a.resources);
+  const maxRes=Math.max(...agents.map(a=>a.resources),1);
+  document.getElementById('scoreBody').innerHTML=sorted.map((a,i)=>{
+    const pct=Math.round(a.resources/maxRes*100);
+    const s=STRATEGIES[a.strategy];
+    return `<tr><td><span class="dot" style="background:${s.color}"></span>${a.name}</td>
+    <td style="font-size:.75rem">${s.emoji}</td>
+    <td><div>${a.resources}</div><div class="bar"><div class="bar-fill" style="width:${pct}%;background:${s.color}"></div></div></td>
+    <td>${a.deals}</td>
+    <td>${(a.reputation*100).toFixed(0)}%</td></tr>`;
+  }).join('');
+}
+
+function updateMarketStats(){
+  document.getElementById('totalDeals').textContent=totalDeals;
+  document.getElementById('totalFails').textContent=totalFails;
+  document.getElementById('avgDeal').textContent=dealSizes.length?
+    (dealSizes.reduce((a,b)=>a+b,0)/dealSizes.length).toFixed(1):'0';
+  document.getElementById('coopRate').textContent=
+    (totalDeals+totalFails)>0?Math.round(totalDeals/(totalDeals+totalFails)*100)+'%':'0%';
+  // Gini
+  const res=agents.map(a=>a.resources).sort((a,b)=>a-b);
+  const n=res.length; let num=0,den=0;
+  res.forEach((r,i)=>{num+=(2*(i+1)-n-1)*r; den+=r});
+  const gini=den>0?(num/(n*den)).toFixed(3):'0.000';
+  document.getElementById('giniIndex').textContent=gini;
+}
+
+function addLog(msg,cls){
+  const d=document.getElementById('logArea');
+  const e=document.createElement('div');
+  e.className='entry '+cls; e.textContent=`[R${round}] ${msg}`;
+  d.prepend(e);
+  while(d.children.length>100) d.removeChild(d.lastChild);
+}
+
+function updateInsights(final=false){
+  const sorted=[...agents].sort((a,b)=>b.resources-a.resources);
+  const top=sorted[0], bottom=sorted[sorted.length-1];
+  const topStrat=STRATEGIES[top.strategy];
+  const lines=[];
+  if(final) lines.push('<b>🏁 Simulation Complete!</b><br>');
+  lines.push(`🥇 <b>${top.name}</b> (${topStrat.emoji} ${top.strategy}) leads with ${top.resources} resources.`);
+  lines.push(`🥉 <b>${bottom.name}</b> trails with ${bottom.resources}.`);
+  // strategy performance
+  const stratPerf={};
+  agents.forEach(a=>{
+    if(!stratPerf[a.strategy]) stratPerf[a.strategy]={total:0,count:0};
+    stratPerf[a.strategy].total+=a.resources; stratPerf[a.strategy].count++;
+  });
+  const best=Object.entries(stratPerf).sort((a,b)=>(b[1].total/b[1].count)-(a[1].total/a[1].count))[0];
+  lines.push(`📊 Best strategy avg: <b>${best[0]}</b> (${Math.round(best[1].total/best[1].count)} avg resources)`);
+  const giniVal=parseFloat(document.getElementById('giniIndex').textContent);
+  if(giniVal>.4) lines.push('⚠️ High inequality detected — aggressive agents may be dominating.');
+  else if(giniVal<.15) lines.push('✅ Resources are distributed fairly evenly.');
+  if(final){
+    const coopAgents=agents.filter(a=>['cooperative','fairshare'].includes(a.strategy));
+    const aggAgents=agents.filter(a=>a.strategy==='aggressive');
+    const coopAvg=coopAgents.length?coopAgents.reduce((s,a)=>s+a.resources,0)/coopAgents.length:0;
+    const aggAvg=aggAgents.length?aggAgents.reduce((s,a)=>s+a.resources,0)/aggAgents.length:0;
+    if(coopAvg>aggAvg) lines.push('💡 <b>Insight:</b> Cooperation outperformed aggression in this environment!');
+    else lines.push('💡 <b>Insight:</b> Aggressive strategies dominated — trust was hard to build.');
+  }
+  document.getElementById('insights').innerHTML=lines.join('<br>');
+}
+
+function loadPreset(name){
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  resetSim();
+  const el=document.getElementById('numAgents');
+  const res=document.getElementById('numResources');
+  const rnds=document.getElementById('numRounds');
+  switch(name){
+    case 'cooperative': el.value=6; res.value=120; rnds.value=40; break;
+    case 'cutthroat': el.value=8; res.value=80; rnds.value=60; break;
+    case 'mixed': el.value=6; res.value=100; rnds.value=50; break;
+    case 'tournament': el.value=12; res.value=200; rnds.value=100; break;
+  }
+  initAgents();
+  // Override strategies for presets
+  if(name==='cooperative') agents.forEach(a=>a.strategy=['cooperative','fairshare','cooperative','fairshare','titfortat','cooperative'][a.id%6]);
+  if(name==='cutthroat') agents.forEach(a=>a.strategy=['aggressive','aggressive','grudger','aggressive','titfortat','aggressive','grudger','aggressive'][a.id%8]);
+  // Re-position after count change
+  const n=agents.length;
+  agents.forEach((a,i)=>{
+    const ang=(Math.PI*2/n)*i;
+    const cx=canvas.width/2, cy=canvas.height/2, rad=Math.min(cx,cy)*0.65;
+    a.x=cx+Math.cos(ang)*rad; a.y=cy+Math.sin(ang)*rad; a.tx=a.x; a.ty=a.y;
+  });
+  updateScoreboard();
+}
+
+// Canvas rendering
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // Background grid
+  ctx.strokeStyle='rgba(30,38,66,.5)'; ctx.lineWidth=1;
+  for(let x=0;x<canvas.width;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}
+  for(let y=0;y<canvas.height;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}
+  // Center label
+  ctx.fillStyle='rgba(100,116,139,.3)'; ctx.font='14px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('NEGOTIATION ARENA',canvas.width/2,canvas.height/2);
+  // Animations
+  animations=animations.filter(a=>{
+    a.t+=.04;
+    if(a.t>1) return false;
+    const alpha=1-a.t;
+    ctx.globalAlpha=alpha;
+    ctx.beginPath(); ctx.moveTo(a.ax,a.ay); ctx.lineTo(a.bx,a.by);
+    if(a.type==='deal'){
+      ctx.strokeStyle=STRATEGIES.cooperative.color;
+      ctx.lineWidth=Math.max(1,(a.size||5)/5);
+    } else {
+      ctx.strokeStyle=STRATEGIES.aggressive.color;
+      ctx.lineWidth=1; ctx.setLineDash([4,4]);
+    }
+    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1;
+    return true;
+  });
+  // Agents
+  agents.forEach(a=>{
+    const s=STRATEGIES[a.strategy];
+    const scale=Math.max(.6,Math.min(2,a.resources/(agents[0]?.startResources||20)));
+    const r=a.radius*scale;
+    // Glow
+    const grad=ctx.createRadialGradient(a.x,a.y,r*.3,a.x,a.y,r*2);
+    grad.addColorStop(0,s.color+'44'); grad.addColorStop(1,'transparent');
+    ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(a.x,a.y,r*2,0,Math.PI*2); ctx.fill();
+    // Body
+    ctx.beginPath(); ctx.arc(a.x,a.y,r,0,Math.PI*2);
+    ctx.fillStyle=s.color+'33'; ctx.fill();
+    ctx.strokeStyle=s.color; ctx.lineWidth=2; ctx.stroke();
+    // Emoji
+    ctx.font=`${Math.round(r)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(s.emoji,a.x,a.y);
+    // Name + resources
+    ctx.font='11px sans-serif'; ctx.fillStyle=var_text;
+    ctx.fillText(a.name,a.x,a.y+r+14);
+    ctx.font='10px sans-serif'; ctx.fillStyle=s.color;
+    ctx.fillText(a.resources+'r',a.x,a.y+r+26);
+    // Reputation ring
+    ctx.beginPath();
+    ctx.arc(a.x,a.y,r+4,-Math.PI/2,-Math.PI/2+Math.PI*2*a.reputation);
+    ctx.strokeStyle=a.reputation>.5?'#00b894':'#d63031'; ctx.lineWidth=2; ctx.stroke();
+  });
+  requestAnimationFrame(draw);
+}
+const var_text='#e2e8f0';
+draw();
+
+// Hover tooltip
+canvas.addEventListener('mousemove',e=>{
+  const rect=canvas.getBoundingClientRect();
+  const sx=canvas.width/rect.width, sy=canvas.height/rect.height;
+  const mx=(e.clientX-rect.left)*sx, my=(e.clientY-rect.top)*sy;
+  let found=null;
+  agents.forEach(a=>{
+    const dx=mx-a.x, dy=my-a.y;
+    if(Math.sqrt(dx*dx+dy*dy)<a.radius*1.5) found=a;
+  });
+  if(found){
+    const s=STRATEGIES[found.strategy];
+    tooltip.style.display='block';
+    tooltip.style.left=(e.clientX-canvas.parentElement.getBoundingClientRect().left+12)+'px';
+    tooltip.style.top=(e.clientY-canvas.parentElement.getBoundingClientRect().top-10)+'px';
+    tooltip.innerHTML=`<b>${found.name}</b> ${s.emoji}<br>
+    Strategy: ${found.strategy}<br>
+    <span style="color:var(--dim)">${s.desc}</span><br>
+    Resources: <b>${found.resources}</b> (started ${found.startResources})<br>
+    Deals: ${found.deals} | Failed: ${found.fails}<br>
+    Reputation: ${(found.reputation*100).toFixed(0)}%<br>
+    Grudges: ${found.grudges.size}`;
+  } else {
+    tooltip.style.display='none';
+  }
+});
+canvas.addEventListener('mouseleave',()=>tooltip.style.display='none');
+
+// Init
+initAgents(); updateScoreboard();
+</script>
+</body>
+</html>
