@@ -1,0 +1,65 @@
+name: 📄 Documentation Issue
+description: Report missing, incorrect, or unclear documentation
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve our docs! Report inaccuracies, gaps, or confusing sections.
+
+  - type: dropdown
+    id: doc-area
+    attributes:
+      label: Documentation Area
+      description: Which documentation is affected?
+      options:
+        - README.md
+        - API docs (api-docs.html)
+        - Tutorials (tutorials.html)
+        - Architecture overview
+        - SDK reference (sdk.html)
+        - Knowledge base
+        - FAQ
+        - Security whitepaper
+        - CONTRIBUTING.md
+        - Inline code comments
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What kind of documentation problem is this?
+      options:
+        - Missing documentation
+        - Incorrect / outdated information
+        - Unclear or confusing explanation
+        - Broken links or references
+        - Missing code examples
+        - Typo or grammar
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe what's wrong or missing
+      placeholder: "The SDK reference doesn't cover the authentication flow..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: How should the documentation read? Provide corrected text or outline if possible.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Links, screenshots, or references that help clarify the issue

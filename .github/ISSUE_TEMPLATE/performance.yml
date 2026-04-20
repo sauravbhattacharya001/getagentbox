@@ -1,0 +1,100 @@
+name: 🐢 Performance Issue
+description: Report slow load times, high resource usage, or rendering jank
+title: "[Perf]: "
+labels: ["performance"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Noticed something slow? Help us track down performance bottlenecks.
+
+  - type: dropdown
+    id: perf-area
+    attributes:
+      label: Affected Area
+      description: Where did you notice the performance problem?
+      options:
+        - Initial page load
+        - Chat demo / simulator
+        - Animations / transitions
+        - Image / asset loading
+        - JavaScript execution
+        - CSS rendering
+        - Metrics simulator
+        - CLI playground
+        - Mobile performance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What's slow?
+      description: Describe the performance issue in detail
+      placeholder: "The page takes 5+ seconds to become interactive on mobile..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: measurements
+    attributes:
+      label: Measurements
+      description: Include Lighthouse scores, Web Vitals, network waterfall, or timing data if available
+      placeholder: |
+        LCP: 4.2s
+        CLS: 0.15
+        FID: 250ms
+
+  - type: dropdown
+    id: connection
+    attributes:
+      label: Network Conditions
+      description: What kind of connection were you on?
+      options:
+        - Fast (broadband / fiber)
+        - Average (cable / DSL)
+        - Slow (3G / throttled)
+        - Offline-first / Service Worker
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device Type
+      options:
+        - High-end desktop
+        - Average desktop / laptop
+        - Low-end device
+        - Tablet
+        - High-end phone
+        - Mid-range phone
+        - Low-end phone
+    validations:
+      required: true
+
+  - type: textarea
+    id: browser-info
+    attributes:
+      label: Browser & OS
+      description: Browser name/version and operating system
+      placeholder: "Chrome 124 on Windows 11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: How can we see the issue?
+      placeholder: |
+        1. Open site on 3G throttle
+        2. Scroll to chat demo section
+        3. Notice 3s delay before animation starts
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: DevTools screenshots, profiles, HAR files, etc.
