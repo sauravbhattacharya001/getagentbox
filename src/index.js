@@ -290,9 +290,8 @@
          * @returns {Array<{score: number, comment: string, timestamp: number}>}
          */
         _load: function () {
-            if (typeof localStorage === 'undefined') return [];
             try {
-                var raw = localStorage.getItem(Feedback._STORAGE_KEY);
+                var raw = (typeof localStorage !== 'undefined') ? localStorage.getItem(Feedback._STORAGE_KEY) : null;
                 return raw ? JSON.parse(raw) : [];
             } catch (e) { return []; }
         },
@@ -302,8 +301,11 @@
          * @param {Array} entries
          */
         _save: function (entries) {
-            if (typeof localStorage === 'undefined') return;
-            try { localStorage.setItem(Feedback._STORAGE_KEY, JSON.stringify(entries)); } catch (e) { /* quota */ }
+            try {
+                if (typeof localStorage !== 'undefined') {
+                    localStorage.setItem(Feedback._STORAGE_KEY, JSON.stringify(entries));
+                }
+            } catch (e) { /* quota or private browsing */ }
         },
 
         /**

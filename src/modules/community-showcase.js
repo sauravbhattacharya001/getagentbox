@@ -110,10 +110,14 @@ var CommunityShowcase = (function () {
     _storage.setJSON(STORAGE_KEY, _likes);
   }
 
-  function _escapeHtml(str) {
-    if (typeof str !== 'string') return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
+  // Use shared DOMUtil when available; otherwise keep a regex fallback for
+  // standalone or SSR contexts where a DOM element isn't available.
+  var _escapeHtml = (typeof DOMUtil !== 'undefined' && DOMUtil.escapeHtml)
+    ? function (str) { return typeof str === 'string' ? DOMUtil.escapeHtml(str) : ''; }
+    : function (str) {
+        if (typeof str !== 'string') return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      };
 
   function _isLiked(id) {
     return !!_likes[id];
