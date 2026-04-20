@@ -231,7 +231,52 @@
     });
   }
 
-  // iCal stub
+  /**
+   * Escape a string for iCalendar TEXT values (RFC 5545 §3.3.11).
+   * Backslashes, semicolons, commas, and newlines must be escaped.
+   */
+  function icalEscapeText(str) {
+    return str
+      .replace(/\\/g, '\\\\')
+      .replace(/;/g, '\\;')
+      .replace(/,/g, '\\,')
+      .replace(/\n/g, '\\n');
+  }
+
+  /**
+   * Parse a time string like "11:00 AM PT" into { hours24, minutes }.
+   * Returns null if the format is unrecognised.
+   */
+  function parseTime(timeStr) {
+    var m = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)\s*/i);
+    if (!m) return null;
+    var hours = parseInt(m[1], 10);
+    var minutes = parseInt(m[2], 10);
+    var isPM = m[3].toUpperCase() === 'PM';
+    if (hours === 12) hours = isPM ? 12 : 0;
+    else if (isPM) hours += 12;
+    return { hours: hours, minutes: minutes };
+  }
+
+  /**
+   * Format a Date + optional parsed time as an iCal DTSTART property.
+   * When a time is available the event is anchored to America/Los_Angeles
+   * ("PT" in the event data).  Without a parseable time we fall back to
+   * an all-day DATE value so the event still appears.
+   */
+  function icalDTStart(d, timeStr) {
+    var dateStr = d.getFullYear() +
+      ('0' + (d.getMonth() + 1)).slice(-2) +
+      ('0' + d.getDate()).slice(-2);
+    var t = parseTime(timeStr);
+    if (t) {
+      var timeStamp = ('0' + t.hours).slice(-2) + ('0' + t.minutes).slice(-2) + '00';
+      return 'DTSTART;TZID=America/Los_Angeles:' + dateStr + 'T' + timeStamp;
+    }
+    return 'DTSTART;VALUE=DATE:' + dateStr;
+  }
+
+  // iCal export
   var icalLink = document.getElementById('icalLink');
   if (icalLink) {
     icalLink.addEventListener('click', function(e) {
@@ -239,13 +284,10 @@
       var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AgentBox//Events//EN'];
       EVENTS.filter(function(ev) { return ev.status !== 'past'; }).forEach(function(ev) {
         var d = parseDate(ev.date);
-        var dateStr = d.getFullYear() +
-          ('0' + (d.getMonth()+1)).slice(-2) +
-          ('0' + d.getDate()).slice(-2);
         lines.push('BEGIN:VEVENT');
-        lines.push('DTSTART;VALUE=DATE:' + dateStr);
-        lines.push('SUMMARY:' + ev.title);
-        lines.push('DESCRIPTION:' + ev.description.substring(0, 200));
+        lines.push(icalDTStart(d, ev.time));
+        lines.push('SUMMARY:' + icalEscapeText(ev.title));
+        lines.push('DESCRIPTION:' + icalEscapeText(ev.description.substring(0, 200)));
         lines.push('END:VEVENT');
       });
       lines.push('END:VCALENDAR');
