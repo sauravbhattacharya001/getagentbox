@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Swarm Playground - AgentBox</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e0e0e0;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+header{background:#111;border-bottom:1px solid #222;padding:12px 24px;display:flex;align-items:center;gap:16px;z-index:10}
+header a{color:#00d4ff;text-decoration:none;font-size:14px}
+header a:hover{text-decoration:underline}
+header h1{font-size:18px;font-weight:600;color:#fff}
+.badge{background:#00d4ff22;color:#00d4ff;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:8px}
+.main{display:flex;flex:1;overflow:hidden}
+.canvas-wrap{flex:1;position:relative}
+canvas{display:block;width:100%;height:100%;background:#0a0a0a}
+.panel{width:280px;background:#111;border-left:1px solid #222;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.panel h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4px}
+.control{display:flex;flex-direction:column;gap:4px}
+.control label{font-size:12px;color:#aaa;display:flex;justify-content:space-between}
+.control input[type=range]{width:100%;accent-color:#00d4ff}
+.btn-row{display:flex;gap:8px}
+.btn{padding:8px 14px;border:1px solid #333;background:#1a1a1a;color:#e0e0e0;border-radius:6px;cursor:pointer;font-size:12px;transition:background .2s}
+.btn:hover{background:#252525}
+.btn.active{background:#00d4ff22;border-color:#00d4ff;color:#00d4ff}
+select{background:#1a1a1a;border:1px solid #333;color:#e0e0e0;padding:6px 10px;border-radius:6px;font-size:12px;width:100%}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:#1a1a1a;border:1px solid #222;border-radius:8px;padding:10px;text-align:center}
+.stat .val{font-size:20px;font-weight:700;color:#00d4ff}
+.stat .lbl{font-size:10px;color:#888;margin-top:2px}
+.toast-container{position:absolute;top:16px;right:16px;display:flex;flex-direction:column;gap:8px;pointer-events:none;z-index:5}
+.toast{background:#00d4ff22;border:1px solid #00d4ff44;color:#00d4ff;padding:8px 14px;border-radius:8px;font-size:12px;animation:fadeInOut 3s forwards}
+@keyframes fadeInOut{0%{opacity:0;transform:translateY(-10px)}10%{opacity:1;transform:translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+</style>
+</head>
+<body>
+<header>
+<a href="index.html">&larr; Home</a>
+<h1>Agent Swarm Playground</h1>
+<span class="badge">Interactive</span>
+</header>
+<div class="main">
+<div class="canvas-wrap">
+<canvas id="c"></canvas>
+<div class="toast-container" id="toasts"></div>
+</div>
+<div class="panel">
+<h2>Controls</h2>
+<div class="control"><label>Agents <span id="lAgents">50</span></label><input type="range" id="sAgents" min="10" max="200" value="50"></div>
+<div class="control"><label>Speed <span id="lSpeed">3</span></label><input type="range" id="sSpeed" min="1" max="10" value="3"></div>
+<div class="control"><label>Separation <span id="lSep">1.5</span></label><input type="range" id="sSep" min="0" max="50" value="15"></div>
+<div class="control"><label>Alignment <span id="lAli">1.0</span></label><input type="range" id="sAli" min="0" max="50" value="10"></div>
+<div class="control"><label>Cohesion <span id="lCoh">1.0</span></label><input type="range" id="sCoh" min="0" max="50" value="10"></div>
+<div class="control"><label>Task Spawn Rate <span id="lRate">3</span></label><input type="range" id="sRate" min="1" max="10" value="3"></div>
+<h2>Presets</h2>
+<select id="presets"><option value="">— Select —</option><option value="tight">Tight Swarm</option><option value="scatter">Scattered</option><option value="highway">Highway</option><option value="chaos">Chaos</option></select>
+<div class="btn-row">
+<button class="btn active" id="btnPlay">⏸ Pause</button>
+<button class="btn" id="btnReset">↺ Reset</button>
+</div>
+<h2>Stats</h2>
+<div class="stats">
+<div class="stat"><div class="val" id="stTasks">0</div><div class="lbl">Tasks Done</div></div>
+<div class="stat"><div class="val" id="stSpeed">0</div><div class="lbl">Avg Speed</div></div>
+<div class="stat"><div class="val" id="stCohesion">0</div><div class="lbl">Cohesion</div></div>
+<div class="stat"><div class="val" id="stClusters">0</div><div class="lbl">Clusters</div></div>
+<div class="stat"><div class="val" id="stEff">0</div><div class="lbl">Tasks/min</div></div>
+</div>
+</div>
+</div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let W,H,agents=[],tasks=[],running=true,tasksDone=0,startTime=Date.now();
+const cfg={count:50,speed:3,sep:1.5,ali:1.0,coh:1.0,rate:3};
+
+function resize(){W=canvas.width=canvas.clientWidth;H=canvas.height=canvas.clientHeight}
+window.addEventListener('resize',resize);resize();
+
+class Agent{
+constructor(){this.x=Math.random()*W;this.y=Math.random()*H;this.vx=(Math.random()-.5)*2;this.vy=(Math.random()-.5)*2;this.state='idle';this.target=null}
+update(agents){
+let sx=0,sy=0,ax=0,ay=0,cx=0,cy=0,sc=0,ac=0,cc=0;
+for(const o of agents){if(o===this)continue;const dx=o.x-this.x,dy=o.y-this.y,d=Math.sqrt(dx*dx+dy*dy);
+if(d<30){sx-=dx/d;sy-=dy/d;sc++}
+if(d<60){ax+=o.vx;ay+=o.vy;ac++}
+if(d<80){cx+=o.x;cy+=o.y;cc++}}
+if(sc){sx/=sc;sy/=sc}if(ac){ax/=ac;ay/=ac}if(cc){cx/=cc;cy/=cc;cx-=this.x;cy-=this.y}
+this.vx+=sx*cfg.sep*0.05+ax*cfg.ali*0.03+cx*cfg.coh*0.02;
+this.vy+=sy*cfg.sep*0.05+ay*cfg.ali*0.03+cy*cfg.coh*0.02;
+if(this.target){const dx=this.target.x-this.x,dy=this.target.y-this.y,d=Math.sqrt(dx*dx+dy*dy);
+if(d<8){tasksDone++;tasks=tasks.filter(t=>t!==this.target);this.target=null;this.state='idle'}
+else{this.vx+=dx/d*0.5;this.vy+=dy/d*0.5;this.state='working'}}
+else{this.state='idle';for(const t of tasks){if(t.claimed)continue;const dx=t.x-this.x,dy=t.y-this.y;if(Math.sqrt(dx*dx+dy*dy)<120){this.target=t;t.claimed=true;break}}}
+const spd=Math.sqrt(this.vx*this.vx+this.vy*this.vy),max=cfg.speed;
+if(spd>max){this.vx=this.vx/spd*max;this.vy=this.vy/spd*max}
+this.x+=this.vx;this.y+=this.vy;
+if(this.x<0)this.x+=W;if(this.x>W)this.x-=W;if(this.y<0)this.y+=H;if(this.y>H)this.y-=H}
+draw(){
+const a=Math.atan2(this.vy,this.vx),s=6;
+const col=this.state==='working'?'#00ff88':this.state==='returning'?'#ff6b35':'#00d4ff';
+ctx.save();ctx.translate(this.x,this.y);ctx.rotate(a);
+ctx.beginPath();ctx.moveTo(s,0);ctx.lineTo(-s,-s/2);ctx.lineTo(-s,s/2);ctx.closePath();
+ctx.fillStyle=col;ctx.fill();ctx.restore()}}
+
+function initAgents(){agents=[];for(let i=0;i<cfg.count;i++)agents.push(new Agent())}
+initAgents();
+
+let taskTimer=0;
+function spawnTask(){tasks.push({x:Math.random()*W,y:Math.random()*H,claimed:false,t:Date.now()})}
+
+function drawTask(t){ctx.beginPath();ctx.arc(t.x,t.y,6,0,Math.PI*2);ctx.fillStyle='#ff6b3566';ctx.fill();ctx.strokeStyle='#ff6b35';ctx.lineWidth=1.5;ctx.stroke();ctx.beginPath();ctx.arc(t.x,t.y,10,0,Math.PI*2);ctx.strokeStyle='#ff6b3533';ctx.stroke()}
+
+let lastAlert=0;
+function checkEmergent(){
+if(Date.now()-lastAlert<5000)return;
+const cx=agents.reduce((s,a)=>s+a.x,0)/agents.length,cy=agents.reduce((s,a)=>s+a.y,0)/agents.length;
+const avgDist=agents.reduce((s,a)=>s+Math.sqrt((a.x-cx)**2+(a.y-cy)**2),0)/agents.length;
+if(avgDist<40){toast('🐝 Flock formed!');lastAlert=Date.now();return}
+if(avgDist>W*0.35){toast('💥 Dispersal event!');lastAlert=Date.now();return}
+const dirs=agents.map(a=>Math.atan2(a.vy,a.vx));
+const avgSin=dirs.reduce((s,d)=>s+Math.sin(d),0)/dirs.length;
+const avgCos=dirs.reduce((s,d)=>s+Math.cos(d),0)/dirs.length;
+if(Math.sqrt(avgSin**2+avgCos**2)>0.85){toast('🛣️ Highway detected!');lastAlert=Date.now()}}
+
+function toast(msg){const d=document.createElement('div');d.className='toast';d.textContent=msg;document.getElementById('toasts').appendChild(d);setTimeout(()=>d.remove(),3200)}
+
+function updateStats(){
+const spds=agents.map(a=>Math.sqrt(a.vx**2+a.vy**2));
+document.getElementById('stTasks').textContent=tasksDone;
+document.getElementById('stSpeed').textContent=(spds.reduce((a,b)=>a+b,0)/spds.length).toFixed(1);
+const cx=agents.reduce((s,a)=>s+a.x,0)/agents.length,cy=agents.reduce((s,a)=>s+a.y,0)/agents.length;
+const coh=agents.reduce((s,a)=>s+Math.sqrt((a.x-cx)**2+(a.y-cy)**2),0)/agents.length;
+document.getElementById('stCohesion').textContent=coh.toFixed(0);
+let clusters=0,visited=new Set();
+for(let i=0;i<agents.length;i++){if(visited.has(i))continue;clusters++;const q=[i];visited.add(i);
+while(q.length){const ci=q.pop();for(let j=0;j<agents.length;j++){if(visited.has(j))continue;
+const dx=agents[ci].x-agents[j].x,dy=agents[ci].y-agents[j].y;if(Math.sqrt(dx*dx+dy*dy)<50){visited.add(j);q.push(j)}}}}
+document.getElementById('stClusters').textContent=clusters;
+const mins=(Date.now()-startTime)/60000;
+document.getElementById('stEff').textContent=mins>0?(tasksDone/mins).toFixed(1):'0'}
+
+function loop(){
+if(!running){requestAnimationFrame(loop);return}
+ctx.clearRect(0,0,W,H);
+taskTimer++;if(taskTimer%(Math.max(1,Math.round(60/cfg.rate)))===0)spawnTask();
+tasks.forEach(drawTask);
+agents.forEach(a=>a.update(agents));agents.forEach(a=>a.draw());
+if(taskTimer%60===0){updateStats();checkEmergent()}
+requestAnimationFrame(loop)}
+loop();
+
+const sl=(id,lbl,key,div)=>{const el=document.getElementById(id);el.oninput=()=>{const v=el.value/div;cfg[key]=v;document.getElementById(lbl).textContent=v.toFixed(1)}};
+sl('sSpeed','lSpeed','speed',1);sl('sSep','lSep','sep',10);sl('sAli','lAli','ali',10);sl('sCoh','lCoh','coh',10);
+document.getElementById('sRate').oninput=function(){cfg.rate=+this.value;document.getElementById('lRate').textContent=this.value};
+document.getElementById('sAgents').oninput=function(){cfg.count=+this.value;document.getElementById('lAgents').textContent=this.value;initAgents()};
+document.getElementById('btnPlay').onclick=function(){running=!running;this.textContent=running?'⏸ Pause':'▶ Play';this.classList.toggle('active',running)};
+document.getElementById('btnReset').onclick=()=>{initAgents();tasks=[];tasksDone=0;startTime=Date.now();updateStats()};
+document.getElementById('presets').onchange=function(){
+const p={tight:{sep:5,ali:10,coh:40},scatter:{sep:45,ali:5,coh:3},highway:{sep:10,ali:50,coh:8},chaos:{sep:Math.random()*50|0,ali:Math.random()*50|0,coh:Math.random()*50|0}};
+const v=p[this.value];if(!v)return;
+document.getElementById('sSep').value=v.sep;cfg.sep=v.sep/10;document.getElementById('lSep').textContent=cfg.sep.toFixed(1);
+document.getElementById('sAli').value=v.ali;cfg.ali=v.ali/10;document.getElementById('lAli').textContent=cfg.ali.toFixed(1);
+document.getElementById('sCoh').value=v.coh;cfg.coh=v.coh/10;document.getElementById('lCoh').textContent=cfg.coh.toFixed(1)};
+</script>
+</body>
+</html>
