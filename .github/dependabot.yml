@@ -2,7 +2,7 @@
 # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
 version: 2
 updates:
-  # GitHub Actions — keep workflow actions up to date
+  # GitHub Actions - keep workflow actions up to date
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -14,8 +14,36 @@ updates:
     labels:
       - "dependencies"
       - "ci/cd"
+    groups:
+      actions:
+        patterns:
+          - "*"
 
-  # Docker — keep base images (node, nginx) up to date
+  # npm - keep Node.js dependencies up to date
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "dependencies"
+      - "javascript"
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Docker - keep base images (node, nginx) up to date
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
