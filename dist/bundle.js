@@ -2339,10 +2339,10 @@ var CapacityPlanner = (function () {
       _resultMessages.textContent = totalMonthly.toLocaleString() + ' msgs/month';
     }
 
-    // Find the best plan
+    // Find the best plan based on per-user daily usage (msgLimit is per-user)
     var bestPlan = PLANS[PLANS.length - 1];
     for (var j = 0; j < PLANS.length; j++) {
-      if (PLANS[j].msgLimit >= totalDaily) {
+      if (PLANS[j].msgLimit >= effectiveDaily) {
         bestPlan = PLANS[j];
         break;
       }
@@ -2359,8 +2359,8 @@ var CapacityPlanner = (function () {
       _resultCost.textContent = totalCost === 0 ? 'Free!' : '$' + totalCost + '/mo';
     }
 
-    // Utilization bar
-    var utilization = Math.min(100, Math.round((totalDaily / bestPlan.msgLimit) * 100));
+    // Utilization bar (per-user usage vs per-user plan limit)
+    var utilization = Math.min(100, Math.round((effectiveDaily / bestPlan.msgLimit) * 100));
     if (_resultBar) {
       _resultBar.style.width = utilization + '%';
       _resultBar.style.backgroundColor = utilization > 85 ? '#dc3545' : utilization > 60 ? '#ffc107' : '#198754';
@@ -3455,15 +3455,8 @@ var PromptGallery = (function () {
 var PersonalityConfigurator = (function () {
   'use strict';
 
-  // Use shared StorageUtil when available, otherwise inline a minimal shim
-  var _storage = (typeof StorageUtil !== 'undefined') ? StorageUtil : {
-    getJSON: function (key, fallback) {
-      try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; }
-    },
-    setJSON: function (key, value) {
-      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota */ }
-    }
-  };
+  // StorageUtil is always available — loaded first in build order (see build.js)
+  var _storage = StorageUtil;
 
   const STORAGE_KEY_PERSONALITY = 'agentbox_personality';
 
@@ -7251,15 +7244,8 @@ var PipelineBuilder = (function () {
 var CommunityShowcase = (function () {
   "use strict";
 
-  // Use shared StorageUtil when available, otherwise inline a minimal shim
-  var _storage = (typeof StorageUtil !== 'undefined') ? StorageUtil : {
-    getJSON: function (key, fallback) {
-      try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; }
-    },
-    setJSON: function (key, value) {
-      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota */ }
-    }
-  };
+  // StorageUtil is always available — loaded first in build order (see build.js)
+  var _storage = StorageUtil;
 
   var STORAGE_KEY = "agentbox_showcase_likes";
 
@@ -7356,10 +7342,14 @@ var CommunityShowcase = (function () {
     _storage.setJSON(STORAGE_KEY, _likes);
   }
 
-  function _escapeHtml(str) {
-    if (typeof str !== 'string') return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
+  // Use shared DOMUtil when available; otherwise keep a regex fallback for
+  // standalone or SSR contexts where a DOM element isn't available.
+  var _escapeHtml = (typeof DOMUtil !== 'undefined' && DOMUtil.escapeHtml)
+    ? function (str) { return typeof str === 'string' ? DOMUtil.escapeHtml(str) : ''; }
+    : function (str) {
+        if (typeof str !== 'string') return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      };
 
   function _isLiked(id) {
     return !!_likes[id];
@@ -10969,15 +10959,8 @@ if (typeof module !== 'undefined' && module.exports) {
 var SetupChecklist = (function () {
   'use strict';
 
-  // Use shared StorageUtil when available, otherwise inline a minimal shim
-  var _storage = (typeof StorageUtil !== 'undefined') ? StorageUtil : {
-    getJSON: function (key, fallback) {
-      try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; }
-    },
-    setJSON: function (key, value) {
-      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota */ }
-    }
-  };
+  // StorageUtil is always available — loaded first in build order (see build.js)
+  var _storage = StorageUtil;
 
   var STORAGE_KEY = 'agentbox_setup_checklist';
 

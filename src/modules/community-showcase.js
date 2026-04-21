@@ -5,15 +5,8 @@
 var CommunityShowcase = (function () {
   "use strict";
 
-  // Use shared StorageUtil when available, otherwise inline a minimal shim
-  var _storage = (typeof StorageUtil !== 'undefined') ? StorageUtil : {
-    getJSON: function (key, fallback) {
-      try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; }
-    },
-    setJSON: function (key, value) {
-      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota */ }
-    }
-  };
+  // StorageUtil is always available — loaded first in build order (see build.js)
+  var _storage = StorageUtil;
 
   var STORAGE_KEY = "agentbox_showcase_likes";
 
