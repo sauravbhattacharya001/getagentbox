@@ -47,7 +47,7 @@
     "url": "https://github.com/sauravbhattacharya001/getagentbox/issues"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
+    "jest": "^30.3.0",
     "jest-environment-jsdom": "^29.7.0"
   }
 }
