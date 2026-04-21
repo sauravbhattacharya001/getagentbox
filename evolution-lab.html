@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Evolution Lab - AgentBox</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--surface:#111827;--surface2:#1e293b;--border:#334155;--primary:#6366f1;--primary-glow:#818cf8;--accent:#10b981;--danger:#ef4444;--warn:#f59e0b;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--radius:12px}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+a{color:var(--primary-glow);text-decoration:none}
+.header{background:linear-gradient(135deg,#1e1b4b,#312e81,#1e1b4b);padding:2rem;text-align:center;border-bottom:1px solid var(--border)}
+.header h1{font-size:2rem;margin-bottom:0.5rem;background:linear-gradient(90deg,var(--primary-glow),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header p{color:var(--text2);max-width:700px;margin:0 auto}
+.back-link{display:inline-block;margin-bottom:1rem;color:var(--text2);font-size:0.9rem}
+.container{max-width:1400px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:320px 1fr;gap:1.5rem}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.panel h2{font-size:1.1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+.panel h3{font-size:0.95rem;margin:1rem 0 0.5rem;color:var(--text2)}
+label{display:block;font-size:0.85rem;color:var(--text2);margin-bottom:0.3rem}
+input[type=range]{width:100%;accent-color:var(--primary)}
+.range-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem}
+.range-row span{font-size:0.8rem;color:var(--text3);min-width:40px;text-align:right}
+select,button{font-family:inherit;font-size:0.9rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);padding:0.5rem 0.75rem;cursor:pointer;width:100%}
+select:focus,button:focus{outline:2px solid var(--primary)}
+button.primary{background:var(--primary);border-color:var(--primary);font-weight:600}
+button.primary:hover{background:var(--primary-glow)}
+button.danger{background:var(--danger);border-color:var(--danger)}
+.btn-row{display:flex;gap:0.5rem;margin-top:1rem}
+.btn-row button{flex:1}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem}
+.stat-card{background:var(--surface2);border-radius:8px;padding:0.75rem;text-align:center}
+.stat-card .val{font-size:1.5rem;font-weight:700;color:var(--primary-glow)}
+.stat-card .lbl{font-size:0.75rem;color:var(--text3);margin-top:0.2rem}
+canvas{width:100%;border-radius:8px;background:var(--surface2)}
+.genome-list{max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:0.5rem}
+.genome-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;cursor:pointer;transition:border-color 0.2s}
+.genome-item:hover,.genome-item.selected{border-color:var(--primary)}
+.genome-item .rank{font-weight:700;color:var(--warn);margin-right:0.5rem}
+.genome-item .fitness{float:right;font-weight:700;color:var(--accent)}
+.genome-item .traits{font-size:0.8rem;color:var(--text3);margin-top:0.3rem}
+.genome-detail{margin-top:1rem}
+.trait-bar{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;font-size:0.85rem}
+.trait-bar .name{min-width:110px;color:var(--text2)}
+.trait-bar .bar-bg{flex:1;height:8px;background:var(--surface);border-radius:4px;overflow:hidden}
+.trait-bar .bar-fill{height:100%;border-radius:4px;transition:width 0.3s}
+.trait-bar .val{min-width:40px;text-align:right;font-weight:600;font-size:0.8rem}
+.log{max-height:200px;overflow-y:auto;font-family:'Cascadia Code',monospace;font-size:0.8rem;color:var(--text3);background:var(--surface2);border-radius:8px;padding:0.75rem;margin-top:1rem;line-height:1.6}
+.log .gen{color:var(--primary-glow)}.log .mut{color:var(--warn)}.log .fit{color:var(--accent)}
+.tag{display:inline-block;font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;margin-right:0.3rem}
+.tag-blue{background:#1e3a5f;color:#60a5fa}.tag-green{background:#14532d;color:#4ade80}.tag-purple{background:#3b0764;color:#c084fc}
+.right-area{display:flex;flex-direction:column;gap:1.5rem}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:1100px){.chart-row{grid-template-columns:1fr}}
+.env-badge{display:inline-block;padding:0.25rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:600;margin-right:0.5rem}
+</style>
+</head>
+<body>
+<div class="header">
+<a href="index.html" class="back-link">← Back to AgentBox</a>
+<h1>🧬 Agent Evolution Lab</h1>
+<p>Evolve optimal agent configurations through simulated natural selection. Define traits, set fitness criteria, and watch generations of agents compete and adapt.</p>
+</div>
+<div class="container">
+<div style="display:flex;flex-direction:column;gap:1.5rem">
+<!-- Evolution Config -->
+<div class="panel">
+<h2>⚙️ Evolution Settings</h2>
+<label>Environment Preset</label>
+<select id="envPreset" onchange="applyPreset()">
+<option value="balanced">🌍 Balanced General</option>
+<option value="speed">⚡ Speed-Critical</option>
+<option value="accuracy">🎯 Accuracy-First</option>
+<option value="cost">💰 Cost-Optimized</option>
+<option value="resilient">🛡️ Resilience-Focused</option>
+<option value="creative">🎨 Creative Exploration</option>
+</select>
+<h3>Population</h3>
+<div class="range-row"><label>Size</label><span id="popSizeVal">30</span></div>
+<input type="range" id="popSize" min="10" max="100" value="30" oninput="popSizeVal.textContent=this.value">
+<h3>Mutation</h3>
+<div class="range-row"><label>Rate</label><span id="mutRateVal">15%</span></div>
+<input type="range" id="mutRate" min="1" max="50" value="15" oninput="mutRateVal.textContent=this.value+'%'">
+<div class="range-row"><label>Strength</label><span id="mutStrVal">20%</span></div>
+<input type="range" id="mutStr" min="5" max="50" value="20" oninput="mutStrVal.textContent=this.value+'%'">
+<h3>Selection</h3>
+<div class="range-row"><label>Elitism</label><span id="eliteVal">10%</span></div>
+<input type="range" id="elite" min="0" max="50" value="10" oninput="eliteVal.textContent=this.value+'%'">
+<label style="margin-top:0.5rem">Crossover Strategy</label>
+<select id="crossover">
+<option value="uniform">Uniform</option>
+<option value="single">Single-Point</option>
+<option value="blend">BLX-α Blend</option>
+</select>
+<h3>Fitness Weights</h3>
+<div class="range-row"><label>Speed</label><span id="wSpeedVal">50</span></div>
+<input type="range" id="wSpeed" min="0" max="100" value="50" oninput="wSpeedVal.textContent=this.value">
+<div class="range-row"><label>Accuracy</label><span id="wAccVal">50</span></div>
+<input type="range" id="wAcc" min="0" max="100" value="50" oninput="wAccVal.textContent=this.value">
+<div class="range-row"><label>Cost Efficiency</label><span id="wCostVal">30</span></div>
+<input type="range" id="wCost" min="0" max="100" value="30" oninput="wCostVal.textContent=this.value">
+<div class="range-row"><label>Resilience</label><span id="wResVal">30</span></div>
+<input type="range" id="wRes" min="0" max="100" value="30" oninput="wResVal.textContent=this.value">
+<div class="btn-row">
+<button class="primary" onclick="startEvolution()">▶ Evolve</button>
+<button onclick="stepOnce()">⏭ Step</button>
+<button class="danger" onclick="resetEvolution()">↺ Reset</button>
+</div>
+</div>
+</div>
+<div class="right-area">
+<!-- Stats -->
+<div class="panel">
+<h2>📊 Generation Stats</h2>
+<div class="stats-grid">
+<div class="stat-card"><div class="val" id="genNum">0</div><div class="lbl">Generation</div></div>
+<div class="stat-card"><div class="val" id="bestFit">0</div><div class="lbl">Best Fitness</div></div>
+<div class="stat-card"><div class="val" id="avgFit">0</div><div class="lbl">Avg Fitness</div></div>
+<div class="stat-card"><div class="val" id="diversity">100%</div><div class="lbl">Diversity</div></div>
+</div>
+<div id="envBadges"></div>
+</div>
+<!-- Charts -->
+<div class="chart-row">
+<div class="panel">
+<h2>📈 Fitness Over Generations</h2>
+<canvas id="fitnessChart" height="220"></canvas>
+</div>
+<div class="panel">
+<h2>🧬 Trait Distribution</h2>
+<canvas id="traitChart" height="220"></canvas>
+</div>
+</div>
+<!-- Leaderboard -->
+<div class="panel">
+<h2>🏆 Top Agents</h2>
+<div class="genome-list" id="leaderboard"></div>
+<div class="genome-detail" id="genomeDetail" style="display:none">
+<h3>Agent Genome Inspector</h3>
+<div id="traitBars"></div>
+</div>
+</div>
+<!-- Log -->
+<div class="panel">
+<h2>📜 Evolution Log</h2>
+<div class="log" id="log"></div>
+</div>
+</div>
+</div>
+
+<script>
+const TRAITS = [
+  {key:'responseSpeed',name:'Response Speed',color:'#60a5fa'},
+  {key:'accuracy',name:'Accuracy',color:'#4ade80'},
+  {key:'contextWindow',name:'Context Window',color:'#c084fc'},
+  {key:'creativity',name:'Creativity',color:'#f472b6'},
+  {key:'costEfficiency',name:'Cost Efficiency',color:'#fbbf24'},
+  {key:'resilience',name:'Resilience',color:'#2dd4bf'},
+  {key:'toolUse',name:'Tool Use',color:'#fb923c'},
+  {key:'reasoning',name:'Reasoning',color:'#a78bfa'},
+  {key:'memoryRetention',name:'Memory',color:'#38bdf8'},
+  {key:'collaboration',name:'Collaboration',color:'#f87171'},
+];
+
+const PRESETS = {
+  balanced:   {wSpeed:50,wAcc:50,wCost:30,wRes:30},
+  speed:      {wSpeed:90,wAcc:30,wCost:40,wRes:20},
+  accuracy:   {wSpeed:20,wAcc:90,wCost:20,wRes:40},
+  cost:       {wSpeed:30,wAcc:40,wCost:90,wRes:20},
+  resilient:  {wSpeed:20,wAcc:40,wCost:20,wRes:90},
+  creative:   {wSpeed:40,wAcc:30,wCost:20,wRes:20},
+};
+
+let population = [];
+let generation = 0;
+let history = {best:[],avg:[],diversity:[]};
+let running = false;
+let animId = null;
+let selectedAgent = null;
+
+function rand(min=0,max=1){return Math.random()*(max-min)+min}
+function clamp(v,lo=0,hi=100){return Math.max(lo,Math.min(hi,v))}
+
+function createAgent(){
+  const g={};
+  TRAITS.forEach(t=>g[t.key]=rand(10,90));
+  return {genome:g,fitness:0,id:Math.random().toString(36).slice(2,8)};
+}
+
+function fitness(agent){
+  const g=agent.genome;
+  const ws=+wSpeed.value,wa=+wAcc.value,wc=+wCost.value,wr=+wRes.value;
+  const total=ws+wa+wc+wr||1;
+  let f=0;
+  f+=(ws/total)*(g.responseSpeed*0.7+g.toolUse*0.3);
+  f+=(wa/total)*(g.accuracy*0.6+g.reasoning*0.3+g.contextWindow*0.1);
+  f+=(wc/total)*(g.costEfficiency*0.8+g.memoryRetention*0.2);
+  f+=(wr/total)*(g.resilience*0.6+g.collaboration*0.2+g.memoryRetention*0.2);
+  // bonus for creativity in creative preset
+  if(envPreset.value==='creative') f+=g.creativity*0.3;
+  // penalty for extreme imbalance
+  const vals=Object.values(g);
+  const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+  const variance=vals.reduce((a,v)=>a+(v-mean)**2,0)/vals.length;
+  f-=Math.sqrt(variance)*0.05;
+  return Math.max(0,f);
+}
+
+function crossover(a,b){
+  const child={genome:{},fitness:0,id:Math.random().toString(36).slice(2,8)};
+  const strat=document.getElementById('crossover').value;
+  if(strat==='uniform'){
+    TRAITS.forEach(t=>child.genome[t.key]=Math.random()<0.5?a.genome[t.key]:b.genome[t.key]);
+  }else if(strat==='single'){
+    const pt=Math.floor(Math.random()*TRAITS.length);
+    TRAITS.forEach((t,i)=>child.genome[t.key]=i<pt?a.genome[t.key]:b.genome[t.key]);
+  }else{
+    const alpha=0.5;
+    TRAITS.forEach(t=>{
+      const lo=Math.min(a.genome[t.key],b.genome[t.key]);
+      const hi=Math.max(a.genome[t.key],b.genome[t.key]);
+      const d=hi-lo;
+      child.genome[t.key]=clamp(rand(lo-alpha*d,hi+alpha*d));
+    });
+  }
+  return child;
+}
+
+function mutate(agent){
+  const rate=+mutRate.value/100;
+  const str=+mutStr.value/100;
+  TRAITS.forEach(t=>{
+    if(Math.random()<rate){
+      agent.genome[t.key]=clamp(agent.genome[t.key]+rand(-str*100,str*100));
+    }
+  });
+}
+
+function calcDiversity(){
+  if(population.length<2) return 100;
+  let totalDiff=0,pairs=0;
+  for(let i=0;i<Math.min(population.length,20);i++){
+    for(let j=i+1;j<Math.min(population.length,20);j++){
+      TRAITS.forEach(t=>totalDiff+=Math.abs(population[i].genome[t.key]-population[j].genome[t.key]));
+      pairs++;
+    }
+  }
+  return Math.min(100,Math.round(totalDiff/(pairs*TRAITS.length*100)*200));
+}
+
+function tournamentSelect(){
+  const k=3;
+  let best=population[Math.floor(Math.random()*population.length)];
+  for(let i=1;i<k;i++){
+    const c=population[Math.floor(Math.random()*population.length)];
+    if(c.fitness>best.fitness)best=c;
+  }
+  return best;
+}
+
+function evolveStep(){
+  generation++;
+  // evaluate
+  population.forEach(a=>a.fitness=fitness(a));
+  population.sort((a,b)=>b.fitness-a.fitness);
+  
+  const eliteCount=Math.max(1,Math.round(population.length*(+elite.value/100)));
+  const newPop=population.slice(0,eliteCount).map(a=>({genome:{...a.genome},fitness:a.fitness,id:a.id}));
+  
+  let mutations=0;
+  while(newPop.length<population.length){
+    const p1=tournamentSelect();
+    const p2=tournamentSelect();
+    const child=crossover(p1,p2);
+    mutate(child);
+    mutations++;
+    child.fitness=fitness(child);
+    newPop.push(child);
+  }
+  
+  population=newPop;
+  population.sort((a,b)=>b.fitness-a.fitness);
+  
+  const best=population[0].fitness;
+  const avg=population.reduce((s,a)=>s+a.fitness,0)/population.length;
+  const div=calcDiversity();
+  
+  history.best.push(best);
+  history.avg.push(avg);
+  history.diversity.push(div);
+  
+  genNum.textContent=generation;
+  bestFit.textContent=best.toFixed(1);
+  avgFit.textContent=avg.toFixed(1);
+  diversity.textContent=div+'%';
+  
+  addLog(`<span class="gen">Gen ${generation}</span> | Best: <span class="fit">${best.toFixed(1)}</span> | Avg: ${avg.toFixed(1)} | Diversity: ${div}%`);
+  
+  if(generation>1){
+    const imp=history.best[history.best.length-1]-history.best[history.best.length-2];
+    if(imp>2)addLog(`<span class="mut">↑ Breakthrough! Fitness jumped +${imp.toFixed(1)}</span>`);
+    if(div<15)addLog(`<span class="mut">⚠ Low diversity — population converging</span>`);
+  }
+  
+  renderLeaderboard();
+  drawFitnessChart();
+  drawTraitChart();
+}
+
+function startEvolution(){
+  if(running){running=false;return}
+  if(population.length===0)initPopulation();
+  running=true;
+  function loop(){
+    if(!running)return;
+    evolveStep();
+    animId=setTimeout(loop,200);
+  }
+  loop();
+}
+
+function stepOnce(){
+  if(population.length===0)initPopulation();
+  evolveStep();
+}
+
+function resetEvolution(){
+  running=false;
+  if(animId)clearTimeout(animId);
+  population=[];generation=0;
+  history={best:[],avg:[],diversity:[]};
+  genNum.textContent='0';bestFit.textContent='0';avgFit.textContent='0';diversity.textContent='100%';
+  document.getElementById('leaderboard').innerHTML='';
+  document.getElementById('genomeDetail').style.display='none';
+  document.getElementById('log').innerHTML='';
+  drawFitnessChart();drawTraitChart();
+  addLog('🔄 Evolution reset');
+}
+
+function initPopulation(){
+  const n=+popSize.value;
+  population=Array.from({length:n},()=>createAgent());
+  population.forEach(a=>a.fitness=fitness(a));
+  population.sort((a,b)=>b.fitness-a.fitness);
+  renderLeaderboard();
+  addLog(`🧪 Initialized population of ${n} agents`);
+  updateEnvBadges();
+}
+
+function applyPreset(){
+  const p=PRESETS[envPreset.value];
+  if(!p)return;
+  wSpeed.value=p.wSpeed;wSpeedVal.textContent=p.wSpeed;
+  wAcc.value=p.wAcc;wAccVal.textContent=p.wAcc;
+  wCost.value=p.wCost;wCostVal.textContent=p.wCost;
+  wRes.value=p.wRes;wResVal.textContent=p.wRes;
+  updateEnvBadges();
+}
+
+function updateEnvBadges(){
+  const names={balanced:'🌍 Balanced',speed:'⚡ Speed',accuracy:'🎯 Accuracy',cost:'💰 Cost',resilient:'🛡️ Resilient',creative:'🎨 Creative'};
+  const colors={balanced:'#334155',speed:'#1e3a5f',accuracy:'#14532d',cost:'#78350f',resilient:'#134e4a',creative:'#4a1d96'};
+  const v=envPreset.value;
+  envBadges.innerHTML=`<span class="env-badge" style="background:${colors[v]}">${names[v]}</span>
+    <span style="font-size:0.8rem;color:var(--text3)">Speed:${wSpeed.value} Acc:${wAcc.value} Cost:${wCost.value} Res:${wRes.value}</span>`;
+}
+
+function renderLeaderboard(){
+  const lb=document.getElementById('leaderboard');
+  lb.innerHTML=population.slice(0,10).map((a,i)=>{
+    const topTraits=TRAITS.map(t=>({name:t.name,val:a.genome[t.key]})).sort((x,y)=>y.val-x.val).slice(0,3);
+    const tags=topTraits.map(t=>`<span class="tag ${['tag-blue','tag-green','tag-purple'][topTraits.indexOf(t)]}">${t.name} ${Math.round(t.val)}</span>`).join('');
+    return `<div class="genome-item${selectedAgent===a.id?' selected':''}" onclick="selectAgent('${a.id}')">
+      <span class="rank">#${i+1}</span><code>${a.id}</code><span class="fitness">${a.fitness.toFixed(1)}</span>
+      <div class="traits">${tags}</div></div>`;
+  }).join('');
+}
+
+function selectAgent(id){
+  selectedAgent=id;
+  const agent=population.find(a=>a.id===id);
+  if(!agent)return;
+  const detail=document.getElementById('genomeDetail');
+  detail.style.display='block';
+  const bars=document.getElementById('traitBars');
+  bars.innerHTML=TRAITS.map(t=>`<div class="trait-bar">
+    <span class="name">${t.name}</span>
+    <div class="bar-bg"><div class="bar-fill" style="width:${agent.genome[t.key]}%;background:${t.color}"></div></div>
+    <span class="val" style="color:${t.color}">${Math.round(agent.genome[t.key])}</span>
+  </div>`).join('');
+  renderLeaderboard();
+}
+
+function drawFitnessChart(){
+  const c=document.getElementById('fitnessChart');
+  const ctx=c.getContext('2d');
+  const W=c.width=c.offsetWidth*2;const H=c.height=220*2;
+  ctx.scale(2,2);const w=W/2,h=H/2;
+  ctx.clearRect(0,0,w,h);
+  if(history.best.length<2)return;
+  const pad={t:20,r:10,b:25,l:40};
+  const maxVal=Math.max(...history.best,1);
+  const xScale=(w-pad.l-pad.r)/Math.max(history.best.length-1,1);
+  const yScale=(h-pad.t-pad.b)/maxVal;
+  // grid
+  ctx.strokeStyle='#1e293b';ctx.lineWidth=0.5;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+i*(h-pad.t-pad.b)/4;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+    ctx.fillStyle='#64748b';ctx.font='10px system-ui';ctx.textAlign='right';
+    ctx.fillText(Math.round(maxVal*(1-i/4)),pad.l-5,y+3);
+  }
+  function drawLine(data,color,alpha=1){
+    ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.globalAlpha=alpha;
+    data.forEach((v,i)=>{const x=pad.l+i*xScale;const y=h-pad.b-v*yScale;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+    ctx.stroke();ctx.globalAlpha=1;
+  }
+  drawLine(history.avg,'#6366f1',0.4);
+  drawLine(history.best,'#10b981');
+  // legend
+  ctx.font='10px system-ui';
+  ctx.fillStyle='#10b981';ctx.fillText('● Best',pad.l,h-5);
+  ctx.fillStyle='#6366f1';ctx.fillText('● Avg',pad.l+50,h-5);
+}
+
+function drawTraitChart(){
+  const c=document.getElementById('traitChart');
+  const ctx=c.getContext('2d');
+  const W=c.width=c.offsetWidth*2;const H=c.height=220*2;
+  ctx.scale(2,2);const w=W/2,h=H/2;
+  ctx.clearRect(0,0,w,h);
+  if(population.length===0)return;
+  // radar chart of best agent
+  const agent=population[0];if(!agent)return;
+  const cx=w/2,cy=h/2-5,r=Math.min(w,h)/2-30;
+  const n=TRAITS.length;
+  // grid
+  for(let ring=1;ring<=4;ring++){
+    ctx.beginPath();ctx.strokeStyle='#1e293b';ctx.lineWidth=0.5;
+    for(let i=0;i<=n;i++){
+      const angle=Math.PI*2*i/n-Math.PI/2;
+      const x=cx+Math.cos(angle)*r*ring/4;
+      const y=cy+Math.sin(angle)*r*ring/4;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+  // axes + labels
+  TRAITS.forEach((t,i)=>{
+    const angle=Math.PI*2*i/n-Math.PI/2;
+    ctx.beginPath();ctx.strokeStyle='#1e293b';ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(angle)*r,cy+Math.sin(angle)*r);ctx.stroke();
+    const lx=cx+Math.cos(angle)*(r+18);
+    const ly=cy+Math.sin(angle)*(r+18);
+    ctx.fillStyle=t.color;ctx.font='9px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(t.name.split(' ')[0],lx,ly);
+  });
+  // avg polygon
+  ctx.beginPath();ctx.fillStyle='rgba(99,102,241,0.15)';ctx.strokeStyle='#6366f1';ctx.lineWidth=1;
+  const avgGenome={};
+  TRAITS.forEach(t=>{avgGenome[t.key]=population.reduce((s,a)=>s+a.genome[t.key],0)/population.length});
+  TRAITS.forEach((t,i)=>{
+    const angle=Math.PI*2*i/n-Math.PI/2;
+    const v=avgGenome[t.key]/100;
+    const x=cx+Math.cos(angle)*r*v;const y=cy+Math.sin(angle)*r*v;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.closePath();ctx.fill();ctx.stroke();
+  // best polygon
+  ctx.beginPath();ctx.fillStyle='rgba(16,185,129,0.2)';ctx.strokeStyle='#10b981';ctx.lineWidth=2;
+  TRAITS.forEach((t,i)=>{
+    const angle=Math.PI*2*i/n-Math.PI/2;
+    const v=agent.genome[t.key]/100;
+    const x=cx+Math.cos(angle)*r*v;const y=cy+Math.sin(angle)*r*v;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.closePath();ctx.fill();ctx.stroke();
+  // legend
+  ctx.font='10px system-ui';
+  ctx.fillStyle='#10b981';ctx.fillText('● Best',10,h-5);
+  ctx.fillStyle='#6366f1';ctx.fillText('● Avg',55,h-5);
+}
+
+function addLog(msg){
+  const log=document.getElementById('log');
+  log.innerHTML=msg+'<br>'+log.innerHTML;
+  if(log.children.length>100)log.removeChild(log.lastChild);
+}
+
+// Init
+updateEnvBadges();
+drawFitnessChart();
+drawTraitChart();
+</script>
+</body>
+</html>
