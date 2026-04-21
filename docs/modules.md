@@ -58,6 +58,28 @@ dependencies beyond the DOM.
 - [FeatureBoard](#featureboard) — Feature request board with voting
 - [AIGlossary](#aiglossary) — Searchable AI/agent terminology reference (35 terms)
 
+### Onboarding & Conversion
+- [CapacityPlanner](#capacityplanner) — Team size / message volume plan estimator
+- [QuickStartWizard](#quickstartwizard) — Guided use-case setup wizard
+- [SetupChecklist](#setupchecklist) — Interactive onboarding progress tracker
+- [PrivacyCheckup](#privacycheckup) — Privacy concern quiz with personalized reassurance
+- [SpeedChallenge](#speedchallenge) — AgentBox-vs-traditional speed comparison demo
+- [ReferralProgram](#referralprogram) — Tiered referral link system with progress tracker
+
+### Visualization & Sharing
+- [NotificationPreview](#notificationpreview) — Phone mockup with cycling notification scenarios
+- [ShareCardGenerator](#sharecardgenerator) — Canvas-based social share image builder
+- [SectionMinimap](#sectionminimap) — Floating page minimap for quick section navigation
+
+### Integration & Automation
+- [PipelineBuilder](#pipelinebuilder) — Drag-and-drop integration pipeline creator
+- [WorkflowTemplates](#workflowtemplates) — Ready-to-use automation recipe gallery
+- [CommunityShowcase](#communityshowcase) — User-submitted agent showcase with likes and filtering
+
+### Support & Utility
+- [HelpChatWidget](#helpchatwidget) — In-page FAQ chat bot with branching conversations
+- [StorageUtil](#storageutil) — Safe localStorage wrapper used by all stateful modules
+
 ### Onboarding
 - [QuickStartWizard](#quickstartwizard) — Step-by-step setup wizard per use-case
 - [WorkflowTemplates](#workflowtemplates) — Pre-built workflow template browser
@@ -753,3 +775,286 @@ immediately via CSS classes on `<body>`.
 - `AccessibilityPanel.getPrefs()` — Returns current preferences object
 
 **Storage key:** `agentbox-a11y-prefs`
+
+---
+
+## Onboarding & Conversion
+
+### CapacityPlanner
+
+Interactive usage estimator and plan recommender.
+
+**What it does:** Users adjust sliders for team size and daily message volume,
+then check feature boxes (web search, image understanding, reminders, etc.).
+The module calculates a recommended plan tier and estimated monthly cost in
+real time.
+
+**Location:** `src/modules/capacity-planner.js`
+
+**Plans:** Free (≤20 msgs, $0) → Starter (≤200, $9) → Pro (≤1 000, $29) →
+Team (≤5 000, $79) → Enterprise (unlimited, $199).
+
+**Public API:**
+- `CapacityPlanner.init()` — Builds the UI inside `#capacityPlannerSection`
+- `CapacityPlanner.destroy()` — Removes event listeners
+
+**DOM target:** `#capacityPlannerSection`
+
+---
+
+### QuickStartWizard
+
+Guided 3-step wizard that tailors the onboarding flow to a user's chosen use case.
+
+**What it does:** Asks users their primary use case (productivity, developer, or
+creative), frequency preference, then shows a customized quick-start guide with
+copy-able commands and a Telegram deep link.
+
+**Location:** `src/modules/quick-start-wizard.js`
+
+**Public API:**
+- `QuickStartWizard.init()` — Renders the wizard into `#quickStartWizard`
+
+**DOM target:** `#quickStartWizard`
+
+---
+
+### SetupChecklist
+
+Persistent onboarding progress tracker with 6 setup steps.
+
+**What it does:** Renders a checklist (Install Telegram → Start AgentBox →
+Set Timezone → First Search → Create Reminder → Explore Features). Checked
+steps persist in localStorage so returning visitors see their progress.
+
+**Location:** `src/modules/setup-checklist.js`
+
+**Public API:**
+- `SetupChecklist.init()` — Renders checklist into `#setupChecklist`
+- `SetupChecklist.destroy()` — Tears down the component
+- `SetupChecklist.getProgress()` — Returns `{ completed, total, percent }`
+
+**Storage key:** `agentbox_setup_checklist`
+
+---
+
+### PrivacyCheckup
+
+Multi-step privacy quiz with a personalized privacy score.
+
+**What it does:** Walks users through 6 questions about their data concerns
+(storage, third-party sharing, AI training, encryption, data portability,
+retention). Each answer reveals a relevant AgentBox privacy feature.
+At the end, a score and tailored recommendations are displayed.
+
+**Location:** `src/modules/privacy-checkup.js`
+
+**Public API:**
+- `PrivacyCheckup.init()` — Builds the quiz into `#privacyCheckup`
+- `PrivacyCheckup.destroy()` — Removes event listeners
+
+**DOM target:** `#privacyCheckup`
+
+---
+
+### SpeedChallenge
+
+Side-by-side speed comparison: AgentBox vs. the traditional way.
+
+**What it does:** Presents a question (e.g., "What's the capital of Bhutan?") and
+races an animated AgentBox response against the multi-step traditional approach
+(open browser → type query → scan results → read article). Displays elapsed
+times to highlight the speed advantage.
+
+**Location:** `src/modules/speed-challenge.js`
+
+**Public API:**
+- `SpeedChallenge.init()` — Renders into `#speedChallenge`
+- `SpeedChallenge.destroy()` — Cleans up timers and listeners
+
+**DOM target:** `#speedChallenge`
+
+---
+
+### ReferralProgram
+
+Tiered referral system with progress tracker and social sharing.
+
+**What it does:** Generates a fake referral code/link, tracks simulated referral
+count, and shows progress through 5 tiers (Starter → Connector → Advocate →
+Champion → Legend) with escalating perks. Includes milestone celebrations and
+copy-to-clipboard sharing.
+
+**Tiers:**
+| Referrals | Tier | Perk |
+|-----------|------|------|
+| 0 | 🌱 Starter | Share your link to start earning |
+| 3 | 🔗 Connector | +10 bonus messages/day |
+| 10 | ⭐ Advocate | +25 messages/day + priority support |
+| 25 | 🏆 Champion | Unlimited messages for 1 month |
+| 50 | 👑 Legend | Lifetime Pro + custom personality |
+
+**Location:** `src/modules/referral-program.js`
+
+**Public API:**
+- `ReferralProgram.init()` — Renders into `#referralProgram`
+- `ReferralProgram.destroy()` — Cleans up
+
+**Storage key:** `agentbox_referrals`
+
+---
+
+## Visualization & Sharing
+
+### NotificationPreview
+
+Phone mockup with cycling notification scenarios.
+
+**What it does:** Renders a simulated phone screen that cycles through five
+notification scenarios (Reminder, Search Result, Daily Digest, Smart Alert,
+Scheduled Message). Users can toggle between compact and detailed views.
+
+**Location:** `src/modules/notification-preview.js`
+
+**Public API:**
+- `NotificationPreview.init()` — Starts the cycling preview
+- `NotificationPreview.destroy()` — Stops cycling
+
+**DOM target:** `#notificationSection`
+
+---
+
+### ShareCardGenerator
+
+Canvas-based social share image builder.
+
+**What it does:** Lets users create a branded AgentBox share card by choosing a
+color theme (gradient, ocean, sunset, forest, dark), toggling feature badges,
+and entering a custom tagline. Renders to a `<canvas>` element and provides
+a download button.
+
+**Location:** `src/modules/share-card-generator.js`
+
+**Public API:**
+- `ShareCardGenerator.init()` — Builds the editor into `#shareCardGenerator`
+- `ShareCardGenerator.destroy()` — Cleans up
+
+**DOM target:** `#shareCardGenerator`
+
+---
+
+### SectionMinimap
+
+Floating page minimap for quick section navigation.
+
+**What it does:** Adds a vertical dot-nav on the right edge of the viewport.
+Each dot corresponds to a page section. As the user scrolls, the active dot
+updates and a tooltip shows the section label. Clicking a dot smooth-scrolls
+to that section. Appears only when the page has >3 sections.
+
+**Location:** `src/modules/section-minimap.js`
+
+**Public API:**
+- `SectionMinimap.init()` — Creates the minimap
+- `SectionMinimap.destroy()` — Removes the minimap from the DOM
+
+---
+
+## Integration & Automation
+
+### PipelineBuilder
+
+Drag-and-connect integration pipeline creator.
+
+**What it does:** Displays a grid of 12 integration cards (Gmail, Slack,
+Calendar, Notion, GitHub, Jira, Sheets, Drive, Twitter/X, Linear, Discord,
+Telegram). Users select 2–4 integrations and the module shows a pre-built
+automation pipeline describing how AgentBox chains them together. 30+
+pipeline combinations are defined.
+
+**Location:** `src/modules/pipeline-builder.js`
+
+**Public API:**
+- `PipelineBuilder.init()` — Renders into `#pipelineBuilder`
+- `PipelineBuilder.destroy()` — Cleans up
+
+**DOM target:** `#pipelineBuilder`
+
+---
+
+### WorkflowTemplates
+
+Ready-to-use automation recipe gallery.
+
+**What it does:** Showcases pre-built workflow templates organized by category
+(productivity, developer, creative, business, research). Each template lists
+steps, required integrations, and a one-click "Use This Workflow" action.
+Includes category filtering and a search bar.
+
+**Location:** `src/modules/workflow-templates.js`
+
+**Public API:**
+- `WorkflowTemplates.init()` — Renders into `#workflowTemplates`
+- `WorkflowTemplates.destroy()` — Cleans up
+
+**DOM target:** `#workflowTemplates`
+
+---
+
+### CommunityShowcase
+
+User-submitted agent showcase with likes and category filtering.
+
+**What it does:** Displays community-submitted AgentBox use cases. Users can
+filter by category (Productivity, Developer, Creative, Business, Research),
+like entries (persisted to localStorage), and submit their own showcases.
+Entries show author, date, tags, and like count.
+
+**Location:** `src/modules/community-showcase.js`
+
+**Public API:**
+- `CommunityShowcase.init()` — Renders into `#communityShowcase`
+- `CommunityShowcase.destroy()` — Cleans up
+
+**Storage key:** `agentbox_showcase_likes`
+
+---
+
+## Support & Utility
+
+### HelpChatWidget
+
+In-page FAQ chat bot with branching conversations.
+
+**What it does:** A floating chat widget (💬 button) that provides a tree-based
+Q&A experience. Users click through options (What is AgentBox? → How does it
+work? → Pricing → Privacy → Get Started) and receive contextual answers with
+further navigation options. Mimics a live-chat support feel without any backend.
+
+**Location:** `src/modules/help-chat-widget.js`
+
+**Public API:**
+- `HelpChatWidget.init()` — Creates the floating widget
+- `HelpChatWidget.destroy()` — Removes the widget
+
+---
+
+### StorageUtil
+
+Safe `localStorage` wrapper for all stateful modules.
+
+**What it does:** Provides `get`, `set`, `getJSON`, `setJSON`, `remove`, and
+`clear` methods that handle private-browsing mode, quota errors, and
+non-browser environments gracefully. Every module that persists state
+(AccessibilityPanel, CommunityShowcase, SetupChecklist, ReferralProgram, etc.)
+uses StorageUtil instead of raw `localStorage`.
+
+**Location:** `src/modules/storage.js`
+
+**Public API:**
+- `StorageUtil.get(key, fallback)` — Read a string
+- `StorageUtil.set(key, value)` — Write a string
+- `StorageUtil.getJSON(key, fallback)` — Read & parse JSON
+- `StorageUtil.setJSON(key, value)` — Stringify & write JSON
+- `StorageUtil.remove(key)` — Delete a key
+- `StorageUtil.clear()` — Wipe all keys
