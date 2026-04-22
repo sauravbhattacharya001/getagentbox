@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Lifecycle Manager - AgentBox</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--surface:#111827;--surface2:#1e293b;--border:#334155;--primary:#6366f1;--primary-glow:#818cf8;--accent:#10b981;--danger:#ef4444;--warn:#f59e0b;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--radius:12px}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+a{color:var(--primary-glow);text-decoration:none}
+.header{background:linear-gradient(135deg,#1e1b4b,#312e81,#1e1b4b);padding:2rem;text-align:center;border-bottom:1px solid var(--border)}
+.header h1{font-size:2rem;margin-bottom:0.5rem;background:linear-gradient(90deg,var(--primary-glow),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header p{color:var(--text2);max-width:700px;margin:0 auto}
+.back-link{display:inline-block;margin-bottom:1rem;color:var(--text2);font-size:0.9rem}
+.container{max-width:1400px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:300px 1fr;gap:1.5rem}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.panel h2{font-size:1.1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+.panel h3{font-size:0.95rem;margin:1rem 0 0.5rem;color:var(--text2)}
+button{font-family:inherit;font-size:0.9rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);padding:0.5rem 0.75rem;cursor:pointer;width:100%}
+button:focus{outline:2px solid var(--primary)}
+button.primary{background:var(--primary);border-color:var(--primary);font-weight:600}
+button.primary:hover{background:var(--primary-glow)}
+button.danger{background:var(--danger);border-color:var(--danger)}
+button.warn{background:var(--warn);border-color:var(--warn);color:#000}
+select{font-family:inherit;font-size:0.9rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);padding:0.5rem 0.75rem;cursor:pointer;width:100%}
+.btn-row{display:flex;gap:0.5rem;margin-top:0.75rem}
+.btn-row button{flex:1}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem}
+.stat-card{background:var(--surface2);border-radius:8px;padding:0.75rem;text-align:center}
+.stat-card .val{font-size:1.4rem;font-weight:700;color:var(--primary-glow)}
+.stat-card .lbl{font-size:0.75rem;color:var(--text3);margin-top:0.2rem}
+canvas{width:100%;border-radius:8px;background:var(--surface2)}
+.right-area{display:flex;flex-direction:column;gap:1.5rem}
+.agent-list{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:0.5rem}
+.agent-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;cursor:pointer;transition:border-color 0.2s;display:flex;justify-content:space-between;align-items:center}
+.agent-item:hover,.agent-item.selected{border-color:var(--primary)}
+.agent-item .name{font-weight:600}
+.agent-item .state-badge{font-size:0.75rem;padding:0.2rem 0.5rem;border-radius:4px;font-weight:600}
+.detail-section{margin-top:0.75rem}
+.detail-row{display:flex;justify-content:space-between;padding:0.4rem 0;font-size:0.85rem;border-bottom:1px solid var(--border)}
+.detail-row .label{color:var(--text2)}
+.detail-row .value{font-weight:600}
+.timeline{max-height:200px;overflow-y:auto;font-family:'Cascadia Code',monospace;font-size:0.8rem;color:var(--text3);background:var(--surface2);border-radius:8px;padding:0.75rem;line-height:1.6}
+.timeline .ts{color:var(--primary-glow)}.timeline .ev{color:var(--accent)}.timeline .warn{color:var(--warn)}.timeline .err{color:var(--danger)}
+.rec-list{display:flex;flex-direction:column;gap:0.5rem}
+.rec-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.85rem}
+.rec-item .rec-title{font-weight:600;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.5rem}
+.rec-item .rec-body{color:var(--text2)}
+.rec-item .severity{font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px}
+.sev-high{background:#7f1d1d;color:#fca5a5}.sev-med{background:#78350f;color:#fde68a}.sev-low{background:#14532d;color:#86efac}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:1100px){.chart-row{grid-template-columns:1fr}}
+.health-bar{height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin:0.3rem 0}
+.health-bar .fill{height:100%;border-radius:4px;transition:width 0.5s}
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem}
+.preset-btn{font-size:0.8rem;padding:0.4rem;text-align:center}
+.preset-btn.active{border-color:var(--primary);background:rgba(99,102,241,0.2)}
+.transition-table{width:100%;font-size:0.8rem;border-collapse:collapse}
+.transition-table th,.transition-table td{padding:0.4rem;border:1px solid var(--border);text-align:center}
+.transition-table th{background:var(--surface2);color:var(--text2)}
+.transition-table td.allowed{background:rgba(16,185,129,0.15);color:var(--accent)}
+.transition-table td.blocked{background:rgba(239,68,68,0.1);color:var(--text3)}
+</style>
+</head>
+<body>
+<div class="header">
+<a href="index.html" class="back-link">← Back to AgentBox</a>
+<h1>🔄 Agent Lifecycle Manager</h1>
+<p>Interactive state machine for agent lifecycle management. Visualize stages, monitor transitions, and get autonomous recommendations for fleet health.</p>
+</div>
+<div class="container">
+<div class="left-panel" style="display:flex;flex-direction:column;gap:1.5rem">
+
+<div class="panel">
+<h2>🏭 Fleet</h2>
+<div class="preset-grid">
+<button class="preset-btn active" onclick="loadPreset('startup')">🚀 Startup</button>
+<button class="preset-btn" onclick="loadPreset('production')">🏢 Production</button>
+<button class="preset-btn" onclick="loadPreset('degraded')">⚠️ Degraded</button>
+<button class="preset-btn" onclick="loadPreset('scaling')">📈 Scaling</button>
+</div>
+<div class="stats-grid" id="fleetStats"></div>
+<div class="btn-row">
+<button class="primary" onclick="spawnAgent()">+ Spawn Agent</button>
+<button onclick="autoManage()">🤖 Auto-Manage</button>
+</div>
+</div>
+
+<div class="panel">
+<h2>📋 Agents</h2>
+<div class="agent-list" id="agentList"></div>
+</div>
+
+<div class="panel" id="detailPanel" style="display:none">
+<h2>🔍 Agent Detail</h2>
+<div id="agentDetail"></div>
+<div class="btn-row" id="actionBtns"></div>
+</div>
+
+<div class="panel">
+<h2>🧠 Recommendations</h2>
+<div class="rec-list" id="recList"></div>
+</div>
+</div>
+
+<div class="right-area">
+<div class="panel">
+<h2>🗺️ State Machine</h2>
+<canvas id="smCanvas" height="400"></canvas>
+</div>
+
+<div class="chart-row">
+<div class="panel">
+<h2>📊 State Distribution</h2>
+<canvas id="distCanvas" height="220"></canvas>
+</div>
+<div class="panel">
+<h2>📈 Health Over Time</h2>
+<canvas id="healthCanvas" height="220"></canvas>
+</div>
+</div>
+
+<div class="panel">
+<h2>⚡ Transition Rules</h2>
+<table class="transition-table" id="transTable"></table>
+</div>
+
+<div class="panel">
+<h2>📜 Event Log</h2>
+<div class="timeline" id="eventLog"></div>
+</div>
+</div>
+</div>
+
+<script>
+const STATES = {
+  created:    { label:'Created',     color:'#6366f1', icon:'🆕', desc:'Agent initialized, not yet started' },
+  starting:   { label:'Starting',    color:'#818cf8', icon:'⏳', desc:'Boot sequence in progress' },
+  running:    { label:'Running',     color:'#10b981', icon:'✅', desc:'Active and processing tasks' },
+  idle:       { label:'Idle',        color:'#60a5fa', icon:'💤', desc:'Running but no active tasks' },
+  degraded:   { label:'Degraded',    color:'#f59e0b', icon:'⚠️', desc:'Operating with reduced capability' },
+  recovering: { label:'Recovering',  color:'#a78bfa', icon:'🔧', desc:'Self-repair in progress' },
+  paused:     { label:'Paused',      color:'#94a3b8', icon:'⏸️', desc:'Manually suspended' },
+  stopping:   { label:'Stopping',    color:'#fb923c', icon:'🛑', desc:'Graceful shutdown in progress' },
+  terminated: { label:'Terminated',  color:'#ef4444', icon:'💀', desc:'Permanently stopped' },
+  archived:   { label:'Archived',    color:'#64748b', icon:'📦', desc:'Removed from fleet, logs preserved' }
+};
+
+const TRANSITIONS = {
+  created:    ['starting','terminated'],
+  starting:   ['running','degraded','terminated'],
+  running:    ['idle','degraded','paused','stopping'],
+  idle:       ['running','paused','stopping'],
+  degraded:   ['recovering','stopping','terminated'],
+  recovering: ['running','degraded','terminated'],
+  paused:     ['running','stopping','terminated'],
+  stopping:   ['terminated'],
+  terminated: ['archived','created'],
+  archived:   ['created']
+};
+
+const NAMES = ['Atlas','Nova','Pulse','Echo','Cipher','Drift','Nexus','Flux','Helix','Onyx','Prism','Quark','Rune','Shard','Vox','Zeta','Bolt','Core','Dusk','Fern','Glyph','Haze','Ion','Jade','Kite','Lux','Mist','Neon','Orb','Pike'];
+let agents = [];
+let selectedId = null;
+let events = [];
+let healthHistory = [];
+let autoMode = false;
+let tick = 0;
+
+function uid(){ return Math.random().toString(36).slice(2,8) }
+function pick(a){ return a[Math.floor(Math.random()*a.length)] }
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a }
+function now(){ return new Date().toLocaleTimeString('en',{hour12:false}) }
+
+function createAgent(state='created'){
+  const name = pick(NAMES)+'-'+rnd(100,999);
+  const agent = {
+    id: uid(), name, state,
+    health: state==='running'?rnd(70,100):state==='degraded'?rnd(20,50):100,
+    uptime: state==='running'?rnd(60,86400):0,
+    tasks: state==='running'?rnd(0,15):0,
+    errors: state==='degraded'?rnd(3,20):0,
+    memory: rnd(30,80),
+    cpu: state==='running'?rnd(10,70):0,
+    created: Date.now(),
+    transitions: [{from:null,to:state,at:Date.now()}]
+  };
+  agents.push(agent);
+  log(`🆕 Agent <span class="ev">${name}</span> created in state <b>${state}</b>`);
+  return agent;
+}
+
+function transitionAgent(agent, to){
+  if(!TRANSITIONS[agent.state]?.includes(to)) return false;
+  const from = agent.state;
+  agent.state = to;
+  agent.transitions.push({from,to,at:Date.now()});
+  if(to==='running'){ agent.health=Math.min(100,agent.health+20); agent.cpu=rnd(10,60); }
+  if(to==='degraded'){ agent.health=Math.max(10,agent.health-30); agent.errors+=rnd(1,5); }
+  if(to==='recovering'){ agent.health=Math.min(100,agent.health+15); }
+  if(to==='terminated'){ agent.health=0; agent.cpu=0; agent.tasks=0; }
+  if(to==='idle'){ agent.cpu=rnd(1,5); agent.tasks=0; }
+  if(to==='paused'){ agent.cpu=0; }
+  log(`${STATES[to].icon} <span class="ev">${agent.name}</span>: ${STATES[from].label} → <b>${STATES[to].label}</b>`);
+  return true;
+}
+
+function log(msg){
+  events.unshift({msg, at:now()});
+  if(events.length>100) events.length=100;
+}
+
+function spawnAgent(){
+  createAgent('created');
+  setTimeout(()=>{
+    const a=agents.find(a=>a.state==='created');
+    if(a) transitionAgent(a,'starting');
+    setTimeout(()=>{
+      if(a&&a.state==='starting'){
+        transitionAgent(a, Math.random()>0.15?'running':'degraded');
+      }
+      render();
+    },800);
+    render();
+  },400);
+  render();
+}
+
+function autoManage(){
+  autoMode=!autoMode;
+  log(autoMode?'🤖 <span class="ev">Auto-manage ENABLED</span> — autonomous lifecycle control active':'🛑 Auto-manage disabled');
+  render();
+}
+
+function doAutoManage(){
+  if(!autoMode) return;
+  agents.forEach(a=>{
+    if(a.state==='degraded' && a.health<30){
+      transitionAgent(a,'recovering');
+    } else if(a.state==='recovering' && a.health>70){
+      transitionAgent(a,'running');
+    } else if(a.state==='idle' && Math.random()>0.7){
+      a.tasks=rnd(1,8);
+      transitionAgent(a,'running');
+    } else if(a.state==='running' && a.errors>15){
+      transitionAgent(a,'degraded');
+    } else if(a.state==='terminated' && Math.random()>0.8){
+      transitionAgent(a,'archived');
+    }
+  });
+  // auto-scale: spawn if too few running
+  const running = agents.filter(a=>a.state==='running'||a.state==='idle').length;
+  if(running<2 && agents.length<20){
+    const a=createAgent('starting');
+    setTimeout(()=>{ if(a.state==='starting') transitionAgent(a,'running'); render(); },600);
+  }
+}
+
+function simulateTick(){
+  tick++;
+  agents.forEach(a=>{
+    if(a.state==='running'){
+      a.uptime+=30;
+      a.cpu=Math.max(5,Math.min(95,a.cpu+rnd(-10,10)));
+      a.memory=Math.max(20,Math.min(95,a.memory+rnd(-3,3)));
+      a.tasks=Math.max(0,a.tasks+rnd(-2,3));
+      if(Math.random()<0.03){ a.errors++; a.health=Math.max(0,a.health-5); }
+      if(a.health<40 && Math.random()<0.3) transitionAgent(a,'degraded');
+      if(a.tasks===0 && Math.random()<0.2) transitionAgent(a,'idle');
+    }
+    if(a.state==='idle'){
+      a.uptime+=30;
+      if(Math.random()<0.3){ a.tasks=rnd(1,6); transitionAgent(a,'running'); }
+    }
+    if(a.state==='degraded'){
+      a.health=Math.max(0,a.health-rnd(0,3));
+      if(a.health<=0) transitionAgent(a,'terminated');
+    }
+    if(a.state==='recovering'){
+      a.health=Math.min(100,a.health+rnd(5,15));
+      if(a.health>=80) transitionAgent(a,'running');
+    }
+    if(a.state==='starting'){
+      if(Math.random()<0.4) transitionAgent(a,Math.random()>0.1?'running':'degraded');
+    }
+  });
+  doAutoManage();
+  const alive=agents.filter(a=>!['terminated','archived'].includes(a.state));
+  const avgH=alive.length?Math.round(alive.reduce((s,a)=>s+a.health,0)/alive.length):0;
+  healthHistory.push(avgH);
+  if(healthHistory.length>60) healthHistory.shift();
+  render();
+}
+
+function getRecommendations(){
+  const recs=[];
+  const degraded=agents.filter(a=>a.state==='degraded');
+  const running=agents.filter(a=>a.state==='running'||a.state==='idle');
+  const terminated=agents.filter(a=>a.state==='terminated');
+  const total=agents.filter(a=>!['terminated','archived'].includes(a.state));
+  const avgHealth=total.length?total.reduce((s,a)=>s+a.health,0)/total.length:100;
+  if(degraded.length>0) recs.push({sev:'high',title:'Degraded Agents Detected',body:`${degraded.length} agent(s) in degraded state. ${degraded.map(a=>a.name).join(', ')} need attention. Consider triggering recovery.`});
+  if(running.length<2 && agents.length>0) recs.push({sev:'high',title:'Low Active Capacity',body:`Only ${running.length} active agent(s). Spawn more agents or resume paused ones to maintain throughput.`});
+  if(avgHealth<60) recs.push({sev:'med',title:'Fleet Health Below Threshold',body:`Average health is ${Math.round(avgHealth)}%. Consider recovering degraded agents or replacing failing ones.`});
+  if(terminated.length>3) recs.push({sev:'med',title:'Terminated Agent Cleanup',body:`${terminated.length} terminated agents. Archive them to keep fleet list manageable.`});
+  const highMem=total.filter(a=>a.memory>80);
+  if(highMem.length>0) recs.push({sev:'med',title:'Memory Pressure',body:`${highMem.length} agent(s) above 80% memory: ${highMem.map(a=>a.name).join(', ')}. Consider restarting.`});
+  const highErr=total.filter(a=>a.errors>10);
+  if(highErr.length>0) recs.push({sev:'high',title:'Error Accumulation',body:`${highErr.length} agent(s) with >10 errors. Investigate root cause before errors cascade.`});
+  if(total.length>0 && degraded.length/total.length>0.4) recs.push({sev:'high',title:'Fleet Instability',body:`Over 40% of fleet is degraded. Enable auto-manage or manually intervene immediately.`});
+  if(recs.length===0) recs.push({sev:'low',title:'Fleet Healthy',body:'All agents operating normally. No action needed.'});
+  return recs;
+}
+
+function loadPreset(name){
+  agents=[];events=[];healthHistory=[];selectedId=null;tick=0;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  if(name==='startup'){
+    createAgent('running'); createAgent('starting'); createAgent('created');
+  } else if(name==='production'){
+    for(let i=0;i<6;i++) createAgent('running');
+    createAgent('idle'); createAgent('idle');
+  } else if(name==='degraded'){
+    createAgent('running'); createAgent('running');
+    createAgent('degraded'); createAgent('degraded'); createAgent('degraded');
+    createAgent('recovering');
+  } else if(name==='scaling'){
+    for(let i=0;i<4;i++) createAgent('running');
+    for(let i=0;i<3;i++) createAgent('starting');
+    createAgent('idle');
+  }
+  // set realistic health for running agents
+  agents.forEach(a=>{
+    if(a.state==='running'){ a.health=rnd(65,100); a.tasks=rnd(1,12); a.cpu=rnd(15,70); }
+    if(a.state==='idle'){ a.health=rnd(80,100); a.cpu=rnd(1,5); }
+    if(a.state==='degraded'){ a.health=rnd(15,45); a.errors=rnd(5,18); a.cpu=rnd(60,95); }
+    if(a.state==='recovering'){ a.health=rnd(40,65); }
+  });
+  log(`📂 Loaded preset: <b>${name}</b>`);
+  render();
+}
+
+function selectAgent(id){
+  selectedId=selectedId===id?null:id;
+  render();
+}
+
+function render(){
+  renderFleetStats();
+  renderAgentList();
+  renderDetail();
+  renderRecs();
+  renderEventLog();
+  drawStateMachine();
+  drawDistribution();
+  drawHealthChart();
+  renderTransTable();
+}
+
+function renderFleetStats(){
+  const total=agents.length;
+  const active=agents.filter(a=>['running','idle'].includes(a.state)).length;
+  const alive=agents.filter(a=>!['terminated','archived'].includes(a.state));
+  const avgH=alive.length?Math.round(alive.reduce((s,a)=>s+a.health,0)/alive.length):0;
+  const errors=agents.reduce((s,a)=>s+a.errors,0);
+  document.getElementById('fleetStats').innerHTML=`
+    <div class="stat-card"><div class="val">${total}</div><div class="lbl">Total</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--accent)">${active}</div><div class="lbl">Active</div></div>
+    <div class="stat-card"><div class="val" style="color:${avgH>60?'var(--accent)':avgH>30?'var(--warn)':'var(--danger)'}">${avgH}%</div><div class="lbl">Avg Health</div></div>
+    <div class="stat-card"><div class="val" style="color:${errors>10?'var(--danger)':'var(--text2)'}">${errors}</div><div class="lbl">Errors</div></div>`;
+}
+
+function renderAgentList(){
+  const el=document.getElementById('agentList');
+  el.innerHTML=agents.map(a=>`
+    <div class="agent-item${selectedId===a.id?' selected':''}" onclick="selectAgent('${a.id}')">
+      <span class="name">${STATES[a.state].icon} ${a.name}</span>
+      <span class="state-badge" style="background:${STATES[a.state].color}33;color:${STATES[a.state].color}">${STATES[a.state].label}</span>
+    </div>`).join('');
+}
+
+function renderDetail(){
+  const dp=document.getElementById('detailPanel');
+  if(!selectedId){ dp.style.display='none'; return; }
+  const a=agents.find(x=>x.id===selectedId);
+  if(!a){ dp.style.display='none'; return; }
+  dp.style.display='block';
+  const hc=a.health>60?'var(--accent)':a.health>30?'var(--warn)':'var(--danger)';
+  document.getElementById('agentDetail').innerHTML=`
+    <div class="detail-row"><span class="label">Name</span><span class="value">${a.name}</span></div>
+    <div class="detail-row"><span class="label">State</span><span class="value">${STATES[a.state].icon} ${STATES[a.state].label}</span></div>
+    <div class="detail-row"><span class="label">Health</span><span class="value" style="color:${hc}">${a.health}%</span></div>
+    <div style="margin:0.3rem 0"><div class="health-bar"><div class="fill" style="width:${a.health}%;background:${hc}"></div></div></div>
+    <div class="detail-row"><span class="label">CPU</span><span class="value">${a.cpu}%</span></div>
+    <div class="detail-row"><span class="label">Memory</span><span class="value">${a.memory}%</span></div>
+    <div class="detail-row"><span class="label">Tasks</span><span class="value">${a.tasks}</span></div>
+    <div class="detail-row"><span class="label">Errors</span><span class="value" style="color:${a.errors>5?'var(--danger)':'var(--text)'}">${a.errors}</span></div>
+    <div class="detail-row"><span class="label">Transitions</span><span class="value">${a.transitions.length}</span></div>`;
+  const allowed=TRANSITIONS[a.state]||[];
+  document.getElementById('actionBtns').innerHTML=allowed.map(s=>`
+    <button class="${s==='terminated'?'danger':s==='recovering'?'warn':'primary'}" onclick="doTransition('${a.id}','${s}')" style="font-size:0.8rem">
+      ${STATES[s].icon} ${STATES[s].label}
+    </button>`).join('');
+}
+
+function doTransition(id,to){
+  const a=agents.find(x=>x.id===id);
+  if(a) transitionAgent(a,to);
+  render();
+}
+
+function renderRecs(){
+  const recs=getRecommendations();
+  document.getElementById('recList').innerHTML=recs.map(r=>`
+    <div class="rec-item">
+      <div class="rec-title"><span class="severity sev-${r.sev}">${r.sev.toUpperCase()}</span>${r.title}</div>
+      <div class="rec-body">${r.body}</div>
+    </div>`).join('');
+}
+
+function renderEventLog(){
+  document.getElementById('eventLog').innerHTML=events.slice(0,30).map(e=>
+    `<div><span class="ts">[${e.at}]</span> ${e.msg}</div>`).join('');
+}
+
+function drawStateMachine(){
+  const c=document.getElementById('smCanvas');
+  const ctx=c.getContext('2d');
+  c.width=c.offsetWidth*2; c.height=800;
+  ctx.scale(2,2);
+  const W=c.offsetWidth, H=400;
+  ctx.clearRect(0,0,W,H);
+
+  const stateKeys=Object.keys(STATES);
+  const positions={
+    created:{x:W*0.1,y:60}, starting:{x:W*0.3,y:60},
+    running:{x:W*0.55,y:60}, idle:{x:W*0.8,y:60},
+    degraded:{x:W*0.35,y:190}, recovering:{x:W*0.55,y:190},
+    paused:{x:W*0.8,y:190}, stopping:{x:W*0.55,y:310},
+    terminated:{x:W*0.3,y:310}, archived:{x:W*0.1,y:310}
+  };
+
+  // Draw transitions
+  const drawn=new Set();
+  Object.entries(TRANSITIONS).forEach(([from,tos])=>{
+    tos.forEach(to=>{
+      const key=from+'>'+to;
+      if(drawn.has(key)) return; drawn.add(key);
+      const p1=positions[from], p2=positions[to];
+      if(!p1||!p2) return;
+      const dx=p2.x-p1.x, dy=p2.y-p1.y, len=Math.sqrt(dx*dx+dy*dy);
+      const ux=dx/len, uy=dy/len;
+      const sx=p1.x+ux*32, sy=p1.y+uy*22;
+      const ex=p2.x-ux*32, ey=p2.y-uy*22;
+      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey);
+      ctx.strokeStyle='#334155'; ctx.lineWidth=1.5; ctx.stroke();
+      // arrow
+      const ax=ex-ux*8, ay=ey-uy*8;
+      ctx.beginPath();
+      ctx.moveTo(ex,ey);
+      ctx.lineTo(ax-uy*4,ay+ux*4);
+      ctx.lineTo(ax+uy*4,ay-ux*4);
+      ctx.closePath(); ctx.fillStyle='#334155'; ctx.fill();
+    });
+  });
+
+  // Draw state nodes
+  const counts={};
+  agents.forEach(a=>{ counts[a.state]=(counts[a.state]||0)+1; });
+
+  stateKeys.forEach(s=>{
+    const p=positions[s]; if(!p) return;
+    const info=STATES[s];
+    const count=counts[s]||0;
+    const isSelected=selectedId&&agents.find(a=>a.id===selectedId)?.state===s;
+    const r=28;
+    // glow for active
+    if(count>0){
+      ctx.beginPath(); ctx.arc(p.x,p.y,r+6,0,Math.PI*2);
+      ctx.fillStyle=info.color+'22'; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
+    ctx.fillStyle=count>0?info.color+'44':'#1e293b';
+    ctx.strokeStyle=isSelected?'#fff':info.color;
+    ctx.lineWidth=isSelected?3:2;
+    ctx.fill(); ctx.stroke();
+    // icon
+    ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#fff'; ctx.fillText(info.icon,p.x,p.y-2);
+    // label
+    ctx.font='bold 11px sans-serif'; ctx.fillStyle=info.color;
+    ctx.fillText(info.label,p.x,p.y+r+14);
+    // count badge
+    if(count>0){
+      ctx.font='bold 10px sans-serif';
+      const bx=p.x+r-4, by=p.y-r+4;
+      ctx.beginPath(); ctx.arc(bx,by,9,0,Math.PI*2);
+      ctx.fillStyle=info.color; ctx.fill();
+      ctx.fillStyle='#fff'; ctx.fillText(count,bx,by+1);
+    }
+  });
+
+  // title
+  ctx.font='bold 13px sans-serif'; ctx.fillStyle='#64748b'; ctx.textAlign='left';
+  ctx.fillText(autoMode?'🤖 AUTO-MANAGE ACTIVE':'State Machine',10,H-10);
+}
+
+function drawDistribution(){
+  const c=document.getElementById('distCanvas');
+  const ctx=c.getContext('2d');
+  c.width=c.offsetWidth*2; c.height=440;
+  ctx.scale(2,2);
+  const W=c.offsetWidth, H=220;
+  ctx.clearRect(0,0,W,H);
+
+  const counts={};
+  agents.forEach(a=>{ counts[a.state]=(counts[a.state]||0)+1; });
+  const entries=Object.entries(STATES).filter(([k])=>counts[k]>0);
+  if(!entries.length){
+    ctx.font='13px sans-serif'; ctx.fillStyle='#64748b'; ctx.textAlign='center';
+    ctx.fillText('No agents',W/2,H/2); return;
+  }
+  const maxC=Math.max(...entries.map(([k])=>counts[k]));
+  const barW=Math.min(40,(W-40)/entries.length-8);
+  const startX=(W-entries.length*(barW+8))/2;
+  entries.forEach(([key,info],i)=>{
+    const x=startX+i*(barW+8);
+    const h=(counts[key]/maxC)*(H-70);
+    const y=H-30-h;
+    ctx.fillStyle=info.color+'88';
+    ctx.beginPath();
+    ctx.roundRect(x,y,barW,h,4);
+    ctx.fill();
+    ctx.fillStyle=info.color;
+    ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(counts[key],x+barW/2,y-6);
+    ctx.font='10px sans-serif'; ctx.fillStyle='#64748b';
+    ctx.fillText(info.icon,x+barW/2,H-14);
+  });
+}
+
+function drawHealthChart(){
+  const c=document.getElementById('healthCanvas');
+  const ctx=c.getContext('2d');
+  c.width=c.offsetWidth*2; c.height=440;
+  ctx.scale(2,2);
+  const W=c.offsetWidth, H=220;
+  ctx.clearRect(0,0,W,H);
+
+  if(healthHistory.length<2){
+    ctx.font='13px sans-serif'; ctx.fillStyle='#64748b'; ctx.textAlign='center';
+    ctx.fillText('Collecting data...',W/2,H/2); return;
+  }
+  const pad={l:35,r:10,t:15,b:25};
+  const gw=W-pad.l-pad.r, gh=H-pad.t-pad.b;
+  // grid
+  ctx.strokeStyle='#1e293b'; ctx.lineWidth=1;
+  for(let p=0;p<=100;p+=25){
+    const y=pad.t+gh*(1-p/100);
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    ctx.font='10px sans-serif'; ctx.fillStyle='#64748b'; ctx.textAlign='right';
+    ctx.fillText(p+'%',pad.l-4,y+3);
+  }
+  // line
+  ctx.beginPath();
+  healthHistory.forEach((v,i)=>{
+    const x=pad.l+(i/(healthHistory.length-1))*gw;
+    const y=pad.t+gh*(1-v/100);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle='#6366f1'; ctx.lineWidth=2; ctx.stroke();
+  // fill
+  const lastX=pad.l+gw;
+  ctx.lineTo(lastX,pad.t+gh); ctx.lineTo(pad.l,pad.t+gh); ctx.closePath();
+  ctx.fillStyle='rgba(99,102,241,0.1)'; ctx.fill();
+  // threshold line
+  ctx.beginPath();
+  const ty=pad.t+gh*0.4;
+  ctx.moveTo(pad.l,ty); ctx.lineTo(W-pad.r,ty);
+  ctx.strokeStyle='#ef444466'; ctx.lineWidth=1; ctx.setLineDash([4,4]); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font='9px sans-serif'; ctx.fillStyle='#ef4444'; ctx.textAlign='left';
+  ctx.fillText('Critical',pad.l+2,ty-4);
+}
+
+function renderTransTable(){
+  const keys=Object.keys(STATES);
+  let html='<tr><th>From \\ To</th>'+keys.map(k=>`<th>${STATES[k].icon}</th>`).join('')+'</tr>';
+  keys.forEach(from=>{
+    html+=`<tr><th>${STATES[from].icon} ${STATES[from].label}</th>`;
+    keys.forEach(to=>{
+      const ok=TRANSITIONS[from]?.includes(to);
+      html+=`<td class="${ok?'allowed':'blocked'}">${ok?'✓':'·'}</td>`;
+    });
+    html+='</tr>';
+  });
+  document.getElementById('transTable').innerHTML=html;
+}
+
+// Init
+loadPreset('startup');
+setInterval(simulateTick,2000);
+</script>
+</body>
+</html>
