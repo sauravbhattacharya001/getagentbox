@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Dependency Mapper - AgentBox</title>
+    <meta name="description" content="Interactive agent dependency visualization with autonomous cascade failure simulation and resilience scoring.">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg:#0a0e1a;--surface:#141828;--surface2:#1c2240;--border:#2a3060;--text:#e0e4f0;--dim:#8890b0;--accent:#6c5ce7;--accent2:#00cec9;--danger:#ff4757;--warn:#ffa502;--success:#2ed573;--radius:12px}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        a{color:var(--accent2);text-decoration:none}
+        .top-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px}
+        .top-bar h1{font-size:1.2rem;flex:1}
+        .top-bar a{font-size:.9rem}
+        .layout{display:grid;grid-template-columns:280px 1fr 300px;height:calc(100vh - 52px)}
+        .panel{background:var(--surface);border-right:1px solid var(--border);padding:16px;overflow-y:auto}
+        .panel h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:12px}
+        .panel-right{border-right:none;border-left:1px solid var(--border)}
+        canvas{display:block;cursor:grab}
+        canvas:active{cursor:grabbing}
+        .node-list{list-style:none}
+        .node-list li{padding:8px 10px;border-radius:8px;margin-bottom:4px;font-size:.85rem;display:flex;align-items:center;gap:8px;cursor:pointer;transition:.2s}
+        .node-list li:hover{background:var(--surface2)}
+        .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+        .btn{padding:8px 16px;border:none;border-radius:8px;font-size:.85rem;cursor:pointer;font-weight:600;transition:.2s}
+        .btn-accent{background:var(--accent);color:#fff}
+        .btn-danger{background:var(--danger);color:#fff}
+        .btn-warn{background:var(--warn);color:#111}
+        .btn-success{background:var(--success);color:#111}
+        .btn:hover{opacity:.85;transform:translateY(-1px)}
+        .btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+        .stat-card{background:var(--surface2);border-radius:var(--radius);padding:12px;margin-bottom:8px}
+        .stat-card .label{font-size:.75rem;color:var(--dim);margin-bottom:4px}
+        .stat-card .value{font-size:1.4rem;font-weight:700}
+        .metric-row{display:flex;justify-content:space-between;font-size:.82rem;padding:4px 0;border-bottom:1px solid var(--border)}
+        .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600}
+        .badge-ok{background:rgba(46,213,115,.15);color:var(--success)}
+        .badge-warn{background:rgba(255,165,2,.15);color:var(--warn)}
+        .badge-crit{background:rgba(255,71,87,.15);color:var(--danger)}
+        .log-feed{font-family:monospace;font-size:.78rem;max-height:200px;overflow-y:auto;background:var(--bg);border-radius:8px;padding:8px;margin-top:8px}
+        .log-entry{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+        .log-entry.warn{color:var(--warn)}
+        .log-entry.crit{color:var(--danger)}
+        .log-entry.ok{color:var(--success)}
+        select,input{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.85rem;width:100%}
+        .preset-row{margin-bottom:12px}
+        .tooltip{position:absolute;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.82rem;pointer-events:none;z-index:10;max-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+        @media(max-width:900px){.layout{grid-template-columns:1fr;grid-template-rows:auto 400px auto}.panel{border:none;border-bottom:1px solid var(--border)}}
+    </style>
+</head>
+<body>
+<div class="top-bar">
+    <h1>🗺️ Agent Dependency Mapper</h1>
+    <span style="color:var(--dim);font-size:.85rem" id="statusText">Ready</span>
+    <a href="index.html">← Back to AgentBox</a>
+</div>
+<div class="layout">
+    <!-- Left Panel -->
+    <div class="panel" id="leftPanel">
+        <h3>Preset Architectures</h3>
+        <div class="preset-row">
+            <select id="presetSelect">
+                <option value="microservices">Microservices (12 nodes)</option>
+                <option value="monolith">Monolith + Satellites (6)</option>
+                <option value="eventdriven">Event-Driven (10)</option>
+                <option value="mesh">Service Mesh (8)</option>
+                <option value="pipeline">Data Pipeline (9)</option>
+            </select>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-accent" onclick="loadPreset()">Load</button>
+            <button class="btn btn-warn" onclick="shuffleLatencies()">Shuffle Latency</button>
+        </div>
+
+        <h3>Services</h3>
+        <ul class="node-list" id="nodeList"></ul>
+
+        <h3 style="margin-top:16px">Simulation</h3>
+        <div class="btn-group">
+            <button class="btn btn-danger" id="btnCascade" onclick="startCascade()">⚡ Cascade Failure</button>
+            <button class="btn btn-success" id="btnHeal" onclick="healAll()">💚 Heal All</button>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-warn" onclick="autoSimulate()">🤖 Auto-Simulate</button>
+            <button class="btn btn-accent" onclick="stopAuto()">⏹ Stop</button>
+        </div>
+        <label style="font-size:.82rem;display:block;margin-top:8px">
+            <input type="checkbox" id="chkAutoHeal" checked> Autonomous self-healing
+        </label>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="canvas"></canvas>
+
+    <!-- Right Panel -->
+    <div class="panel panel-right" id="rightPanel">
+        <h3>Resilience Score</h3>
+        <div class="stat-card">
+            <div class="label">Overall Health</div>
+            <div class="value" id="healthScore">100%</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Single Point of Failure Count</div>
+            <div class="value" id="spofCount">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Max Cascade Depth</div>
+            <div class="value" id="maxCascade">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Avg Dependency Depth</div>
+            <div class="value" id="avgDepth">0</div>
+        </div>
+
+        <h3 style="margin-top:16px">Proactive Insights</h3>
+        <div id="insights"></div>
+
+        <h3 style="margin-top:16px">Event Log</h3>
+        <div class="log-feed" id="logFeed"></div>
+
+        <h3 style="margin-top:16px">Export</h3>
+        <div class="btn-group">
+            <button class="btn btn-accent" onclick="exportJSON()">JSON</button>
+            <button class="btn btn-accent" onclick="exportPNG()">PNG</button>
+        </div>
+    </div>
+</div>
+
+<div class="tooltip" id="tooltip" style="display:none"></div>
+
+<script>
+const C = document.getElementById('canvas');
+const ctx = C.getContext('2d');
+let W, H;
+let nodes = [], edges = [];
+let drag = null, pan = {x:0,y:0}, panStart = null;
+let hoveredNode = null;
+let autoInterval = null;
+const logFeed = document.getElementById('logFeed');
+const tooltip = document.getElementById('tooltip');
+
+const PRESETS = {
+    microservices: {
+        nodes: [
+            {id:'gateway',label:'API Gateway',type:'gateway',x:.5,y:.08},
+            {id:'auth',label:'Auth Service',type:'core',x:.2,y:.25},
+            {id:'user',label:'User Service',type:'core',x:.4,y:.25},
+            {id:'order',label:'Order Service',type:'core',x:.6,y:.25},
+            {id:'payment',label:'Payment Service',type:'core',x:.8,y:.25},
+            {id:'inventory',label:'Inventory',type:'service',x:.3,y:.45},
+            {id:'notification',label:'Notifications',type:'service',x:.7,y:.45},
+            {id:'search',label:'Search',type:'service',x:.15,y:.45},
+            {id:'cache',label:'Redis Cache',type:'infra',x:.5,y:.65},
+            {id:'db',label:'PostgreSQL',type:'infra',x:.3,y:.8},
+            {id:'queue',label:'Message Queue',type:'infra',x:.7,y:.65},
+            {id:'storage',label:'Object Store',type:'infra',x:.6,y:.85}
+        ],
+        edges: [
+            ['gateway','auth'],['gateway','user'],['gateway','order'],['gateway','payment'],
+            ['auth','cache'],['auth','db'],['user','db'],['user','cache'],
+            ['order','inventory'],['order','payment'],['order','queue'],
+            ['payment','db'],['inventory','db'],['inventory','cache'],
+            ['notification','queue'],['search','db'],['search','cache'],
+            ['order','notification'],['storage','db']
+        ]
+    },
+    monolith: {
+        nodes: [
+            {id:'monolith',label:'Monolith App',type:'gateway',x:.5,y:.3},
+            {id:'db',label:'Main Database',type:'infra',x:.5,y:.7},
+            {id:'cdn',label:'CDN',type:'service',x:.2,y:.15},
+            {id:'email',label:'Email Service',type:'service',x:.8,y:.15},
+            {id:'logging',label:'Log Aggregator',type:'service',x:.2,y:.55},
+            {id:'backup',label:'Backup Service',type:'infra',x:.8,y:.55}
+        ],
+        edges: [
+            ['monolith','db'],['monolith','cdn'],['monolith','email'],
+            ['monolith','logging'],['db','backup'],['logging','db']
+        ]
+    },
+    eventdriven: {
+        nodes: [
+            {id:'producer1',label:'Web App',type:'gateway',x:.15,y:.15},
+            {id:'producer2',label:'Mobile API',type:'gateway',x:.45,y:.15},
+            {id:'producer3',label:'IoT Ingest',type:'gateway',x:.75,y:.15},
+            {id:'broker',label:'Event Broker',type:'core',x:.45,y:.4},
+            {id:'processor1',label:'Stream Processor',type:'service',x:.2,y:.6},
+            {id:'processor2',label:'ML Pipeline',type:'service',x:.5,y:.6},
+            {id:'processor3',label:'Alert Engine',type:'service',x:.8,y:.6},
+            {id:'sink1',label:'Data Lake',type:'infra',x:.2,y:.85},
+            {id:'sink2',label:'Dashboard DB',type:'infra',x:.5,y:.85},
+            {id:'sink3',label:'Notification Hub',type:'infra',x:.8,y:.85}
+        ],
+        edges: [
+            ['producer1','broker'],['producer2','broker'],['producer3','broker'],
+            ['broker','processor1'],['broker','processor2'],['broker','processor3'],
+            ['processor1','sink1'],['processor2','sink2'],['processor3','sink3'],
+            ['processor2','sink1'],['processor3','sink2']
+        ]
+    },
+    mesh: {
+        nodes: [
+            {id:'proxy',label:'Ingress Proxy',type:'gateway',x:.5,y:.1},
+            {id:'svc1',label:'Sidecar A',type:'core',x:.2,y:.35},
+            {id:'svc2',label:'Sidecar B',type:'core',x:.5,y:.35},
+            {id:'svc3',label:'Sidecar C',type:'core',x:.8,y:.35},
+            {id:'ctrl',label:'Control Plane',type:'service',x:.5,y:.6},
+            {id:'obs',label:'Observability',type:'service',x:.2,y:.75},
+            {id:'cert',label:'Cert Manager',type:'infra',x:.5,y:.85},
+            {id:'config',label:'Config Store',type:'infra',x:.8,y:.75}
+        ],
+        edges: [
+            ['proxy','svc1'],['proxy','svc2'],['proxy','svc3'],
+            ['svc1','svc2'],['svc2','svc3'],['svc1','svc3'],
+            ['ctrl','svc1'],['ctrl','svc2'],['ctrl','svc3'],
+            ['ctrl','obs'],['ctrl','cert'],['ctrl','config']
+        ]
+    },
+    pipeline: {
+        nodes: [
+            {id:'ingest',label:'Data Ingest',type:'gateway',x:.1,y:.4},
+            {id:'validate',label:'Validator',type:'service',x:.25,y:.25},
+            {id:'transform',label:'Transformer',type:'service',x:.4,y:.4},
+            {id:'enrich',label:'Enricher',type:'service',x:.55,y:.25},
+            {id:'dedupe',label:'Deduplicator',type:'core',x:.55,y:.55},
+            {id:'ml',label:'ML Scorer',type:'core',x:.7,y:.4},
+            {id:'load',label:'Loader',type:'service',x:.85,y:.25},
+            {id:'warehouse',label:'Data Warehouse',type:'infra',x:.9,y:.55},
+            {id:'monitor',label:'Pipeline Monitor',type:'service',x:.5,y:.8}
+        ],
+        edges: [
+            ['ingest','validate'],['validate','transform'],['transform','enrich'],
+            ['transform','dedupe'],['enrich','ml'],['dedupe','ml'],
+            ['ml','load'],['load','warehouse'],
+            ['monitor','ingest'],['monitor','transform'],['monitor','ml'],['monitor','warehouse']
+        ]
+    }
+};
+
+const COLORS = {gateway:'#6c5ce7',core:'#00cec9',service:'#ffa502',infra:'#ff6b81'};
+const RADIUS = 28;
+
+function resize(){
+    W = C.parentElement.clientWidth || 800;
+    H = C.parentElement.clientHeight || 600;
+    C.width = W * devicePixelRatio;
+    C.height = H * devicePixelRatio;
+    C.style.width = W+'px';
+    C.style.height = H+'px';
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+
+function loadPreset(){
+    const key = document.getElementById('presetSelect').value;
+    const p = PRESETS[key];
+    nodes = p.nodes.map(n=>({
+        ...n,
+        px: n.x * (W-100) + 50,
+        py: n.y * (H-80) + 40,
+        health: 100,
+        status: 'healthy',
+        latency: 5 + Math.random()*45|0,
+        deps: 0
+    }));
+    edges = p.edges.map(([s,t])=>({source:s,target:t}));
+    // count dependencies
+    nodes.forEach(n=>{ n.deps = edges.filter(e=>e.source===n.id||e.target===n.id).length; });
+    pan = {x:0,y:0};
+    clearLog();
+    addLog('Loaded preset: '+key,'ok');
+    updateNodeList();
+    analyze();
+}
+
+function shuffleLatencies(){
+    nodes.forEach(n=>{ n.latency = 5 + Math.random()*95|0; });
+    addLog('Latencies shuffled','ok');
+    analyze();
+}
+
+function nodeAt(mx,my){
+    for(let i=nodes.length-1;i>=0;i--){
+        const n=nodes[i];
+        const dx=mx-n.px-pan.x, dy=my-n.py-pan.y;
+        if(dx*dx+dy*dy < RADIUS*RADIUS) return n;
+    }
+    return null;
+}
+
+C.addEventListener('mousedown',e=>{
+    const r=C.getBoundingClientRect();
+    const mx=e.clientX-r.left, my=e.clientY-r.top;
+    const n=nodeAt(mx,my);
+    if(n){ drag={node:n,ox:n.px-mx,oy:n.py-my}; }
+    else{ panStart={x:e.clientX-pan.x,y:e.clientY-pan.y}; }
+});
+C.addEventListener('mousemove',e=>{
+    const r=C.getBoundingClientRect();
+    const mx=e.clientX-r.left, my=e.clientY-r.top;
+    if(drag){ drag.node.px=mx+drag.ox; drag.node.py=my+drag.oy; return; }
+    if(panStart){ pan.x=e.clientX-panStart.x; pan.y=e.clientY-panStart.y; return; }
+    const n=nodeAt(mx,my);
+    hoveredNode=n;
+    if(n){
+        tooltip.style.display='block';
+        tooltip.style.left=(e.clientX+12)+'px';
+        tooltip.style.top=(e.clientY+12)+'px';
+        tooltip.innerHTML=`<strong>${n.label}</strong><br>Status: ${n.status}<br>Health: ${n.health}%<br>Latency: ${n.latency}ms<br>Connections: ${n.deps}`;
+    } else {
+        tooltip.style.display='none';
+    }
+});
+C.addEventListener('mouseup',()=>{ drag=null; panStart=null; });
+C.addEventListener('dblclick',e=>{
+    const r=C.getBoundingClientRect();
+    const n=nodeAt(e.clientX-r.left,e.clientY-r.top);
+    if(n && n.status==='healthy'){ killNode(n); }
+    else if(n && n.status!=='healthy'){ healNode(n); }
+});
+
+function killNode(n){
+    n.health=0; n.status='dead';
+    addLog(`☠️ ${n.label} killed`,'crit');
+    propagateCascade(n, 1);
+    analyze();
+}
+function healNode(n){
+    n.health=100; n.status='healthy';
+    addLog(`💚 ${n.label} healed`,'ok');
+    analyze();
+}
+function healAll(){
+    nodes.forEach(n=>{ n.health=100; n.status='healthy'; });
+    addLog('💚 All services healed','ok');
+    analyze();
+}
+
+function propagateCascade(src, depth){
+    const dependents = edges
+        .filter(e=>e.target===src.id)
+        .map(e=>nodes.find(n=>n.id===e.source))
+        .filter(n=>n&&n.status==='healthy');
+    
+    dependents.forEach(dep=>{
+        // Each dep loses health proportional to how many of its deps are down
+        const totalDeps = edges.filter(e=>e.source===dep.id).length;
+        const downDeps = edges.filter(e=>e.source===dep.id).map(e=>nodes.find(n=>n.id===e.target)).filter(n=>n&&n.status==='dead').length;
+        const ratio = downDeps / Math.max(totalDeps,1);
+        
+        if(ratio >= 0.5){
+            dep.health = Math.max(0, dep.health - 60);
+            if(dep.health <= 0){
+                dep.status = 'dead';
+                addLog(`💥 ${dep.label} cascade failure (depth ${depth})`,'crit');
+                propagateCascade(dep, depth+1);
+            } else {
+                dep.status = 'degraded';
+                addLog(`⚠️ ${dep.label} degraded (${dep.health}%)`,'warn');
+            }
+        } else if(ratio > 0){
+            dep.health = Math.max(20, dep.health - 30);
+            dep.status = 'degraded';
+            addLog(`⚠️ ${dep.label} degraded (${dep.health}%)`,'warn');
+        }
+    });
+}
+
+function startCascade(){
+    // Pick highest-connectivity healthy node
+    const candidates = nodes.filter(n=>n.status==='healthy').sort((a,b)=>b.deps-a.deps);
+    if(!candidates.length){ addLog('No healthy nodes to fail','warn'); return; }
+    const target = candidates[0];
+    addLog(`⚡ Triggering cascade from ${target.label}`,'crit');
+    killNode(target);
+}
+
+function autoSimulate(){
+    if(autoInterval) clearInterval(autoInterval);
+    addLog('🤖 Auto-simulation started','ok');
+    autoInterval = setInterval(()=>{
+        const healthy = nodes.filter(n=>n.status==='healthy');
+        const dead = nodes.filter(n=>n.status==='dead');
+        
+        // Randomly fail a node
+        if(healthy.length > 0 && Math.random() < 0.4){
+            const victim = healthy[Math.random()*healthy.length|0];
+            victim.health = 0; victim.status = 'dead';
+            addLog(`⚡ Auto: ${victim.label} failed`,'crit');
+            propagateCascade(victim,1);
+        }
+        
+        // Self-heal if enabled
+        if(document.getElementById('chkAutoHeal').checked && dead.length > 0 && Math.random() < 0.3){
+            const target = dead[Math.random()*dead.length|0];
+            target.health = 100; target.status = 'healthy';
+            addLog(`🔧 Auto-heal: ${target.label} restored`,'ok');
+        }
+        
+        analyze();
+    }, 2000);
+}
+function stopAuto(){
+    if(autoInterval){ clearInterval(autoInterval); autoInterval=null; }
+    addLog('⏹ Auto-simulation stopped','ok');
+}
+
+function analyze(){
+    const total = nodes.length;
+    const healthyCount = nodes.filter(n=>n.status==='healthy').length;
+    const pct = total ? (healthyCount/total*100)|0 : 0;
+    document.getElementById('healthScore').textContent = pct+'%';
+    document.getElementById('healthScore').style.color = pct>70?'var(--success)':pct>40?'var(--warn)':'var(--danger)';
+
+    // SPOF: nodes whose removal would disconnect others
+    let spof = 0;
+    nodes.forEach(n=>{
+        const depCount = edges.filter(e=>e.target===n.id).length;
+        const isOnlyProvider = edges.filter(e=>e.target===n.id).some(e=>{
+            const consumer = nodes.find(nd=>nd.id===e.source);
+            if(!consumer) return false;
+            const altProviders = edges.filter(e2=>e2.source===consumer.id && e2.target!==n.id).length;
+            return altProviders === 0;
+        });
+        if(depCount >= 2 || isOnlyProvider) spof++;
+    });
+    document.getElementById('spofCount').textContent = spof;
+
+    // Max cascade depth via BFS
+    let maxD = 0;
+    nodes.forEach(start=>{
+        let visited = new Set([start.id]), queue = [{id:start.id,d:0}];
+        while(queue.length){
+            const {id,d} = queue.shift();
+            maxD = Math.max(maxD,d);
+            edges.filter(e=>e.target===id).forEach(e=>{
+                if(!visited.has(e.source)){ visited.add(e.source); queue.push({id:e.source,d:d+1}); }
+            });
+        }
+    });
+    document.getElementById('maxCascade').textContent = maxD;
+
+    // Avg depth
+    const depths = nodes.map(n=>{
+        let d=0;
+        const visit = (id,depth)=>{
+            d=Math.max(d,depth);
+            edges.filter(e=>e.source===id).forEach(e=>visit(e.target,depth+1));
+        };
+        visit(n.id,0);
+        return d;
+    });
+    document.getElementById('avgDepth').textContent = (depths.reduce((a,b)=>a+b,0)/Math.max(depths.length,1)).toFixed(1);
+
+    // Insights
+    const insights = [];
+    if(spof > 0) insights.push({t:'⚠️ Single Points of Failure',m:`${spof} service(s) have no redundancy. Consider adding replicas or fallback paths.`,c:'warn'});
+    const highLatency = nodes.filter(n=>n.latency>70);
+    if(highLatency.length) insights.push({t:'🐌 High Latency Detected',m:`${highLatency.map(n=>n.label).join(', ')} have latency >70ms. Consider caching or optimizing.`,c:'warn'});
+    const dead = nodes.filter(n=>n.status==='dead');
+    if(dead.length) insights.push({t:'💀 Services Down',m:`${dead.map(n=>n.label).join(', ')} are offline. ${dead.length>total*.3?'CRITICAL: >30% of fleet down!':'Investigate and restore.'}`,c:'crit'});
+    if(pct===100) insights.push({t:'✅ All Systems Operational',m:'Full fleet health. Consider running a chaos test to validate resilience.',c:'ok'});
+    if(maxD >= 4) insights.push({t:'🔗 Deep Dependency Chain',m:`Max cascade depth is ${maxD}. Deep chains amplify failure impact. Consider circuit breakers.`,c:'warn'});
+    
+    const iDiv = document.getElementById('insights');
+    iDiv.innerHTML = insights.map(i=>`<div class="stat-card"><div class="badge badge-${i.c}">${i.t}</div><div style="font-size:.82rem;margin-top:4px">${i.m}</div></div>`).join('');
+
+    document.getElementById('statusText').textContent = `${healthyCount}/${total} healthy • ${pct}%`;
+}
+
+function updateNodeList(){
+    const ul = document.getElementById('nodeList');
+    ul.innerHTML = nodes.map(n=>`<li onclick="document.querySelectorAll('.node-list li').forEach(l=>l.style.background='');this.style.background='var(--surface2)'" title="Double-click on canvas to toggle"><span class="dot" style="background:${COLORS[n.type]}"></span>${n.label} <span class="badge badge-ok" style="margin-left:auto;font-size:.7rem">${n.latency}ms</span></li>`).join('');
+}
+
+function addLog(msg, cls){
+    const d = document.createElement('div');
+    d.className = 'log-entry '+(cls||'');
+    const t = new Date().toLocaleTimeString();
+    d.textContent = `[${t}] ${msg}`;
+    logFeed.prepend(d);
+    if(logFeed.children.length > 100) logFeed.lastChild.remove();
+}
+function clearLog(){ logFeed.innerHTML=''; }
+
+// Rendering
+function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    ctx.translate(pan.x, pan.y);
+
+    // Edges
+    edges.forEach(e=>{
+        const s=nodes.find(n=>n.id===e.source);
+        const t=nodes.find(n=>n.id===e.target);
+        if(!s||!t) return;
+        const bothDead = s.status==='dead'&&t.status==='dead';
+        const anyDead = s.status==='dead'||t.status==='dead';
+        ctx.beginPath();
+        ctx.moveTo(s.px,s.py);
+        ctx.lineTo(t.px,t.py);
+        ctx.strokeStyle = bothDead?'rgba(255,71,87,.3)':anyDead?'rgba(255,165,2,.4)':'rgba(255,255,255,.12)';
+        ctx.lineWidth = anyDead?1.5:1;
+        if(anyDead){ ctx.setLineDash([4,4]); } else { ctx.setLineDash([]); }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Arrow
+        const angle = Math.atan2(t.py-s.py, t.px-s.px);
+        const dist = Math.hypot(t.px-s.px, t.py-s.py);
+        const ax = s.px + Math.cos(angle)*(dist-RADIUS-4);
+        const ay = s.py + Math.sin(angle)*(dist-RADIUS-4);
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax-8*Math.cos(angle-0.3), ay-8*Math.sin(angle-0.3));
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax-8*Math.cos(angle+0.3), ay-8*Math.sin(angle+0.3));
+        ctx.strokeStyle = anyDead?'rgba(255,165,2,.5)':'rgba(255,255,255,.2)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    });
+
+    // Nodes
+    const time = Date.now();
+    nodes.forEach(n=>{
+        const col = COLORS[n.type];
+        
+        // Pulse ring for degraded
+        if(n.status==='degraded'){
+            const pulse = Math.sin(time/300)*0.3+0.5;
+            ctx.beginPath();
+            ctx.arc(n.px, n.py, RADIUS+6, 0, Math.PI*2);
+            ctx.strokeStyle = `rgba(255,165,2,${pulse})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Dead X
+        if(n.status==='dead'){
+            ctx.beginPath();
+            ctx.arc(n.px, n.py, RADIUS+4, 0, Math.PI*2);
+            ctx.strokeStyle = 'rgba(255,71,87,.6)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([3,3]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Node circle
+        ctx.beginPath();
+        ctx.arc(n.px, n.py, RADIUS, 0, Math.PI*2);
+        const alpha = n.status==='dead'?0.25:n.status==='degraded'?0.5:0.85;
+        ctx.fillStyle = col.replace(')',`,${alpha})`).replace('rgb','rgba');
+        if(!col.startsWith('rgba')) {
+            // hex to rgba
+            const r=parseInt(col.slice(1,3),16),g=parseInt(col.slice(3,5),16),b=parseInt(col.slice(5,7),16);
+            ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        }
+        ctx.fill();
+        ctx.strokeStyle = n===hoveredNode?'#fff':col;
+        ctx.lineWidth = n===hoveredNode?2.5:1.5;
+        ctx.stroke();
+
+        // Label
+        ctx.fillStyle = n.status==='dead'?'rgba(255,255,255,.4)':'#fff';
+        ctx.font = '11px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(n.label, n.px, n.py + RADIUS + 16);
+
+        // Health bar
+        if(n.status!=='healthy'){
+            const bw=40, bh=4;
+            ctx.fillStyle='rgba(0,0,0,.5)';
+            ctx.fillRect(n.px-bw/2, n.py+RADIUS+4, bw, bh);
+            ctx.fillStyle=n.health>50?'var(--warn)':'#ff4757';
+            ctx.fillStyle=n.health>50?'#ffa502':'#ff4757';
+            ctx.fillRect(n.px-bw/2, n.py+RADIUS+4, bw*n.health/100, bh);
+        }
+        
+        // Status icon
+        if(n.status==='dead'){
+            ctx.fillStyle='#fff';
+            ctx.font='bold 16px sans-serif';
+            ctx.fillText('✕',n.px,n.py+5);
+        }
+    });
+
+    ctx.restore();
+    requestAnimationFrame(draw);
+}
+
+function exportJSON(){
+    const data = {nodes:nodes.map(n=>({id:n.id,label:n.label,type:n.type,health:n.health,status:n.status,latency:n.latency})),edges};
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a = document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='dependency-map.json';
+    a.click();
+}
+function exportPNG(){
+    const a=document.createElement('a');
+    a.href=C.toDataURL('image/png');
+    a.download='dependency-map.png';
+    a.click();
+}
+
+window.addEventListener('resize', resize);
+resize();
+loadPreset();
+draw();
+</script>
+</body>
+</html>
