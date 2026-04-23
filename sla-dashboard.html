@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox SLA Dashboard — Autonomous SLA Monitoring</title>
+    <meta name="description" content="Interactive SLA dashboard with uptime tracking, error budget burn-down, breach prediction, response time sparklines, incident timeline, and proactive recommendations.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #facc15;
+            --color-danger: #ef4444;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+        a { color: var(--color-primary); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { display: inline-block; margin-bottom: 1rem; font-size: 0.9rem; }
+        h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+        .subtitle { color: var(--color-text-muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
+        .fleet-summary { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .summary-card { background: var(--color-bg-mid); border-radius: 10px; padding: 1rem 1.5rem; flex: 1; min-width: 140px; text-align: center; }
+        .summary-card .num { font-size: 2rem; font-weight: 700; }
+        .summary-card .label { font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .section-title { font-size: 1.2rem; margin: 1.5rem 0 0.8rem; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+        .agent-card { background: var(--color-bg-mid); border-radius: 10px; padding: 1.2rem; transition: transform 0.15s; }
+        .agent-card:hover { transform: translateY(-2px); }
+        .agent-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.8rem; }
+        .health-ring { width: 52px; height: 52px; flex-shrink: 0; }
+        .agent-name { font-weight: 600; font-size: 1rem; }
+        .agent-tier { font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; font-weight: 600; display: inline-block; margin-left: 0.4rem; }
+        .tier-gold { background: #facc15; color: #000; }
+        .tier-silver { background: #94a3b8; color: #000; }
+        .tier-bronze { background: #d97706; color: #000; }
+        .metric-row { display: flex; justify-content: space-between; font-size: 0.82rem; padding: 0.2rem 0; }
+        .metric-label { color: var(--color-text-muted); }
+        .budget-bar-wrap { background: rgba(255,255,255,0.08); border-radius: 6px; height: 10px; margin: 0.5rem 0 0.3rem; overflow: hidden; }
+        .budget-bar { height: 100%; border-radius: 6px; transition: width 0.5s; }
+        .sparkline-wrap { margin-top: 0.5rem; }
+        .sparkline-wrap canvas { width: 100%; height: 40px; border-radius: 4px; background: rgba(0,0,0,0.2); }
+        .breach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.8rem; margin-bottom: 1.5rem; }
+        .breach-card { background: var(--color-bg-mid); border-radius: 10px; padding: 1rem; border-left: 4px solid; }
+        .breach-card.safe { border-color: var(--color-success); }
+        .breach-card.caution { border-color: var(--color-primary); }
+        .breach-card.warning { border-color: var(--color-warning); }
+        .breach-card.critical { border-color: var(--color-danger); }
+        .breach-countdown { font-size: 1.6rem; font-weight: 700; }
+        .breach-rec { font-size: 0.82rem; color: var(--color-text-muted); margin-top: 0.4rem; font-style: italic; }
+        .timeline { background: var(--color-bg-mid); border-radius: 10px; padding: 1rem; max-height: 260px; overflow-y: auto; margin-bottom: 1.5rem; }
+        .timeline-item { display: flex; gap: 0.8rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .timeline-item:last-child { border-bottom: none; }
+        .timeline-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+        .timeline-body { flex: 1; }
+        .timeline-ts { font-size: 0.75rem; color: var(--color-text-muted); }
+        .timeline-title { font-size: 0.85rem; font-weight: 500; }
+        .timeline-detail { font-size: 0.8rem; color: var(--color-text-muted); display: none; margin-top: 0.3rem; }
+        .timeline-item.open .timeline-detail { display: block; }
+        .rec-panel { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.8rem; margin-bottom: 1.5rem; }
+        .rec-card { background: var(--color-bg-mid); border-radius: 10px; padding: 1rem; }
+        .rec-icon { font-size: 1.3rem; margin-bottom: 0.3rem; }
+        .rec-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .rec-desc { font-size: 0.82rem; color: var(--color-text-muted); }
+        .monitor-toggle { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--color-primary); color: #000; border: none; border-radius: 99px; padding: 0.7rem 1.4rem; font-weight: 700; font-size: 0.85rem; cursor: pointer; z-index: 100; box-shadow: 0 4px 20px rgba(0,212,255,0.3); }
+        .monitor-toggle.active { background: var(--color-danger); color: #fff; }
+        .toast { position: fixed; top: 1rem; right: 1rem; background: var(--color-danger); color: #fff; padding: 0.8rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; z-index: 200; animation: slideIn 0.3s ease, fadeOut 0.5s ease 3s forwards; max-width: 350px; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
+        @media (max-width: 600px) { body { padding: 0.8rem; } .agent-grid, .breach-grid, .rec-panel { grid-template-columns: 1fr; } .fleet-summary { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">&larr; Back to Home</a>
+    <h1>&#x1f6e1;&#xfe0f; Agent SLA Dashboard</h1>
+    <p class="subtitle">Autonomous SLA monitoring with breach prediction &amp; proactive recommendations</p>
+    <div class="fleet-summary" id="fleetSummary"></div>
+    <h2 class="section-title">Agent Fleet &amp; Error Budgets</h2>
+    <div class="agent-grid" id="agentGrid"></div>
+    <h2 class="section-title">Breach Prediction Engine</h2>
+    <div class="breach-grid" id="breachGrid"></div>
+    <h2 class="section-title">Incident Timeline</h2>
+    <div class="timeline" id="timeline"></div>
+    <h2 class="section-title">&#x1f916; Proactive Recommendations</h2>
+    <div class="rec-panel" id="recPanel"></div>
+    <button class="monitor-toggle" id="monitorToggle">&#x25b6; Start Auto-Monitor</button>
+    <script>
+    (function() {
+        'use strict';
+        var TIERS = {
+            Gold:   { uptimeSLA: 99.99, latencySLA: 200, budgetMin: 4.32 },
+            Silver: { uptimeSLA: 99.9,  latencySLA: 500, budgetMin: 43.2 },
+            Bronze: { uptimeSLA: 99.5,  latencySLA: 1000, budgetMin: 216 }
+        };
+        function rb(a, b) { return a + Math.random() * (b - a); }
+        function ri(a, b) { return Math.floor(rb(a, b)); }
+        function genH(base, jit, n) { var h = []; for (var i = 0; i < n; i++) h.push(Math.max(10, base + (Math.random() - 0.5) * jit * 2)); return h; }
+        var agents = [
+            { name: 'agent-alpha',   tier: 'Gold',   uptime: rb(99.95, 100), avgLatency: rb(80, 180),  errorRate: rb(0, 0.02), history: genH(120, 60, 24) },
+            { name: 'agent-bravo',   tier: 'Gold',   uptime: rb(99.85, 99.99), avgLatency: rb(100, 220), errorRate: rb(0, 0.05), history: genH(160, 80, 24) },
+            { name: 'agent-charlie', tier: 'Silver', uptime: rb(99.7, 99.98), avgLatency: rb(200, 480), errorRate: rb(0.01, 0.1), history: genH(350, 150, 24) },
+            { name: 'agent-delta',   tier: 'Silver', uptime: rb(99.5, 99.95), avgLatency: rb(250, 550), errorRate: rb(0.02, 0.15), history: genH(400, 200, 24) },
+            { name: 'agent-echo',    tier: 'Bronze', uptime: rb(99.0, 99.8), avgLatency: rb(400, 900),  errorRate: rb(0.05, 0.3), history: genH(600, 300, 24) },
+            { name: 'agent-foxtrot', tier: 'Bronze', uptime: rb(98.5, 99.6), avgLatency: rb(500, 1100), errorRate: rb(0.1, 0.5), history: genH(800, 400, 24) }
+        ];
+        function genIncidents() {
+            var sevs = ['critical','major','minor','minor','minor','major'];
+            var descs = ['Response timeout spike on inference endpoint','Memory pressure triggered pod eviction','TLS certificate renewal delayed','Queue depth exceeded threshold','Model loading latency increase','Rate limiter false positives detected','Database connection pool exhaustion','Cache invalidation cascade','Health check flapping on node-3'];
+            var out = [], now = Date.now();
+            for (var i = 0; i < 12; i++) { var ago = ri(600000, 86400000*3); var sev = sevs[ri(0, sevs.length)]; var dur = sev === 'critical' ? ri(10,45) : sev === 'major' ? ri(5,25) : ri(1,10); out.push({ts: new Date(now-ago), severity: sev, duration: dur, agent: agents[ri(0, agents.length)].name, desc: descs[ri(0, descs.length)]}); }
+            return out.sort(function(a,b){return b.ts-a.ts;});
+        }
+        var incidents = genIncidents();
+        function sColor(u) { return u >= 99.9 ? '#4ade80' : u >= 99.0 ? '#facc15' : '#ef4444'; }
+        function budgetUsed(a) { var t = TIERS[a.tier]; return Math.min(100, ((100-a.uptime)/100*30*24*60/t.budgetMin)*100); }
+        function daysUntil(a) { var t = TIERS[a.tier]; var d = (100-a.uptime)/100*15*24*60; var bl = t.budgetMin - d; if(bl<=0) return 0; var db = d/15; return db<=0 ? 999 : Math.min(999, bl/db); }
+        function bClass(d) { return d>14?'safe':d>7?'caution':d>3?'warning':'critical'; }
+        function bLabel(d) { return d>14?'Safe':d>7?'Caution':d>3?'Warning':'Critical'; }
+        var recs = [
+            {icon:'\u{1f504}',title:'Enable Circuit Breakers',desc:'Agents with rising error rates should activate circuit breakers to prevent cascade failures.'},
+            {icon:'\u{1f4c8}',title:'Scale Horizontally',desc:'Agent-foxtrot latency trending upward \u2014 add replica capacity before SLA breach.'},
+            {icon:'\u{1f9f9}',title:'Cache Warm-Up',desc:'Cold-start latency spikes detected. Pre-warm caches during low-traffic windows.'},
+            {icon:'\u{1f50d}',title:'Investigate Error Spike',desc:'Agent-bravo error rate elevated in last 6h \u2014 correlate with recent deployments.'},
+            {icon:'\u23f1\ufe0f',title:'Tune Timeout Budgets',desc:'P99 latency exceeds SLA for Silver-tier agents. Consider request hedging.'},
+            {icon:'\u{1f6e1}\ufe0f',title:'Enable Auto-Remediation',desc:'Configure automated pod restart for agents crossing 3x error threshold.'}
+        ];
+        function drawRing(cv, up) {
+            var ctx = cv.getContext('2d'), s = 52*(window.devicePixelRatio||1);
+            cv.width = s; cv.height = s; ctx.scale(s/52, s/52);
+            ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+            ctx.beginPath(); ctx.arc(26,26,20,0,Math.PI*2); ctx.stroke();
+            ctx.strokeStyle = sColor(up); ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.arc(26,26,20,-Math.PI/2,-Math.PI/2+Math.PI*2*(Math.min(up,100)/100)); ctx.stroke();
+            ctx.fillStyle='#fff'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+            ctx.fillText(up.toFixed(2)+'%',26,26);
+        }
+        function drawSpark(cv, data, thr) {
+            var dpr = window.devicePixelRatio||1, w = cv.clientWidth||280, h = 40;
+            cv.width = w*dpr; cv.height = h*dpr;
+            var ctx = cv.getContext('2d'); ctx.scale(dpr,dpr);
+            var mx = Math.max.apply(null, data.concat([thr]))*1.1, mn = Math.min.apply(null, data)*0.8, rng = mx-mn||1, step = w/(data.length-1);
+            var tY = h-((thr-mn)/rng)*h;
+            ctx.strokeStyle='rgba(239,68,68,0.4)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+            ctx.beginPath(); ctx.moveTo(0,tY); ctx.lineTo(w,tY); ctx.stroke(); ctx.setLineDash([]);
+            ctx.strokeStyle='#00d4ff'; ctx.lineWidth=1.5; ctx.beginPath();
+            for(var i=0;i<data.length;i++){var x=i*step,y=h-((data[i]-mn)/rng)*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke();
+            for(var j=0;j<data.length;j++){if(data[j]>thr){var bx=j*step,by=h-((data[j]-mn)/rng)*h; ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(bx,by,3,0,Math.PI*2); ctx.fill();}}
+        }
+        function pcts(arr){var s=arr.slice().sort(function(a,b){return a-b;}); return {p50:s[Math.floor(s.length*0.5)],p95:s[Math.floor(s.length*0.95)],p99:s[Math.floor(s.length*0.99)]};}
+        function render() {
+            var comp=0,atR=0,br=0;
+            agents.forEach(function(a){var d=daysUntil(a); if(a.uptime>=TIERS[a.tier].uptimeSLA)comp++; if(d>3&&d<=14)atR++; if(d<=3)br++;});
+            document.getElementById('fleetSummary').innerHTML=[{n:agents.length,l:'Total Agents',c:'var(--color-primary)'},{n:comp,l:'In Compliance',c:'var(--color-success)'},{n:atR,l:'At Risk',c:'var(--color-warning)'},{n:br,l:'Breaching',c:'var(--color-danger)'}].map(function(c){return '<div class="summary-card"><div class="num" style="color:'+c.c+'">'+c.n+'</div><div class="label">'+c.l+'</div></div>';}).join('');
+            document.getElementById('agentGrid').innerHTML=agents.map(function(a,idx){
+                var bu=budgetUsed(a),buC=bu>80?'var(--color-danger)':bu>50?'var(--color-warning)':'var(--color-success)',p=pcts(a.history),tc='tier-'+a.tier.toLowerCase();
+                return '<div class="agent-card"><div class="agent-header"><canvas class="health-ring" id="r'+idx+'"></canvas><div><span class="agent-name">'+a.name+'</span> <span class="agent-tier '+tc+'">'+a.tier+'</span></div></div><div class="metric-row"><span class="metric-label">Avg Latency</span><span>'+a.avgLatency.toFixed(0)+'ms</span></div><div class="metric-row"><span class="metric-label">P50 / P95 / P99</span><span>'+p.p50.toFixed(0)+' / '+p.p95.toFixed(0)+' / '+p.p99.toFixed(0)+'ms</span></div><div class="metric-row"><span class="metric-label">Error Rate</span><span>'+a.errorRate.toFixed(3)+'%</span></div><div class="metric-row"><span class="metric-label">Error Budget Used</span><span style="color:'+buC+'">'+bu.toFixed(1)+'%</span></div><div class="budget-bar-wrap"><div class="budget-bar" style="width:'+Math.min(100,bu)+'%;background:'+buC+'"></div></div><div class="sparkline-wrap"><canvas id="s'+idx+'"></canvas></div></div>';
+            }).join('');
+            agents.forEach(function(a,i){drawRing(document.getElementById('r'+i),a.uptime); requestAnimationFrame(function(){drawSpark(document.getElementById('s'+i),a.history,TIERS[a.tier].latencySLA);});});
+            var rm={safe:'No action needed \u2014 budget healthy.',caution:'Monitor closely. Review recent deployments.',warning:'Scale horizontally or enable request hedging.',critical:'Immediate action: activate circuit breaker & investigate root cause.'};
+            document.getElementById('breachGrid').innerHTML=agents.map(function(a){var d=daysUntil(a),cl=bClass(d); return '<div class="breach-card '+cl+'"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>'+a.name+'</strong> <span class="agent-tier tier-'+a.tier.toLowerCase()+'" style="font-size:0.65rem">'+a.tier+'</span></div><span style="font-size:0.75rem;color:var(--color-text-muted)">'+bLabel(d)+'</span></div><div class="breach-countdown" style="color:'+sColor(d>14?100:d>7?99.5:d>3?99:98)+'">'+(d>=999?'\u221e':d.toFixed(1))+' days</div><div class="breach-rec">\u{1f4a1} '+rm[cl]+'</div></div>';}).join('');
+            var sc={critical:'#ef4444',major:'#facc15',minor:'#94a3b8'};
+            document.getElementById('timeline').innerHTML=incidents.map(function(inc){return '<div class="timeline-item" onclick="this.classList.toggle(\'open\')"><div class="timeline-dot" style="background:'+sc[inc.severity]+'"></div><div class="timeline-body"><div class="timeline-ts">'+inc.ts.toLocaleString()+' \u00b7 '+inc.severity.toUpperCase()+' \u00b7 '+inc.duration+'min</div><div class="timeline-title">'+inc.desc+'</div><div class="timeline-detail">Affected: <strong>'+inc.agent+'</strong> \u00b7 Duration: '+inc.duration+' minutes \u00b7 Severity: '+inc.severity+'</div></div></div>';}).join('');
+            document.getElementById('recPanel').innerHTML=recs.map(function(r){return '<div class="rec-card"><div class="rec-icon">'+r.icon+'</div><div class="rec-title">'+r.title+'</div><div class="rec-desc">'+r.desc+'</div></div>';}).join('');
+        }
+        render();
+        var intv=null, btn=document.getElementById('monitorToggle');
+        btn.addEventListener('click',function(){
+            if(intv){clearInterval(intv);intv=null;btn.textContent='\u25b6 Start Auto-Monitor';btn.classList.remove('active');}
+            else{btn.textContent='\u23f9 Stop Auto-Monitor';btn.classList.add('active');intv=setInterval(function(){
+                agents.forEach(function(a){a.uptime=Math.max(97,Math.min(100,a.uptime+(Math.random()-0.52)*0.03));a.avgLatency=Math.max(30,a.avgLatency+(Math.random()-0.48)*20);a.errorRate=Math.max(0,a.errorRate+(Math.random()-0.48)*0.01);var np=Math.max(10,a.avgLatency+(Math.random()-0.5)*100);a.history.push(np);if(a.history.length>24)a.history.shift();var d=daysUntil(a);if(d<=3&&Math.random()<0.15)toast('\u26a0\ufe0f SLA BREACH ALERT: '+a.name+' \u2014 '+d.toFixed(1)+' days remaining!');});render();
+            },2000);}
+        });
+        function toast(m){var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove();},3800);}
+    })();
+    </script>
+</body>
+</html>
