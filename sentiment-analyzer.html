@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Sentiment Analyzer - AgentBox</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f1117;--bg2:#1a1d27;--bg3:#242834;--text:#e4e6ed;--text2:#9ca3af;--accent:#6c63ff;--accent2:#818cf8;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--orange:#f97316;--blue:#3b82f6;--pink:#ec4899;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.3)}
+[data-theme=light]{--bg:#f8f9fb;--bg2:#fff;--bg3:#e5e7eb;--text:#1f2937;--text2:#6b7280;--shadow:0 4px 24px rgba(0,0,0,.08)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+nav{background:var(--bg2);border-bottom:1px solid var(--bg3);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-logo{color:var(--text);text-decoration:none;font-weight:700;font-size:1.15rem}
+.nav-right{display:flex;gap:.75rem;align-items:center}
+.theme-btn{background:var(--bg3);border:none;color:var(--text);padding:.4rem .7rem;border-radius:8px;cursor:pointer;font-size:1rem}
+header{text-align:center;padding:3rem 1.5rem 1.5rem}
+header h1{font-size:2rem;background:linear-gradient(135deg,var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
+header p{color:var(--text2);max-width:600px;margin:0 auto}
+main{max-width:1100px;margin:0 auto;padding:0 1.5rem 3rem}
+.card{background:var(--bg2);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);margin-bottom:1.25rem}
+.card h3{margin-bottom:.75rem;font-size:1.1rem}
+textarea{width:100%;height:180px;background:var(--bg3);color:var(--text);border:1px solid var(--bg3);border-radius:8px;padding:.75rem;font-family:inherit;font-size:.9rem;resize:vertical}
+textarea:focus{outline:none;border-color:var(--accent)}
+.btn-row{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
+.btn{padding:.5rem 1rem;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600;transition:transform .15s,opacity .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-secondary{background:var(--bg3);color:var(--text)}
+.btn-sm{padding:.35rem .75rem;font-size:.8rem}
+#results{display:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center}
+.gauge-label{font-size:2rem;font-weight:700;margin-top:.5rem}
+.gauge-sub{color:var(--text2);font-size:.85rem}
+.health-num{font-size:3rem;font-weight:800;text-align:center}
+.health-label{text-align:center;color:var(--text2);font-size:.9rem}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem}
+.tag{padding:.25rem .6rem;border-radius:20px;font-size:.75rem;font-weight:600;color:#fff}
+.tag-joy{background:var(--green)}.tag-frustration{background:var(--red)}.tag-confusion{background:var(--orange)}.tag-gratitude{background:var(--blue)}.tag-urgency{background:var(--pink)}
+canvas{width:100%;border-radius:8px;background:var(--bg3)}
+.timeline{max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem}
+.msg{display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;border-radius:8px;background:var(--bg3);font-size:.85rem}
+.msg-bar{width:6px;min-height:28px;border-radius:3px;flex-shrink:0}
+.msg-role{font-weight:700;min-width:50px;font-size:.75rem;text-transform:uppercase;color:var(--text2)}
+.msg-text{flex:1}
+.msg-score{font-weight:700;min-width:45px;text-align:right;font-size:.85rem}
+.drift-alert{background:rgba(239,68,68,.12);border:1px solid var(--red);border-radius:8px;padding:.75rem 1rem;margin-bottom:.5rem;font-size:.85rem;color:var(--red)}
+.insight{border-left:3px solid var(--accent);padding:.5rem .75rem;background:var(--bg3);border-radius:0 8px 8px 0;margin-bottom:.5rem;font-size:.85rem}
+footer{text-align:center;padding:2rem;color:var(--text2);font-size:.85rem;border-top:1px solid var(--bg3)}
+</style>
+</head>
+<body>
+<nav>
+<a href="index.html" class="nav-logo">🤖 AgentBox</a>
+<div class="nav-right">
+<a href="index.html" class="btn btn-sm btn-secondary">← Home</a>
+<button class="theme-btn" id="themeBtn" title="Toggle theme">☀️</button>
+</div>
+</nav>
+<header>
+<h1>🔬 Agent Sentiment Analyzer</h1>
+<p>Paste agent conversation logs to uncover sentiment patterns, emotional drift, and communication health — powered by real-time rule-based NLP.</p>
+</header>
+<main>
+<div class="card">
+<h3>💬 Conversation Input</h3>
+<textarea id="input" placeholder="Paste conversation here... Format: one message per line.&#10;Prefix with 'User:' or 'Agent:' for role detection.&#10;&#10;Example:&#10;User: I can't log in to my account&#10;Agent: I'm sorry to hear that. Let me help you right away.&#10;User: I've been trying for 30 minutes, this is so frustrating&#10;Agent: I completely understand your frustration. Let's fix this together."></textarea>
+<div class="btn-row">
+<button class="btn btn-primary" onclick="analyze()">🔍 Analyze Sentiment</button>
+<button class="btn btn-secondary" onclick="loadPreset(0)">😊 Happy Customer</button>
+<button class="btn btn-secondary" onclick="loadPreset(1)">😤 Escalating Frustration</button>
+<button class="btn btn-secondary" onclick="loadPreset(2)">🔄 Recovery Arc</button>
+</div>
+</div>
+<div id="results">
+<div class="grid3">
+<div class="card gauge-wrap">
+<h3>Overall Sentiment</h3>
+<svg id="gauge" width="180" height="110" viewBox="0 0 180 110"></svg>
+<div class="gauge-label" id="gaugeLabel">0.00</div>
+<div class="gauge-sub" id="gaugeSub">Neutral</div>
+</div>
+<div class="card">
+<h3>🏥 Communication Health</h3>
+<div class="health-num" id="healthNum">0</div>
+<div class="health-label" id="healthLabel">-</div>
+</div>
+<div class="card">
+<h3>🎭 Detected Emotions</h3>
+<div class="tags" id="emotionTags"></div>
+</div>
+</div>
+<div class="card">
+<h3>📈 Sentiment Trend</h3>
+<canvas id="chart" height="200"></canvas>
+</div>
+<div class="grid2">
+<div class="card">
+<h3>📋 Message Timeline</h3>
+<div id="driftAlerts"></div>
+<div class="timeline" id="timeline"></div>
+</div>
+<div class="card">
+<h3>💡 Proactive Insights</h3>
+<div id="insights"></div>
+</div>
+</div>
+</div>
+</main>
+<footer>&copy; 2026 AgentBox &mdash; Agent Sentiment Analyzer</footer>
+<script>
+const POSITIVE=['great','thanks','thank','helpful','perfect','awesome','love','excellent','wonderful','amazing','fantastic','good','nice','brilliant','outstanding','superb','pleased','happy','glad','satisfied','appreciate','delightful','incredible','phenomenal','impressive','remarkable','terrific','fabulous','marvelous','exceptional','splendid','gracious','kind','quick','resolved','fixed','working','solved','clear','easy','smooth','bravo','cheers','grateful','beautiful','enjoy','exciting','reliable','efficient','prompt','well'];
+const NEGATIVE=['bad','terrible','wrong','broken','frustrating','hate','awful','useless','horrible','worst','poor','disappointed','annoying','pathetic','dreadful','disgusting','abysmal','unacceptable','ridiculous','stupid','slow','fail','failed','failure','bug','error','crash','stuck','confused','angry','upset','furious','waste','pointless','incompetent','unreliable','rubbish','lousy','miserable','painful','nightmare','appalling','atrocious','dire','hopeless','impossible','irritating','outrageous','sucks','garbage'];
+const INTENSIFIERS=new Set(['very','really','extremely','incredibly','absolutely','totally','completely','utterly','highly','super','quite','remarkably','seriously','especially','particularly']);
+const NEGATORS=new Set(['not','never',"don't","doesn't","didn't","can't","cannot","couldn't","won't","wouldn't","isn't","aren't","wasn't","weren't","hardly","barely","scarcely","no"]);
+const EMOJI_POS=/[😊👍❤️🎉😃😄🥳💪✅🙌💯🌟⭐🤩😍💖😁👏🔥]/gu;
+const EMOJI_NEG=/[😡😢😤👎😠💔😞😒🤬😫😩😭🤮👿💩😵🙄😑]/gu;
+const EMOTIONS={joy:['happy','glad','love','awesome','amazing','great','wonderful','fantastic','excited','delightful','thrilled','joy','pleased','yay','brilliant','cheers','celebrate'],frustration:['frustrating','frustrated','annoying','angry','furious','upset','ridiculous','unacceptable','stupid','hate','ugh','argh','dammit','seriously','come on','pointless','waste'],confusion:['confused','confusing','unclear','understand','what','huh','lost','complicated','makes no sense','how','why','weird','strange','baffled','puzzled'],gratitude:['thanks','thank','appreciate','grateful','gratitude','kind','helped','lifesaver','saved','blessing','amazing help','so helpful'],urgency:['urgent','asap','immediately','emergency','critical','hurry','quickly','deadline','rush','now','right away','time-sensitive','can\'t wait']};
+const PRESETS=[
+[{r:'User',t:'Hi, I need help setting up my agent profile.'},{r:'Agent',t:'Of course! I\'d be happy to help you get started. What would you like to configure first?'},{r:'User',t:'I want to set up a custom personality. Is that easy to do?'},{r:'Agent',t:'Absolutely! It\'s really straightforward. Go to Settings → Personality and you\'ll see a visual editor.'},{r:'User',t:'Oh wow, that was super easy! The interface is really intuitive.'},{r:'Agent',t:'Glad to hear that! You can also preview changes in real-time before saving.'},{r:'User',t:'This is amazing! I love how smooth everything works. Thanks so much!'},{r:'Agent',t:'You\'re very welcome! Don\'t hesitate to reach out if you need anything else. Enjoy your agent! 😊'},{r:'User',t:'Absolutely will do. Best support experience I\'ve ever had! ❤️'}],
+[{r:'User',t:'My agent isn\'t responding to any messages.'},{r:'Agent',t:'I\'m sorry to hear that. Let me look into this for you.'},{r:'User',t:'I\'ve been waiting 20 minutes already. This is really frustrating.'},{r:'Agent',t:'I understand your frustration. Can you tell me which plan you\'re on?'},{r:'User',t:'I\'m on the Pro plan. I\'m paying for this and it doesn\'t even work!'},{r:'Agent',t:'Let me check the server status. There might be a temporary issue.'},{r:'User',t:'Temporary? This happened last week too. This is unacceptable.'},{r:'Agent',t:'I see there were some intermittent issues. I\'ll escalate this to our engineering team.'},{r:'User',t:'That\'s what you said last time. Nothing ever gets fixed. This is terrible service.'},{r:'Agent',t:'I completely understand your disappointment. Let me connect you with a senior engineer directly.'},{r:'User',t:'I\'m seriously considering cancelling. This is the worst experience I\'ve had with any product. 😡'}],
+[{r:'User',t:'This is broken. Nothing works. I hate this app. 😡'},{r:'Agent',t:'I\'m really sorry you\'re having such a bad experience. I want to fix this for you personally. What\'s happening?'},{r:'User',t:'The agent keeps giving wrong answers and it crashed twice today.'},{r:'Agent',t:'That\'s definitely not acceptable. I\'ve just checked your agent logs and found the issue — there was a configuration conflict. I\'ve fixed it on our end.'},{r:'User',t:'Oh... it\'s working now. But what about the wrong answers?'},{r:'Agent',t:'Great question. I\'ve also updated your agent\'s knowledge base and added guardrails to prevent those errors. Try asking it something now.'},{r:'User',t:'Wow, that\'s actually much better now. The responses are accurate.'},{r:'Agent',t:'Excellent! I also added a monitoring alert so if this happens again, we\'ll catch it before you even notice. 😊'},{r:'User',t:'That\'s really impressive. Thanks for actually fixing it instead of just apologizing. Appreciate it! 👍'},{r:'Agent',t:'You\'re welcome! Your feedback helped us improve the system for everyone. Thank you for your patience! ❤️'}]
+];
+function scoreMessage(text){
+const words=text.toLowerCase().replace(/[^\w\s'😊👍❤️🎉😃😄🥳💪✅🙌💯🌟⭐🤩😍💖😁👏🔥😡😢😤👎😠💔😞😒🤬😫😩😭🤮👿💩😵🙄😑]/gu,' ').split(/\s+/);
+let score=0,count=0,negate=false;
+for(let i=0;i<words.length;i++){
+const w=words[i];
+if(NEGATORS.has(w)){negate=true;continue}
+let s=0;
+if(POSITIVE.includes(w))s=1;
+else if(NEGATIVE.includes(w))s=-1;
+if(s!==0){
+let mult=1;
+if(i>0&&INTENSIFIERS.has(words[i-1]))mult=1.5;
+if(negate){s*=-1;negate=false}
+score+=s*mult;count++;
+}else{negate=false}
+}
+const emoP=(text.match(EMOJI_POS)||[]).length;
+const emoN=(text.match(EMOJI_NEG)||[]).length;
+score+=emoP*0.8-emoN*0.8;count+=emoP+emoN;
+return count===0?0:Math.max(-1,Math.min(1,score/count));
+}
+function detectEmotions(text){
+const lower=text.toLowerCase();
+const found=[];
+for(const[emotion,keywords]of Object.entries(EMOTIONS)){
+if(keywords.some(k=>lower.includes(k)))found.push(emotion);
+}
+return found;
+}
+function sentimentColor(s){
+if(s>=0.3)return'var(--green)';if(s>=-0.3)return'var(--yellow)';return'var(--red)';
+}
+function sentimentWord(s){
+if(s>=0.5)return'Very Positive';if(s>=0.2)return'Positive';if(s>=-0.2)return'Neutral';if(s>=-0.5)return'Negative';return'Very Negative';
+}
+function drawGauge(score){
+const svg=document.getElementById('gauge');
+const angle=90+score*90;
+const rad=n=>n*Math.PI/180;
+const cx=90,cy=100,r=75;
+const bgArc=`M ${cx-r} ${cy} A ${r} ${r} 0 1 1 ${cx+r} ${cy}`;
+const endX=cx+r*Math.cos(rad(180-angle));
+const endY=cy-r*Math.sin(rad(180-angle));
+const large=angle>90?1:0;
+const fgArc=`M ${cx-r} ${cy} A ${r} ${r} 0 ${large} 1 ${endX} ${endY}`;
+const c=sentimentColor(score);
+svg.innerHTML=`<path d="${bgArc}" fill="none" stroke="var(--bg3)" stroke-width="14" stroke-linecap="round"/>
+<path d="${fgArc}" fill="none" stroke="${c}" stroke-width="14" stroke-linecap="round" style="transition:all .6s"/>`;
+document.getElementById('gaugeLabel').textContent=score.toFixed(2);
+document.getElementById('gaugeLabel').style.color=c;
+document.getElementById('gaugeSub').textContent=sentimentWord(score);
+}
+function drawChart(scores,roles){
+const canvas=document.getElementById('chart');
+const dpr=window.devicePixelRatio||1;
+canvas.width=canvas.clientWidth*dpr;canvas.height=200*dpr;
+const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+const w=canvas.clientWidth,h=200,pad=30;
+ctx.clearRect(0,0,w,h);
+// grid
+ctx.strokeStyle='var(--bg3)';ctx.lineWidth=1;
+const cs=getComputedStyle(document.body);
+ctx.strokeStyle=cs.getPropertyValue('--bg3')||'#333';
+for(let v=-1;v<=1;v+=0.5){
+const y=pad+(1-v)/2*(h-2*pad);
+ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-pad,y);ctx.stroke();
+ctx.fillStyle=cs.getPropertyValue('--text2')||'#999';ctx.font='11px sans-serif';ctx.textAlign='right';
+ctx.fillText(v.toFixed(1),pad-5,y+4);
+}
+// zero line
+const zy=pad+0.5*(h-2*pad);
+ctx.strokeStyle=cs.getPropertyValue('--text2')||'#666';ctx.setLineDash([4,4]);
+ctx.beginPath();ctx.moveTo(pad,zy);ctx.lineTo(w-pad,zy);ctx.stroke();ctx.setLineDash([]);
+// line
+if(scores.length<2)return;
+const step=(w-2*pad)/(scores.length-1);
+ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.strokeStyle=cs.getPropertyValue('--accent')||'#6c63ff';
+ctx.beginPath();
+scores.forEach((s,i)=>{
+const x=pad+i*step,y=pad+(1-s)/2*(h-2*pad);
+i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+});
+ctx.stroke();
+// dots
+scores.forEach((s,i)=>{
+const x=pad+i*step,y=pad+(1-s)/2*(h-2*pad);
+ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
+const nc=s>=0.3?'#22c55e':s>=-0.3?'#eab308':'#ef4444';
+ctx.fillStyle=nc;ctx.fill();
+});
+// x labels
+ctx.fillStyle=cs.getPropertyValue('--text2')||'#999';ctx.font='10px sans-serif';ctx.textAlign='center';
+scores.forEach((_,i)=>{
+if(scores.length<=15||i%(Math.ceil(scores.length/12))===0){
+ctx.fillText(`#${i+1}`,pad+i*step,h-5);
+}
+});
+}
+function parseInput(text){
+const lines=text.split('\n').filter(l=>l.trim());
+return lines.map(l=>{
+const m=l.match(/^(User|Agent|Bot|System|Human|Assistant)\s*[:\-]\s*(.*)/i);
+if(m)return{r:m[1],t:m[2]};
+return{r:'?',t:l.trim()};
+});
+}
+function loadPreset(i){
+const msgs=PRESETS[i];
+document.getElementById('input').value=msgs.map(m=>`${m.r}: ${m.t}`).join('\n');
+analyze();
+}
+function analyze(){
+const raw=document.getElementById('input').value.trim();
+if(!raw){alert('Please enter a conversation to analyze.');return}
+const msgs=parseInput(raw);
+if(msgs.length===0)return;
+const scores=msgs.map(m=>scoreMessage(m.t));
+const allEmotions=new Set();
+msgs.forEach(m=>detectEmotions(m.t).forEach(e=>allEmotions.add(e)));
+const avg=scores.reduce((a,b)=>a+b,0)/scores.length;
+// Health score
+const stability=1-Math.min(1,scores.reduce((a,s,i)=>i===0?0:a+Math.abs(s-scores[i-1]),0)/(scores.length||1));
+const last3=scores.slice(-3);
+const trajectory=last3.length?last3.reduce((a,b)=>a+b,0)/last3.length:0;
+const positivity=(avg+1)/2;
+const health=Math.round(Math.max(0,Math.min(100,(stability*40+((trajectory+1)/2)*35+positivity*25))));
+drawGauge(avg);
+document.getElementById('healthNum').textContent=health;
+document.getElementById('healthNum').style.color=health>=70?'var(--green)':health>=40?'var(--yellow)':'var(--red)';
+document.getElementById('healthLabel').textContent=health>=80?'Excellent':health>=60?'Good':health>=40?'Needs Attention':'Critical';
+// Emotions
+const tagsEl=document.getElementById('emotionTags');
+tagsEl.innerHTML='';
+if(allEmotions.size===0)tagsEl.innerHTML='<span style="color:var(--text2);font-size:.85rem">No strong emotions detected</span>';
+else allEmotions.forEach(e=>{
+const span=document.createElement('span');
+span.className=`tag tag-${e}`;
+span.textContent=e.charAt(0).toUpperCase()+e.slice(1);
+tagsEl.appendChild(span);
+});
+drawChart(scores,msgs.map(m=>m.r));
+// Drift alerts
+const driftEl=document.getElementById('driftAlerts');
+driftEl.innerHTML='';
+scores.forEach((s,i)=>{
+if(i>0&&Math.abs(s-scores[i-1])>0.6){
+const div=document.createElement('div');
+div.className='drift-alert';
+div.textContent=`⚠️ Emotional drift at message #${i+1}: sentiment shifted ${scores[i-1]>s?'down':'up'} by ${Math.abs(s-scores[i-1]).toFixed(2)} — ${msgs[i].t.substring(0,60)}...`;
+driftEl.appendChild(div);
+}
+});
+// Timeline
+const tl=document.getElementById('timeline');
+tl.innerHTML='';
+msgs.forEach((m,i)=>{
+const div=document.createElement('div');
+div.className='msg';
+div.innerHTML=`<div class="msg-bar" style="background:${sentimentColor(scores[i])}"></div><div class="msg-role">${m.r}</div><div class="msg-text">${m.t}</div><div class="msg-score" style="color:${sentimentColor(scores[i])}">${scores[i].toFixed(2)}</div>`;
+tl.appendChild(div);
+});
+// Insights
+const ins=document.getElementById('insights');
+ins.innerHTML='';
+function addInsight(text){const d=document.createElement('div');d.className='insight';d.textContent=text;ins.appendChild(d)}
+// Turning points
+let turningPoints=[];
+scores.forEach((s,i)=>{if(i>0&&Math.abs(s-scores[i-1])>0.4)turningPoints.push(i)});
+if(turningPoints.length)addInsight(`📍 Turning point${turningPoints.length>1?'s':''} detected at message${turningPoints.length>1?'s':''} #${turningPoints.join(', #')} — significant sentiment shifts occurred here.`);
+// Negative agent responses
+const negAgent=msgs.map((m,i)=>({m,s:scores[i],i})).filter(x=>x.m.r.toLowerCase()==='agent'&&x.s<-0.1);
+if(negAgent.length)addInsight(`🔧 Agent response${negAgent.length>1?'s':''} at #${negAgent.map(x=>x.i+1).join(', #')} had negative sentiment. Consider using more empathetic, solution-oriented language.`);
+// Pattern detection
+const userScores=msgs.map((m,i)=>({m,s:scores[i]})).filter(x=>x.m.r.toLowerCase()==='user');
+const negUser=userScores.filter(x=>x.s<-0.2);
+if(negUser.length>userScores.length/2)addInsight('📊 Pattern: User sentiment is predominantly negative. They may feel unheard — prioritize acknowledgment and concrete solutions.');
+else if(negUser.length===0&&userScores.length>2)addInsight('📊 Pattern: User maintained positive sentiment throughout — great conversation quality!');
+// Trajectory
+if(scores.length>=4){
+const firstHalf=scores.slice(0,Math.floor(scores.length/2));
+const secondHalf=scores.slice(Math.floor(scores.length/2));
+const fAvg=firstHalf.reduce((a,b)=>a+b,0)/firstHalf.length;
+const sAvg=secondHalf.reduce((a,b)=>a+b,0)/secondHalf.length;
+if(sAvg-fAvg>0.3)addInsight('📈 Sentiment improved significantly over the conversation — the agent recovered well.');
+else if(fAvg-sAvg>0.3)addInsight('📉 Sentiment degraded over the conversation — consider earlier intervention points.');
+}
+if(allEmotions.has('urgency'))addInsight('⏰ Urgency detected — user may need faster resolution or escalation.');
+if(health>=80)addInsight('✅ Overall communication health is excellent. This conversation is a good template for training.');
+document.getElementById('results').style.display='block';
+document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+// Theme toggle
+const tb=document.getElementById('themeBtn');
+tb.addEventListener('click',()=>{
+const dark=!document.documentElement.hasAttribute('data-theme');
+if(dark)document.documentElement.setAttribute('data-theme','light');
+else document.documentElement.removeAttribute('data-theme');
+tb.textContent=dark?'🌙':'☀️';
+});
+</script>
+</body>
+</html>
