@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox — Workflow Builder</title>
+    <meta name="description" content="Visually design automation workflows for your AgentBox agent with drag-and-drop nodes, connections, and simulation.">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --bg3: #1a1a2e;
+            --text: #e0e0e8;
+            --text2: #8888a0;
+            --accent: #6c63ff;
+            --accent2: #00c853;
+            --accent3: #ff6b9d;
+            --border: #2a2a3e;
+            --card-bg: #16161f;
+            --shadow: rgba(0,0,0,0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
+        a { color: var(--accent); text-decoration: none; }
+
+        /* Top Bar */
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 48px; background: var(--bg2); border-bottom: 1px solid var(--border); z-index: 100; }
+        .topbar .back { font-size: 14px; color: var(--text2); }
+        .topbar .back:hover { color: var(--accent); }
+        .topbar h1 { font-size: 16px; font-weight: 600; }
+        .topbar .actions { display: flex; gap: 6px; }
+        .topbar .actions button, .topbar .actions select { background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+        .topbar .actions button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* Layout */
+        .layout { display: flex; height: calc(100vh - 48px); }
+
+        /* Palette */
+        .palette { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; padding: 12px; }
+        .palette h3 { font-size: 11px; text-transform: uppercase; color: var(--text2); margin: 12px 0 6px; letter-spacing: 1px; }
+        .palette h3:first-child { margin-top: 0; }
+        .palette-node { padding: 8px 10px; margin: 3px 0; border-radius: 6px; font-size: 13px; cursor: grab; border: 1px solid var(--border); background: var(--card-bg); display: flex; align-items: center; gap: 8px; }
+        .palette-node:hover { border-color: var(--accent); }
+        .palette-node .icon { width: 20px; text-align: center; }
+
+        /* Canvas */
+        .canvas-wrap { flex: 1; position: relative; overflow: hidden; background: var(--bg); }
+        .canvas-wrap svg { width: 100%; height: 100%; }
+        .grid-bg { fill: url(#grid); }
+        .node-group { cursor: move; }
+        .node-rect { rx: 8; ry: 8; stroke-width: 1.5; }
+        .node-rect.selected { stroke-width: 2.5; filter: drop-shadow(0 0 8px var(--accent)); }
+        .node-title { font-size: 12px; font-weight: 600; fill: var(--text); pointer-events: none; }
+        .node-subtitle { font-size: 10px; fill: var(--text2); pointer-events: none; }
+        .port { r: 6; stroke-width: 2; cursor: crosshair; }
+        .port:hover { r: 8; }
+        .connection { fill: none; stroke-width: 2; opacity: 0.7; }
+        .connection:hover { stroke-width: 3; opacity: 1; cursor: pointer; }
+        .ghost-node { opacity: 0.3; cursor: pointer; }
+        .ghost-node:hover { opacity: 0.6; }
+        .particle { r: 4; fill: var(--accent2); }
+        .warn-badge { font-size: 10px; fill: #ff5252; font-weight: bold; }
+
+        /* Properties Panel */
+        .props { width: 260px; background: var(--bg2); border-left: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; padding: 16px; }
+        .props h3 { font-size: 13px; margin-bottom: 12px; color: var(--accent); }
+        .props .empty { color: var(--text2); font-size: 13px; text-align: center; margin-top: 40px; }
+        .props label { display: block; font-size: 11px; color: var(--text2); margin: 10px 0 4px; }
+        .props input, .props textarea, .props select { width: 100%; background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; font-size: 12px; font-family: inherit; }
+        .props textarea { resize: vertical; min-height: 50px; }
+        .props .delete-btn { margin-top: 16px; background: #ff5252; color: #fff; border: none; padding: 8px; border-radius: 6px; width: 100%; cursor: pointer; font-size: 12px; }
+        .props .delete-btn:hover { background: #ff1744; }
+
+        /* Status Bar */
+        .statusbar { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; font-size: 11px; color: var(--text2); z-index: 10; }
+        .statusbar .warn { color: #ff5252; }
+        .statusbar .ok { color: var(--accent2); }
+
+        /* Complexity Badge */
+        .complexity { display: inline-flex; align-items: center; gap: 4px; }
+        .complexity .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+        @keyframes pulse { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+        .simulating .particle { animation: pulse 0.6s infinite; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="index.html" class="back">← Back to AgentBox</a>
+        <h1>🔧 Workflow Builder</h1>
+        <div class="actions">
+            <select id="templates" title="Load template">
+                <option value="">Load Template…</option>
+                <option value="auto-reply">Auto-Reply Bot</option>
+                <option value="research">Research Pipeline</option>
+                <option value="digest">Scheduled Digest</option>
+                <option value="multilang">Multi-Language Support</option>
+            </select>
+            <button onclick="autoLayout()" title="Auto-layout">⬡ Layout</button>
+            <button onclick="undo()" title="Undo">↩</button>
+            <button onclick="redo()" title="Redo">↪</button>
+            <button onclick="runSimulation()" id="simBtn" title="Simulate">▶ Simulate</button>
+            <button onclick="exportJSON()">📥 Export</button>
+            <button onclick="importJSON()">📤 Import</button>
+            <button onclick="clearCanvas()">🗑 Clear</button>
+        </div>
+    </div>
+    <div class="layout">
+        <div class="palette" id="palette"></div>
+        <div class="canvas-wrap" id="canvasWrap">
+            <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                        <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1a1a2e" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect class="grid-bg" width="10000" height="10000" x="-5000" y="-5000"/>
+                <g id="connectionsLayer"></g>
+                <g id="ghostLayer"></g>
+                <g id="nodesLayer"></g>
+                <g id="particleLayer"></g>
+                <line id="dragLine" stroke="#6c63ff" stroke-width="2" stroke-dasharray="6,4" style="display:none"/>
+            </svg>
+            <div class="statusbar" id="statusbar"></div>
+        </div>
+        <div class="props" id="props"><div class="empty">Select a node to edit properties</div></div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json" style="display:none">
+
+    <script>
+    const NODE_TYPES = {
+        // Triggers
+        webhook:    { cat: 'trigger', label: 'Webhook',          icon: '🌐', color: '#6c63ff', fields: [{key:'url',label:'Endpoint URL',type:'text'},{key:'method',label:'Method',type:'select',options:['GET','POST','PUT']}] },
+        schedule:   { cat: 'trigger', label: 'Schedule',         icon: '⏰', color: '#6c63ff', fields: [{key:'cron',label:'Cron Expression',type:'text'},{key:'tz',label:'Timezone',type:'text'}] },
+        message:    { cat: 'trigger', label: 'Message Received', icon: '💬', color: '#6c63ff', fields: [{key:'channel',label:'Channel',type:'select',options:['Telegram','Discord','WhatsApp','Any']}] },
+        keyword:    { cat: 'trigger', label: 'Keyword Match',    icon: '🔑', color: '#6c63ff', fields: [{key:'keywords',label:'Keywords (comma-sep)',type:'text'},{key:'caseSensitive',label:'Case Sensitive',type:'select',options:['No','Yes']}] },
+        // Actions
+        sendMsg:    { cat: 'action', label: 'Send Message',   icon: '📤', color: '#00c853', fields: [{key:'template',label:'Message Template',type:'textarea'}] },
+        webSearch:  { cat: 'action', label: 'Web Search',     icon: '🔍', color: '#00c853', fields: [{key:'query',label:'Search Query',type:'text'},{key:'count',label:'Max Results',type:'text'}] },
+        genImage:   { cat: 'action', label: 'Generate Image', icon: '🎨', color: '#00c853', fields: [{key:'prompt',label:'Image Prompt',type:'textarea'}] },
+        summarize:  { cat: 'action', label: 'Summarize',      icon: '📝', color: '#00c853', fields: [{key:'maxLen',label:'Max Length',type:'text'},{key:'style',label:'Style',type:'select',options:['Concise','Detailed','Bullet Points']}] },
+        translate:  { cat: 'action', label: 'Translate',       icon: '🌍', color: '#00c853', fields: [{key:'targetLang',label:'Target Language',type:'text'}] },
+        // Logic
+        ifElse:     { cat: 'logic', label: 'If / Else',       icon: '🔀', color: '#ffa726', fields: [{key:'condition',label:'Condition',type:'textarea'}], outputs: 2 },
+        delay:      { cat: 'logic', label: 'Delay',           icon: '⏳', color: '#ffa726', fields: [{key:'seconds',label:'Seconds',type:'text'}] },
+        loop:       { cat: 'logic', label: 'Loop',            icon: '🔄', color: '#ffa726', fields: [{key:'times',label:'Iterations',type:'text'},{key:'exitCond',label:'Exit Condition',type:'text'}] },
+        random:     { cat: 'logic', label: 'Random Choice',   icon: '🎲', color: '#ffa726', fields: [{key:'branches',label:'# Branches',type:'text'}], outputs: 2 },
+        // Outputs
+        respond:    { cat: 'output', label: 'Send Response',  icon: '📨', color: '#ff6b9d', fields: [{key:'template',label:'Response Template',type:'textarea'}] },
+        saveMem:    { cat: 'output', label: 'Save to Memory', icon: '💾', color: '#ff6b9d', fields: [{key:'key',label:'Memory Key',type:'text'}] },
+        log:        { cat: 'output', label: 'Log',            icon: '📋', color: '#ff6b9d', fields: [{key:'level',label:'Level',type:'select',options:['info','warn','error']}] },
+    };
+
+    const CAT_LABELS = { trigger: '⚡ Triggers', action: '⚙️ Actions', logic: '🧠 Logic', output: '📤 Outputs' };
+
+    // State
+    let nodes = [];
+    let connections = [];
+    let nextId = 1;
+    let selectedId = null;
+    let undoStack = [], redoStack = [];
+    let panX = 0, panY = 0, zoom = 1;
+    let draggingNode = null, dragOff = {x:0,y:0};
+    let draggingPort = null;
+    let simRunning = false;
+
+    // SVG refs
+    const svg = document.getElementById('svg');
+    const nodesLayer = document.getElementById('nodesLayer');
+    const connectionsLayer = document.getElementById('connectionsLayer');
+    const ghostLayer = document.getElementById('ghostLayer');
+    const particleLayer = document.getElementById('particleLayer');
+    const dragLine = document.getElementById('dragLine');
+
+    // Build Palette
+    (function buildPalette() {
+        const pal = document.getElementById('palette');
+        const cats = {};
+        for (const [type, def] of Object.entries(NODE_TYPES)) {
+            (cats[def.cat] = cats[def.cat] || []).push({type, ...def});
+        }
+        for (const [cat, items] of Object.entries(cats)) {
+            const h = document.createElement('h3'); h.textContent = CAT_LABELS[cat] || cat; pal.appendChild(h);
+            for (const item of items) {
+                const d = document.createElement('div'); d.className = 'palette-node'; d.dataset.type = item.type;
+                d.innerHTML = `<span class="icon">${item.icon}</span>${item.label}`;
+                d.draggable = true;
+                d.addEventListener('dragstart', e => { e.dataTransfer.setData('nodeType', item.type); });
+                pal.appendChild(d);
+            }
+        }
+    })();
+
+    // Canvas drop
+    const wrap = document.getElementById('canvasWrap');
+    wrap.addEventListener('dragover', e => e.preventDefault());
+    wrap.addEventListener('drop', e => {
+        e.preventDefault();
+        const type = e.dataTransfer.getData('nodeType');
+        if (!type) return;
+        const rect = svg.getBoundingClientRect();
+        const x = (e.clientX - rect.left - panX) / zoom;
+        const y = (e.clientY - rect.top - panY) / zoom;
+        saveUndo();
+        addNode(type, x, y);
+    });
+
+    function addNode(type, x, y, id, fieldVals) {
+        const def = NODE_TYPES[type];
+        if (!def) return null;
+        const node = { id: id || nextId++, type, x, y, name: def.label, fields: {} };
+        if (fieldVals) node.fields = fieldVals;
+        if (id && id >= nextId) nextId = id + 1;
+        nodes.push(node);
+        renderAll();
+        return node;
+    }
+
+    function removeNode(id) {
+        nodes = nodes.filter(n => n.id !== id);
+        connections = connections.filter(c => c.from !== id && c.to !== id);
+        if (selectedId === id) { selectedId = null; renderProps(); }
+        renderAll();
+    }
+
+    function addConnection(fromId, toId, fromPort) {
+        if (fromId === toId) return;
+        if (connections.find(c => c.from === fromId && c.to === toId && c.fromPort === (fromPort||0))) return;
+        connections.push({ from: fromId, to: toId, fromPort: fromPort || 0 });
+        renderAll();
+    }
+
+    function removeConnection(idx) {
+        connections.splice(idx, 1);
+        renderAll();
+    }
+
+    // Render
+    function renderAll() {
+        renderNodes();
+        renderConnections();
+        renderGhosts();
+        updateStatus();
+    }
+
+    function nodeWidth() { return 160; }
+    function nodeHeight() { return 52; }
+    function outPortPos(node, portIdx) {
+        const def = NODE_TYPES[node.type];
+        const outs = def.outputs || 1;
+        const w = nodeWidth();
+        const h = nodeHeight();
+        const spacing = w / (outs + 1);
+        return { x: node.x + spacing * (portIdx + 1), y: node.y + h };
+    }
+    function inPortPos(node) {
+        return { x: node.x + nodeWidth() / 2, y: node.y };
+    }
+
+    function renderNodes() {
+        nodesLayer.innerHTML = '';
+        const viewBox = `${-panX/zoom} ${-panY/zoom} ${wrap.clientWidth/zoom} ${wrap.clientHeight/zoom}`;
+        svg.setAttribute('viewBox', viewBox);
+
+        for (const node of nodes) {
+            const def = NODE_TYPES[node.type];
+            const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+            g.classList.add('node-group');
+            g.dataset.id = node.id;
+
+            // Rect
+            const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+            r.classList.add('node-rect');
+            if (node.id === selectedId) r.classList.add('selected');
+            r.setAttribute('x', node.x); r.setAttribute('y', node.y);
+            r.setAttribute('width', nodeWidth()); r.setAttribute('height', nodeHeight());
+            r.setAttribute('fill', 'var(--card-bg)'); r.setAttribute('stroke', def.color);
+            g.appendChild(r);
+
+            // Title
+            const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+            t.classList.add('node-title');
+            t.setAttribute('x', node.x + 30); t.setAttribute('y', node.y + 22);
+            t.textContent = def.icon + ' ' + (node.name || def.label);
+            g.appendChild(t);
+
+            // Subtitle
+            const s = document.createElementNS('http://www.w3.org/2000/svg','text');
+            s.classList.add('node-subtitle');
+            s.setAttribute('x', node.x + 30); s.setAttribute('y', node.y + 38);
+            s.textContent = def.cat;
+            g.appendChild(s);
+
+            // Input port (not for triggers)
+            if (def.cat !== 'trigger') {
+                const ip = inPortPos(node);
+                const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+                c.classList.add('port'); c.setAttribute('cx', ip.x); c.setAttribute('cy', ip.y);
+                c.setAttribute('fill', '#333'); c.setAttribute('stroke', def.color);
+                c.dataset.nodeId = node.id; c.dataset.portType = 'in';
+                g.appendChild(c);
+            }
+
+            // Output ports
+            const outs = def.outputs || 1;
+            for (let i = 0; i < outs; i++) {
+                const op = outPortPos(node, i);
+                const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+                c.classList.add('port'); c.setAttribute('cx', op.x); c.setAttribute('cy', op.y);
+                c.setAttribute('fill', def.color); c.setAttribute('stroke', '#fff');
+                c.dataset.nodeId = node.id; c.dataset.portType = 'out'; c.dataset.portIdx = i;
+                g.appendChild(c);
+            }
+
+            nodesLayer.appendChild(g);
+        }
+    }
+
+    function renderConnections() {
+        connectionsLayer.innerHTML = '';
+        connections.forEach((conn, idx) => {
+            const fromNode = nodes.find(n => n.id === conn.from);
+            const toNode = nodes.find(n => n.id === conn.to);
+            if (!fromNode || !toNode) return;
+            const fp = outPortPos(fromNode, conn.fromPort || 0);
+            const tp = inPortPos(toNode);
+            const dy = Math.abs(tp.y - fp.y) * 0.5;
+            const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+            path.classList.add('connection');
+            path.setAttribute('d', `M${fp.x},${fp.y} C${fp.x},${fp.y+dy} ${tp.x},${tp.y-dy} ${tp.x},${tp.y}`);
+            path.setAttribute('stroke', NODE_TYPES[fromNode.type].color);
+            path.dataset.idx = idx;
+            path.addEventListener('click', () => { saveUndo(); removeConnection(idx); });
+            connectionsLayer.appendChild(path);
+        });
+    }
+
+    // Ghost suggestions
+    const SUGGEST_MAP = {
+        message: ['ifElse', 'respond', 'summarize'],
+        webhook: ['ifElse', 'sendMsg', 'log'],
+        schedule: ['webSearch', 'summarize', 'sendMsg'],
+        keyword: ['ifElse', 'respond'],
+        webSearch: ['summarize', 'respond'],
+        summarize: ['respond', 'sendMsg', 'saveMem'],
+        translate: ['respond', 'sendMsg'],
+        ifElse: ['sendMsg', 'respond', 'log'],
+        genImage: ['respond', 'sendMsg'],
+    };
+
+    function renderGhosts() {
+        ghostLayer.innerHTML = '';
+        if (!selectedId) return;
+        const node = nodes.find(n => n.id === selectedId);
+        if (!node) return;
+        const suggestions = SUGGEST_MAP[node.type] || [];
+        const existing = new Set(connections.filter(c => c.from === node.id).map(c => nodes.find(n => n.id === c.to)?.type));
+        const filtered = suggestions.filter(s => !existing.has(s)).slice(0, 2);
+
+        filtered.forEach((type, i) => {
+            const def = NODE_TYPES[type];
+            const gx = node.x + nodeWidth() + 80;
+            const gy = node.y + (i * 70) - ((filtered.length-1)*35);
+
+            const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+            g.classList.add('ghost-node');
+            g.addEventListener('click', () => {
+                saveUndo();
+                const newNode = addNode(type, gx, gy);
+                if (newNode) addConnection(node.id, newNode.id, 0);
+            });
+
+            const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+            r.setAttribute('x', gx); r.setAttribute('y', gy);
+            r.setAttribute('width', nodeWidth()); r.setAttribute('height', nodeHeight());
+            r.setAttribute('rx', 8); r.setAttribute('fill', 'var(--bg3)');
+            r.setAttribute('stroke', def.color); r.setAttribute('stroke-dasharray', '4,4');
+            g.appendChild(r);
+
+            const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+            t.setAttribute('x', gx + 30); t.setAttribute('y', gy + 30);
+            t.setAttribute('fill', def.color); t.setAttribute('font-size', '12');
+            t.textContent = '+ ' + def.icon + ' ' + def.label;
+            g.appendChild(t);
+
+            ghostLayer.appendChild(g);
+        });
+    }
+
+    // Interaction
+    let isPanning = false, panStart = {};
+    svg.addEventListener('mousedown', e => {
+        const port = e.target.closest('.port');
+        const nodeG = e.target.closest('.node-group');
+
+        if (port && port.dataset.portType === 'out') {
+            draggingPort = { nodeId: +port.dataset.nodeId, portIdx: +port.dataset.portIdx };
+            dragLine.style.display = '';
+            const node = nodes.find(n => n.id === draggingPort.nodeId);
+            const p = outPortPos(node, draggingPort.portIdx);
+            dragLine.setAttribute('x1', p.x); dragLine.setAttribute('y1', p.y);
+            dragLine.setAttribute('x2', p.x); dragLine.setAttribute('y2', p.y);
+            return;
+        }
+        if (nodeG) {
+            const id = +nodeG.dataset.id;
+            selectedId = id;
+            const node = nodes.find(n => n.id === id);
+            draggingNode = node;
+            const pt = svgPoint(e);
+            dragOff = { x: pt.x - node.x, y: pt.y - node.y };
+            renderAll();
+            renderProps();
+            return;
+        }
+        // Deselect
+        if (e.target.classList.contains('grid-bg')) {
+            selectedId = null;
+            renderAll(); renderProps();
+            isPanning = true;
+            panStart = { x: e.clientX - panX, y: e.clientY - panY };
+        }
+    });
+
+    svg.addEventListener('mousemove', e => {
+        if (draggingNode) {
+            const pt = svgPoint(e);
+            draggingNode.x = Math.round((pt.x - dragOff.x) / 15) * 15;
+            draggingNode.y = Math.round((pt.y - dragOff.y) / 15) * 15;
+            renderAll();
+        }
+        if (draggingPort) {
+            const pt = svgPoint(e);
+            dragLine.setAttribute('x2', pt.x); dragLine.setAttribute('y2', pt.y);
+        }
+        if (isPanning) {
+            panX = e.clientX - panStart.x;
+            panY = e.clientY - panStart.y;
+            renderAll();
+        }
+    });
+
+    svg.addEventListener('mouseup', e => {
+        if (draggingNode) {
+            saveUndo();
+            draggingNode = null;
+        }
+        if (draggingPort) {
+            dragLine.style.display = 'none';
+            const port = e.target.closest('.port');
+            if (port && port.dataset.portType === 'in') {
+                saveUndo();
+                addConnection(draggingPort.nodeId, +port.dataset.nodeId, draggingPort.portIdx);
+            }
+            draggingPort = null;
+        }
+        isPanning = false;
+    });
+
+    svg.addEventListener('wheel', e => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        zoom = Math.min(3, Math.max(0.2, zoom * delta));
+        renderAll();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Delete' && selectedId && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            saveUndo(); removeNode(selectedId);
+        }
+        if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+        if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+    });
+
+    function svgPoint(e) {
+        const rect = svg.getBoundingClientRect();
+        return { x: (e.clientX - rect.left - panX) / zoom, y: (e.clientY - rect.top - panY) / zoom };
+    }
+
+    // Properties Panel
+    function renderProps() {
+        const panel = document.getElementById('props');
+        if (!selectedId) { panel.innerHTML = '<div class="empty">Select a node to edit properties</div>'; return; }
+        const node = nodes.find(n => n.id === selectedId);
+        if (!node) { panel.innerHTML = ''; return; }
+        const def = NODE_TYPES[node.type];
+
+        let html = `<h3>${def.icon} ${def.label}</h3>`;
+        html += `<label>Name</label><input type="text" value="${node.name||''}" data-field="__name">`;
+        for (const f of def.fields) {
+            html += `<label>${f.label}</label>`;
+            if (f.type === 'textarea') {
+                html += `<textarea data-field="${f.key}">${node.fields[f.key]||''}</textarea>`;
+            } else if (f.type === 'select') {
+                html += `<select data-field="${f.key}">${f.options.map(o => `<option${(node.fields[f.key]||'')=== o?' selected':''}>${o}</option>`).join('')}</select>`;
+            } else {
+                html += `<input type="text" value="${node.fields[f.key]||''}" data-field="${f.key}">`;
+            }
+        }
+        html += `<button class="delete-btn" onclick="saveUndo();removeNode(${node.id})">🗑 Delete Node</button>`;
+        panel.innerHTML = html;
+
+        panel.querySelectorAll('input,textarea,select').forEach(el => {
+            el.addEventListener('change', () => {
+                const field = el.dataset.field;
+                if (field === '__name') node.name = el.value;
+                else node.fields[field] = el.value;
+                renderAll();
+            });
+        });
+    }
+
+    // Validation & Status
+    function validate() {
+        const warnings = [];
+        const triggers = nodes.filter(n => NODE_TYPES[n.type].cat === 'trigger');
+        if (nodes.length > 0 && triggers.length === 0) warnings.push('No trigger node');
+        const connected = new Set();
+        connections.forEach(c => { connected.add(c.from); connected.add(c.to); });
+        const disconnected = nodes.filter(n => !connected.has(n.id) && nodes.length > 1);
+        if (disconnected.length) warnings.push(`${disconnected.length} disconnected node(s)`);
+        const loops = nodes.filter(n => n.type === 'loop' && !n.fields.exitCond);
+        if (loops.length) warnings.push('Loop without exit condition');
+        return warnings;
+    }
+
+    function complexity() {
+        const n = nodes.length;
+        const branches = nodes.filter(nd => (NODE_TYPES[nd.type].outputs || 1) > 1).length;
+        const loopCount = nodes.filter(nd => nd.type === 'loop').length;
+        const score = n + branches * 2 + loopCount * 3;
+        if (score <= 5) return { label: 'Simple', color: '#00c853' };
+        if (score <= 15) return { label: 'Moderate', color: '#ffa726' };
+        return { label: 'Complex', color: '#ff5252' };
+    }
+
+    function updateStatus() {
+        const warns = validate();
+        const comp = complexity();
+        const sb = document.getElementById('statusbar');
+        sb.innerHTML = `
+            <span>Nodes: ${nodes.length}</span>
+            <span>Connections: ${connections.length}</span>
+            <span class="complexity"><span class="dot" style="background:${comp.color}"></span>${comp.label}</span>
+            ${warns.length ? `<span class="warn">⚠ ${warns.join(' · ')}</span>` : '<span class="ok">✓ Valid</span>'}
+        `;
+    }
+
+    // Undo/Redo
+    function snapshot() { return JSON.stringify({ nodes: nodes.map(n => ({...n, fields:{...n.fields}})), connections: [...connections], nextId }); }
+    function restore(s) { const d = JSON.parse(s); nodes = d.nodes; connections = d.connections; nextId = d.nextId; selectedId = null; renderAll(); renderProps(); }
+    function saveUndo() { undoStack.push(snapshot()); redoStack = []; if (undoStack.length > 50) undoStack.shift(); }
+    function undo() { if (!undoStack.length) return; redoStack.push(snapshot()); restore(undoStack.pop()); }
+    function redo() { if (!redoStack.length) return; undoStack.push(snapshot()); restore(redoStack.pop()); }
+
+    // Auto Layout
+    function autoLayout() {
+        saveUndo();
+        const layers = {};
+        const visited = new Set();
+        const triggers = nodes.filter(n => NODE_TYPES[n.type].cat === 'trigger');
+        let queue = triggers.map(t => ({ id: t.id, depth: 0 }));
+        if (!queue.length && nodes.length) queue = [{ id: nodes[0].id, depth: 0 }];
+
+        while (queue.length) {
+            const { id, depth } = queue.shift();
+            if (visited.has(id)) continue;
+            visited.add(id);
+            (layers[depth] = layers[depth] || []).push(id);
+            connections.filter(c => c.from === id).forEach(c => queue.push({ id: c.to, depth: depth + 1 }));
+        }
+        // Unvisited
+        nodes.filter(n => !visited.has(n.id)).forEach((n, i) => {
+            const d = Object.keys(layers).length;
+            (layers[d] = layers[d] || []).push(n.id);
+        });
+
+        for (const [depth, ids] of Object.entries(layers)) {
+            ids.forEach((id, i) => {
+                const node = nodes.find(n => n.id === id);
+                if (node) {
+                    node.x = 100 + (+depth) * 240;
+                    node.y = 80 + i * 80;
+                }
+            });
+        }
+        renderAll();
+    }
+
+    // Simulation
+    function runSimulation() {
+        if (simRunning) return;
+        simRunning = true;
+        document.getElementById('simBtn').textContent = '⏸ Running…';
+        const triggers = nodes.filter(n => NODE_TYPES[n.type].cat === 'trigger');
+        if (!triggers.length) { stopSim(); return; }
+
+        let step = 0;
+        const active = new Set(triggers.map(t => t.id));
+        const interval = setInterval(() => {
+            particleLayer.innerHTML = '';
+            if (active.size === 0 || step > 20) { clearInterval(interval); stopSim(); return; }
+            const nextActive = new Set();
+            for (const nodeId of active) {
+                const outConns = connections.filter(c => c.from === nodeId);
+                for (const conn of outConns) {
+                    const fromNode = nodes.find(n => n.id === conn.from);
+                    const toNode = nodes.find(n => n.id === conn.to);
+                    if (!fromNode || !toNode) continue;
+                    const fp = outPortPos(fromNode, conn.fromPort || 0);
+                    const tp = inPortPos(toNode);
+                    const t = (step % 3) / 3;
+                    const cx = fp.x + (tp.x - fp.x) * t;
+                    const cy = fp.y + (tp.y - fp.y) * t;
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+                    circle.classList.add('particle');
+                    circle.setAttribute('cx', cx); circle.setAttribute('cy', cy);
+                    particleLayer.appendChild(circle);
+                    nextActive.add(conn.to);
+                }
+            }
+            active.clear();
+            for (const id of nextActive) active.add(id);
+            step++;
+        }, 400);
+    }
+
+    function stopSim() {
+        simRunning = false;
+        document.getElementById('simBtn').textContent = '▶ Simulate';
+        particleLayer.innerHTML = '';
+    }
+
+    // Export/Import
+    function exportJSON() {
+        const data = { nodes: nodes.map(n => ({...n})), connections: [...connections] };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'workflow.json'; a.click();
+    }
+
+    function importJSON() {
+        const fi = document.getElementById('fileInput');
+        fi.onchange = () => {
+            const file = fi.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = JSON.parse(reader.result);
+                    saveUndo();
+                    nodes = data.nodes || [];
+                    connections = data.connections || [];
+                    nextId = Math.max(...nodes.map(n => n.id), 0) + 1;
+                    selectedId = null;
+                    renderAll(); renderProps();
+                } catch(e) { alert('Invalid JSON'); }
+            };
+            reader.readAsText(file);
+            fi.value = '';
+        };
+        fi.click();
+    }
+
+    function clearCanvas() {
+        if (!nodes.length) return;
+        saveUndo();
+        nodes = []; connections = []; selectedId = null; nextId = 1;
+        renderAll(); renderProps();
+    }
+
+    // Templates
+    const TEMPLATES = {
+        'auto-reply': () => {
+            clearCanvas();
+            const a = addNode('message', 100, 120);
+            const b = addNode('ifElse', 340, 120);
+            const c = addNode('respond', 580, 60);
+            const d = addNode('respond', 580, 200);
+            b.fields.condition = 'message contains "help"';
+            c.name = 'Help Response'; c.fields.template = 'Here is how I can help…';
+            d.name = 'Default Reply'; d.fields.template = 'Thanks for your message!';
+            addConnection(a.id, b.id, 0);
+            addConnection(b.id, c.id, 0);
+            addConnection(b.id, d.id, 1);
+        },
+        'research': () => {
+            clearCanvas();
+            const a = addNode('message', 100, 120);
+            const b = addNode('webSearch', 340, 120);
+            const c = addNode('summarize', 580, 120);
+            const d = addNode('respond', 820, 120);
+            b.fields.query = '{{message.text}}'; b.fields.count = '5';
+            c.fields.style = 'Concise'; c.fields.maxLen = '200';
+            addConnection(a.id, b.id, 0);
+            addConnection(b.id, c.id, 0);
+            addConnection(c.id, d.id, 0);
+        },
+        'digest': () => {
+            clearCanvas();
+            const a = addNode('schedule', 100, 120);
+            const b = addNode('webSearch', 340, 120);
+            const c = addNode('summarize', 580, 120);
+            const d = addNode('sendMsg', 820, 120);
+            a.fields.cron = '0 9 * * *'; a.fields.tz = 'America/Los_Angeles';
+            b.fields.query = 'AI news today'; b.fields.count = '10';
+            c.fields.style = 'Bullet Points';
+            d.fields.template = '📰 Daily Digest:\n{{summary}}';
+            addConnection(a.id, b.id, 0);
+            addConnection(b.id, c.id, 0);
+            addConnection(c.id, d.id, 0);
+        },
+        'multilang': () => {
+            clearCanvas();
+            const a = addNode('message', 100, 150);
+            const b = addNode('ifElse', 340, 150);
+            const c = addNode('translate', 580, 80);
+            const d = addNode('respond', 820, 80);
+            const e = addNode('respond', 580, 240);
+            b.fields.condition = 'language !== "en"';
+            c.fields.targetLang = 'en';
+            d.name = 'Translated Reply';
+            e.name = 'English Reply';
+            addConnection(a.id, b.id, 0);
+            addConnection(b.id, c.id, 0);
+            addConnection(c.id, d.id, 0);
+            addConnection(b.id, e.id, 1);
+        },
+    };
+
+    document.getElementById('templates').addEventListener('change', e => {
+        const val = e.target.value;
+        if (TEMPLATES[val]) { saveUndo(); TEMPLATES[val](); }
+        e.target.value = '';
+    });
+
+    // Init
+    renderAll();
+    renderProps();
+    </script>
+</body>
+</html>
