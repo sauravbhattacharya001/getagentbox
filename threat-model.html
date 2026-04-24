@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Threat Model Builder — AgentBox</title>
+<style>
+  /* ========================================
+     CSS Variables & Reset
+     ======================================== */
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface-2: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --text-muted: #888;
+    --accent: #00d4ff;
+    --green: #00b894;
+    --yellow: #fdcb6e;
+    --orange: #e17055;
+    --red: #d63031;
+    --purple: #6c5ce7;
+    --radius: 12px;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ========================================
+     Header
+     ======================================== */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    backdrop-filter: blur(12px);
+  }
+
+  .header a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+
+  .header a:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+  }
+
+  .header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  /* ========================================
+     Main Layout
+     ======================================== */
+  .main {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    padding: 24px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .panel h2 {
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 600;
+  }
+
+  /* ========================================
+     Form Elements
+     ======================================== */
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  input[type="text"],
+  select {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 14px;
+    margin-bottom: 14px;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+  }
+
+  /* ========================================
+     Capabilities Grid
+     ======================================== */
+  .caps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .cap-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    padding: 7px 10px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    border: 1px solid transparent;
+    user-select: none;
+  }
+
+  .cap-item:hover {
+    background: var(--border);
+  }
+
+  .cap-item:has(input:checked) {
+    border-color: var(--accent);
+    background: rgba(0, 212, 255, 0.06);
+  }
+
+  .cap-item input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ========================================
+     Slider
+     ======================================== */
+  .slider-wrap {
+    margin-bottom: 18px;
+  }
+
+  .slider-wrap input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    margin-top: 6px;
+  }
+
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ========================================
+     Right Column
+     ======================================== */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ========================================
+     Score & Matrix Row
+     ======================================== */
+  .score-row {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .gauge-wrap {
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .gauge-wrap .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-weight: 500;
+  }
+
+  .matrix-wrap {
+    flex-shrink: 0;
+  }
+
+  .matrix-wrap canvas {
+    border-radius: 8px;
+    display: block;
+    background: var(--surface-2);
+  }
+
+  .matrix-wrap .label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  /* ========================================
+     STRIDE Sections
+     ======================================== */
+  .stride-section {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    transition: box-shadow 0.2s;
+  }
+
+  .stride-section:hover {
+    box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.1);
+  }
+
+  .stride-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--surface-2);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .stride-header:hover {
+    background: var(--border);
+  }
+
+  .stride-header .count {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 8px;
+    font-weight: 400;
+  }
+
+  .stride-header .arrow {
+    transition: transform 0.2s;
+    font-size: 12px;
+  }
+
+  .stride-header.open .arrow {
+    transform: rotate(90deg);
+  }
+
+  .stride-body {
+    display: none;
+    padding: 10px 14px;
+  }
+
+  .stride-body.open {
+    display: block;
+  }
+
+  .threat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.1s;
+  }
+
+  .threat-item:last-child {
+    border-bottom: none;
+  }
+
+  .threat-item:hover {
+    background: rgba(0, 212, 255, 0.04);
+  }
+
+  .threat-item.selected {
+    background: rgba(0, 212, 255, 0.08);
+  }
+
+  .threat-name {
+    flex: 1;
+  }
+
+  .threat-cap {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-left: 4px;
+  }
+
+  .threat-vals {
+    display: flex;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+
+  .threat-vals .risk-high {
+    color: var(--red);
+    font-weight: 600;
+  }
+
+  .threat-vals .risk-med {
+    color: var(--orange);
+  }
+
+  .threat-vals .risk-low {
+    color: var(--green);
+  }
+
+  /* ========================================
+     Mitigations
+     ======================================== */
+  .mitigations-list {
+    max-height: 280px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .mit-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    transition: opacity 0.15s;
+  }
+
+  .mit-item:last-child {
+    border-bottom: none;
+  }
+
+  .mit-item.applied {
+    opacity: 0.5;
+  }
+
+  .mit-item input[type="checkbox"] {
+    accent-color: var(--green);
+    flex-shrink: 0;
+  }
+
+  .mit-text {
+    flex: 1;
+  }
+
+  .mit-threat {
+    color: var(--text-muted);
+    font-size: 11px;
+    display: block;
+  }
+
+  .badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .badge-low {
+    background: rgba(0, 184, 148, 0.15);
+    color: var(--green);
+  }
+
+  .badge-med {
+    background: rgba(253, 203, 110, 0.15);
+    color: var(--yellow);
+  }
+
+  .badge-high {
+    background: rgba(214, 48, 49, 0.15);
+    color: var(--red);
+  }
+
+  /* ========================================
+     Bottom Section — Auto-Scan
+     ======================================== */
+  .bottom-section {
+    grid-column: 1 / -1;
+  }
+
+  .auto-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .scan-toggle {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--accent);
+    color: #000;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .scan-toggle:hover {
+    filter: brightness(1.1);
+  }
+
+  .scan-toggle.active {
+    background: var(--red);
+    color: #fff;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(214, 48, 49, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(214, 48, 49, 0); }
+  }
+
+  .feed {
+    flex: 1;
+    min-width: 300px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .feed-entry {
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(42, 42, 42, 0.5);
+  }
+
+  .feed-entry:last-child {
+    border-bottom: none;
+  }
+
+  .feed-entry.warn {
+    color: var(--orange);
+  }
+
+  .feed-entry.crit {
+    color: var(--red);
+    font-weight: 600;
+  }
+
+  .alert-banner {
+    display: none;
+    padding: 14px 20px;
+    background: rgba(214, 48, 49, 0.12);
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    color: var(--red);
+    font-weight: 600;
+    text-align: center;
+    margin-top: 14px;
+    animation: fadeIn 0.3s;
+  }
+
+  .alert-banner.show {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========================================
+     Export Button
+     ======================================== */
+  .export-btn {
+    width: 100%;
+    padding: 10px 24px;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: all 0.15s;
+  }
+
+  .export-btn:hover {
+    background: var(--accent);
+    color: #000;
+  }
+
+  /* ========================================
+     Stats Row
+     ======================================== */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .stat-card {
+    flex: 1;
+    min-width: 100px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .stat-card .val {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .stat-card .desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ========================================
+     Placeholder
+     ======================================== */
+  .no-threats {
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 12px 4px;
+    text-align: center;
+  }
+
+  /* ========================================
+     Responsive
+     ======================================== */
+  @media (max-width: 860px) {
+    .main {
+      grid-template-columns: 1fr;
+    }
+
+    .score-row {
+      justify-content: center;
+    }
+
+    .bottom-section {
+      grid-column: 1;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html">← Back to AgentBox</a>
+  <h1>🛡️ Agent Threat Model Builder</h1>
+</div>
+
+<div class="main">
+  <!-- ============ LEFT PANEL ============ -->
+  <div class="panel" style="align-self: start; position: sticky; top: 80px;">
+    <h2>Agent Configuration</h2>
+
+    <label for="agentName">Agent Name</label>
+    <input type="text" id="agentName" placeholder="e.g. ResearchBot" value="MyAgent">
+
+    <label>Capabilities</label>
+    <div class="caps-grid" id="capsGrid"></div>
+
+    <div class="slider-wrap">
+      <label for="trustLevel">Trust Level: <strong id="trustLabel">3 — Moderate</strong></label>
+      <input type="range" id="trustLevel" min="1" max="5" value="3">
+      <div class="slider-label"><span>Sandboxed</span><span>Unrestricted</span></div>
+    </div>
+
+    <label for="dataSens">Data Sensitivity</label>
+    <select id="dataSens">
+      <option value="1">Public</option>
+      <option value="2">Internal</option>
+      <option value="3" selected>Confidential</option>
+      <option value="4">Restricted</option>
+      <option value="5">Top Secret</option>
+    </select>
+
+    <button class="export-btn" onclick="exportJSON()">📥 Export Threat Model as JSON</button>
+  </div>
+
+  <!-- ============ RIGHT COLUMN ============ -->
+  <div class="right-col">
+
+    <!-- Score + Matrix -->
+    <div class="panel">
+      <h2>Risk Overview</h2>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="val" id="statThreats">0</div>
+          <div class="desc">Active Threats</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" id="statCaps">0</div>
+          <div class="desc">Capabilities</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" id="statMits">0</div>
+          <div class="desc">Mitigations Applied</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" id="statResidual" style="color:var(--green)">0</div>
+          <div class="desc">Residual Score</div>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="gauge-wrap">
+          <svg id="gauge" width="170" height="170" viewBox="0 0 170 170">
+            <circle cx="85" cy="85" r="72" fill="none" stroke="var(--border)" stroke-width="12" />
+            <circle id="gaugeArc" cx="85" cy="85" r="72" fill="none" stroke="var(--green)"
+              stroke-width="12" stroke-dasharray="0 453" stroke-linecap="round"
+              transform="rotate(-90 85 85)" style="transition: stroke-dasharray 0.4s, stroke 0.4s;" />
+            <text id="gaugeText" x="85" y="78" text-anchor="middle" dominant-baseline="central"
+              fill="var(--text)" font-size="38" font-weight="700">0</text>
+            <text x="85" y="102" text-anchor="middle" fill="var(--text-muted)"
+              font-size="11">THREAT SCORE</text>
+          </svg>
+        </div>
+        <div class="matrix-wrap">
+          <canvas id="matrix" width="240" height="240"></canvas>
+          <div class="label">Risk Matrix — click a threat to highlight</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRIDE -->
+    <div class="panel">
+      <h2>STRIDE Threat Categories</h2>
+      <div id="strideContainer"></div>
+    </div>
+
+    <!-- Mitigations -->
+    <div class="panel">
+      <h2>Mitigation Recommendations</h2>
+      <div class="mitigations-list" id="mitList">
+        <p class="no-threats">Select capabilities to see mitigations.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ BOTTOM: AUTO-SCAN ============ -->
+  <div class="bottom-section panel">
+    <h2>Auto-Scan Mode</h2>
+    <div class="auto-row">
+      <button class="scan-toggle" id="scanBtn" onclick="toggleScan()">▶ Start Auto-Scan</button>
+      <div class="feed" id="feed">
+        <div class="feed-entry">Awaiting scan…</div>
+      </div>
+    </div>
+    <div class="alert-banner" id="alertBanner">⚠️ CRITICAL: Threat score has exceeded 70 — immediate review recommended!</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+  /* ------------------------------------------
+     Constants & Configuration
+     ------------------------------------------ */
+  const CAPABILITIES = [
+    'Web Access', 'File System', 'Code Execution', 'API Calls',
+    'Database Access', 'Email/Messaging', 'Payment Processing', 'User Auth',
+    'Data Collection', 'Model Training', 'Multi-Agent Comms', 'Autonomous Decisions'
+  ];
+
+  const TRUST_LABELS = [
+    '', '1 — Sandboxed', '2 — Restricted', '3 — Moderate',
+    '4 — Elevated', '5 — Unrestricted'
+  ];
+
+  const TRUST_MULT  = [0, 0.6, 0.8, 1.0, 1.3, 1.6];
+  const SENS_MULT   = [0, 0.6, 0.8, 1.0, 1.4, 1.8];
+  const GAUGE_CIRC  = 2 * Math.PI * 72; // circumference for r=72
+
+  /* STRIDE keys: S=Spoofing, T=Tampering, R=Repudiation,
+     I=Info Disclosure, D=DoS, E=Elevation of Privilege */
+  const STRIDE_CATS = [
+    { key: 'S', name: 'Spoofing',                icon: '🎭', color: 'var(--purple)' },
+    { key: 'T', name: 'Tampering',               icon: '🔧', color: 'var(--orange)' },
+    { key: 'R', name: 'Repudiation',             icon: '🙈', color: 'var(--yellow)' },
+    { key: 'I', name: 'Information Disclosure',   icon: '👁️', color: 'var(--accent)' },
+    { key: 'D', name: 'Denial of Service',        icon: '💥', color: 'var(--red)'    },
+    { key: 'E', name: 'Elevation of Privilege',   icon: '👑', color: 'var(--green)'  }
+  ];
+
+  /* ------------------------------------------
+     Threats Database
+     Each capability maps to STRIDE-categorised
+     threats with likelihood(1-5), impact(1-5),
+     a recommended mitigation, and effort level.
+     ------------------------------------------ */
+  const THREATS_DB = {
+    'Web Access': [
+      { s:'S', name:'URL spoofing / phishing relay',        l:3, i:4, mit:'URL allowlist filtering',              eff:'Low'  },
+      { s:'I', name:'Data exfiltration via outbound HTTP',   l:4, i:5, mit:'Egress network monitoring & DLP',     eff:'Med'  },
+      { s:'D', name:'Recursive fetch loop (self-DoS)',       l:2, i:3, mit:'Request rate limiting per origin',     eff:'Low'  },
+      { s:'T', name:'Response injection via MITM',           l:2, i:4, mit:'Enforce TLS certificate pinning',     eff:'Low'  },
+      { s:'R', name:'Unlogged external requests',            l:3, i:3, mit:'Full request/response audit logging', eff:'Med'  },
+      { s:'E', name:'SSRF to internal services',             l:3, i:5, mit:'Block RFC-1918 ranges in agent proxy',eff:'Med'  }
+    ],
+    'File System': [
+      { s:'T', name:'Unauthorized file modification',        l:3, i:5, mit:'Read-only mounts + integrity hashes', eff:'Med'  },
+      { s:'I', name:'Sensitive file exfiltration',           l:4, i:5, mit:'Path-based access control lists',     eff:'Med'  },
+      { s:'E', name:'Symlink / path traversal escape',       l:2, i:5, mit:'Disable symlink following in sandbox',eff:'Low'  },
+      { s:'R', name:'Unlogged file operations',              l:3, i:3, mit:'Comprehensive I/O audit trail',       eff:'Med'  },
+      { s:'D', name:'Disk space exhaustion',                 l:2, i:3, mit:'Per-agent disk quotas',               eff:'Low'  }
+    ],
+    'Code Execution': [
+      { s:'T', name:'Malicious code injection',              l:4, i:5, mit:'Input sanitization + AST validation', eff:'High' },
+      { s:'E', name:'Sandbox escape',                        l:3, i:5, mit:'gVisor / Firecracker micro-VM',       eff:'High' },
+      { s:'D', name:'Resource exhaustion (fork bomb)',        l:3, i:4, mit:'cgroup CPU/memory/PID limits',        eff:'Med'  },
+      { s:'R', name:'Unattributed code execution',           l:3, i:3, mit:'Execution logging with content hashes',eff:'Low' },
+      { s:'I', name:'Environment variable leakage',          l:3, i:4, mit:'Minimal env injection + secret masking',eff:'Low'}
+    ],
+    'API Calls': [
+      { s:'S', name:'API credential theft / replay',         l:3, i:5, mit:'Short-lived tokens via vault rotation',eff:'Med' },
+      { s:'T', name:'Request parameter tampering',           l:3, i:4, mit:'Strict schema validation layer',      eff:'Low'  },
+      { s:'I', name:'Over-scoped API permissions',           l:4, i:4, mit:'Least-privilege scope per endpoint',  eff:'Med'  },
+      { s:'D', name:'API rate limit abuse',                  l:2, i:3, mit:'Per-agent rate quotas',               eff:'Low'  },
+      { s:'E', name:'OAuth scope escalation',                l:2, i:5, mit:'Consent screen + scope pinning',      eff:'Med'  }
+    ],
+    'Database Access': [
+      { s:'T', name:'SQL / NoSQL injection',                 l:3, i:5, mit:'Parameterized queries exclusively',   eff:'Low'  },
+      { s:'I', name:'Bulk data exfiltration',                l:4, i:5, mit:'Row-level security + query limits',   eff:'High' },
+      { s:'E', name:'Privilege escalation via DB roles',      l:2, i:5, mit:'Dedicated read-only DB credentials', eff:'Med'  },
+      { s:'R', name:'Unlogged query execution',              l:3, i:3, mit:'Query audit logging (pgaudit etc.)',  eff:'Low'  },
+      { s:'D', name:'Long-running query resource lock',      l:2, i:4, mit:'Statement timeout enforcement',      eff:'Low'  }
+    ],
+    'Email/Messaging': [
+      { s:'S', name:'Agent impersonation via email',         l:4, i:5, mit:'DKIM/SPF + sender verification',      eff:'Med'  },
+      { s:'I', name:'Leaking sensitive data in messages',    l:3, i:5, mit:'Outbound content DLP scanning',       eff:'High' },
+      { s:'D', name:'Spam / message flood',                  l:2, i:3, mit:'Outbound rate limiting per recipient',eff:'Low'  },
+      { s:'R', name:'Deniable message sending',              l:3, i:3, mit:'Immutable append-only send logs',     eff:'Low'  },
+      { s:'T', name:'Message content manipulation',          l:2, i:4, mit:'End-to-end message signing',          eff:'Med'  }
+    ],
+    'Payment Processing': [
+      { s:'T', name:'Transaction amount manipulation',       l:3, i:5, mit:'Server-side idempotent validation',   eff:'Med'  },
+      { s:'S', name:'Payment credential spoofing',           l:2, i:5, mit:'Multi-factor payment authorisation',  eff:'High' },
+      { s:'E', name:'Unauthorized fund transfer',            l:2, i:5, mit:'Human-in-the-loop for all payments',  eff:'Med'  },
+      { s:'I', name:'PCI data exposure',                     l:3, i:5, mit:'Tokenize all card/bank data',         eff:'High' },
+      { s:'R', name:'Missing transaction audit trail',       l:3, i:4, mit:'Immutable ledger with receipts',      eff:'Med'  }
+    ],
+    'User Auth': [
+      { s:'S', name:'Session hijacking',                     l:3, i:5, mit:'Device-bound sessions + rotation',    eff:'Med'  },
+      { s:'E', name:'Role / permission manipulation',        l:3, i:5, mit:'Immutable RBAC with change approval', eff:'Med'  },
+      { s:'T', name:'Auth token tampering',                  l:2, i:5, mit:'Signed JWT with short expiry',        eff:'Low'  },
+      { s:'R', name:'Failed login suppression',              l:2, i:3, mit:'Centralised auth event logging',      eff:'Low'  },
+      { s:'D', name:'Credential brute-force',                l:3, i:4, mit:'Adaptive rate limiting + lockout',    eff:'Med'  }
+    ],
+    'Data Collection': [
+      { s:'I', name:'Over-collection of PII',               l:4, i:4, mit:'Data minimisation policy enforcement', eff:'Med'  },
+      { s:'T', name:'Training data poisoning at ingestion',  l:3, i:5, mit:'Input validation + anomaly detection',eff:'High' },
+      { s:'R', name:'Consent tracking gaps',                 l:3, i:4, mit:'Consent management platform (CMP)',   eff:'Med'  },
+      { s:'S', name:'Fake data source injection',            l:2, i:4, mit:'Source authentication + provenance',  eff:'Med'  },
+      { s:'D', name:'Ingestion pipeline flooding',           l:2, i:3, mit:'Backpressure + queue size limits',    eff:'Low'  }
+    ],
+    'Model Training': [
+      { s:'T', name:'Adversarial training data injection',   l:3, i:5, mit:'Dataset integrity verification',     eff:'High' },
+      { s:'I', name:'Model weight exfiltration',             l:2, i:5, mit:'Encrypted model storage + ACLs',     eff:'Med'  },
+      { s:'D', name:'Compute resource hijacking',            l:2, i:4, mit:'GPU quota + job scheduling limits',  eff:'Med'  },
+      { s:'E', name:'Backdoor via fine-tuning',              l:2, i:5, mit:'Red-team eval after every training run',eff:'High'},
+      { s:'R', name:'Untracked model lineage',               l:3, i:3, mit:'ML metadata store (MLflow etc.)',    eff:'Med'  }
+    ],
+    'Multi-Agent Comms': [
+      { s:'S', name:'Agent identity impersonation',          l:3, i:5, mit:'Mutual TLS between all agents',      eff:'Med'  },
+      { s:'T', name:'Message tampering in transit',          l:3, i:4, mit:'Signed inter-agent message envelopes',eff:'Med'  },
+      { s:'D', name:'Message flood / amplification',         l:2, i:3, mit:'Per-channel rate limits + circuit breakers',eff:'Low'},
+      { s:'E', name:'Cascading privilege escalation',        l:3, i:5, mit:'Zero-trust agent capability boundaries',eff:'High'},
+      { s:'I', name:'Eavesdropping on agent messages',       l:2, i:4, mit:'End-to-end encryption for all comms',eff:'Med'  }
+    ],
+    'Autonomous Decisions': [
+      { s:'E', name:'Scope creep beyond authorised actions', l:4, i:5, mit:'Action allowlist + budget constraints',eff:'Med' },
+      { s:'R', name:'Unexplainable / opaque decisions',     l:4, i:4, mit:'Decision audit trail + reasoning logs',eff:'Med' },
+      { s:'T', name:'Goal misalignment exploitation',        l:3, i:5, mit:'Human-in-the-loop for critical actions',eff:'High'},
+      { s:'D', name:'Infinite loop / runaway autonomy',      l:3, i:4, mit:'Execution timeout + global kill switch',eff:'Low'},
+      { s:'S', name:'Spoofed goal / instruction injection',  l:3, i:5, mit:'Signed instruction provenance chain', eff:'Med'  },
+      { s:'I', name:'Leaking internal reasoning to users',   l:2, i:3, mit:'Output filtering on chain-of-thought',eff:'Low' }
+    ]
+  };
+
+  /* ------------------------------------------
+     Application State
+     ------------------------------------------ */
+  let selectedThreat  = null;
+  let scanning        = false;
+  let scanInterval    = null;
+  let appliedMits     = new Set();
+  let feedEntries     = [];
+
+  /* ------------------------------------------
+     Initialisation
+     ------------------------------------------ */
+  function init() {
+    // Build capability checkboxes
+    const grid = document.getElementById('capsGrid');
+    CAPABILITIES.forEach(cap => {
+      const lbl = document.createElement('label');
+      lbl.className = 'cap-item';
+      lbl.innerHTML = `<input type="checkbox" data-cap="${cap}" onchange="update()"> ${cap}`;
+      grid.appendChild(lbl);
+    });
+
+    // Trust slider listener
+    document.getElementById('trustLevel').addEventListener('input', e => {
+      document.getElementById('trustLabel').textContent = TRUST_LABELS[+e.target.value];
+      update();
+    });
+
+    // Data sensitivity listener
+    document.getElementById('dataSens').addEventListener('change', update);
+
+    // Build STRIDE accordion
+    buildSTRIDE();
+
+    // Initial render
+    update();
+  }
+
+  function buildSTRIDE() {
+    const container = document.getElementById('strideContainer');
+    STRIDE_CATS.forEach(cat => {
+      const sec = document.createElement('div');
+      sec.className = 'stride-section';
+      sec.innerHTML =
+        `<div class="stride-header" onclick="toggleStride(this)">
+           <span>${cat.icon} ${cat.name} <span class="count" id="count-${cat.key}">(0)</span></span>
+           <span class="arrow">▶</span>
+         </div>
+         <div class="stride-body" id="stride-${cat.key}"></div>`;
+      container.appendChild(sec);
+    });
+  }
+
+  /* ------------------------------------------
+     UI Toggles
+     ------------------------------------------ */
+  function toggleStride(el) {
+    el.classList.toggle('open');
+    el.nextElementSibling.classList.toggle('open');
+  }
+
+  function highlightThreat(key) {
+    selectedThreat = selectedThreat === key ? null : key;
+    update();
+  }
+
+  function toggleMit(key, applied) {
+    if (applied) appliedMits.add(key);
+    else appliedMits.delete(key);
+    update();
+  }
+
+  /* ------------------------------------------
+     Data Helpers
+     ------------------------------------------ */
+  function getActiveCaps() {
+    return [...document.querySelectorAll('#capsGrid input:checked')].map(c => c.dataset.cap);
+  }
+
+  function getActiveThreats() {
+    const caps = getActiveCaps();
+    const threats = [];
+    caps.forEach(cap => {
+      (THREATS_DB[cap] || []).forEach(t => threats.push({ ...t, cap }));
+    });
+    return threats;
+  }
+
+  function threatKey(t) {
+    return t.cap + '::' + t.name;
+  }
+
+  function riskClass(r) {
+    if (r >= 15) return 'risk-high';
+    if (r >= 8)  return 'risk-med';
+    return 'risk-low';
+  }
+
+  /* ------------------------------------------
+     Score Computation
+     ------------------------------------------ */
+  function computeScore(threats) {
+    if (!threats.length) return 0;
+
+    const trust = TRUST_MULT[+document.getElementById('trustLevel').value];
+    const sens  = SENS_MULT[+document.getElementById('dataSens').value];
+
+    const appliedCount = threats.filter(t => appliedMits.has(threatKey(t))).length;
+    const mitFactor    = 1 - (appliedCount / threats.length) * 0.4;
+
+    const avgRisk = threats.reduce((sum, t) => sum + t.l * t.i, 0) / threats.length;
+    return Math.min(100, Math.round(avgRisk * trust * sens * 4 * mitFactor));
+  }
+
+  function scoreColor(s) {
+    if (s <= 30) return 'var(--green)';
+    if (s <= 60) return 'var(--yellow)';
+    if (s <= 80) return 'var(--orange)';
+    return 'var(--red)';
+  }
+
+  /* ------------------------------------------
+     Rendering: Gauge
+     ------------------------------------------ */
+  function updateGauge(score) {
+    const arc = document.getElementById('gaugeArc');
+    const txt = document.getElementById('gaugeText');
+    const c   = scoreColor(score);
+
+    arc.setAttribute('stroke', c);
+    arc.setAttribute('stroke-dasharray', `${(score / 100) * GAUGE_CIRC} ${GAUGE_CIRC}`);
+    txt.textContent = score;
+    txt.setAttribute('fill', c);
+  }
+
+  /* ------------------------------------------
+     Rendering: Stats
+     ------------------------------------------ */
+  function updateStats(threats, score) {
+    const caps = getActiveCaps();
+    const applied = threats.filter(t => appliedMits.has(threatKey(t))).length;
+
+    document.getElementById('statThreats').textContent  = threats.length;
+    document.getElementById('statCaps').textContent     = caps.length;
+    document.getElementById('statMits').textContent     = applied;
+
+    const residual = document.getElementById('statResidual');
+    residual.textContent = score;
+    residual.style.color = scoreColor(score);
+  }
+
+  /* ------------------------------------------
+     Rendering: STRIDE Categories
+     ------------------------------------------ */
+  function updateSTRIDE(threats) {
+    STRIDE_CATS.forEach(cat => {
+      const body     = document.getElementById('stride-' + cat.key);
+      const countEl  = document.getElementById('count-' + cat.key);
+      const filtered = threats.filter(t => t.s === cat.key);
+
+      countEl.textContent = `(${filtered.length})`;
+
+      if (!filtered.length) {
+        body.innerHTML = '<p class="no-threats">No active threats for current capabilities.</p>';
+        return;
+      }
+
+      body.innerHTML = filtered.map(t => {
+        const k  = threatKey(t);
+        const r  = t.l * t.i;
+        const cl = selectedThreat === k ? ' selected' : '';
+        return `<div class="threat-item${cl}" onclick="highlightThreat('${k.replace(/'/g, "\\'")}')">
+          <span class="threat-name">${t.name}<span class="threat-cap"> (${t.cap})</span></span>
+          <div class="threat-vals">
+            <span>L:${t.l}</span>
+            <span>I:${t.i}</span>
+            <span class="${riskClass(r)}">R:${r}</span>
+          </div>
+        </div>`;
+      }).join('');
+    });
+  }
+
+  /* ------------------------------------------
+     Rendering: Risk Matrix (Canvas)
+     ------------------------------------------ */
+  function drawMatrix(threats) {
+    const canvas = document.getElementById('matrix');
+    const ctx    = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const pad  = 34;
+    const cell = (w - pad) / 5;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Draw heatmap cells
+    for (let li = 0; li < 5; li++) {
+      for (let ii = 0; ii < 5; ii++) {
+        const risk      = (li + 1) * (ii + 1);
+        const intensity = risk / 25;
+        ctx.fillStyle   = `rgba(214, 48, 49, ${intensity * 0.4})`;
+        ctx.fillRect(pad + ii * cell, (4 - li) * cell, cell, cell);
+
+        ctx.strokeStyle = '#2a2a2a';
+        ctx.lineWidth   = 0.5;
+        ctx.strokeRect(pad + ii * cell, (4 - li) * cell, cell, cell);
+      }
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#888';
+    ctx.font      = '10px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+
+    for (let i = 1; i <= 5; i++) {
+      ctx.fillText(i, pad + (i - 0.5) * cell, h - 6);    // X labels
+      ctx.fillText(i, 16, (5 - i + 0.5) * cell + 4);     // Y labels
+    }
+
+    ctx.fillText('Impact →', pad + 2.5 * cell, h - 18);
+    ctx.save();
+    ctx.translate(6, 2.5 * cell);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Likelihood →', 0, 0);
+    ctx.restore();
+
+    // Plot threat dots
+    if (!threats.length) return;
+
+    // Stack offset for overlapping dots
+    const positions = {};
+    threats.forEach(t => {
+      const pk = `${t.l},${t.i}`;
+      positions[pk] = (positions[pk] || 0);
+      const offset = positions[pk] * 3;
+      positions[pk]++;
+
+      const x    = pad + (t.i - 0.5) * cell + offset;
+      const y    = (5 - t.l + 0.5) * cell - offset;
+      const isSel = selectedThreat === threatKey(t);
+
+      ctx.beginPath();
+      ctx.arc(x, y, isSel ? 9 : 5, 0, Math.PI * 2);
+      ctx.fillStyle   = isSel ? '#00d4ff' : '#ffffff';
+      ctx.globalAlpha = isSel ? 1 : 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      if (isSel) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth   = 2;
+        ctx.stroke();
+      }
+    });
+  }
+
+  /* ------------------------------------------
+     Rendering: Mitigations
+     ------------------------------------------ */
+  function updateMitigations(threats) {
+    const list = document.getElementById('mitList');
+
+    if (!threats.length) {
+      list.innerHTML = '<p class="no-threats">Select agent capabilities to see mitigation recommendations.</p>';
+      return;
+    }
+
+    // Sort by risk descending
+    const sorted = [...threats].sort((a, b) => (b.l * b.i) - (a.l * a.i));
+
+    list.innerHTML = sorted.map(t => {
+      const k       = threatKey(t);
+      const checked = appliedMits.has(k) ? 'checked' : '';
+      const cls     = appliedMits.has(k) ? ' applied' : '';
+      const effCls  = t.eff === 'Low' ? 'badge-low' : t.eff === 'Med' ? 'badge-med' : 'badge-high';
+
+      return `<div class="mit-item${cls}">
+        <input type="checkbox" ${checked}
+          onchange="toggleMit('${k.replace(/'/g, "\\'")}', this.checked)">
+        <div class="mit-text">
+          ${t.mit}
+          <span class="mit-threat">↳ ${t.name} (${t.cap})</span>
+        </div>
+        <span class="badge ${effCls}">${t.eff}</span>
+      </div>`;
+    }).join('');
+  }
+
+  /* ------------------------------------------
+     Main Update Loop
+     ------------------------------------------ */
+  function update() {
+    const threats = getActiveThreats();
+    const score   = computeScore(threats);
+
+    updateGauge(score);
+    updateStats(threats, score);
+    updateSTRIDE(threats);
+    drawMatrix(threats);
+    updateMitigations(threats);
+
+    // Alert banner
+    const banner = document.getElementById('alertBanner');
+    banner.classList.toggle('show', score > 70);
+
+    return { threats, score };
+  }
+
+  /* ------------------------------------------
+     Auto-Scan
+     ------------------------------------------ */
+  function toggleScan() {
+    scanning = !scanning;
+    const btn = document.getElementById('scanBtn');
+
+    if (scanning) {
+      btn.textContent = '⏹ Stop Auto-Scan';
+      btn.classList.add('active');
+      scanInterval = setInterval(runAutoScan, 3000);
+      runAutoScan();
+    } else {
+      btn.textContent = '▶ Start Auto-Scan';
+      btn.classList.remove('active');
+      clearInterval(scanInterval);
+    }
+  }
+
+  function runAutoScan() {
+    const { threats, score } = update();
+    const caps = getActiveCaps();
+    const ts   = new Date().toLocaleTimeString();
+    const applied = threats.filter(t => appliedMits.has(threatKey(t))).length;
+
+    let cls = '';
+    let suffix = '';
+    if (score > 70)      { cls = 'crit'; suffix = ' ⚠️ CRITICAL RISK'; }
+    else if (score > 50) { cls = 'warn'; suffix = ' ⚡ ELEVATED RISK'; }
+
+    const msg = `[${ts}] Score: ${score}/100 | ${threats.length} threats | ${caps.length} caps | ${applied} mitigations${suffix}`;
+
+    feedEntries.unshift({ msg, cls });
+    if (feedEntries.length > 20) feedEntries.pop();
+
+    const feed = document.getElementById('feed');
+    feed.innerHTML = feedEntries.map(
+      e => `<div class="feed-entry ${e.cls}">${e.msg}</div>`
+    ).join('');
+  }
+
+  /* ------------------------------------------
+     Export
+     ------------------------------------------ */
+  function exportJSON() {
+    const threats = getActiveThreats();
+    const score   = computeScore(threats);
+
+    const model = {
+      agent:           document.getElementById('agentName').value || 'Unnamed Agent',
+      capabilities:    getActiveCaps(),
+      trustLevel:      +document.getElementById('trustLevel').value,
+      dataSensitivity: +document.getElementById('dataSens').value,
+      threatScore:     score,
+      totalThreats:    threats.length,
+      mitigationsApplied: [...appliedMits].length,
+      threats: threats.map(t => ({
+        strideCategory:    STRIDE_CATS.find(s => s.key === t.s)?.name || t.s,
+        capability:        t.cap,
+        threat:            t.name,
+        likelihood:        t.l,
+        impact:            t.i,
+        riskScore:         t.l * t.i,
+        mitigation:        t.mit,
+        mitigationEffort:  t.eff,
+        mitigationApplied: appliedMits.has(threatKey(t))
+      })),
+      exportedAt: new Date().toISOString()
+    };
+
+    const blob = new Blob([JSON.stringify(model, null, 2)], { type: 'application/json' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `threat-model-${(model.agent).toLowerCase().replace(/\s+/g, '-')}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  /* ------------------------------------------
+     Boot
+     ------------------------------------------ */
+  init();
+</script>
+</body>
+</html>
