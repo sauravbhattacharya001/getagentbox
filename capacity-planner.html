@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Capacity Planner - AgentBox</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh}
+        a{color:#6c63ff;text-decoration:none}
+        a:hover{text-decoration:underline}
+        .nav{background:rgba(15,15,35,0.95);border-bottom:1px solid rgba(108,99,255,0.2);padding:1rem 2rem;display:flex;align-items:center;gap:2rem;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+        .nav-brand{font-size:1.25rem;font-weight:700;background:linear-gradient(135deg,#6c63ff,#00d2ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .nav a{color:#999;font-size:0.9rem;transition:color 0.2s}
+        .nav a:hover{color:#fff;text-decoration:none}
+        .hero{text-align:center;padding:2rem 1rem 1rem;background:linear-gradient(180deg,rgba(108,99,255,0.08),transparent)}
+        .hero h1{font-size:2.2rem;background:linear-gradient(135deg,#6c63ff,#00d2ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:0.5rem}
+        .hero p{color:#888;font-size:1.05rem;max-width:600px;margin:0 auto}
+        .container{display:grid;grid-template-columns:320px 1fr;gap:1.5rem;padding:1.5rem;max-width:1400px;margin:0 auto}
+        @media(max-width:900px){.container{grid-template-columns:1fr}}
+        .panel{background:rgba(20,20,40,0.8);border:1px solid rgba(108,99,255,0.15);border-radius:12px;padding:1.25rem}
+        .panel h2{font-size:1rem;color:#6c63ff;margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.05em}
+        .field{margin-bottom:1rem}
+        .field label{display:flex;justify-content:space-between;font-size:0.85rem;color:#aaa;margin-bottom:4px}
+        .field label span{color:#6c63ff;font-weight:600}
+        input[type=range]{width:100%;accent-color:#6c63ff;background:transparent}
+        select{width:100%;padding:0.5rem;background:#1a1a2e;border:1px solid rgba(108,99,255,0.3);border-radius:6px;color:#e0e0e0;font-size:0.9rem}
+        .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0}
+        .toggle-row span{font-size:0.85rem;color:#aaa}
+        .toggle{width:40px;height:22px;background:#333;border-radius:11px;position:relative;cursor:pointer;transition:background 0.3s}
+        .toggle.on{background:#6c63ff}
+        .toggle::after{content:'';width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:transform 0.3s}
+        .toggle.on::after{transform:translateX(18px)}
+        .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem}
+        .metric{background:rgba(15,15,35,0.9);border:1px solid rgba(108,99,255,0.1);border-radius:10px;padding:1rem;text-align:center}
+        .metric .val{font-size:1.6rem;font-weight:700;margin:0.25rem 0}
+        .metric .lbl{font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:0.04em}
+        .metric.green .val{color:#00e676}
+        .metric.yellow .val{color:#ffd600}
+        .metric.red .val{color:#ff5252}
+        .metric.critical .val{color:#ff1744;animation:pulse 1s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        .chart-wrap{position:relative;background:rgba(10,10,25,0.9);border-radius:10px;border:1px solid rgba(108,99,255,0.1);overflow:hidden}
+        canvas{width:100%;display:block}
+        .section{margin-top:1.5rem}
+        .bottleneck{padding:0.75rem 1rem;border-radius:8px;margin-bottom:0.5rem;font-size:0.9rem;display:flex;align-items:flex-start;gap:0.75rem}
+        .bottleneck.warning{background:rgba(255,214,0,0.08);border-left:3px solid #ffd600}
+        .bottleneck.critical{background:rgba(255,23,68,0.08);border-left:3px solid #ff1744}
+        .bottleneck .icon{font-size:1.2rem;flex-shrink:0}
+        .bottleneck .fix{color:#6c63ff;font-size:0.8rem;margin-top:0.25rem}
+        .scenarios{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;margin-bottom:1rem}
+        .scenario-btn{padding:0.75rem;background:rgba(30,30,60,0.8);border:1px solid rgba(108,99,255,0.2);border-radius:8px;cursor:pointer;text-align:center;transition:all 0.3s;color:#ccc;font-size:0.85rem}
+        .scenario-btn:hover,.scenario-btn.active{border-color:#6c63ff;background:rgba(108,99,255,0.1);color:#fff}
+        .scenario-btn .emoji{font-size:1.5rem;display:block;margin-bottom:0.3rem}
+        .rec{padding:0.75rem 1rem;background:rgba(108,99,255,0.05);border:1px solid rgba(108,99,255,0.1);border-radius:8px;margin-bottom:0.5rem;display:flex;justify-content:space-between;align-items:center;font-size:0.9rem}
+        .rec .impact{font-size:0.8rem;color:#00e676}
+        .rec .apply-btn{padding:0.3rem 0.75rem;background:#6c63ff;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem;transition:background 0.2s}
+        .rec .apply-btn:hover{background:#5a52d5}
+        .export-bar{display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap}
+        .export-bar button{padding:0.6rem 1.2rem;background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.3);color:#6c63ff;border-radius:8px;cursor:pointer;font-size:0.85rem;transition:all 0.2s}
+        .export-bar button:hover{background:rgba(108,99,255,0.25)}
+        .autoscale-toggle{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;padding:0.75rem 1rem;background:rgba(0,210,255,0.05);border:1px solid rgba(0,210,255,0.2);border-radius:8px}
+        .autoscale-toggle span{font-size:0.9rem;color:#00d2ff}
+        .comparison-table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-top:0.75rem}
+        .comparison-table th{text-align:left;padding:0.5rem;color:#6c63ff;border-bottom:1px solid rgba(108,99,255,0.2)}
+        .comparison-table td{padding:0.5rem;border-bottom:1px solid rgba(255,255,255,0.05)}
+        .legend{display:flex;gap:1rem;margin:0.5rem 0;font-size:0.8rem;color:#888}
+        .legend span{display:flex;align-items:center;gap:0.3rem}
+        .legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">AgentBox</div>
+        <a href="index.html">Home</a>
+        <a href="simulator.html">Simulator</a>
+        <a href="roi-calculator.html">ROI Calculator</a>
+        <a href="metrics-simulator.html">Metrics</a>
+        <a href="sitemap.html">Sitemap</a>
+    </nav>
+
+    <div class="hero">
+        <h1>⚡ Agent Capacity Planner</h1>
+        <p>Model your agent fleet workload, detect bottlenecks, simulate auto-scaling, and get optimization recommendations — all in real time.</p>
+    </div>
+
+    <div class="container">
+        <!-- Left Panel: Configurator -->
+        <div>
+            <div class="panel">
+                <h2>🎛️ Workload Config</h2>
+                <div class="field">
+                    <label>Agents <span id="v-agents">10</span></label>
+                    <input type="range" id="agents" min="1" max="100" value="10">
+                </div>
+                <div class="field">
+                    <label>Messages/min <span id="v-mpm">500</span></label>
+                    <input type="range" id="mpm" min="10" max="10000" value="500" step="10">
+                </div>
+                <div class="field">
+                    <label>Avg tokens/msg <span id="v-tokens">500</span></label>
+                    <input type="range" id="tokens" min="100" max="4000" value="500" step="50">
+                </div>
+                <div class="field">
+                    <label>Peak multiplier <span id="v-peak">2.0x</span></label>
+                    <input type="range" id="peak" min="1" max="5" value="2" step="0.1">
+                </div>
+                <div class="field">
+                    <label>Concurrent users <span id="v-users">100</span></label>
+                    <input type="range" id="users" min="1" max="1000" value="100">
+                </div>
+                <div class="field">
+                    <label>Model Tier</label>
+                    <select id="model">
+                        <option value="0.5">GPT-3.5 Turbo ($0.50/1M)</option>
+                        <option value="3" selected>Claude Sonnet ($3/1M)</option>
+                        <option value="5">GPT-4o ($5/1M)</option>
+                        <option value="15">Claude Opus ($15/1M)</option>
+                        <option value="30">GPT-4 ($30/1M)</option>
+                        <option value="0">Local / Self-hosted ($0)</option>
+                    </select>
+                </div>
+                <div class="toggle-row"><span>Caching</span><div class="toggle" id="t-cache" onclick="toggleSwitch(this)"></div></div>
+                <div class="toggle-row"><span>Request batching</span><div class="toggle" id="t-batch" onclick="toggleSwitch(this)"></div></div>
+                <div class="toggle-row"><span>Priority queuing</span><div class="toggle" id="t-priority" onclick="toggleSwitch(this)"></div></div>
+            </div>
+
+            <div class="panel section">
+                <h2>🔀 What-If Scenarios</h2>
+                <div class="scenarios">
+                    <div class="scenario-btn active" onclick="setScenario('normal',this)"><span class="emoji">☀️</span>Normal Day</div>
+                    <div class="scenario-btn" onclick="setScenario('launch',this)"><span class="emoji">🚀</span>Product Launch<br><small>10x traffic</small></div>
+                    <div class="scenario-btn" onclick="setScenario('ddos',this)"><span class="emoji">🛡️</span>DDoS Attack<br><small>100x spike</small></div>
+                    <div class="scenario-btn" onclick="setScenario('growth',this)"><span class="emoji">📈</span>Growth<br><small>+20%/month</small></div>
+                </div>
+            </div>
+
+            <div class="panel section">
+                <h2>📤 Export</h2>
+                <div class="export-bar">
+                    <button onclick="exportJSON()">Export JSON</button>
+                    <button onclick="copyShareURL()">Copy Share URL</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Area -->
+        <div>
+            <!-- Metrics -->
+            <div class="metrics" id="metrics">
+                <div class="metric green" id="m-util"><div class="lbl">Utilization</div><div class="val">45%</div></div>
+                <div class="metric" id="m-cost"><div class="lbl">Est. Monthly Cost</div><div class="val">$0</div></div>
+                <div class="metric" id="m-throughput"><div class="lbl">Tokens/sec</div><div class="val">0</div></div>
+                <div class="metric" id="m-queue"><div class="lbl">Peak Queue Depth</div><div class="val">0</div></div>
+                <div class="metric" id="m-dropped"><div class="lbl">Dropped Requests</div><div class="val">0%</div></div>
+                <div class="metric" id="m-agents-rec"><div class="lbl">Recommended Agents</div><div class="val">0</div></div>
+            </div>
+
+            <!-- Chart -->
+            <div class="chart-wrap">
+                <div class="legend" style="padding:0.5rem 1rem">
+                    <span><span class="dot" style="background:#6c63ff"></span> Load</span>
+                    <span><span class="dot" style="background:#ff5252"></span> Capacity</span>
+                    <span><span class="dot" style="background:#00e676"></span> Auto-scaled</span>
+                </div>
+                <canvas id="chart" height="280"></canvas>
+            </div>
+
+            <!-- Auto-scale toggle -->
+            <div class="autoscale-toggle section">
+                <div class="toggle" id="t-autoscale" onclick="toggleSwitch(this)"></div>
+                <span>Enable Auto-Scaling Simulation</span>
+                <span id="autoscale-info" style="margin-left:auto;font-size:0.8rem;color:#888"></span>
+            </div>
+
+            <!-- Bottlenecks -->
+            <div class="panel section" id="bottlenecks-panel">
+                <h2>🔍 Bottleneck Detector</h2>
+                <div id="bottlenecks"></div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="panel section">
+                <h2>💡 Optimization Recommendations</h2>
+                <div id="recommendations"></div>
+            </div>
+
+            <!-- Scenario Comparison Table -->
+            <div class="panel section">
+                <h2>📊 Scenario Comparison</h2>
+                <table class="comparison-table" id="comparison-table">
+                    <thead><tr><th>Scenario</th><th>Peak Util %</th><th>Monthly Cost</th><th>Queue Depth</th><th>Dropped %</th><th>Min Agents</th></tr></thead>
+                    <tbody id="comparison-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // --- State ---
+    const C = {
+        agents: 10, mpm: 500, tokens: 500, peak: 2, users: 100,
+        modelCost: 3, cache: false, batch: false, priority: false,
+        autoscale: false, scenario: 'normal'
+    };
+    const AGENT_CAPACITY_MPM = 120; // msgs/min per agent at full load
+
+    // --- Helpers ---
+    function $(id){ return document.getElementById(id) }
+    function toggleSwitch(el){
+        el.classList.toggle('on');
+        const key = {
+            't-cache':'cache','t-batch':'batch','t-priority':'priority','t-autoscale':'autoscale'
+        }[el.id];
+        if(key) C[key] = el.classList.contains('on');
+        update();
+    }
+    function fmt$(n){ return n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1e3?'$'+(n/1e3).toFixed(1)+'K':'$'+n.toFixed(0) }
+    function fmtN(n){ return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0) }
+
+    // --- Sliders ---
+    ['agents','mpm','tokens','peak','users'].forEach(k=>{
+        const el=$(k);
+        el.addEventListener('input',()=>{
+            C[k]=parseFloat(el.value);
+            const vEl=$('v-'+k);
+            if(k==='peak') vEl.textContent=C[k].toFixed(1)+'x';
+            else vEl.textContent=C[k];
+            update();
+        });
+    });
+    $('model').addEventListener('change',()=>{ C.modelCost=parseFloat($('model').value); update(); });
+
+    // --- Scenario multipliers ---
+    const SCENARIOS = {
+        normal: {mult:1, label:'Normal Day'},
+        launch: {mult:10, label:'Product Launch'},
+        ddos:   {mult:100, label:'DDoS Attack'},
+        growth: {mult:1, label:'Growth (+20%/mo)', growth:true}
+    };
+    function setScenario(key, el){
+        document.querySelectorAll('.scenario-btn').forEach(b=>b.classList.remove('active'));
+        if(el) el.classList.add('active');
+        C.scenario=key;
+        update();
+    }
+
+    // --- Core Calculations ---
+    function calcMetrics(overrideMult){
+        const sc = SCENARIOS[C.scenario];
+        const mult = overrideMult || sc.mult;
+        const effectiveMPM = C.mpm * mult;
+        const cacheFactor = C.cache ? 0.6 : 1;
+        const batchFactor = C.batch ? 0.85 : 1;
+        const actualMPM = effectiveMPM * cacheFactor * batchFactor;
+        const totalCapacity = C.agents * AGENT_CAPACITY_MPM;
+        const baseUtil = (actualMPM / totalCapacity) * 100;
+        const peakUtil = baseUtil * C.peak;
+        const tokensPerSec = (actualMPM * C.tokens) / 60;
+        const monthlyTokens = tokensPerSec * 60 * 60 * 24 * 30;
+        const monthlyCost = (monthlyTokens / 1e6) * C.modelCost;
+        const queueDepth = peakUtil > 100 ? Math.round((peakUtil - 100) / 100 * actualMPM * C.peak * 0.5) : 0;
+        const dropped = peakUtil > 150 ? Math.min(((peakUtil - 150) / peakUtil) * 100, 99) : 0;
+        const recAgents = Math.ceil((actualMPM * C.peak) / AGENT_CAPACITY_MPM);
+        return { baseUtil:Math.min(baseUtil,200), peakUtil:Math.min(peakUtil,300), tokensPerSec, monthlyCost, queueDepth, dropped, recAgents, actualMPM, totalCapacity };
+    }
+
+    // --- Update UI ---
+    function update(){
+        const m = calcMetrics();
+        // Metrics
+        setMetric('m-util', m.peakUtil.toFixed(0)+'%', m.peakUtil<70?'green':m.peakUtil<85?'yellow':m.peakUtil<100?'red':'critical');
+        setMetric('m-cost', fmt$(m.monthlyCost));
+        setMetric('m-throughput', fmtN(m.tokensPerSec));
+        setMetric('m-queue', fmtN(m.queueDepth), m.queueDepth>500?'red':m.queueDepth>100?'yellow':'green');
+        setMetric('m-dropped', m.dropped.toFixed(1)+'%', m.dropped>5?'critical':m.dropped>0?'red':'green');
+        setMetric('m-agents-rec', m.recAgents, m.recAgents>C.agents?'red':'green');
+
+        // Bottlenecks
+        updateBottlenecks(m);
+        // Recommendations
+        updateRecommendations(m);
+        // Comparison table
+        updateComparison();
+        // Autoscale info
+        if(C.autoscale){
+            const saved = m.recAgents < C.agents ? (C.agents - m.recAgents)*50 : 0;
+            const extra = m.recAgents > C.agents ? m.recAgents - C.agents : 0;
+            $('autoscale-info').textContent = extra ? `+${extra} agents needed at peak` : `${saved>0?'Save ~$'+saved+'/mo by scaling down':'Fleet optimally sized'}`;
+        } else {
+            $('autoscale-info').textContent = '';
+        }
+    }
+
+    function setMetric(id, val, cls){
+        const el=$(id);
+        el.querySelector('.val').textContent=val;
+        if(cls){ el.className='metric '+cls; }
+    }
+
+    function updateBottlenecks(m){
+        const bns=[];
+        if(m.peakUtil>100) bns.push({sev:'critical',msg:`Capacity exceeded at peak: ${m.peakUtil.toFixed(0)}% utilization. Requests will queue and drop.`,fix:`Add ${m.recAgents-C.agents} more agents or reduce message volume.`});
+        else if(m.peakUtil>85) bns.push({sev:'warning',msg:`Nearing capacity at peak: ${m.peakUtil.toFixed(0)}%. Buffer is thin.`,fix:'Consider adding 2-3 buffer agents.'});
+        if(m.monthlyCost>10000) bns.push({sev:'critical',msg:`Monthly cost is ${fmt$(m.monthlyCost)} — exceeds $10K threshold.`,fix:'Switch to a cheaper model tier or enable caching.'});
+        else if(m.monthlyCost>5000) bns.push({sev:'warning',msg:`Monthly cost is ${fmt$(m.monthlyCost)} — approaching $5K.`,fix:'Enable caching and batching to reduce token usage.'});
+        if(m.queueDepth>1000) bns.push({sev:'critical',msg:`Peak queue depth: ${fmtN(m.queueDepth)} messages. Users will experience long waits.`,fix:'Increase agent count or enable priority queuing.'});
+        if(m.dropped>0) bns.push({sev:'critical',msg:`${m.dropped.toFixed(1)}% of requests dropped at peak.`,fix:'Immediately add agents or enable auto-scaling.'});
+        if(C.users > C.agents * 20) bns.push({sev:'warning',msg:`High user-to-agent ratio (${C.users}:${C.agents}). Context switching overhead increases.`,fix:'Add agents to improve per-user responsiveness.'});
+        if(!bns.length) bns.push({sev:'ok',msg:'✅ No bottlenecks detected. Fleet is healthy.'});
+        $('bottlenecks').innerHTML=bns.map(b=> b.sev==='ok'?`<div style="padding:0.75rem;color:#00e676;font-size:0.9rem">${b.msg}</div>`:
+            `<div class="bottleneck ${b.sev}"><span class="icon">${b.sev==='critical'?'🔴':'🟡'}</span><div><div>${b.msg}</div><div class="fix">💡 ${b.fix}</div></div></div>`
+        ).join('');
+    }
+
+    function updateRecommendations(m){
+        const recs=[];
+        if(!C.cache) recs.push({msg:'Enable caching to reduce token usage by ~40%',impact:'Save ~'+fmt$(m.monthlyCost*0.4)+'/mo',action:()=>{C.cache=true;$('t-cache').classList.add('on');update();}});
+        if(!C.batch) recs.push({msg:'Enable request batching to improve throughput by ~15%',impact:'Save ~'+fmt$(m.monthlyCost*0.15)+'/mo',action:()=>{C.batch=true;$('t-batch').classList.add('on');update();}});
+        if(C.modelCost>=5 && m.monthlyCost>1000) recs.push({msg:'Switch routine queries to GPT-3.5 to save on costs',impact:'Save ~'+fmt$(m.monthlyCost*0.7)+'/mo',action:()=>{$('model').value='0.5';C.modelCost=0.5;update();}});
+        if(m.recAgents>C.agents) recs.push({msg:`Add ${m.recAgents-C.agents} more agents to handle peak load`,impact:'Eliminates dropped requests',action:()=>{C.agents=m.recAgents;$('agents').value=m.recAgents;$('v-agents').textContent=m.recAgents;update();}});
+        if(m.recAgents<C.agents*0.7) recs.push({msg:`Reduce fleet to ${m.recAgents} agents — currently over-provisioned`,impact:'Save ~$'+(((C.agents-m.recAgents)*50)).toFixed(0)+'/mo infra',action:()=>{C.agents=m.recAgents;$('agents').value=m.recAgents;$('v-agents').textContent=m.recAgents;update();}});
+        if(!C.priority && m.queueDepth>100) recs.push({msg:'Enable priority queuing to serve critical requests first',impact:'Reduces P95 latency by ~30%',action:()=>{C.priority=true;$('t-priority').classList.add('on');update();}});
+        if(!C.autoscale && m.peakUtil>80) recs.push({msg:'Enable auto-scaling to handle traffic spikes dynamically',impact:'Prevents dropped requests',action:()=>{C.autoscale=true;$('t-autoscale').classList.add('on');update();}});
+        if(!recs.length) recs.push({msg:'✅ Configuration looks optimal!',impact:'',noBtn:true});
+        $('recommendations').innerHTML=recs.map((r,i)=>
+            `<div class="rec"><div><div>${r.msg}</div>${r.impact?`<div class="impact">↗ ${r.impact}</div>`:''}</div>${r.noBtn?'':`<button class="apply-btn" onclick="applyRec(${i})">Apply</button>`}</div>`
+        ).join('');
+        window._recs=recs;
+    }
+    function applyRec(i){ if(window._recs[i]&&window._recs[i].action) window._recs[i].action(); }
+
+    function updateComparison(){
+        const rows=[
+            {key:'normal',label:'☀️ Normal'},
+            {key:'launch',label:'🚀 Launch (10x)'},
+            {key:'ddos',label:'🛡️ DDoS (100x)'},
+            {key:'growth',label:'📈 Growth (6mo)'}
+        ];
+        const body=rows.map(r=>{
+            const mult = r.key==='normal'?1:r.key==='launch'?10:r.key==='ddos'?100:Math.pow(1.2,6);
+            const oldScenario=C.scenario;C.scenario=r.key;
+            const m=calcMetrics(mult);
+            C.scenario=oldScenario;
+            return `<tr><td>${r.label}</td><td style="color:${m.peakUtil>100?'#ff5252':m.peakUtil>85?'#ffd600':'#00e676'}">${m.peakUtil.toFixed(0)}%</td><td>${fmt$(m.monthlyCost)}</td><td>${fmtN(m.queueDepth)}</td><td>${m.dropped.toFixed(1)}%</td><td>${m.recAgents}</td></tr>`;
+        }).join('');
+        $('comparison-body').innerHTML=body;
+    }
+
+    // --- Canvas Chart ---
+    const canvas=$('chart');
+    const ctx=canvas.getContext('2d');
+    let animFrame=0;
+
+    function drawChart(){
+        const dpr=window.devicePixelRatio||1;
+        const rect=canvas.parentElement.getBoundingClientRect();
+        canvas.width=rect.width*dpr;
+        canvas.height=280*dpr;
+        canvas.style.height='280px';
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        const W=rect.width, H=280;
+        ctx.clearRect(0,0,W,H);
+
+        const pad={top:20,bottom:30,left:50,right:20};
+        const gW=W-pad.left-pad.right, gH=H-pad.top-pad.bottom;
+
+        // Grid
+        ctx.strokeStyle='rgba(108,99,255,0.08)';
+        ctx.lineWidth=1;
+        for(let i=0;i<=4;i++){
+            const y=pad.top+gH*(i/4);
+            ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+gW,y);ctx.stroke();
+            ctx.fillStyle='#555';ctx.font='11px sans-serif';ctx.textAlign='right';
+            ctx.fillText((100-i*25)+'%',pad.left-8,y+4);
+        }
+        // Hour labels
+        ctx.textAlign='center';
+        for(let h=0;h<=24;h+=3){
+            const x=pad.left+(h/24)*gW;
+            ctx.fillStyle='#555';ctx.fillText(h+':00',x,H-8);
+        }
+
+        const sc=SCENARIOS[C.scenario];
+        const mult=sc.mult;
+
+        // Generate load curve (sine wave with peak hours 9-17)
+        const points=200;
+        const loadData=[], capData=[], autoData=[];
+        for(let i=0;i<points;i++){
+            const t=i/(points-1); // 0..1 = 0..24h
+            const hour=t*24;
+            // Base pattern: higher during work hours
+            const workFactor=Math.exp(-Math.pow((hour-13)/4,2)); // Gaussian around 1pm
+            const noise=Math.sin(animFrame*0.02+i*0.3)*0.05+Math.sin(animFrame*0.01+i*0.7)*0.03;
+            const baseMPM=C.mpm*mult*(0.3+0.7*workFactor)*(1+noise);
+            const cacheFactor=C.cache?0.6:1;
+            const batchFactor=C.batch?0.85:1;
+            const actualMPM=baseMPM*cacheFactor*batchFactor;
+            const capacity=C.agents*AGENT_CAPACITY_MPM;
+            const util=Math.min((actualMPM/capacity)*100,150);
+            loadData.push(util);
+            capData.push(100); // capacity line at 100%
+
+            // Autoscale: dynamically match capacity
+            if(C.autoscale){
+                const needed=Math.ceil(actualMPM/AGENT_CAPACITY_MPM);
+                const autoAgents=Math.max(C.agents, Math.min(needed+2, 100));
+                const autoUtil=(actualMPM/(autoAgents*AGENT_CAPACITY_MPM))*100;
+                autoData.push(autoUtil);
+            }
+        }
+
+        // Draw capacity line
+        ctx.strokeStyle='rgba(255,82,82,0.4)';ctx.lineWidth=2;ctx.setLineDash([5,5]);
+        ctx.beginPath();
+        for(let i=0;i<points;i++){
+            const x=pad.left+(i/(points-1))*gW;
+            const y=pad.top+gH*(1-capData[i]/150);
+            i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.stroke();ctx.setLineDash([]);
+
+        // Draw load fill
+        ctx.beginPath();
+        for(let i=0;i<points;i++){
+            const x=pad.left+(i/(points-1))*gW;
+            const y=pad.top+gH*(1-Math.min(loadData[i],150)/150);
+            i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.lineTo(pad.left+gW,pad.top+gH);ctx.lineTo(pad.left,pad.top+gH);ctx.closePath();
+        const grad=ctx.createLinearGradient(0,pad.top,0,pad.top+gH);
+        grad.addColorStop(0,'rgba(108,99,255,0.3)');grad.addColorStop(1,'rgba(108,99,255,0.02)');
+        ctx.fillStyle=grad;ctx.fill();
+
+        // Draw load line
+        ctx.strokeStyle='#6c63ff';ctx.lineWidth=2.5;
+        ctx.beginPath();
+        for(let i=0;i<points;i++){
+            const x=pad.left+(i/(points-1))*gW;
+            const y=pad.top+gH*(1-Math.min(loadData[i],150)/150);
+            i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+
+        // Draw autoscale line
+        if(C.autoscale && autoData.length){
+            ctx.strokeStyle='#00e676';ctx.lineWidth=2;ctx.setLineDash([3,3]);
+            ctx.beginPath();
+            for(let i=0;i<points;i++){
+                const x=pad.left+(i/(points-1))*gW;
+                const y=pad.top+gH*(1-Math.min(autoData[i],150)/150);
+                i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+            }
+            ctx.stroke();ctx.setLineDash([]);
+        }
+
+        // Danger zone highlight where load > capacity
+        ctx.fillStyle='rgba(255,23,68,0.08)';
+        for(let i=0;i<points-1;i++){
+            if(loadData[i]>100){
+                const x=pad.left+(i/(points-1))*gW;
+                const w=gW/(points-1);
+                ctx.fillRect(x,pad.top,w,gH);
+            }
+        }
+
+        animFrame++;
+        requestAnimationFrame(drawChart);
+    }
+
+    // --- Export ---
+    function exportJSON(){
+        const m=calcMetrics();
+        const data={config:{...C},metrics:{peakUtilization:m.peakUtil,monthlyCost:m.monthlyCost,tokensPerSec:m.tokensPerSec,peakQueueDepth:m.queueDepth,droppedRequests:m.dropped,recommendedAgents:m.recAgents},timestamp:new Date().toISOString()};
+        const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+        const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='capacity-plan.json';a.click();
+    }
+    function copyShareURL(){
+        const params=new URLSearchParams({a:C.agents,m:C.mpm,t:C.tokens,p:C.peak,u:C.users,mc:C.modelCost,c:C.cache?1:0,b:C.batch?1:0,q:C.priority?1:0,s:C.scenario});
+        const url=location.origin+location.pathname+'#'+params.toString();
+        navigator.clipboard.writeText(url).then(()=>alert('Share URL copied to clipboard!'));
+    }
+
+    // Load from hash
+    function loadFromHash(){
+        if(!location.hash) return;
+        try{
+            const p=new URLSearchParams(location.hash.slice(1));
+            if(p.has('a')){C.agents=+p.get('a');$('agents').value=C.agents;$('v-agents').textContent=C.agents}
+            if(p.has('m')){C.mpm=+p.get('m');$('mpm').value=C.mpm;$('v-mpm').textContent=C.mpm}
+            if(p.has('t')){C.tokens=+p.get('t');$('tokens').value=C.tokens;$('v-tokens').textContent=C.tokens}
+            if(p.has('p')){C.peak=+p.get('p');$('peak').value=C.peak;$('v-peak').textContent=C.peak+'x'}
+            if(p.has('u')){C.users=+p.get('u');$('users').value=C.users;$('v-users').textContent=C.users}
+            if(p.has('mc')){C.modelCost=+p.get('mc');$('model').value=C.modelCost}
+            if(p.get('c')==='1'){C.cache=true;$('t-cache').classList.add('on')}
+            if(p.get('b')==='1'){C.batch=true;$('t-batch').classList.add('on')}
+            if(p.get('q')==='1'){C.priority=true;$('t-priority').classList.add('on')}
+            if(p.has('s')) C.scenario=p.get('s');
+        }catch(e){}
+    }
+
+    // --- Init ---
+    loadFromHash();
+    update();
+    drawChart();
+    </script>
+</body>
+</html>
