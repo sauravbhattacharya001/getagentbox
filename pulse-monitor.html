@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Pulse Monitor — Real-Time Fleet Health Dashboard</title>
+    <meta name="description" content="Monitor AI agent fleet health in real-time with autonomous anomaly detection, degradation tracking, and proactive recovery recommendations.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #ffaa00;
+            --color-danger: #ff4444;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+        }
+        a { color: var(--color-primary); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .nav-brand { font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { color: var(--color-text-muted); font-size: 0.9rem; }
+        .nav-links a:hover { color: var(--color-text); text-decoration: none; }
+        .page-header { text-align: center; padding: 2rem 1rem 1rem; }
+        .page-header h1 { font-size: 2rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { color: var(--color-text-muted); max-width: 600px; margin: 0 auto; }
+        .controls { display: flex; gap: 1rem; justify-content: center; padding: 1rem; flex-wrap: wrap; }
+        .controls select, .controls button {
+            background: var(--color-bg-mid); color: var(--color-text); border: 1px solid rgba(255,255,255,0.15);
+            padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer;
+        }
+        .controls button:hover { border-color: var(--color-primary); }
+        .controls button.active { border-color: var(--color-success); color: var(--color-success); }
+        .dashboard { display: grid; grid-template-columns: 1fr 300px; gap: 1rem; padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; }
+        @media (max-width: 900px) { .dashboard { grid-template-columns: 1fr; } }
+        .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+        .agent-card {
+            background: var(--color-bg-mid); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem; position: relative; overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        .agent-card.warning { border-color: var(--color-warning); }
+        .agent-card.critical { border-color: var(--color-danger); }
+        .agent-card.offline { opacity: 0.5; border-color: rgba(255,255,255,0.05); }
+        .agent-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .agent-name { font-weight: 600; font-size: 0.95rem; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-dot.healthy { background: var(--color-success); box-shadow: 0 0 6px var(--color-success); }
+        .status-dot.warning { background: var(--color-warning); box-shadow: 0 0 6px var(--color-warning); }
+        .status-dot.critical { background: var(--color-danger); box-shadow: 0 0 6px var(--color-danger); animation: pulse-dot 1s infinite; }
+        .status-dot.offline { background: #555; }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .health-score { font-size: 1.8rem; font-weight: 700; text-align: center; margin: 0.25rem 0; }
+        .health-score.good { color: var(--color-success); }
+        .health-score.warn { color: var(--color-warning); }
+        .health-score.bad { color: var(--color-danger); }
+        .heartbeat-canvas { width: 100%; height: 50px; display: block; margin: 0.5rem 0; }
+        .vitals { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+        .vital { font-size: 0.75rem; color: var(--color-text-muted); }
+        .vital span { color: var(--color-text); font-weight: 600; }
+        .vital .sparkline { display: inline-block; vertical-align: middle; margin-left: 4px; }
+        .agent-diagnosis { font-size: 0.75rem; color: var(--color-warning); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); }
+        .insights {
+            background: var(--color-bg-mid); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem;
+            height: fit-content; position: sticky; top: 1rem;
+        }
+        .insights h3 { font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--color-primary); }
+        .fleet-score { font-size: 2.5rem; font-weight: 700; text-align: center; margin: 0.5rem 0; }
+        .insight-section { margin-top: 1rem; }
+        .insight-section h4 { font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+        .risk-item, .action-item { font-size: 0.8rem; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .risk-item .severity { font-weight: 600; }
+        .risk-item .severity.high { color: var(--color-danger); }
+        .risk-item .severity.medium { color: var(--color-warning); }
+        .risk-item .severity.low { color: var(--color-primary); }
+        .action-item .confidence { color: var(--color-text-muted); font-size: 0.7rem; margin-left: 4px; }
+        .timeline-section { padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; }
+        .timeline-section h3 { font-size: 0.95rem; color: var(--color-primary); margin-bottom: 0.5rem; }
+        .timeline {
+            background: var(--color-bg-mid); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+            padding: 1rem; max-height: 200px; overflow-y: auto; font-size: 0.8rem;
+        }
+        .timeline::-webkit-scrollbar { width: 4px; }
+        .timeline::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+        .tl-event { padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; gap: 0.5rem; }
+        .tl-time { color: var(--color-text-muted); white-space: nowrap; min-width: 55px; }
+        .tl-badge { padding: 0 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
+        .tl-badge.info { background: rgba(0,212,255,0.15); color: var(--color-primary); }
+        .tl-badge.warn { background: rgba(255,170,0,0.15); color: var(--color-warning); }
+        .tl-badge.error { background: rgba(255,68,68,0.15); color: var(--color-danger); }
+        .tl-badge.recovery { background: rgba(74,222,128,0.15); color: var(--color-success); }
+        .tl-badge.pattern { background: rgba(123,44,191,0.15); color: var(--color-accent); }
+        .tl-msg { color: var(--color-text-muted); }
+        .footer { text-align: center; padding: 2rem; color: var(--color-text-muted); font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <a href="index.html" class="nav-brand">🤖 AgentBox</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="simulator.html">Simulator</a>
+            <a href="sandbox.html">Sandbox</a>
+            <a href="sitemap.html">Sitemap</a>
+        </div>
+    </nav>
+    <div class="page-header">
+        <h1>🫀 Agent Pulse Monitor</h1>
+        <p>Real-time fleet health dashboard with autonomous anomaly detection, degradation tracking, and proactive recovery recommendations.</p>
+    </div>
+    <div class="controls">
+        <select id="scenario">
+            <option value="normal">Normal Operations</option>
+            <option value="cascade">Cascading Failure</option>
+            <option value="memleak">Memory Leak</option>
+            <option value="traffic">Traffic Spike</option>
+            <option value="recovery">Recovery Mode</option>
+        </select>
+        <select id="speed">
+            <option value="1">1× Speed</option>
+            <option value="2">2× Speed</option>
+            <option value="5">5× Speed</option>
+        </select>
+        <button id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
+        <button id="healBtn" onclick="toggleAutoHeal()">🩹 Auto-Heal: OFF</button>
+    </div>
+    <div class="dashboard">
+        <div class="agent-grid" id="agentGrid"></div>
+        <div class="insights" id="insightsPanel">
+            <h3>🧠 Proactive Insights</h3>
+            <div class="fleet-score" id="fleetScore">--</div>
+            <div style="text-align:center;font-size:0.8rem;color:var(--color-text-muted)">Fleet Health Score</div>
+            <div class="insight-section"><h4>⚠️ Top Risks</h4><div id="risksList"></div></div>
+            <div class="insight-section"><h4>🔮 Predictions</h4><div id="predictionsList"></div></div>
+            <div class="insight-section"><h4>💡 Recommended Actions</h4><div id="actionsList"></div></div>
+        </div>
+    </div>
+    <div class="timeline-section">
+        <h3>📡 Live Pulse Timeline</h3>
+        <div class="timeline" id="timeline"></div>
+    </div>
+    <div class="footer"><a href="index.html">← Back to AgentBox</a> · Agent Pulse Monitor simulates fleet health monitoring.</div>
+<script>
+const AGENTS=[{id:'alpha',name:'Agent Alpha',role:'Router'},{id:'beta',name:'Agent Beta',role:'Search'},{id:'gamma',name:'Agent Gamma',role:'Memory'},{id:'delta',name:'Agent Delta',role:'Executor'},{id:'epsilon',name:'Agent Epsilon',role:'Monitor'},{id:'zeta',name:'Agent Zeta',role:'Planner'}];
+let paused=false,autoHeal=false,speedMultiplier=1,tick=0;
+const HISTORY_LEN=60,state={},timelineEvents=[];
+AGENTS.forEach(a=>{state[a.id]={latency:45,throughput:120,errorRate:0.5,memory:35,history:{latency:[],throughput:[],errorRate:[],memory:[]},healthScore:100,status:'healthy',diagnosis:'',heartbeat:[],degradeCount:0,anomalyCount:0};for(let i=0;i<HISTORY_LEN;i++){state[a.id].history.latency.push(45+Math.random()*10);state[a.id].history.throughput.push(120+Math.random()*20);state[a.id].history.errorRate.push(0.5+Math.random()*0.5);state[a.id].history.memory.push(35+Math.random()*5);state[a.id].heartbeat.push(70+Math.random()*10)}});
+function rand(a,b){return a+Math.random()*(b-a)}
+function getScenarioModifiers(agentId,scenario){const idx=AGENTS.findIndex(a=>a.id===agentId);const t=tick;switch(scenario){case'cascade':const delay=idx*30;if(t>delay){const sev=Math.min((t-delay)/100,1);return{latency:sev*400,errorRate:sev*30,memory:sev*20}}return{};case'memleak':return{memory:Math.min(t*0.15,55),latency:Math.min(t*0.3,100)};case'traffic':const wave=Math.sin(t/20)*0.5+0.5;return{throughput:wave*300,latency:wave*150,errorRate:wave*10};case'recovery':const recov=Math.min(t/80,1);return{latency:(1-recov)*200,errorRate:(1-recov)*15,memory:(1-recov)*30};default:return{}}}
+function updateAgent(agentId){const s=state[agentId];const scenario=document.getElementById('scenario').value;const mods=getScenarioModifiers(agentId,scenario);let lat=45+rand(-5,5)+(mods.latency||0);let thr=120+rand(-10,10)+(mods.throughput||0);let err=0.5+rand(-0.2,0.2)+(mods.errorRate||0);let mem=35+rand(-2,2)+(mods.memory||0);if(autoHeal&&s.status!=='healthy'){lat*=0.9;err*=0.85;mem*=0.95}lat=Math.max(5,Math.min(999,lat));thr=Math.max(0,Math.min(999,thr));err=Math.max(0,Math.min(100,err));mem=Math.max(5,Math.min(99,mem));s.latency=lat;s.throughput=thr;s.errorRate=err;s.memory=mem;['latency','throughput','errorRate','memory'].forEach(k=>{s.history[k].push(s[k]);if(s.history[k].length>HISTORY_LEN)s.history[k].shift()});const hbBase=s.status==='critical'?40:s.status==='warning'?55:72;s.heartbeat.push(hbBase+rand(-8,8)+(s.status==='critical'?rand(-20,20):0));if(s.heartbeat.length>80)s.heartbeat.shift();let score=100;if(lat>100)score-=Math.min((lat-100)/5,30);if(err>3)score-=Math.min((err-3)*3,30);if(mem>70)score-=Math.min(mem-70,25);if(thr<50)score-=Math.min((50-thr)/2,15);s.healthScore=Math.max(0,Math.min(100,Math.round(score)));const prev=s.status;if(s.healthScore>=75)s.status='healthy';else if(s.healthScore>=45)s.status='warning';else if(s.healthScore>10)s.status='critical';else s.status='offline';const h=s.history.latency;if(h.length>=5){const last5=h.slice(-5);let declining=true;for(let i=1;i<last5.length;i++){if(last5[i]<=last5[i-1]){declining=false;break}}if(declining)s.degradeCount++;else s.degradeCount=Math.max(0,s.degradeCount-1)}const mean=h.reduce((a,b)=>a+b,0)/h.length;const std=Math.sqrt(h.reduce((a,b)=>a+(b-mean)**2,0)/h.length)||1;s.anomalyCount=Math.abs(s.latency-mean)>2*std?s.anomalyCount+1:Math.max(0,s.anomalyCount-1);s.diagnosis='';if(mem>80)s.diagnosis='🧠 Memory leak detected — consider restart';else if(err>15)s.diagnosis='🔥 High error rate — dependency failure likely';else if(lat>300)s.diagnosis='🐌 Severe latency — upstream bottleneck';else if(s.degradeCount>5)s.diagnosis='📉 Sustained degradation — investigate load';else if(s.anomalyCount>3)s.diagnosis='🔍 Anomalous behavior detected';if(prev!==s.status){const badge=s.status==='critical'?'error':s.status==='warning'?'warn':s.status==='healthy'?'recovery':'error';addTimelineEvent(badge,AGENTS.find(a=>a.id===agentId).name+' → '+s.status.toUpperCase()+' (score: '+s.healthScore+')');if(autoHeal&&(s.status==='warning'||s.status==='critical')){addTimelineEvent('recovery','Auto-heal triggered for '+AGENTS.find(a=>a.id===agentId).name)}}if(tick%25===0&&tick>0){const criticals=AGENTS.filter(a=>state[a.id].status==='critical'||state[a.id].status==='offline');if(criticals.length>=2){addTimelineEvent('pattern','Correlated degradation detected across '+criticals.map(a=>a.name).join(', '))}}}
+function addTimelineEvent(type,msg){const now=new Date();const time=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});timelineEvents.unshift({time,type,msg});if(timelineEvents.length>50)timelineEvents.pop()}
+function drawHeartbeat(canvas,data,color){const ctx=canvas.getContext('2d');const w=canvas.width=canvas.offsetWidth*2;const h=canvas.height=canvas.offsetHeight*2;ctx.scale(2,2);const cw=canvas.offsetWidth,ch=canvas.offsetHeight;ctx.clearRect(0,0,cw,ch);if(data.length<2)return;const min=Math.min(...data),max=Math.max(...data);const range=max-min||1;ctx.shadowBlur=6;ctx.shadowColor=color;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();for(let i=0;i<data.length;i++){const x=(i/(data.length-1))*cw;const y=ch-((data[i]-min)/range)*(ch*0.8)-ch*0.1;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke();ctx.shadowBlur=0}
+function sparklineSVG(data,w,h){w=w||40;h=h||12;if(data.length<2)return'';const min=Math.min(...data),max=Math.max(...data),range=max-min||1;const pts=data.map((v,i)=>(i/(data.length-1))*w+','+(h-((v-min)/range)*h)).join(' ');const last=data[data.length-1];const color=last>(min+range*0.7)?'#ff4444':last>(min+range*0.4)?'#ffaa00':'#4ade80';return'<svg class="sparkline" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><polyline fill="none" stroke="'+color+'" stroke-width="1.5" points="'+pts+'"/></svg>'}
+function renderAgents(){const grid=document.getElementById('agentGrid');if(!grid.children.length){AGENTS.forEach(a=>{const card=document.createElement('div');card.className='agent-card';card.id='card-'+a.id;card.innerHTML='<div class="agent-header"><div><span class="status-dot" id="dot-'+a.id+'"></span><span class="agent-name">'+a.name+'</span> <span style="color:var(--color-text-muted);font-size:0.75rem">('+a.role+')</span></div><span id="status-'+a.id+'" style="font-size:0.75rem"></span></div><div class="health-score" id="score-'+a.id+'">--</div><canvas class="heartbeat-canvas" id="hb-'+a.id+'"></canvas><div class="vitals" id="vitals-'+a.id+'"></div><div class="agent-diagnosis" id="diag-'+a.id+'"></div>';grid.appendChild(card)})}AGENTS.forEach(a=>{const s=state[a.id];document.getElementById('card-'+a.id).className='agent-card '+(s.status==='healthy'?'':s.status);document.getElementById('dot-'+a.id).className='status-dot '+s.status;document.getElementById('status-'+a.id).textContent=s.status.toUpperCase();const scoreEl=document.getElementById('score-'+a.id);scoreEl.textContent=s.healthScore;scoreEl.className='health-score '+(s.healthScore>=75?'good':s.healthScore>=45?'warn':'bad');const color=s.status==='critical'?'#ff4444':s.status==='warning'?'#ffaa00':'#4ade80';drawHeartbeat(document.getElementById('hb-'+a.id),s.heartbeat,color);document.getElementById('vitals-'+a.id).innerHTML='<div class="vital">Latency: <span>'+s.latency.toFixed(0)+'ms</span> '+sparklineSVG(s.history.latency.slice(-15))+'</div><div class="vital">Throughput: <span>'+s.throughput.toFixed(0)+'/s</span> '+sparklineSVG(s.history.throughput.slice(-15))+'</div><div class="vital">Error Rate: <span>'+s.errorRate.toFixed(1)+'%</span> '+sparklineSVG(s.history.errorRate.slice(-15))+'</div><div class="vital">Memory: <span>'+s.memory.toFixed(0)+'%</span> '+sparklineSVG(s.history.memory.slice(-15))+'</div>';document.getElementById('diag-'+a.id).textContent=s.diagnosis})}
+function renderInsights(){const scores=AGENTS.map(a=>state[a.id].healthScore);const avg=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);const fleetEl=document.getElementById('fleetScore');fleetEl.textContent=avg;fleetEl.style.color=avg>=75?'var(--color-success)':avg>=45?'var(--color-warning)':'var(--color-danger)';const risks=[];AGENTS.forEach(a=>{const s=state[a.id];if(s.memory>80)risks.push({text:a.name+': memory at '+s.memory.toFixed(0)+'%',severity:'high'});if(s.errorRate>10)risks.push({text:a.name+': error rate '+s.errorRate.toFixed(1)+'%',severity:'high'});if(s.latency>200)risks.push({text:a.name+': latency '+s.latency.toFixed(0)+'ms',severity:'medium'});if(s.degradeCount>3)risks.push({text:a.name+': sustained degradation',severity:'medium'})});risks.sort((a,b)=>(a.severity==='high'?0:1)-(b.severity==='high'?0:1));document.getElementById('risksList').innerHTML=risks.length===0?'<div class="risk-item" style="color:var(--color-success)">✅ No active risks</div>':risks.slice(0,5).map(r=>'<div class="risk-item"><span class="severity '+r.severity+'">'+r.severity.toUpperCase()+'</span> '+r.text+'</div>').join('');const preds=[];AGENTS.forEach(a=>{const s=state[a.id];const memH=s.history.memory;if(memH.length>=10){const trend=(memH[memH.length-1]-memH[memH.length-10])/10;if(trend>0.5){const ticksTo90=(90-s.memory)/trend;if(ticksTo90>0&&ticksTo90<100)preds.push(a.name+' may hit 90% memory in ~'+Math.round(ticksTo90)+' ticks')}}if(s.degradeCount>2&&s.status==='warning')preds.push(a.name+' trending toward critical')});document.getElementById('predictionsList').innerHTML=preds.length===0?'<div style="font-size:0.8rem;color:var(--color-text-muted)">No concerning trends</div>':preds.slice(0,4).map(p=>'<div class="risk-item">'+p+'</div>').join('');const actions=[];AGENTS.forEach(a=>{const s=state[a.id];if(s.memory>80)actions.push({text:'Restart '+a.name+' to reclaim memory',conf:92});if(s.errorRate>15)actions.push({text:'Check '+a.name+' dependencies',conf:87});if(s.latency>300)actions.push({text:'Scale '+a.name+' horizontally',conf:78});if(s.status==='offline')actions.push({text:'Failover '+a.name+' to standby',conf:95})});if(actions.length===0)actions.push({text:'Fleet healthy — no actions needed',conf:100});document.getElementById('actionsList').innerHTML=actions.slice(0,4).map(a=>'<div class="action-item">'+a.text+' <span class="confidence">'+a.conf+'%</span></div>').join('')}
+function renderTimeline(){const el=document.getElementById('timeline');if(timelineEvents.length===0){el.innerHTML='<div style="color:var(--color-text-muted);text-align:center;padding:1rem">Monitoring... events will appear here</div>';return}el.innerHTML=timelineEvents.slice(0,30).map(e=>'<div class="tl-event"><span class="tl-time">'+e.time+'</span><span class="tl-badge '+e.type+'">'+e.type+'</span><span class="tl-msg">'+e.msg+'</span></div>').join('')}
+function togglePause(){paused=!paused;document.getElementById('pauseBtn').textContent=paused?'▶ Resume':'⏸ Pause'}
+function toggleAutoHeal(){autoHeal=!autoHeal;const btn=document.getElementById('healBtn');btn.textContent='🩹 Auto-Heal: '+(autoHeal?'ON':'OFF');btn.classList.toggle('active',autoHeal);if(autoHeal)addTimelineEvent('recovery','Auto-heal system activated')}
+document.getElementById('speed').addEventListener('change',e=>{speedMultiplier=parseInt(e.target.value)});
+document.getElementById('scenario').addEventListener('change',()=>{tick=0});
+let lastUpdate=0;function loop(ts){requestAnimationFrame(loop);if(paused)return;const interval=500/speedMultiplier;if(ts-lastUpdate<interval)return;lastUpdate=ts;tick++;AGENTS.forEach(a=>updateAgent(a.id));renderAgents();renderInsights();renderTimeline()}
+addTimelineEvent('info','Pulse Monitor initialized — monitoring 6 agents');renderAgents();renderInsights();renderTimeline();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
