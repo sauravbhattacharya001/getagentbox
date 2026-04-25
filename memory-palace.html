@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Memory Palace — Interactive Spatial Memory Visualization</title>
+    <meta name="description" content="Explore how AI agents store, retrieve, and forget information through an interactive spatial memory palace visualization.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #ffaa00;
+            --color-danger: #ff4444;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--color-bg-deep); color: var(--color-text); min-height: 100vh; }
+        a { color: var(--color-primary); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .nav-brand { font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { color: var(--color-text-muted); font-size: 0.9rem; }
+        .nav-links a:hover { color: var(--color-text); text-decoration: none; }
+        .page-header { text-align: center; padding: 2rem 1rem 1rem; }
+        .page-header h1 { font-size: 2rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { color: var(--color-text-muted); max-width: 600px; margin: 0 auto; }
+        .main-layout { display: grid; grid-template-columns: 1fr 340px; gap: 1rem; padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; }
+        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+        .panel { background: var(--color-surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem; }
+        .panel h2 { font-size: 1rem; margin-bottom: 0.75rem; color: var(--color-primary); }
+        #palaceCanvas { width: 100%; border-radius: 8px; cursor: pointer; display: block; }
+        .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .btn { padding: 0.5rem 1rem; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: var(--color-surface); color: var(--color-text); cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+        .btn:hover { background: var(--color-surface-hover); border-color: var(--color-primary); }
+        .btn.active { background: rgba(0,212,255,0.15); border-color: var(--color-primary); color: var(--color-primary); }
+        .btn-primary { background: rgba(0,212,255,0.2); border-color: var(--color-primary); color: var(--color-primary); }
+        input[type=text] { padding: 0.5rem 0.75rem; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: rgba(0,0,0,0.3); color: var(--color-text); font-size: 0.85rem; flex: 1; min-width: 120px; }
+        input[type=text]::placeholder { color: rgba(255,255,255,0.3); }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
+        .stat-card { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 0.6rem; text-align: center; }
+        .stat-card .val { font-size: 1.4rem; font-weight: 700; color: var(--color-primary); }
+        .stat-card .lbl { font-size: 0.7rem; color: var(--color-text-muted); margin-top: 2px; }
+        .room-bar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; font-size: 0.8rem; }
+        .room-bar .bar-bg { flex: 1; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+        .room-bar .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+        .memory-list { max-height: 200px; overflow-y: auto; font-size: 0.8rem; }
+        .memory-item { display: flex; justify-content: space-between; align-items: center; padding: 0.35rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); gap: 0.5rem; }
+        .memory-item .text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .memory-item .strength { font-size: 0.7rem; color: var(--color-text-muted); white-space: nowrap; }
+        .memory-item .actions { display: flex; gap: 0.3rem; }
+        .memory-item .actions button { padding: 2px 6px; font-size: 0.7rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; background: transparent; color: var(--color-text-muted); cursor: pointer; }
+        .memory-item .actions button:hover { color: var(--color-primary); border-color: var(--color-primary); }
+        .log-area { max-height: 160px; overflow-y: auto; font-size: 0.75rem; font-family: 'SF Mono', monospace; color: var(--color-text-muted); }
+        .log-area div { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .log-area .auto { color: var(--color-warning); }
+        .retrieval-path { font-size: 0.8rem; color: var(--color-text-muted); margin-top: 0.5rem; min-height: 2rem; }
+        .retrieval-path .found { color: var(--color-success); }
+        .retrieval-path .notfound { color: var(--color-danger); }
+        .selected-room { background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem; }
+        .selected-room h3 { font-size: 0.9rem; color: var(--color-primary); margin-bottom: 0.3rem; }
+        .selected-room p { font-size: 0.75rem; color: var(--color-text-muted); }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <a class="nav-brand" href="index.html">🧊 AgentBox</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="sitemap.html">Sitemap</a>
+            <a href="sandbox.html">Sandbox</a>
+        </div>
+    </nav>
+    <div class="page-header">
+        <h1>🏛️ Agent Memory Palace</h1>
+        <p>Explore how AI agents store, retrieve, and forget information. Add memories, watch them decay, rehearse to strengthen, and observe autonomous consolidation.</p>
+    </div>
+    <div class="main-layout">
+        <div>
+            <div class="panel" style="margin-bottom:1rem">
+                <div class="controls">
+                    <input type="text" id="memInput" placeholder="Enter a new memory..." />
+                    <button class="btn btn-primary" onclick="addMemory()">💾 Store</button>
+                    <button class="btn" id="autoBtn" onclick="toggleAuto()">🤖 Auto-Consolidate: OFF</button>
+                </div>
+                <canvas id="palaceCanvas" height="420"></canvas>
+            </div>
+            <div class="panel">
+                <h2>🔍 Memory Search & Retrieval</h2>
+                <div class="controls">
+                    <input type="text" id="searchInput" placeholder="Search memories..." />
+                    <button class="btn btn-primary" onclick="searchMemory()">Retrieve</button>
+                </div>
+                <div class="retrieval-path" id="retrievalPath">Type a query and click Retrieve to simulate memory search.</div>
+            </div>
+        </div>
+        <div>
+            <div class="panel" style="margin-bottom:1rem">
+                <h2>📊 Memory Stats</h2>
+                <div class="stat-grid">
+                    <div class="stat-card"><div class="val" id="statTotal">0</div><div class="lbl">Total Memories</div></div>
+                    <div class="stat-card"><div class="val" id="statActive">0</div><div class="lbl">Active</div></div>
+                    <div class="stat-card"><div class="val" id="statDecayed">0</div><div class="lbl">Decayed</div></div>
+                    <div class="stat-card"><div class="val" id="statHealth">100</div><div class="lbl">Health Score</div></div>
+                </div>
+                <h2>📦 Room Utilization</h2>
+                <div id="roomBars"></div>
+            </div>
+            <div class="panel" style="margin-bottom:1rem" id="selectedRoomPanel" hidden>
+                <div class="selected-room">
+                    <h3 id="selRoomName"></h3>
+                    <p id="selRoomDesc"></p>
+                </div>
+                <h2>Memories in Room</h2>
+                <div class="memory-list" id="roomMemories"></div>
+            </div>
+            <div class="panel">
+                <h2>📜 Activity Log</h2>
+                <div class="log-area" id="logArea"></div>
+            </div>
+        </div>
+    </div>
+<script>
+const ROOMS = [
+    { id: 'stb', name: 'Short-Term Buffer', desc: 'New memories land here first. Fast access, rapid decay.', color: '#00d4ff', capacity: 7, x: 0.15, y: 0.22, w: 0.22, h: 0.25 },
+    { id: 'wm', name: 'Working Memory', desc: 'Active processing space. Memories being used right now.', color: '#646cff', capacity: 5, x: 0.42, y: 0.1, w: 0.2, h: 0.22 },
+    { id: 'epi', name: 'Episodic Store', desc: 'Personal experiences and events. Decays slower.', color: '#7b2cbf', capacity: 20, x: 0.7, y: 0.15, w: 0.24, h: 0.28 },
+    { id: 'sem', name: 'Semantic Store', desc: 'Facts and knowledge. Very stable, slow decay.', color: '#4ade80', capacity: 30, x: 0.12, y: 0.58, w: 0.25, h: 0.3 },
+    { id: 'proc', name: 'Procedural Store', desc: 'Skills and how-to knowledge. Nearly permanent.', color: '#ffaa00', capacity: 15, x: 0.42, y: 0.55, w: 0.22, h: 0.3 },
+    { id: 'arch', name: 'Archive Vault', desc: 'Deep storage. Rarely accessed, very slow retrieval.', color: '#ff4444', capacity: 50, x: 0.7, y: 0.55, w: 0.24, h: 0.32 }
+];
+const CONSOLIDATION_PATHS = [
+    ['stb','wm'], ['wm','epi'], ['wm','sem'], ['wm','proc'], ['epi','arch'], ['sem','arch'], ['stb','sem']
+];
+
+let memories = [];
+let nextId = 1;
+let autoMode = false;
+let selectedRoom = null;
+let particles = [];
+let logs = [];
+let decayTimer = 0;
+
+const canvas = document.getElementById('palaceCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+    canvas.width = canvas.clientWidth * (window.devicePixelRatio || 1);
+    canvas.height = 420 * (window.devicePixelRatio || 1);
+    ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+function getRoom(id) { return ROOMS.find(r => r.id === id); }
+function roomMemories(id) { return memories.filter(m => m.room === id && !m.decayed); }
+function roomCenter(r) { return { x: (r.x + r.w/2) * canvas.clientWidth, y: (r.y + r.h/2) * 420 }; }
+
+function addLog(msg, isAuto) {
+    const t = new Date().toLocaleTimeString();
+    logs.unshift({ t, msg, isAuto });
+    if (logs.length > 100) logs.pop();
+    renderLog();
+}
+function renderLog() {
+    const el = document.getElementById('logArea');
+    el.innerHTML = logs.slice(0, 40).map(l => `<div${l.isAuto ? ' class="auto"' : ''}>[${l.t}] ${l.msg}</div>`).join('');
+}
+
+function addMemory() {
+    const input = document.getElementById('memInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const stb = getRoom('stb');
+    if (roomMemories('stb').length >= stb.capacity) {
+        addLog('⚠️ Short-Term Buffer full! Memory rejected.');
+        return;
+    }
+    memories.push({ id: nextId++, text, room: 'stb', strength: 1.0, rehearsals: 0, created: Date.now(), lastAccess: Date.now(), decayed: false, accessCount: 0 });
+    input.value = '';
+    addLog(`💾 Stored: "${text.slice(0,30)}${text.length>30?'...':''}" → Short-Term Buffer`);
+    spawnParticle(null, 'stb');
+    updateAll();
+}
+
+function rehearseMemory(id) {
+    const m = memories.find(x => x.id === id);
+    if (!m || m.decayed) return;
+    m.strength = Math.min(1.0, m.strength + 0.3);
+    m.rehearsals++;
+    m.lastAccess = Date.now();
+    m.accessCount++;
+    addLog(`🔄 Rehearsed: "${m.text.slice(0,25)}..." (strength: ${(m.strength*100).toFixed(0)}%)`);
+    updateAll();
+}
+
+function consolidateMemory(id) {
+    const m = memories.find(x => x.id === id);
+    if (!m || m.decayed) return;
+    const paths = { stb: 'wm', wm: m.rehearsals > 2 ? 'sem' : 'epi', epi: 'arch', sem: 'arch', proc: 'arch' };
+    const target = paths[m.room];
+    if (!target) { addLog(`📦 "${m.text.slice(0,20)}..." is already in deepest storage.`); return; }
+    const tr = getRoom(target);
+    if (roomMemories(target).length >= tr.capacity) { addLog(`⚠️ ${tr.name} is full!`); return; }
+    const from = m.room;
+    m.room = target;
+    m.strength = Math.min(1.0, m.strength + 0.1);
+    m.lastAccess = Date.now();
+    spawnParticle(from, target);
+    addLog(`📤 Consolidated: "${m.text.slice(0,20)}..." → ${tr.name}`);
+    updateAll();
+}
+
+function spawnParticle(fromId, toId) {
+    const from = fromId ? roomCenter(getRoom(fromId)) : { x: canvas.clientWidth / 2, y: 0 };
+    const to = roomCenter(getRoom(toId));
+    particles.push({ x: from.x, y: from.y, tx: to.x, ty: to.y, progress: 0, color: getRoom(toId).color });
+}
+
+function decayTick() {
+    const now = Date.now();
+    memories.forEach(m => {
+        if (m.decayed) return;
+        const age = (now - m.lastAccess) / 1000;
+        const decayRates = { stb: 0.015, wm: 0.01, epi: 0.003, sem: 0.001, proc: 0.0005, arch: 0.0002 };
+        const rate = decayRates[m.room] || 0.005;
+        m.strength = Math.max(0, m.strength - rate);
+        if (m.strength <= 0) {
+            m.decayed = true;
+            addLog(`💨 Decayed: "${m.text.slice(0,25)}..." in ${getRoom(m.room).name}`);
+        }
+    });
+}
+
+function autoConsolidate() {
+    if (!autoMode) return;
+    const candidates = memories.filter(m => !m.decayed && m.room === 'stb' && m.rehearsals >= 1);
+    if (candidates.length > 0) {
+        const best = candidates.sort((a,b) => b.accessCount - a.accessCount)[0];
+        consolidateMemory(best.id);
+        addLog(`🤖 Auto: consolidated "${best.text.slice(0,20)}..."`, true);
+    }
+    // Auto-promote from wm
+    const wmCandidates = memories.filter(m => !m.decayed && m.room === 'wm' && m.rehearsals >= 2);
+    if (wmCandidates.length > 0) {
+        consolidateMemory(wmCandidates[0].id);
+        addLog(`🤖 Auto: promoted from Working Memory`, true);
+    }
+    // Auto-prune deeply decayed
+    const pruned = memories.filter(m => m.decayed);
+    if (pruned.length > 10) {
+        const oldest = pruned.sort((a,b) => a.created - b.created)[0];
+        memories = memories.filter(m => m.id !== oldest.id);
+        addLog(`🤖 Auto: pruned old decayed memory`, true);
+    }
+}
+
+function toggleAuto() {
+    autoMode = !autoMode;
+    document.getElementById('autoBtn').textContent = `🤖 Auto-Consolidate: ${autoMode ? 'ON' : 'OFF'}`;
+    document.getElementById('autoBtn').classList.toggle('active', autoMode);
+    addLog(autoMode ? '🤖 Auto-consolidation ENABLED' : '🤖 Auto-consolidation DISABLED');
+}
+
+function searchMemory() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const el = document.getElementById('retrievalPath');
+    if (!q) { el.innerHTML = 'Enter a search query.'; return; }
+    // Search all rooms in retrieval order
+    const searchOrder = ['wm','stb','epi','sem','proc','arch'];
+    let found = null, path = [], latency = 0;
+    for (const rid of searchOrder) {
+        path.push(getRoom(rid).name);
+        latency += { wm: 5, stb: 10, epi: 30, sem: 50, proc: 80, arch: 200 }[rid];
+        const match = memories.find(m => !m.decayed && m.room === rid && m.text.toLowerCase().includes(q));
+        if (match) { found = match; break; }
+    }
+    if (found) {
+        found.lastAccess = Date.now();
+        found.accessCount++;
+        found.strength = Math.min(1.0, found.strength + 0.05);
+        const conf = Math.round(found.strength * 100);
+        el.innerHTML = `<span class="found">✅ Found!</span> "${found.text}" in <b>${getRoom(found.room).name}</b><br>Path: ${path.join(' → ')} | Confidence: ${conf}% | Latency: ~${latency}ms`;
+        // Animate retrieval path
+        for (let i = 1; i < path.length; i++) {
+            const from = ROOMS.find(r => r.name === path[i-1]);
+            const to = ROOMS.find(r => r.name === path[i]);
+            if (from && to) setTimeout(() => spawnParticle(from.id, to.id), i * 200);
+        }
+        addLog(`🔍 Retrieved: "${found.text.slice(0,25)}..." (${latency}ms, ${conf}%)`);
+    } else {
+        el.innerHTML = `<span class="notfound">❌ Not found.</span> Searched: ${path.join(' → ')} | Total latency: ~${latency}ms`;
+        addLog(`🔍 Search failed: "${q}"`);
+    }
+    updateAll();
+}
+
+function updateAll() {
+    // Stats
+    const active = memories.filter(m => !m.decayed);
+    const decayed = memories.filter(m => m.decayed);
+    document.getElementById('statTotal').textContent = memories.length;
+    document.getElementById('statActive').textContent = active.length;
+    document.getElementById('statDecayed').textContent = decayed.length;
+    const health = memories.length === 0 ? 100 : Math.round((active.length / memories.length) * 100);
+    document.getElementById('statHealth').textContent = health;
+    document.getElementById('statHealth').style.color = health > 70 ? '#4ade80' : health > 40 ? '#ffaa00' : '#ff4444';
+
+    // Room bars
+    const barsEl = document.getElementById('roomBars');
+    barsEl.innerHTML = ROOMS.map(r => {
+        const count = roomMemories(r.id).length;
+        const pct = Math.round((count / r.capacity) * 100);
+        return `<div class="room-bar"><span style="width:90px;color:${r.color}">${r.name.split(' ')[0]}</span><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${r.color}"></div></div><span style="width:40px;text-align:right">${count}/${r.capacity}</span></div>`;
+    }).join('');
+
+    // Selected room memories
+    if (selectedRoom) {
+        const panel = document.getElementById('selectedRoomPanel');
+        const r = getRoom(selectedRoom);
+        panel.hidden = false;
+        document.getElementById('selRoomName').textContent = r.name;
+        document.getElementById('selRoomDesc').textContent = r.desc;
+        const mems = roomMemories(selectedRoom);
+        document.getElementById('roomMemories').innerHTML = mems.length === 0 ? '<div style="color:var(--color-text-muted);padding:0.5rem;font-size:0.8rem">No memories here.</div>' :
+            mems.map(m => `<div class="memory-item" style="opacity:${0.3 + m.strength * 0.7}"><span class="text">${m.text}</span><span class="strength">${(m.strength*100).toFixed(0)}%</span><span class="actions"><button onclick="rehearseMemory(${m.id})">🔄</button><button onclick="consolidateMemory(${m.id})">📤</button></span></div>`).join('');
+    }
+}
+
+function drawPalace() {
+    const W = canvas.clientWidth, H = 420;
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw consolidation paths
+    ctx.lineWidth = 1;
+    CONSOLIDATION_PATHS.forEach(([a, b]) => {
+        const ra = getRoom(a), rb = getRoom(b);
+        const ca = roomCenter(ra), cb = roomCenter(rb);
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.setLineDash([4, 6]);
+        ctx.moveTo(ca.x, ca.y);
+        ctx.lineTo(cb.x, cb.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    });
+
+    // Draw rooms
+    ROOMS.forEach(r => {
+        const x = r.x * W, y = r.y * H, w = r.w * W, h = r.h * H;
+        const count = roomMemories(r.id).length;
+        const activity = count / r.capacity;
+        const isSel = selectedRoom === r.id;
+
+        // Glow
+        if (activity > 0 || isSel) {
+            ctx.shadowColor = r.color;
+            ctx.shadowBlur = 10 + activity * 20;
+        }
+        ctx.fillStyle = isSel ? `rgba(${hexToRgb(r.color)},0.15)` : `rgba(255,255,255,0.03)`;
+        ctx.strokeStyle = isSel ? r.color : `rgba(${hexToRgb(r.color)},${0.2 + activity * 0.5})`;
+        ctx.lineWidth = isSel ? 2 : 1;
+        ctx.beginPath();
+        roundRect(ctx, x, y, w, h, 10);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Label
+        ctx.fillStyle = r.color;
+        ctx.font = 'bold 12px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(r.name, x + w/2, y + 20);
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '10px -apple-system, sans-serif';
+        ctx.fillText(`${count}/${r.capacity}`, x + w/2, y + 35);
+
+        // Memory dots
+        const mems = roomMemories(r.id);
+        mems.forEach((m, i) => {
+            const cols = Math.ceil(Math.sqrt(r.capacity));
+            const mx = x + 15 + (i % cols) * 16;
+            const my = y + 48 + Math.floor(i / cols) * 16;
+            if (my < y + h - 5) {
+                ctx.beginPath();
+                ctx.arc(mx, my, 5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${hexToRgb(r.color)},${0.2 + m.strength * 0.8})`;
+                ctx.fill();
+            }
+        });
+    });
+
+    // Draw particles
+    particles = particles.filter(p => p.progress < 1);
+    particles.forEach(p => {
+        p.progress += 0.02;
+        const t = p.progress;
+        const px = p.x + (p.tx - p.x) * t;
+        const py = p.y + (p.ty - p.y) * t;
+        ctx.beginPath();
+        ctx.arc(px, py, 3, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    });
+
+    requestAnimationFrame(drawPalace);
+}
+
+function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return `${r},${g},${b}`;
+}
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y);
+}
+
+canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / canvas.clientWidth;
+    const my = (e.clientY - rect.top) / 420;
+    selectedRoom = null;
+    ROOMS.forEach(r => {
+        if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) selectedRoom = r.id;
+    });
+    updateAll();
+});
+
+document.getElementById('memInput').addEventListener('keydown', e => { if (e.key === 'Enter') addMemory(); });
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchMemory(); });
+
+// Seed some starter memories
+['User preference: dark mode', 'API key format: sk-xxx', 'Meeting at 3pm Tuesday', 'Python is interpreted', 'How to deploy: git push'].forEach(t => {
+    memories.push({ id: nextId++, text: t, room: ['stb','wm','epi','sem','proc'][Math.floor(Math.random()*5)], strength: 0.5 + Math.random()*0.5, rehearsals: Math.floor(Math.random()*3), created: Date.now() - Math.random()*60000, lastAccess: Date.now(), decayed: false, accessCount: Math.floor(Math.random()*5) });
+});
+
+// Main loop
+setInterval(() => {
+    decayTimer++;
+    decayTick();
+    if (decayTimer % 5 === 0) autoConsolidate();
+    updateAll();
+}, 1000);
+
+updateAll();
+drawPalace();
+addLog('🏛️ Memory Palace initialized with sample memories.');
+</script>
+</body>
+</html>
