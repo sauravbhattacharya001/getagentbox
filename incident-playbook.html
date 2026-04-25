@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Incident Playbook — AgentBox</title>
+    <meta name="description" content="Interactive incident response playbook builder with visual flowchart editor, simulation, risk assessment, and autonomous optimization.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #fbbf24;
+            --color-danger: #ef4444;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+        }
+        .ip-header { text-align: center; padding: 2rem 1rem 1rem; }
+        .ip-header h1 {
+            font-size: 2.2rem; margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--color-danger), var(--color-warning), var(--color-primary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .ip-header p { color: var(--color-text-muted); max-width: 650px; margin: 0 auto; }
+        .ip-layout {
+            display: grid; grid-template-columns: 260px 1fr 300px; gap: 1rem;
+            padding: 1rem; max-width: 1500px; margin: 0 auto; min-height: 700px;
+        }
+        .ip-card {
+            background: var(--color-bg-mid); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 1rem; overflow: hidden;
+        }
+        .ip-card h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: 0.75rem; }
+        .ip-btn {
+            padding: 0.4rem 0.8rem; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+            background: var(--color-surface); color: var(--color-text); cursor: pointer;
+            font-size: 0.8rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem;
+        }
+        .ip-btn:hover { background: var(--color-surface-hover); }
+        .ip-btn.primary { border-color: var(--color-primary); color: var(--color-primary); }
+        .ip-btn.primary:hover { background: rgba(0,212,255,0.15); }
+        .ip-btn.danger { border-color: var(--color-danger); color: var(--color-danger); }
+        .ip-btn.success { border-color: var(--color-success); color: var(--color-success); }
+        .ip-btn.accent { border-color: var(--color-accent); color: var(--color-accent); }
+        .pb-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .pb-item {
+            padding: 0.6rem; border-radius: 8px; background: var(--color-surface);
+            cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+        }
+        .pb-item:hover { background: var(--color-surface-hover); }
+        .pb-item.active { border-color: var(--color-primary); }
+        .pb-item .pb-name { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem; }
+        .pb-item .pb-meta { font-size: 0.7rem; color: var(--color-text-muted); }
+        .canvas-wrap { position: relative; }
+        .canvas-wrap canvas { width: 100%; height: 550px; border-radius: 8px; background: rgba(0,0,0,0.2); cursor: grab; }
+        .canvas-toolbar { display: flex; gap: 0.4rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+        .node-props { margin-top: 0.5rem; padding: 0.6rem; background: var(--color-surface); border-radius: 8px; display: none; font-size: 0.8rem; }
+        .node-props.visible { display: block; }
+        .node-props label { display: block; color: var(--color-text-muted); margin: 0.3rem 0 0.1rem; font-size: 0.7rem; }
+        .node-props input, .node-props select, .node-props textarea {
+            width: 100%; padding: 0.3rem 0.5rem; background: var(--color-bg-deep);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--color-text); font-size: 0.8rem; font-family: inherit;
+        }
+        .node-props textarea { resize: vertical; min-height: 50px; }
+        .sim-timeline { max-height: 300px; overflow-y: auto; }
+        .sim-step { padding: 0.4rem; border-left: 3px solid rgba(255,255,255,0.1); margin-bottom: 0.3rem; font-size: 0.75rem; transition: all 0.3s; }
+        .sim-step.running { border-color: var(--color-primary); background: rgba(0,212,255,0.05); }
+        .sim-step.success { border-color: var(--color-success); }
+        .sim-step.fail { border-color: var(--color-danger); }
+        .sim-step .step-name { font-weight: 600; }
+        .sim-step .step-msg { color: var(--color-text-muted); margin-top: 0.1rem; }
+        .metric-bar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; font-size: 0.75rem; }
+        .metric-bar .bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+        .metric-bar .bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s, background 0.5s; }
+        .metric-bar .metric-val { min-width: 35px; text-align: right; font-variant-numeric: tabular-nums; }
+        .risk-score { text-align: center; padding: 0.8rem; margin: 0.5rem 0; }
+        .risk-ring {
+            width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 0.4rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; font-weight: 700; border: 4px solid; transition: all 0.5s;
+        }
+        .suggestions { font-size: 0.75rem; }
+        .suggestion { padding: 0.4rem; margin-bottom: 0.3rem; border-radius: 6px; background: var(--color-surface); border-left: 3px solid var(--color-warning); }
+        .suggestion .sug-title { font-weight: 600; margin-bottom: 0.1rem; }
+        .suggestion .sug-desc { color: var(--color-text-muted); }
+        .export-area { margin-top: 0.5rem; }
+        .export-area textarea {
+            width: 100%; height: 80px; background: var(--color-bg-deep);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+            color: var(--color-text); font-family: monospace; font-size: 0.7rem; padding: 0.4rem; resize: vertical;
+        }
+        @media (max-width: 1000px) { .ip-layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="ip-header">
+        <h1>📋 Agent Incident Playbook</h1>
+        <p>Build automated incident response runbooks with visual flowcharts, run simulations, and get autonomous optimization suggestions.</p>
+    </div>
+    <div class="ip-layout">
+        <div class="ip-card">
+            <h3>📚 Playbook Library</h3>
+            <button class="ip-btn primary" style="width:100%;margin-bottom:0.5rem;justify-content:center;" onclick="newPlaybook()">+ New Playbook</button>
+            <div class="pb-list" id="pbList"></div>
+        </div>
+        <div class="ip-card canvas-wrap">
+            <h3 id="editorTitle">🔧 Playbook Editor</h3>
+            <div class="canvas-toolbar">
+                <button class="ip-btn danger" onclick="addNode('trigger')">🔴 Trigger</button>
+                <button class="ip-btn" style="border-color:var(--color-warning);color:var(--color-warning);" onclick="addNode('condition')">🔀 Condition</button>
+                <button class="ip-btn primary" onclick="addNode('action')">⚡ Action</button>
+                <button class="ip-btn accent" onclick="addNode('escalation')">📢 Escalation</button>
+                <button class="ip-btn" onclick="addNode('wait')">⏳ Wait</button>
+                <button class="ip-btn success" onclick="addNode('loop')">🔄 Loop</button>
+                <button class="ip-btn" onclick="deleteSelected()" title="Delete selected node">🗑️</button>
+            </div>
+            <canvas id="flowCanvas" width="900" height="550"></canvas>
+            <div class="node-props" id="nodeProps">
+                <strong id="propTitle"></strong>
+                <label>Name</label><input type="text" id="propName" oninput="updateNodeProp('name',this.value)">
+                <label>Description</label><textarea id="propDesc" oninput="updateNodeProp('desc',this.value)"></textarea>
+                <label>Config</label><input type="text" id="propConfig" placeholder="e.g. threshold=80, timeout=30s" oninput="updateNodeProp('config',this.value)">
+            </div>
+        </div>
+        <div class="ip-card" style="display:flex;flex-direction:column;gap:0.8rem;">
+            <div>
+                <h3>▶️ Simulation</h3>
+                <div style="display:flex;gap:0.4rem;margin-bottom:0.5rem;">
+                    <button class="ip-btn success" onclick="runSimulation()">Run</button>
+                    <button class="ip-btn" onclick="resetSimulation()">Reset</button>
+                </div>
+                <div id="simMetrics">
+                    <div class="metric-bar"><span>CPU</span><div class="bar-bg"><div class="bar-fill" id="metCPU" style="width:45%;background:var(--color-success);"></div></div><span class="metric-val" id="metCPUVal">45%</span></div>
+                    <div class="metric-bar"><span>Mem</span><div class="bar-bg"><div class="bar-fill" id="metMem" style="width:60%;background:var(--color-warning);"></div></div><span class="metric-val" id="metMemVal">60%</span></div>
+                    <div class="metric-bar"><span>Err</span><div class="bar-bg"><div class="bar-fill" id="metErr" style="width:5%;background:var(--color-success);"></div></div><span class="metric-val" id="metErrVal">5/m</span></div>
+                </div>
+                <div class="sim-timeline" id="simTimeline"></div>
+            </div>
+            <div>
+                <h3>🛡️ Risk Assessment</h3>
+                <div class="risk-score">
+                    <div class="risk-ring" id="riskRing" style="border-color:var(--color-success);color:var(--color-success);">—</div>
+                    <div id="riskLabel" style="font-size:0.75rem;color:var(--color-text-muted);">Load a playbook</div>
+                </div>
+                <div style="font-size:0.7rem;color:var(--color-text-muted);margin-bottom:0.3rem;" id="coverageText">Coverage: —</div>
+            </div>
+            <div>
+                <h3>🤖 Auto-Optimize</h3>
+                <button class="ip-btn accent" onclick="autoOptimize()" style="margin-bottom:0.4rem;">Analyze Playbook</button>
+                <div class="suggestions" id="suggestions"></div>
+            </div>
+            <div class="export-area">
+                <h3>📤 Export</h3>
+                <button class="ip-btn" onclick="exportJSON()">Export JSON</button>
+                <button class="ip-btn" onclick="copyLink()">Copy Link</button>
+                <textarea id="exportOut" readonly placeholder="Export output appears here..."></textarea>
+            </div>
+        </div>
+    </div>
+    <script>
+    const NODE_TYPES = {
+        trigger:{emoji:'🔴',color:'#ef4444',label:'Trigger'},condition:{emoji:'🔀',color:'#fbbf24',label:'Condition'},
+        action:{emoji:'⚡',color:'#00d4ff',label:'Action'},escalation:{emoji:'📢',color:'#7b2cbf',label:'Escalation'},
+        wait:{emoji:'⏳',color:'#6b7280',label:'Wait'},loop:{emoji:'🔄',color:'#4ade80',label:'Loop'}
+    };
+    const PRESETS=[
+        {name:'High CPU Auto-Scale',desc:'Trigger on CPU > 80%, scale up, verify, notify',
+         nodes:[{id:1,type:'trigger',name:'CPU > 80%',desc:'Monitor CPU utilization',config:'threshold=80%,window=5m',x:400,y:30},
+                {id:2,type:'condition',name:'Duration > 2m?',desc:'Sustained high CPU',config:'min_duration=2m',x:400,y:130},
+                {id:3,type:'action',name:'Scale Up Fleet',desc:'Add 2 agent instances',config:'scale_by=2',x:250,y:230},
+                {id:4,type:'wait',name:'Wait 60s',desc:'Allow scaling effect',config:'duration=60s',x:250,y:330},
+                {id:5,type:'condition',name:'CPU < 70%?',desc:'Check if scaling helped',config:'threshold=70%',x:250,y:430},
+                {id:6,type:'escalation',name:'Notify Team',desc:'Send success notification',config:'channel=#ops',x:150,y:530},
+                {id:7,type:'escalation',name:'Page On-Call',desc:'Scaling did not help',config:'severity=high',x:550,y:230}],
+         edges:[[1,2],[2,3],[2,7],[3,4],[4,5],[5,6],[5,7]],
+         simSteps:[{nodeId:1,status:'success',msg:'CPU at 92% detected',metrics:{cpu:92,mem:60,err:5}},
+                   {nodeId:2,status:'success',msg:'Sustained for 3m12s — proceeding',metrics:{cpu:90,mem:62,err:6}},
+                   {nodeId:3,status:'success',msg:'Scaled fleet from 4 → 6 agents',metrics:{cpu:88,mem:58,err:4}},
+                   {nodeId:4,status:'success',msg:'Waiting 60 seconds...',metrics:{cpu:72,mem:55,err:3}},
+                   {nodeId:5,status:'success',msg:'CPU now 65% — below threshold',metrics:{cpu:65,mem:52,err:2}},
+                   {nodeId:6,status:'success',msg:'Posted to #ops: "Auto-scale resolved CPU spike"',metrics:{cpu:62,mem:50,err:2}}]},
+        {name:'Memory Leak Mitigation',desc:'Detect memory growth, restart, capture heap dump',
+         nodes:[{id:1,type:'trigger',name:'Mem Growth > 5%/min',desc:'Detect memory leak',config:'rate=5%/min,window=10m',x:400,y:30},
+                {id:2,type:'action',name:'Capture Heap Dump',desc:'Save diagnostic data',config:'path=/dumps/',x:400,y:130},
+                {id:3,type:'action',name:'Graceful Restart',desc:'Drain and restart',config:'drain_timeout=30s',x:400,y:230},
+                {id:4,type:'wait',name:'Wait 30s',desc:'Allow restart',config:'duration=30s',x:400,y:330},
+                {id:5,type:'condition',name:'Memory Stable?',desc:'Check if leak persists',config:'threshold=2%/min',x:400,y:430},
+                {id:6,type:'escalation',name:'Alert Team',desc:'Leak persists',config:'channel=#incidents,severity=high',x:600,y:530},
+                {id:7,type:'action',name:'Log Resolution',desc:'Record mitigation',config:'tag=auto-resolved',x:200,y:530}],
+         edges:[[1,2],[2,3],[3,4],[4,5],[5,7],[5,6]],
+         simSteps:[{nodeId:1,status:'success',msg:'Memory growing 8%/min for 12 minutes',metrics:{cpu:45,mem:89,err:12}},
+                   {nodeId:2,status:'success',msg:'Heap dump saved to /dumps/agent-3.hprof',metrics:{cpu:48,mem:91,err:14}},
+                   {nodeId:3,status:'success',msg:'Agent-3 drained and restarted',metrics:{cpu:42,mem:35,err:3}},
+                   {nodeId:4,status:'success',msg:'Waiting 30 seconds...',metrics:{cpu:40,mem:38,err:2}},
+                   {nodeId:5,status:'success',msg:'Memory growth 0.3%/min — stable',metrics:{cpu:40,mem:40,err:2}},
+                   {nodeId:7,status:'success',msg:'Resolution logged: auto-resolved',metrics:{cpu:40,mem:41,err:1}}]},
+        {name:'Cascade Failure Breaker',desc:'Detect error spike, isolate, reroute traffic',
+         nodes:[{id:1,type:'trigger',name:'Error Rate > 50/min',desc:'Detect error spike',config:'threshold=50/min',x:400,y:30},
+                {id:2,type:'action',name:'Identify Affected',desc:'Find high-error agents',config:'top_n=3',x:400,y:130},
+                {id:3,type:'action',name:'Isolate Agents',desc:'Remove from LB',config:'method=drain',x:400,y:230},
+                {id:4,type:'action',name:'Reroute Traffic',desc:'Redistribute load',config:'strategy=round-robin',x:400,y:330},
+                {id:5,type:'loop',name:'Retry Health Check',desc:'Check isolated agents',config:'retries=3,backoff=30s',x:250,y:430},
+                {id:6,type:'condition',name:'Agents Recovered?',desc:'Can they rejoin?',config:'error_rate<5/min',x:400,y:520},
+                {id:7,type:'action',name:'Reintegrate',desc:'Add back to fleet',config:'gradual=true',x:250,y:600},
+                {id:8,type:'escalation',name:'Replace Agents',desc:'Spin up fresh',config:'severity=critical',x:600,y:600}],
+         edges:[[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[6,8]],
+         simSteps:[{nodeId:1,status:'success',msg:'Error rate spiked to 87/min',metrics:{cpu:70,mem:75,err:87}},
+                   {nodeId:2,status:'success',msg:'Identified Agent-2, Agent-5, Agent-7',metrics:{cpu:72,mem:76,err:92}},
+                   {nodeId:3,status:'success',msg:'Isolated 3 agents from load balancer',metrics:{cpu:55,mem:60,err:45}},
+                   {nodeId:4,status:'success',msg:'Traffic rerouted to 5 healthy agents',metrics:{cpu:60,mem:58,err:12}},
+                   {nodeId:5,status:'success',msg:'Health check 2/3 — Agent-2 recovering',metrics:{cpu:55,mem:55,err:8}},
+                   {nodeId:6,status:'success',msg:'Agent-2 recovered, 5/7 still failing',metrics:{cpu:52,mem:53,err:5}},
+                   {nodeId:7,status:'success',msg:'Agent-2 reintegrated',metrics:{cpu:48,mem:50,err:3}},
+                   {nodeId:8,status:'success',msg:'Replacement requested for Agent-5, Agent-7',metrics:{cpu:48,mem:50,err:3}}]},
+        {name:'Stale Agent Recovery',desc:'Detect heartbeat timeout, restart, escalate',
+         nodes:[{id:1,type:'trigger',name:'Heartbeat Timeout',desc:'No heartbeat 60s',config:'timeout=60s',x:400,y:30},
+                {id:2,type:'action',name:'Send Ping',desc:'Direct health check',config:'timeout=10s',x:400,y:130},
+                {id:3,type:'condition',name:'Ping Response?',desc:'Did agent respond?',config:'',x:400,y:230},
+                {id:4,type:'action',name:'Force Restart',desc:'Kill and restart',config:'signal=SIGKILL',x:250,y:330},
+                {id:5,type:'wait',name:'Wait 20s',desc:'Allow restart',config:'duration=20s',x:250,y:430},
+                {id:6,type:'condition',name:'Agent Alive?',desc:'Heartbeat resumed?',config:'timeout=30s',x:250,y:530},
+                {id:7,type:'escalation',name:'Page On-Call',desc:'Unrecoverable',config:'severity=critical',x:400,y:600},
+                {id:8,type:'action',name:'Log False Alarm',desc:'Was just slow',config:'tag=false-alarm',x:600,y:330}],
+         edges:[[1,2],[2,3],[3,4],[3,8],[4,5],[5,6],[6,7]],
+         simSteps:[{nodeId:1,status:'success',msg:'Agent-9 missed heartbeat for 72s',metrics:{cpu:30,mem:40,err:20}},
+                   {nodeId:2,status:'success',msg:'Sending ping to Agent-9...',metrics:{cpu:30,mem:40,err:22}},
+                   {nodeId:3,status:'fail',msg:'No response — agent unresponsive',metrics:{cpu:30,mem:40,err:25}},
+                   {nodeId:4,status:'success',msg:'SIGKILL sent, restarting...',metrics:{cpu:28,mem:35,err:18}},
+                   {nodeId:5,status:'success',msg:'Waiting 20 seconds...',metrics:{cpu:32,mem:38,err:10}},
+                   {nodeId:6,status:'success',msg:'Heartbeat resumed — recovered!',metrics:{cpu:35,mem:42,err:4}}]},
+        {name:'Data Pipeline Stall',desc:'Detect throughput drop, check upstream, retry',
+         nodes:[{id:1,type:'trigger',name:'Throughput < 10/s',desc:'Pipeline throughput dropped',config:'threshold=10/s,window=5m',x:400,y:30},
+                {id:2,type:'action',name:'Check Upstream',desc:'Verify data source',config:'endpoint=/health',x:400,y:130},
+                {id:3,type:'condition',name:'Upstream OK?',desc:'Source healthy?',config:'',x:400,y:230},
+                {id:4,type:'loop',name:'Retry Pipeline',desc:'Restart workers',config:'retries=3,backoff=15s',x:250,y:330},
+                {id:5,type:'escalation',name:'Alert Upstream',desc:'Source is down',config:'channel=#data-eng',x:600,y:330},
+                {id:6,type:'condition',name:'Throughput OK?',desc:'Check recovery',config:'threshold=10/s',x:250,y:430},
+                {id:7,type:'action',name:'Log Recovery',desc:'Record auto-recovery',config:'tag=pipeline-stall',x:150,y:530},
+                {id:8,type:'escalation',name:'Escalate',desc:'Pipeline stuck',config:'severity=high',x:400,y:530}],
+         edges:[[1,2],[2,3],[3,4],[3,5],[4,6],[6,7],[6,8]],
+         simSteps:[{nodeId:1,status:'success',msg:'Throughput dropped to 2/s for 7 min',metrics:{cpu:25,mem:30,err:35}},
+                   {nodeId:2,status:'success',msg:'Upstream: 200 OK, latency 45ms',metrics:{cpu:25,mem:30,err:38}},
+                   {nodeId:3,status:'success',msg:'Upstream healthy — issue is local',metrics:{cpu:25,mem:30,err:40}},
+                   {nodeId:4,status:'success',msg:'Retry 2/3: Restarted 4 workers',metrics:{cpu:40,mem:35,err:15}},
+                   {nodeId:6,status:'success',msg:'Throughput recovered to 28/s',metrics:{cpu:45,mem:40,err:3}},
+                   {nodeId:7,status:'success',msg:'Recovery logged: pipeline stall resolved',metrics:{cpu:42,mem:38,err:2}}]}
+    ];
+
+    let playbooks=PRESETS.map((p,i)=>({...p,id:i}));
+    let activePlaybook=null, nodes=[], edges=[], selectedNode=null, dragging=null, dragOff={x:0,y:0}, nextId=100, simRunning=false;
+    const canvas=document.getElementById('flowCanvas'), ctx=canvas.getContext('2d');
+
+    function renderLibrary(){
+        document.getElementById('pbList').innerHTML=playbooks.map((p,i)=>`
+            <div class="pb-item ${activePlaybook===i?'active':''}" onclick="loadPlaybook(${i})">
+                <div class="pb-name">${p.name}</div>
+                <div class="pb-meta">${p.nodes.length} steps · ${p.desc}</div>
+            </div>`).join('');
+    }
+    function loadPlaybook(idx){
+        activePlaybook=idx; const p=playbooks[idx];
+        nodes=p.nodes.map(n=>({...n})); edges=p.edges.map(e=>[...e]);
+        selectedNode=null; document.getElementById('nodeProps').classList.remove('visible');
+        document.getElementById('editorTitle').textContent='🔧 '+p.name;
+        renderLibrary(); resetSimulation(); updateRisk(); draw();
+    }
+    function newPlaybook(){
+        playbooks.push({name:'New Playbook '+(playbooks.length+1),desc:'Custom playbook',
+            nodes:[{id:nextId++,type:'trigger',name:'New Trigger',desc:'Define trigger',config:'',x:400,y:60}],edges:[],simSteps:[]});
+        loadPlaybook(playbooks.length-1);
+    }
+    function draw(){
+        const dpr=window.devicePixelRatio||1, rect=canvas.getBoundingClientRect();
+        canvas.width=rect.width*dpr; canvas.height=rect.height*dpr; ctx.scale(dpr,dpr);
+        ctx.clearRect(0,0,rect.width,rect.height);
+        edges.forEach(([fid,tid])=>{
+            const f=nodes.find(n=>n.id===fid), t=nodes.find(n=>n.id===tid);
+            if(!f||!t) return;
+            ctx.beginPath(); ctx.moveTo(f.x,f.y+20);
+            const cy1=f.y+20+(t.y-20-f.y-20)*0.4, cy2=f.y+20+(t.y-20-f.y-20)*0.6;
+            ctx.bezierCurveTo(f.x,cy1,t.x,cy2,t.x,t.y-20);
+            ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=2; ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(t.x,t.y-20); ctx.lineTo(t.x-6,t.y-30); ctx.lineTo(t.x+6,t.y-30);
+            ctx.closePath(); ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.fill();
+        });
+        nodes.forEach(n=>{
+            const t=NODE_TYPES[n.type], w=160, h=44, x=n.x-w/2, y=n.y-h/2;
+            if(selectedNode===n.id){ctx.shadowColor=t.color;ctx.shadowBlur=15;}
+            if(n._simStatus==='running'){ctx.shadowColor='#00d4ff';ctx.shadowBlur=20;}
+            ctx.beginPath(); ctx.roundRect(x,y,w,h,10);
+            ctx.fillStyle=selectedNode===n.id?'rgba(255,255,255,0.12)':'rgba(255,255,255,0.06)'; ctx.fill();
+            ctx.strokeStyle=n._simStatus==='success'?'#4ade80':n._simStatus==='fail'?'#ef4444':t.color;
+            ctx.lineWidth=selectedNode===n.id?2.5:1.5; ctx.stroke();
+            ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+            ctx.fillStyle=t.color; ctx.font='14px sans-serif'; ctx.textAlign='left';
+            ctx.fillText(t.emoji,x+8,y+28);
+            ctx.fillStyle='#fff'; ctx.font='12px -apple-system, sans-serif';
+            ctx.fillText(n.name.length>18?n.name.slice(0,17)+'…':n.name,x+30,y+28);
+        });
+    }
+    function getNodeAt(mx,my){for(let i=nodes.length-1;i>=0;i--){const n=nodes[i];if(Math.abs(mx-n.x)<80&&Math.abs(my-n.y)<22)return n;}return null;}
+    canvas.addEventListener('mousedown',e=>{
+        const rect=canvas.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top, node=getNodeAt(mx,my);
+        if(node){
+            if(e.shiftKey&&selectedNode&&selectedNode!==node.id){
+                if(!edges.find(([a,b])=>a===selectedNode&&b===node.id))edges.push([selectedNode,node.id]);
+                draw(); return;
+            }
+            selectedNode=node.id; dragging=node; dragOff={x:mx-node.x,y:my-node.y}; showNodeProps(node);
+        } else { selectedNode=null; document.getElementById('nodeProps').classList.remove('visible'); }
+        draw();
+    });
+    canvas.addEventListener('mousemove',e=>{if(!dragging)return;const rect=canvas.getBoundingClientRect();dragging.x=e.clientX-rect.left-dragOff.x;dragging.y=e.clientY-rect.top-dragOff.y;draw();});
+    canvas.addEventListener('mouseup',()=>{dragging=null;});
+    function showNodeProps(node){
+        const t=NODE_TYPES[node.type];
+        document.getElementById('propTitle').textContent=t.emoji+' '+t.label;
+        document.getElementById('propName').value=node.name;
+        document.getElementById('propDesc').value=node.desc||'';
+        document.getElementById('propConfig').value=node.config||'';
+        document.getElementById('nodeProps').classList.add('visible');
+    }
+    function updateNodeProp(prop,val){const node=nodes.find(n=>n.id===selectedNode);if(node){node[prop]=val;draw();}}
+    function addNode(type){
+        const id=nextId++, t=NODE_TYPES[type];
+        nodes.push({id,type,name:'New '+t.label,desc:'',config:'',x:300+Math.random()*200,y:100+Math.random()*300});
+        selectedNode=id; showNodeProps(nodes[nodes.length-1]); draw();
+    }
+    function deleteSelected(){
+        if(!selectedNode)return; nodes=nodes.filter(n=>n.id!==selectedNode);
+        edges=edges.filter(([a,b])=>a!==selectedNode&&b!==selectedNode);
+        selectedNode=null; document.getElementById('nodeProps').classList.remove('visible'); draw();
+    }
+    async function runSimulation(){
+        if(simRunning||activePlaybook===null)return; simRunning=true;
+        const steps=playbooks[activePlaybook].simSteps||[];
+        if(!steps.length){document.getElementById('simTimeline').innerHTML='<div style="font-size:0.75rem;color:var(--color-text-muted);padding:0.5rem;">No simulation data for custom playbooks.</div>';simRunning=false;return;}
+        document.getElementById('simTimeline').innerHTML=''; nodes.forEach(n=>{n._simStatus=null;}); draw();
+        for(const s of steps){
+            const node=nodes.find(n=>n.id===s.nodeId); if(node){node._simStatus='running';draw();}
+            const div=document.createElement('div'); div.className='sim-step running';
+            div.innerHTML=`<div class="step-name">${node?node.name:'Step'}</div><div class="step-msg">Running...</div>`;
+            document.getElementById('simTimeline').appendChild(div);
+            document.getElementById('simTimeline').scrollTop=99999;
+            await new Promise(r=>setTimeout(r,800+Math.random()*600));
+            if(s.metrics){setMetric('CPU',s.metrics.cpu);setMetric('Mem',s.metrics.mem);setMetric('Err',s.metrics.err);}
+            div.className='sim-step '+s.status; div.querySelector('.step-msg').textContent=s.msg;
+            if(node){node._simStatus=s.status;draw();}
+        }
+        simRunning=false;
+    }
+    function resetSimulation(){
+        simRunning=false; document.getElementById('simTimeline').innerHTML='';
+        nodes.forEach(n=>{n._simStatus=null;}); setMetric('CPU',45);setMetric('Mem',60);setMetric('Err',5); draw();
+    }
+    function setMetric(name,val){
+        const id=name==='CPU'?'metCPU':name==='Mem'?'metMem':'metErr';
+        const pct=Math.min(100,val), color=pct>75?'var(--color-danger)':pct>50?'var(--color-warning)':'var(--color-success)';
+        document.getElementById(id).style.width=pct+'%'; document.getElementById(id).style.background=color;
+        document.getElementById(id+'Val').textContent=name==='Err'?val+'/m':val+'%';
+    }
+    function updateRisk(){
+        if(!nodes.length)return; let risk=0;
+        const hasEsc=nodes.some(n=>n.type==='escalation'), hasCond=nodes.some(n=>n.type==='condition'),
+              hasWait=nodes.some(n=>n.type==='wait'), hasLoop=nodes.some(n=>n.type==='loop'),
+              acts=nodes.filter(n=>n.type==='action').length;
+        if(!hasEsc)risk+=30; if(!hasCond)risk+=15; if(!hasWait)risk+=10;
+        if(acts>4&&!hasLoop)risk+=10; if(!acts)risk+=25; risk+=Math.max(0,(nodes.length-8)*3);
+        const score=Math.max(0,Math.min(100,100-risk)), ring=document.getElementById('riskRing'), label=document.getElementById('riskLabel');
+        ring.textContent=score;
+        if(score>=75){ring.style.borderColor=ring.style.color='#4ade80';label.textContent='Low Risk';}
+        else if(score>=50){ring.style.borderColor=ring.style.color='#fbbf24';label.textContent='Medium Risk';}
+        else{ring.style.borderColor=ring.style.color='#ef4444';label.textContent='High Risk';}
+        const types=new Set(nodes.map(n=>n.type)), cov=Math.round((types.size/6)*100);
+        document.getElementById('coverageText').textContent=`Coverage: ${cov}% types · ${nodes.length} steps · ${edges.length} connections`;
+    }
+    function autoOptimize(){
+        const sugs=[], hasEsc=nodes.some(n=>n.type==='escalation'), hasWait=nodes.some(n=>n.type==='wait'),
+              hasLoop=nodes.some(n=>n.type==='loop'), hasCond=nodes.some(n=>n.type==='condition'),
+              acts=nodes.filter(n=>n.type==='action');
+        if(!hasEsc)sugs.push({title:'Add Escalation Path',desc:'No escalation node. Add one so humans get notified when automation fails.'});
+        if(!hasWait&&acts.length>1)sugs.push({title:'Add Wait Between Actions',desc:'Add a wait step to allow changes to propagate before verification.'});
+        if(!hasLoop&&acts.length>0)sugs.push({title:'Add Retry Logic',desc:'Add a loop node with backoff for critical actions.'});
+        if(!hasCond)sugs.push({title:'Add Verification Step',desc:'No condition nodes. Add a check to verify actions worked.'});
+        acts.forEach(a=>{if(!a.config.includes('timeout'))sugs.push({title:`Add Timeout to "${a.name}"`,desc:'No timeout configured. Long-running actions can stall the playbook.'});});
+        if(nodes.length>8)sugs.push({title:'Consider Splitting',desc:'Many steps — consider sub-playbooks for maintainability.'});
+        if(edges.length<nodes.length-1)sugs.push({title:'Disconnected Steps',desc:'Some nodes may not be connected. Ensure all steps are reachable.'});
+        const el=document.getElementById('suggestions');
+        el.innerHTML=sugs.length?sugs.slice(0,5).map(s=>`<div class="suggestion"><div class="sug-title">💡 ${s.title}</div><div class="sug-desc">${s.desc}</div></div>`).join('')
+            :'<div style="color:var(--color-success);font-size:0.8rem;">✅ Playbook looks good!</div>';
+    }
+    function exportJSON(){
+        if(activePlaybook===null)return;
+        document.getElementById('exportOut').value=JSON.stringify({name:playbooks[activePlaybook].name,nodes,edges,exportedAt:new Date().toISOString()},null,2);
+    }
+    function copyLink(){
+        const url=`https://getagentbox.com/incident-playbook?id=${Date.now().toString(36)}`;
+        document.getElementById('exportOut').value=url; navigator.clipboard?.writeText(url);
+    }
+    renderLibrary(); loadPlaybook(0); window.addEventListener('resize',draw);
+    </script>
+</body>
+</html>
