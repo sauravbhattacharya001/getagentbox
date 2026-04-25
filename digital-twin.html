@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Digital Twin — Behavior Modeling & Drift Detection</title>
+    <meta name="description" content="Create a digital twin of your AI agent, run what-if scenarios, and detect behavioral drift in real-time.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #ffaa00;
+            --color-danger: #ff4444;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--color-bg-deep); color: var(--color-text); min-height: 100vh; }
+        a { color: var(--color-primary); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .nav-brand { font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { color: var(--color-text-muted); font-size: 0.9rem; }
+        .nav-links a:hover { color: var(--color-text); text-decoration: none; }
+        .page-header { text-align: center; padding: 2rem 1rem 1rem; }
+        .page-header h1 { font-size: 2rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { color: var(--color-text-muted); max-width: 600px; margin: 0 auto; }
+        .main-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1rem; padding: 1rem 2rem; max-width: 1400px; margin: 0 auto; }
+        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+        .panel { background: var(--color-surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+        .panel h2 { font-size: 1rem; margin-bottom: 0.75rem; color: var(--color-primary); }
+        .btn { padding: 0.5rem 1rem; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: var(--color-surface); color: var(--color-text); cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+        .btn:hover { background: var(--color-surface-hover); border-color: var(--color-primary); }
+        .btn.active { background: rgba(0,212,255,0.15); border-color: var(--color-primary); color: var(--color-primary); }
+        .btn-primary { background: rgba(0,212,255,0.2); border-color: var(--color-primary); color: var(--color-primary); }
+        .btn-danger { background: rgba(255,68,68,0.2); border-color: var(--color-danger); color: var(--color-danger); }
+        input[type=text], select { padding: 0.5rem 0.75rem; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: rgba(0,0,0,0.3); color: var(--color-text); font-size: 0.85rem; width: 100%; }
+        input[type=range] { width: 100%; accent-color: var(--color-primary); }
+        .slider-row { margin-bottom: 0.6rem; }
+        .slider-row label { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 2px; }
+        .slider-row label span.val { color: var(--color-primary); font-weight: 600; }
+        .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+        #twinCanvas { width: 100%; border-radius: 8px; display: block; }
+        #driftChart { width: 100%; height: 120px; border-radius: 8px; display: block; }
+        .scenario-result { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem; font-size: 0.8rem; line-height: 1.5; }
+        .scenario-result h3 { font-size: 0.85rem; color: var(--color-primary); margin-bottom: 0.4rem; }
+        .insight-card { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 0.6rem 0.8rem; margin-top: 0.5rem; font-size: 0.8rem; border-left: 3px solid var(--color-warning); }
+        .insight-card.info { border-left-color: var(--color-primary); }
+        .insight-card.danger { border-left-color: var(--color-danger); }
+        .log-entry { font-size: 0.75rem; color: var(--color-text-muted); padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .log-entry .ts { color: var(--color-primary-alt); margin-right: 0.5rem; }
+        .alert-banner { background: rgba(255,68,68,0.15); border: 1px solid var(--color-danger); border-radius: 8px; padding: 0.6rem; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--color-danger); animation: pulse-alert 1s ease-in-out 3; }
+        @keyframes pulse-alert { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .stat-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .stat-box { flex: 1; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 0.5rem; text-align: center; }
+        .stat-box .val { font-size: 1.3rem; font-weight: 700; }
+        .stat-box .lbl { font-size: 0.65rem; color: var(--color-text-muted); }
+        .bottom-section { padding: 0 2rem 2rem; max-width: 1400px; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <a class="nav-brand" href="index.html">AgentBox</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="simulator.html">Simulator</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="memory-palace.html">Memory Palace</a>
+        </div>
+    </nav>
+    <header class="page-header">
+        <h1>🪞 Agent Digital Twin</h1>
+        <p>Create a behavioral clone of your agent, run what-if scenarios, and detect drift before it impacts production.</p>
+    </header>
+    <div class="main-layout">
+        <div class="left-col">
+            <div class="panel">
+                <h2>Twin Visualization</h2>
+                <div class="stat-row">
+                    <div class="stat-box"><div class="val" id="driftScore" style="color:var(--color-success)">0%</div><div class="lbl">Drift Score</div></div>
+                    <div class="stat-box"><div class="val" id="scenarioCount" style="color:var(--color-primary)">0</div><div class="lbl">Scenarios Run</div></div>
+                    <div class="stat-box"><div class="val" id="alertCount" style="color:var(--color-warning)">0</div><div class="lbl">Anomalies</div></div>
+                    <div class="stat-box"><div class="val" id="twinStatus" style="color:var(--color-text-muted)">—</div><div class="lbl">Twin Status</div></div>
+                </div>
+                <canvas id="twinCanvas" height="350"></canvas>
+            </div>
+            <div class="panel">
+                <h2>📊 What-If Scenario Runner</h2>
+                <div class="controls">
+                    <select id="scenarioSelect">
+                        <option value="traffic">Traffic Spike (10x)</option>
+                        <option value="timeout">API Timeout Storm</option>
+                        <option value="memory">Memory Pressure (90%)</option>
+                        <option value="poison">Poison Input Attack</option>
+                        <option value="dependency">Dependency Failure</option>
+                        <option value="coldstart">Cold Start</option>
+                        <option value="schema">Data Schema Change</option>
+                        <option value="concurrent">Concurrent User Surge</option>
+                    </select>
+                    <button class="btn btn-primary" id="runScenarioBtn" disabled>Run Scenario</button>
+                    <button class="btn" id="autoMonitorBtn">Auto-Monitor</button>
+                    <button class="btn btn-danger" id="resetBtn">Reset</button>
+                    <button class="btn" id="exportBtn" disabled>Export Report</button>
+                </div>
+                <div id="alertArea"></div>
+                <div id="scenarioResults"></div>
+            </div>
+            <div class="panel">
+                <h2>📈 Drift Timeline</h2>
+                <canvas id="driftChart"></canvas>
+            </div>
+            <div class="panel">
+                <h2>💡 Proactive Insights</h2>
+                <div id="insightsArea"><p style="color:var(--color-text-muted);font-size:0.8rem;">Create a twin and run scenarios to generate insights.</p></div>
+            </div>
+        </div>
+        <div class="right-col">
+            <div class="panel">
+                <h2>⚙️ Twin Configuration</h2>
+                <div style="margin-bottom:0.75rem;">
+                    <label style="font-size:0.8rem;color:var(--color-text-muted);display:block;margin-bottom:4px;">Agent Name</label>
+                    <input type="text" id="agentName" placeholder="My Production Agent" value="AgentBox-Prime">
+                </div>
+                <div class="slider-row"><label>Responsiveness <span class="val" id="v_resp">70</span></label><input type="range" min="0" max="100" value="70" id="s_resp"></div>
+                <div class="slider-row"><label>Creativity <span class="val" id="v_crea">50</span></label><input type="range" min="0" max="100" value="50" id="s_crea"></div>
+                <div class="slider-row"><label>Caution <span class="val" id="v_caut">60</span></label><input type="range" min="0" max="100" value="60" id="s_caut"></div>
+                <div class="slider-row"><label>Autonomy <span class="val" id="v_auto">40</span></label><input type="range" min="0" max="100" value="40" id="s_auto"></div>
+                <div class="slider-row"><label>Memory Retention <span class="val" id="v_memr">80</span></label><input type="range" min="0" max="100" value="80" id="s_memr"></div>
+                <div class="slider-row"><label>Learning Rate <span class="val" id="v_learn">55</span></label><input type="range" min="0" max="100" value="55" id="s_learn"></div>
+                <div class="controls" style="margin-top:0.5rem;">
+                    <button class="btn btn-primary" id="createTwinBtn">Create Twin</button>
+                </div>
+                <div class="controls">
+                    <button class="btn preset" data-p="conservative">Conservative</button>
+                    <button class="btn preset" data-p="explorer">Explorer</button>
+                    <button class="btn preset" data-p="balanced">Balanced</button>
+                    <button class="btn preset" data-p="aggressive">Aggressive</button>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>📋 Activity Log</h2>
+                <div id="logArea" style="max-height:300px;overflow-y:auto;"><p style="color:var(--color-text-muted);font-size:0.8rem;">No activity yet.</p></div>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        // State
+        const state = {
+            twinCreated: false,
+            params: { resp: 70, crea: 50, caut: 60, auto: 40, memr: 80, learn: 55 },
+            realParams: { resp: 75, crea: 45, caut: 65, auto: 35, memr: 85, learn: 50 },
+            drift: 0,
+            driftHistory: [],
+            scenariosRun: 0,
+            anomalies: 0,
+            autoMonitor: false,
+            autoInterval: null,
+            results: [],
+            insights: [],
+            logs: [],
+            running: false,
+            shakeReal: 0, shakeTwin: 0
+        };
+
+        const presets = {
+            conservative: { resp: 40, crea: 20, caut: 90, auto: 15, memr: 95, learn: 30 },
+            explorer: { resp: 85, crea: 90, caut: 25, auto: 80, memr: 60, learn: 85 },
+            balanced: { resp: 60, crea: 50, caut: 55, auto: 50, memr: 70, learn: 55 },
+            aggressive: { resp: 95, crea: 75, caut: 10, auto: 95, memr: 50, learn: 90 }
+        };
+
+        const scenarios = {
+            traffic: { name: 'Traffic Spike (10x)', weights: { resp: 0.4, crea: 0.05, caut: 0.15, auto: 0.2, memr: 0.1, learn: 0.1 }, severity: 0.7 },
+            timeout: { name: 'API Timeout Storm', weights: { resp: 0.3, crea: 0.05, caut: 0.25, auto: 0.15, memr: 0.15, learn: 0.1 }, severity: 0.65 },
+            memory: { name: 'Memory Pressure (90%)', weights: { resp: 0.15, crea: 0.05, caut: 0.2, auto: 0.1, memr: 0.4, learn: 0.1 }, severity: 0.8 },
+            poison: { name: 'Poison Input Attack', weights: { resp: 0.1, crea: 0.1, caut: 0.35, auto: 0.2, memr: 0.1, learn: 0.15 }, severity: 0.9 },
+            dependency: { name: 'Dependency Failure', weights: { resp: 0.2, crea: 0.15, caut: 0.2, auto: 0.25, memr: 0.1, learn: 0.1 }, severity: 0.6 },
+            coldstart: { name: 'Cold Start', weights: { resp: 0.25, crea: 0.1, caut: 0.1, auto: 0.1, memr: 0.25, learn: 0.2 }, severity: 0.5 },
+            schema: { name: 'Data Schema Change', weights: { resp: 0.1, crea: 0.2, caut: 0.15, auto: 0.15, memr: 0.15, learn: 0.25 }, severity: 0.55 },
+            concurrent: { name: 'Concurrent User Surge', weights: { resp: 0.35, crea: 0.05, caut: 0.15, auto: 0.2, memr: 0.15, learn: 0.1 }, severity: 0.75 }
+        };
+
+        const sliders = ['resp','crea','caut','auto','memr','learn'];
+        sliders.forEach(k => {
+            const s = document.getElementById('s_'+k);
+            const v = document.getElementById('v_'+k);
+            s.addEventListener('input', () => { v.textContent = s.value; state.params[k] = +s.value; });
+        });
+
+        document.querySelectorAll('.preset').forEach(b => {
+            b.addEventListener('click', () => {
+                const p = presets[b.dataset.p];
+                sliders.forEach(k => {
+                    document.getElementById('s_'+k).value = p[k];
+                    document.getElementById('v_'+k).textContent = p[k];
+                    state.params[k] = p[k];
+                });
+                addLog('Preset applied: ' + b.dataset.p);
+            });
+        });
+
+        document.getElementById('createTwinBtn').addEventListener('click', () => {
+            state.twinCreated = true;
+            state.drift = 0;
+            const name = document.getElementById('agentName').value || 'Agent';
+            document.getElementById('twinStatus').textContent = '✓';
+            document.getElementById('twinStatus').style.color = 'var(--color-success)';
+            document.getElementById('runScenarioBtn').disabled = false;
+            document.getElementById('exportBtn').disabled = false;
+            addLog('Twin created: ' + name);
+            updateDriftDisplay();
+        });
+
+        document.getElementById('runScenarioBtn').addEventListener('click', () => {
+            if(state.running || !state.twinCreated) return;
+            runScenario(document.getElementById('scenarioSelect').value);
+        });
+
+        document.getElementById('autoMonitorBtn').addEventListener('click', () => {
+            state.autoMonitor = !state.autoMonitor;
+            const btn = document.getElementById('autoMonitorBtn');
+            if(state.autoMonitor) {
+                btn.classList.add('active');
+                btn.textContent = 'Stop Monitor';
+                addLog('Auto-monitor started');
+                state.autoInterval = setInterval(() => {
+                    if(!state.running && state.twinCreated) {
+                        const keys = Object.keys(scenarios);
+                        runScenario(keys[Math.floor(Math.random()*keys.length)]);
+                    }
+                }, 3000);
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = 'Auto-Monitor';
+                clearInterval(state.autoInterval);
+                addLog('Auto-monitor stopped');
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            state.twinCreated = false; state.drift = 0; state.driftHistory = [];
+            state.scenariosRun = 0; state.anomalies = 0; state.results = [];
+            state.insights = []; state.logs = []; state.running = false;
+            if(state.autoInterval) clearInterval(state.autoInterval);
+            state.autoMonitor = false;
+            document.getElementById('autoMonitorBtn').classList.remove('active');
+            document.getElementById('autoMonitorBtn').textContent = 'Auto-Monitor';
+            document.getElementById('twinStatus').textContent = '—';
+            document.getElementById('twinStatus').style.color = 'var(--color-text-muted)';
+            document.getElementById('runScenarioBtn').disabled = true;
+            document.getElementById('exportBtn').disabled = true;
+            document.getElementById('scenarioResults').innerHTML = '';
+            document.getElementById('insightsArea').innerHTML = '<p style="color:var(--color-text-muted);font-size:0.8rem;">Create a twin and run scenarios to generate insights.</p>';
+            document.getElementById('logArea').innerHTML = '<p style="color:var(--color-text-muted);font-size:0.8rem;">No activity yet.</p>';
+            document.getElementById('alertArea').innerHTML = '';
+            updateDriftDisplay();
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const report = {
+                agent: document.getElementById('agentName').value,
+                twinParams: {...state.params},
+                realParams: {...state.realParams},
+                currentDrift: state.drift,
+                driftHistory: state.driftHistory,
+                scenariosRun: state.scenariosRun,
+                anomalies: state.anomalies,
+                results: state.results,
+                insights: state.insights,
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(report, null, 2)], {type:'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'digital-twin-report.json';
+            a.click();
+            addLog('Report exported');
+        });
+
+        function runScenario(key) {
+            state.running = true;
+            const sc = scenarios[key];
+            addLog('Running: ' + sc.name);
+
+            // Calculate responses
+            let realScore = 0, twinScore = 0;
+            sliders.forEach(k => {
+                const w = sc.weights[k];
+                realScore += state.realParams[k] * w;
+                twinScore += state.params[k] * w;
+            });
+            const noise = () => (Math.random()-0.5)*10;
+            realScore = Math.max(0, Math.min(100, realScore + noise()));
+            twinScore = Math.max(0, Math.min(100, twinScore + noise()));
+
+            const driftDelta = Math.abs(realScore - twinScore) * sc.severity / 50;
+            const prevDrift = state.drift;
+            state.drift = Math.min(100, Math.max(0, state.drift + driftDelta - 1));
+            state.scenariosRun++;
+            state.driftHistory.push({ t: state.scenariosRun, drift: state.drift, scenario: sc.name });
+
+            // Shake animation
+            state.shakeReal = 15 * sc.severity;
+            state.shakeTwin = 15 * sc.severity;
+
+            // Check anomaly
+            const isAnomaly = Math.abs(state.drift - prevDrift) > 15;
+            if(isAnomaly) {
+                state.anomalies++;
+                const alertDiv = document.getElementById('alertArea');
+                alertDiv.innerHTML = '<div class="alert-banner">⚠️ Drift anomaly detected! Sudden ' + Math.abs(state.drift - prevDrift).toFixed(1) + '% change during "' + sc.name + '"</div>' + alertDiv.innerHTML;
+                addLog('⚠️ ANOMALY: drift jumped ' + Math.abs(state.drift - prevDrift).toFixed(1) + '%');
+            }
+
+            // Real vs Twin responses
+            const realVerdict = realScore > 65 ? 'Handled gracefully' : realScore > 40 ? 'Degraded response' : 'Failure likely';
+            const twinVerdict = twinScore > 65 ? 'Handled gracefully' : twinScore > 40 ? 'Degraded response' : 'Failure likely';
+            const recommendation = state.drift > 50 ? 'Critical: Recalibrate twin parameters immediately' : state.drift > 25 ? 'Monitor closely — drift is accumulating' : 'Twin is tracking well';
+
+            const result = { scenario: sc.name, realScore: realScore.toFixed(1), twinScore: twinScore.toFixed(1), realVerdict, twinVerdict, driftDelta: driftDelta.toFixed(1), recommendation };
+            state.results.push(result);
+
+            // Generate insight
+            generateInsight(sc, result);
+
+            // Render result
+            const resDiv = document.getElementById('scenarioResults');
+            resDiv.innerHTML = '<div class="scenario-result"><h3>' + sc.name + '</h3>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">' +
+                '<div><span style="color:var(--color-primary)">Real Agent:</span> ' + realScore.toFixed(1) + ' — ' + realVerdict + '</div>' +
+                '<div><span style="color:var(--color-accent)">Digital Twin:</span> ' + twinScore.toFixed(1) + ' — ' + twinVerdict + '</div></div>' +
+                '<div style="margin-top:0.4rem;"><strong>Drift Δ:</strong> +' + driftDelta.toFixed(1) + '% | <strong>Recommendation:</strong> ' + recommendation + '</div></div>' + resDiv.innerHTML;
+            if(resDiv.children.length > 5) resDiv.removeChild(resDiv.lastChild);
+
+            updateDriftDisplay();
+            drawDriftChart();
+
+            setTimeout(() => { state.running = false; }, 500);
+        }
+
+        function generateInsight(sc, result) {
+            const ins = [];
+            if(state.params.auto > 70 && parseFloat(result.driftDelta) > 5) {
+                ins.push({ level: 'warning', text: 'High autonomy (' + state.params.auto + ') caused divergent response during "' + sc.name + '". Consider reducing to ~60.' });
+            }
+            if(state.drift > 40 && state.driftHistory.length > 3) {
+                const recent = state.driftHistory.slice(-3);
+                const trend = recent[2].drift - recent[0].drift;
+                if(trend > 10) ins.push({ level: 'danger', text: 'Drift increasing linearly (+' + trend.toFixed(1) + '% over last 3 runs). Potential model decay — retrain recommended.' });
+            }
+            if(state.params.caut < 30 && sc.severity > 0.7) {
+                ins.push({ level: 'warning', text: 'Low caution (' + state.params.caut + ') under high-severity scenario is risky. The real agent is more conservative.' });
+            }
+            if(state.params.memr < 50 && sc.weights.memr > 0.2) {
+                ins.push({ level: 'info', text: 'Memory retention matters for "' + sc.name + '". Twin\'s low retention may cause compounding drift.' });
+            }
+            if(state.drift < 10 && state.scenariosRun > 5) {
+                ins.push({ level: 'info', text: 'Twin is closely mirroring the real agent. Consider stress-testing with more extreme scenarios.' });
+            }
+            if(ins.length === 0) {
+                ins.push({ level: 'info', text: sc.name + ' processed. Twin deviation within expected range.' });
+            }
+            state.insights = ins.concat(state.insights).slice(0, 10);
+            const area = document.getElementById('insightsArea');
+            area.innerHTML = state.insights.map(i => '<div class="insight-card ' + i.level + '">' + (i.level === 'danger' ? '🔴' : i.level === 'warning' ? '🟡' : 'ℹ️') + ' ' + i.text + '</div>').join('');
+        }
+
+        function addLog(msg) {
+            const now = new Date();
+            const ts = now.toLocaleTimeString();
+            state.logs.unshift({ ts, msg });
+            if(state.logs.length > 20) state.logs.pop();
+            const area = document.getElementById('logArea');
+            area.innerHTML = state.logs.map(l => '<div class="log-entry"><span class="ts">' + l.ts + '</span>' + l.msg + '</div>').join('');
+        }
+
+        function updateDriftDisplay() {
+            const el = document.getElementById('driftScore');
+            el.textContent = state.drift.toFixed(1) + '%';
+            el.style.color = state.drift < 20 ? 'var(--color-success)' : state.drift < 50 ? 'var(--color-warning)' : 'var(--color-danger)';
+            document.getElementById('scenarioCount').textContent = state.scenariosRun;
+            document.getElementById('alertCount').textContent = state.anomalies;
+        }
+
+        // Canvas visualization
+        const canvas = document.getElementById('twinCanvas');
+        const ctx = canvas.getContext('2d');
+        let animTime = 0;
+
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth * (window.devicePixelRatio || 1);
+            canvas.height = 350 * (window.devicePixelRatio || 1);
+            ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawTwin() {
+            const w = canvas.clientWidth, h = 350;
+            ctx.clearRect(0, 0, w, h);
+            animTime += 0.02;
+
+            // Decay shake
+            state.shakeReal *= 0.92;
+            state.shakeTwin *= 0.92;
+
+            const cx = w / 2, cy = h / 2;
+            const realX = cx - 120, twinX = cx + 120;
+            const realY = cy, twinY = cy;
+
+            // Connection line with drift color
+            const driftColor = state.drift < 20 ? '#4ade80' : state.drift < 50 ? '#ffaa00' : '#ff4444';
+            ctx.beginPath();
+            ctx.strokeStyle = driftColor;
+            ctx.lineWidth = 2 + Math.sin(animTime * 3) * 0.5;
+            ctx.setLineDash([5, 5]);
+            ctx.moveTo(realX + 45, realY);
+            ctx.lineTo(twinX - 45, twinY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Drift label
+            if(state.twinCreated) {
+                ctx.fillStyle = driftColor;
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Drift: ' + state.drift.toFixed(1) + '%', cx, cy - 10);
+                ctx.font = '10px sans-serif';
+                ctx.fillStyle = '#a0a0a0';
+                ctx.fillText(state.drift < 20 ? 'Synchronized' : state.drift < 50 ? 'Diverging' : 'Critical Drift', cx, cy + 8);
+            }
+
+            // Draw agent nodes
+            function drawNode(x, y, label, color, shake, params) {
+                const sx = x + (Math.random() - 0.5) * shake;
+                const sy = y + (Math.random() - 0.5) * shake;
+                // Glow
+                const grad = ctx.createRadialGradient(sx, sy, 20, sx, sy, 55);
+                grad.addColorStop(0, color + '33');
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(sx, sy, 55, 0, Math.PI * 2); ctx.fill();
+                // Pulse circle
+                const pulse = 40 + Math.sin(animTime * 2) * 3;
+                ctx.beginPath(); ctx.arc(sx, sy, pulse, 0, Math.PI * 2);
+                ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+                ctx.fillStyle = color + '22';
+                ctx.fill();
+                // Inner circle
+                ctx.beginPath(); ctx.arc(sx, sy, 20, 0, Math.PI * 2);
+                ctx.fillStyle = color + '44'; ctx.fill();
+                ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+                // Label
+                ctx.fillStyle = color;
+                ctx.font = 'bold 11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, sx, sy + 60);
+                // Orbiting behavior dots
+                if(params) {
+                    const keys = Object.keys(params);
+                    keys.forEach((k, i) => {
+                        const angle = animTime * (0.5 + i * 0.15) + (i * Math.PI * 2 / keys.length);
+                        const r = 50 + (params[k] / 100) * 15;
+                        const dx = sx + Math.cos(angle) * r;
+                        const dy = sy + Math.sin(angle) * r;
+                        const size = 2 + (params[k] / 100) * 3;
+                        ctx.beginPath(); ctx.arc(dx, dy, size, 0, Math.PI * 2);
+                        ctx.fillStyle = color + '88'; ctx.fill();
+                    });
+                }
+            }
+
+            drawNode(realX, realY, 'Real Agent', '#00d4ff', state.shakeReal, state.twinCreated ? state.realParams : null);
+            drawNode(twinX, twinY, 'Digital Twin', '#7b2cbf', state.shakeTwin, state.twinCreated ? state.params : null);
+
+            if(!state.twinCreated) {
+                ctx.fillStyle = '#a0a0a0';
+                ctx.font = '13px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Configure parameters and create a twin to begin', cx, h - 30);
+            }
+
+            requestAnimationFrame(drawTwin);
+        }
+        drawTwin();
+
+        // Drift chart
+        function drawDriftChart() {
+            const c = document.getElementById('driftChart');
+            const cx2 = c.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            c.width = c.clientWidth * dpr;
+            c.height = 120 * dpr;
+            cx2.scale(dpr, dpr);
+            const w = c.clientWidth, h2 = 120;
+            cx2.clearRect(0, 0, w, h2);
+
+            // Background
+            cx2.fillStyle = 'rgba(0,0,0,0.3)';
+            cx2.fillRect(0, 0, w, h2);
+
+            // Grid lines
+            cx2.strokeStyle = 'rgba(255,255,255,0.05)';
+            cx2.lineWidth = 1;
+            [20, 50].forEach(pct => {
+                const y = h2 - 10 - (pct / 100) * (h2 - 20);
+                cx2.beginPath(); cx2.moveTo(40, y); cx2.lineTo(w - 10, y); cx2.stroke();
+                cx2.fillStyle = pct === 20 ? '#4ade80' : '#ffaa00';
+                cx2.font = '9px sans-serif'; cx2.textAlign = 'right';
+                cx2.fillText(pct + '%', 35, y + 3);
+            });
+
+            const data = state.driftHistory;
+            if(data.length < 2) {
+                cx2.fillStyle = '#a0a0a0'; cx2.font = '11px sans-serif'; cx2.textAlign = 'center';
+                cx2.fillText('Run scenarios to build drift timeline', w/2, h2/2);
+                return;
+            }
+
+            const maxT = Math.max(data.length, 10);
+            const startIdx = Math.max(0, data.length - 30);
+            const visible = data.slice(startIdx);
+            const stepX = (w - 50) / Math.max(visible.length - 1, 1);
+
+            // Line
+            cx2.beginPath();
+            cx2.lineWidth = 2;
+            visible.forEach((d, i) => {
+                const x = 40 + i * stepX;
+                const y = h2 - 10 - (d.drift / 100) * (h2 - 20);
+                if(i === 0) cx2.moveTo(x, y); else cx2.lineTo(x, y);
+            });
+            cx2.strokeStyle = '#00d4ff';
+            cx2.stroke();
+
+            // Dots
+            visible.forEach((d, i) => {
+                const x = 40 + i * stepX;
+                const y = h2 - 10 - (d.drift / 100) * (h2 - 20);
+                cx2.beginPath(); cx2.arc(x, y, 3, 0, Math.PI * 2);
+                cx2.fillStyle = d.drift < 20 ? '#4ade80' : d.drift < 50 ? '#ffaa00' : '#ff4444';
+                cx2.fill();
+            });
+        }
+        drawDriftChart();
+    })();
+    </script>
+</body>
+</html>
