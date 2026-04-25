@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Feedback Loop - AgentBox</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .feedback-app{max-width:1200px;margin:2rem auto;padding:0 1.5rem}
+        .feedback-header{text-align:center;margin-bottom:2rem}
+        .feedback-header h1{font-size:2.2rem;margin-bottom:.5rem}
+        .feedback-header p{color:#888;font-size:1.1rem}
+        .fb-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+        @media(max-width:768px){.fb-grid{grid-template-columns:1fr}}
+        .fb-card{background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:1.5rem}
+        .fb-card h2{font-size:1.2rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+        .fb-full{grid-column:1/-1}
+        .rating-stars{display:flex;gap:.3rem;margin:.8rem 0}
+        .rating-stars span{font-size:1.8rem;cursor:pointer;color:#444;transition:color .2s}
+        .rating-stars span.active{color:#f5a623}
+        .rating-stars span:hover,.rating-stars span:hover~span{color:#f5a623}
+        .fb-input{width:100%;background:#0d0d1a;border:1px solid #444;border-radius:8px;padding:.7rem;color:#fff;font-size:.95rem;resize:vertical;font-family:inherit}
+        .fb-input:focus{outline:none;border-color:#6c63ff}
+        .fb-select{background:#0d0d1a;border:1px solid #444;border-radius:8px;padding:.6rem;color:#fff;font-size:.9rem;width:100%}
+        .fb-btn{background:#6c63ff;color:#fff;border:none;border-radius:8px;padding:.7rem 1.5rem;font-size:.95rem;cursor:pointer;transition:background .2s}
+        .fb-btn:hover{background:#5a52d5}
+        .fb-btn-sm{padding:.4rem 1rem;font-size:.85rem}
+        .fb-btn-outline{background:transparent;border:1px solid #6c63ff;color:#6c63ff}
+        .fb-btn-outline:hover{background:#6c63ff;color:#fff}
+        .tag{display:inline-block;background:#2a2a4a;border-radius:20px;padding:.2rem .7rem;font-size:.8rem;margin:.2rem;cursor:pointer;transition:all .2s}
+        .tag.selected{background:#6c63ff;color:#fff}
+        .tag:hover{background:#3a3a5a}
+        .insight-bar{display:flex;align-items:center;gap:.5rem;margin:.4rem 0}
+        .insight-bar .bar-bg{flex:1;height:8px;background:#1a1a2e;border-radius:4px;overflow:hidden}
+        .insight-bar .bar-fill{height:100%;border-radius:4px;transition:width .5s}
+        .insight-bar .label{min-width:100px;font-size:.85rem}
+        .insight-bar .pct{min-width:40px;text-align:right;font-size:.85rem;color:#888}
+        .timeline-item{display:flex;gap:1rem;padding:.8rem 0;border-bottom:1px solid #222}
+        .timeline-item:last-child{border:none}
+        .timeline-dot{width:12px;height:12px;border-radius:50%;margin-top:.3rem;flex-shrink:0}
+        .timeline-content{flex:1}
+        .timeline-content .meta{font-size:.8rem;color:#888;margin-top:.3rem}
+        .sentiment-gauge{position:relative;width:200px;height:110px;margin:0 auto}
+        .sentiment-gauge canvas{width:200px;height:110px}
+        .sentiment-label{text-align:center;font-size:1.4rem;font-weight:bold;margin-top:.3rem}
+        .pattern-card{background:#0d0d1a;border-radius:8px;padding:1rem;margin:.5rem 0;border-left:3px solid #6c63ff}
+        .pattern-card .severity{font-size:.75rem;padding:.15rem .5rem;border-radius:10px;display:inline-block}
+        .severity-high{background:#ff4444;color:#fff}
+        .severity-medium{background:#f5a623;color:#000}
+        .severity-low{background:#44bb44;color:#fff}
+        .rec-item{display:flex;align-items:flex-start;gap:.8rem;padding:.6rem 0;border-bottom:1px solid #1a1a2e}
+        .rec-item:last-child{border:none}
+        .rec-icon{font-size:1.3rem;flex-shrink:0}
+        .rec-text h4{margin:0 0 .2rem;font-size:.95rem}
+        .rec-text p{margin:0;font-size:.85rem;color:#888}
+        .auto-badge{font-size:.7rem;background:#44bb44;color:#000;padding:.1rem .4rem;border-radius:8px;margin-left:.5rem}
+        .stats-row{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem}
+        .stat-box{flex:1;min-width:120px;background:#1a1a2e;border-radius:10px;padding:1rem;text-align:center}
+        .stat-box .num{font-size:1.8rem;font-weight:bold;color:#6c63ff}
+        .stat-box .lbl{font-size:.8rem;color:#888;margin-top:.2rem}
+        .canvas-wrap{background:#0d0d1a;border-radius:8px;overflow:hidden;margin:.5rem 0}
+        .canvas-wrap canvas{width:100%;display:block}
+        .toggle-row{display:flex;align-items:center;gap:.8rem;margin:.5rem 0}
+        .toggle{width:44px;height:24px;background:#333;border-radius:12px;cursor:pointer;position:relative;transition:background .3s}
+        .toggle.on{background:#6c63ff}
+        .toggle::after{content:'';width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .3s}
+        .toggle.on::after{left:22px}
+        .feed-scroll{max-height:300px;overflow-y:auto}
+        .feed-scroll::-webkit-scrollbar{width:6px}
+        .feed-scroll::-webkit-scrollbar-track{background:#0d0d1a}
+        .feed-scroll::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+    </style>
+</head>
+<body>
+<div class="feedback-app">
+    <div class="feedback-header">
+        <h1>🔄 Agent Feedback Loop</h1>
+        <p>Collect feedback, detect patterns, and let your agent improve autonomously</p>
+    </div>
+
+    <div class="stats-row" id="stats-row">
+        <div class="stat-box"><div class="num" id="stat-total">0</div><div class="lbl">Total Feedback</div></div>
+        <div class="stat-box"><div class="num" id="stat-avg">—</div><div class="lbl">Avg Rating</div></div>
+        <div class="stat-box"><div class="num" id="stat-patterns">0</div><div class="lbl">Patterns Found</div></div>
+        <div class="stat-box"><div class="num" id="stat-improvements">0</div><div class="lbl">Auto-Improvements</div></div>
+        <div class="stat-box"><div class="num" id="stat-nps">—</div><div class="lbl">NPS Score</div></div>
+    </div>
+
+    <div class="fb-grid">
+        <!-- Submit Feedback -->
+        <div class="fb-card">
+            <h2>📝 Submit Feedback</h2>
+            <label style="font-size:.9rem;color:#aaa">Interaction Category</label>
+            <select class="fb-select" id="fb-category" style="margin:.5rem 0">
+                <option value="response-quality">Response Quality</option>
+                <option value="speed">Speed / Latency</option>
+                <option value="accuracy">Accuracy</option>
+                <option value="helpfulness">Helpfulness</option>
+                <option value="tone">Tone & Style</option>
+                <option value="tool-use">Tool Usage</option>
+                <option value="memory">Memory / Context</option>
+                <option value="creativity">Creativity</option>
+            </select>
+            <label style="font-size:.9rem;color:#aaa">Rating</label>
+            <div class="rating-stars" id="rating-stars">
+                <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+            </div>
+            <label style="font-size:.9rem;color:#aaa">Details</label>
+            <textarea class="fb-input" id="fb-details" rows="3" placeholder="What went well or could improve?"></textarea>
+            <div style="margin-top:.8rem">
+                <label style="font-size:.9rem;color:#aaa">Tags</label>
+                <div id="tag-list" style="margin:.4rem 0">
+                    <span class="tag" data-t="slow">🐌 slow</span>
+                    <span class="tag" data-t="wrong">❌ wrong</span>
+                    <span class="tag" data-t="helpful">✅ helpful</span>
+                    <span class="tag" data-t="confusing">😕 confusing</span>
+                    <span class="tag" data-t="impressive">🌟 impressive</span>
+                    <span class="tag" data-t="repetitive">🔁 repetitive</span>
+                    <span class="tag" data-t="off-topic">🎯 off-topic</span>
+                    <span class="tag" data-t="creative">🎨 creative</span>
+                </div>
+            </div>
+            <button class="fb-btn" onclick="submitFeedback()" style="margin-top:.8rem;width:100%">Submit Feedback</button>
+        </div>
+
+        <!-- Sentiment Trend -->
+        <div class="fb-card">
+            <h2>📊 Sentiment Trend</h2>
+            <div class="sentiment-gauge"><canvas id="gauge-canvas" width="200" height="110"></canvas></div>
+            <div class="sentiment-label" id="sentiment-label">Neutral</div>
+            <div class="canvas-wrap"><canvas id="trend-canvas" height="150"></canvas></div>
+            <div style="display:flex;justify-content:center;gap:.5rem;margin-top:.5rem">
+                <button class="fb-btn fb-btn-sm fb-btn-outline" onclick="setTrendRange('7d')">7d</button>
+                <button class="fb-btn fb-btn-sm fb-btn-outline" onclick="setTrendRange('30d')">30d</button>
+                <button class="fb-btn fb-btn-sm fb-btn-outline" onclick="setTrendRange('all')">All</button>
+            </div>
+        </div>
+
+        <!-- Pattern Detection -->
+        <div class="fb-card">
+            <h2>🔍 Detected Patterns <span class="auto-badge">AUTO</span></h2>
+            <div id="patterns-list" class="feed-scroll"></div>
+        </div>
+
+        <!-- Proactive Recommendations -->
+        <div class="fb-card">
+            <h2>💡 Improvement Recommendations</h2>
+            <div id="rec-list" class="feed-scroll"></div>
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="fb-card">
+            <h2>📈 Category Breakdown</h2>
+            <div id="category-bars"></div>
+        </div>
+
+        <!-- Auto-Improve Settings -->
+        <div class="fb-card">
+            <h2>⚙️ Autonomous Improvement</h2>
+            <p style="font-size:.85rem;color:#888;margin-bottom:1rem">When enabled, the agent will automatically adjust behavior based on feedback patterns.</p>
+            <div class="toggle-row">
+                <div class="toggle on" id="tog-tone" onclick="toggleSetting(this)"></div>
+                <span style="font-size:.9rem">Auto-adjust tone based on feedback</span>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle on" id="tog-verbosity" onclick="toggleSetting(this)"></div>
+                <span style="font-size:.9rem">Adapt response verbosity</span>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle" id="tog-tools" onclick="toggleSetting(this)"></div>
+                <span style="font-size:.9rem">Auto-select preferred tools</span>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle" id="tog-escalate" onclick="toggleSetting(this)"></div>
+                <span style="font-size:.9rem">Auto-escalate negative trends</span>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle on" id="tog-learn" onclick="toggleSetting(this)"></div>
+                <span style="font-size:.9rem">Learn user preferences over time</span>
+            </div>
+            <div id="auto-log" class="feed-scroll" style="margin-top:1rem;max-height:150px"></div>
+        </div>
+
+        <!-- Feedback Timeline -->
+        <div class="fb-card fb-full">
+            <h2>🕐 Feedback Timeline</h2>
+            <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+                <button class="fb-btn fb-btn-sm fb-btn-outline" onclick="filterTimeline('all')">All</button>
+                <button class="fb-btn fb-btn-sm fb-btn-outline" onclick="filterTimeline('positive')">👍 Positive</button>
+                <button class="fb-btn fb-btn-sm fb-btn-outline" onclick="filterTimeline('negative')">👎 Negative</button>
+                <button class="fb-btn fb-btn-sm fb-btn-outline" onclick="filterTimeline('pattern')">🔍 Patterns</button>
+                <button class="fb-btn fb-btn-sm fb-btn-outline" onclick="filterTimeline('improvement')">⚡ Improvements</button>
+            </div>
+            <div id="timeline" class="feed-scroll" style="max-height:350px"></div>
+        </div>
+    </div>
+
+    <!-- Simulate -->
+    <div style="text-align:center;margin:1rem 0 3rem">
+        <button class="fb-btn" onclick="simulateBatch()" style="margin:.3rem">▶ Simulate 10 Feedback</button>
+        <button class="fb-btn fb-btn-outline" onclick="runAnalysis()" style="margin:.3rem">🔬 Run Analysis</button>
+        <button class="fb-btn fb-btn-outline" onclick="exportData()" style="margin:.3rem">📥 Export JSON</button>
+        <button class="fb-btn fb-btn-outline" onclick="resetAll()" style="margin:.3rem">🗑 Reset</button>
+    </div>
+</div>
+
+<script>
+const CATEGORIES=['response-quality','speed','accuracy','helpfulness','tone','tool-use','memory','creativity'];
+const CAT_LABELS={'response-quality':'Response Quality','speed':'Speed','accuracy':'Accuracy','helpfulness':'Helpfulness','tone':'Tone & Style','tool-use':'Tool Usage','memory':'Memory','creativity':'Creativity'};
+const CAT_COLORS={'response-quality':'#6c63ff','speed':'#ff6384','accuracy':'#36a2eb','helpfulness':'#4bc0c0','tone':'#f5a623','tool-use':'#9966ff','memory':'#ff9f40','creativity':'#44bb44'};
+let feedbackData=[],patterns=[],recommendations=[],autoLog=[],selectedRating=0,selectedTags=new Set(),trendRange='30d',timelineFilter='all',improvements=0;
+
+// Stars
+document.querySelectorAll('#rating-stars span').forEach(s=>{
+    s.addEventListener('click',()=>{selectedRating=+s.dataset.v;updateStars()});
+    s.addEventListener('mouseenter',()=>{document.querySelectorAll('#rating-stars span').forEach(x=>x.classList.toggle('active',+x.dataset.v<=+s.dataset.v))});
+});
+document.getElementById('rating-stars').addEventListener('mouseleave',updateStars);
+function updateStars(){document.querySelectorAll('#rating-stars span').forEach(x=>x.classList.toggle('active',+x.dataset.v<=selectedRating))}
+
+// Tags
+document.querySelectorAll('.tag').forEach(t=>t.addEventListener('click',()=>{
+    const tag=t.dataset.t;selectedTags.has(tag)?selectedTags.delete(tag):selectedTags.add(tag);
+    t.classList.toggle('selected');
+}));
+
+function toggleSetting(el){el.classList.toggle('on');addAutoLog(el.classList.contains('on')?'Enabled':'Disabled',el.parentElement.querySelector('span').textContent)}
+
+function addAutoLog(action,setting){
+    autoLog.unshift({time:new Date(),action,setting});
+    renderAutoLog();
+}
+function renderAutoLog(){
+    document.getElementById('auto-log').innerHTML=autoLog.slice(0,10).map(l=>
+        `<div style="font-size:.8rem;padding:.3rem 0;border-bottom:1px solid #1a1a2e;color:#888">
+            <span style="color:#6c63ff">${l.action}</span> ${l.setting} <span style="float:right">${timeAgo(l.time)}</span>
+        </div>`
+    ).join('');
+}
+
+function submitFeedback(){
+    if(!selectedRating){alert('Please select a rating');return}
+    const fb={
+        id:Date.now(),time:new Date(),
+        category:document.getElementById('fb-category').value,
+        rating:selectedRating,
+        details:document.getElementById('fb-details').value,
+        tags:[...selectedTags],
+        sentiment:selectedRating>=4?'positive':selectedRating<=2?'negative':'neutral'
+    };
+    feedbackData.push(fb);
+    selectedRating=0;selectedTags.clear();
+    document.getElementById('fb-details').value='';
+    document.querySelectorAll('.tag').forEach(t=>t.classList.remove('selected'));
+    updateStars();
+    detectPatterns();
+    generateRecommendations();
+    renderAll();
+}
+
+function simulateBatch(){
+    const phrases={positive:['Great response!','Very helpful','Exactly what I needed','Fast and accurate','Love the creativity'],negative:['Too slow','Wrong answer','Didn\'t understand context','Off topic','Repetitive response'],neutral:['Okay response','Could be better','Partially helpful']};
+    for(let i=0;i<10;i++){
+        const rating=Math.floor(Math.random()*5)+1;
+        const sent=rating>=4?'positive':rating<=2?'negative':'neutral';
+        const cat=CATEGORIES[Math.floor(Math.random()*CATEGORIES.length)];
+        const tags=[];
+        if(rating<=2)tags.push(['slow','wrong','confusing','repetitive','off-topic'][Math.floor(Math.random()*5)]);
+        if(rating>=4)tags.push(['helpful','impressive','creative'][Math.floor(Math.random()*3)]);
+        feedbackData.push({
+            id:Date.now()+i,
+            time:new Date(Date.now()-Math.random()*30*86400000),
+            category:cat,rating,
+            details:phrases[sent][Math.floor(Math.random()*phrases[sent].length)],
+            tags,sentiment:sent
+        });
+    }
+    feedbackData.sort((a,b)=>a.time-b.time);
+    detectPatterns();
+    generateRecommendations();
+    renderAll();
+}
+
+function detectPatterns(){
+    patterns=[];
+    // Frequency by category
+    const catCounts={};
+    feedbackData.forEach(f=>{catCounts[f.category]=(catCounts[f.category]||0)+1});
+    // Low-rated categories
+    const catRatings={};
+    feedbackData.forEach(f=>{if(!catRatings[f.category])catRatings[f.category]=[];catRatings[f.category].push(f.rating)});
+    for(const [cat,ratings] of Object.entries(catRatings)){
+        const avg=ratings.reduce((a,b)=>a+b,0)/ratings.length;
+        if(avg<3&&ratings.length>=3)patterns.push({type:'low-rating',severity:'high',category:cat,avg:avg.toFixed(1),count:ratings.length,msg:`Low satisfaction in ${CAT_LABELS[cat]}: avg ${avg.toFixed(1)}/5 across ${ratings.length} feedback`});
+    }
+    // Tag clusters
+    const tagCounts={};
+    feedbackData.forEach(f=>f.tags.forEach(t=>{tagCounts[t]=(tagCounts[t]||0)+1}));
+    for(const [tag,count] of Object.entries(tagCounts)){
+        if(count>=3)patterns.push({type:'tag-cluster',severity:count>=5?'high':'medium',msg:`"${tag}" mentioned ${count} times — recurring theme`,count});
+    }
+    // Declining trend (last 5 vs prev 5)
+    if(feedbackData.length>=10){
+        const recent=feedbackData.slice(-5).reduce((a,b)=>a+b.rating,0)/5;
+        const prev=feedbackData.slice(-10,-5).reduce((a,b)=>a+b.rating,0)/5;
+        if(recent<prev-0.5)patterns.push({type:'declining',severity:'high',msg:`Satisfaction declining: ${prev.toFixed(1)} → ${recent.toFixed(1)} (last 10 entries)`});
+        if(recent>prev+0.5)patterns.push({type:'improving',severity:'low',msg:`Satisfaction improving: ${prev.toFixed(1)} → ${recent.toFixed(1)} — keep it up!`});
+    }
+    // Negative streak
+    const last3=feedbackData.slice(-3);
+    if(last3.length===3&&last3.every(f=>f.rating<=2))patterns.push({type:'streak',severity:'high',msg:'3 consecutive negative ratings — immediate attention needed'});
+}
+
+function generateRecommendations(){
+    recommendations=[];
+    const catRatings={};
+    feedbackData.forEach(f=>{if(!catRatings[f.category])catRatings[f.category]=[];catRatings[f.category].push(f.rating)});
+    for(const [cat,ratings] of Object.entries(catRatings)){
+        const avg=ratings.reduce((a,b)=>a+b,0)/ratings.length;
+        if(avg<3){
+            const recs={
+                'response-quality':{icon:'📝',title:'Improve Response Quality',desc:'Add more examples and structure. Consider bullet points for complex answers.'},
+                'speed':{icon:'⚡',title:'Reduce Latency',desc:'Enable streaming responses. Cache common queries. Optimize tool selection.'},
+                'accuracy':{icon:'🎯',title:'Boost Accuracy',desc:'Add fact-checking step. Cross-reference multiple sources. Show confidence levels.'},
+                'helpfulness':{icon:'🤝',title:'Increase Helpfulness',desc:'Ask clarifying questions upfront. Provide actionable next steps. Offer alternatives.'},
+                'tone':{icon:'🎭',title:'Adjust Communication Style',desc:'Match user formality level. Reduce jargon. Be more empathetic in negative situations.'},
+                'tool-use':{icon:'🔧',title:'Optimize Tool Selection',desc:'Prefer tools users responded well to. Explain tool choices. Reduce unnecessary tool calls.'},
+                'memory':{icon:'🧠',title:'Improve Context Retention',desc:'Reference previous conversations. Track user preferences. Maintain topic continuity.'},
+                'creativity':{icon:'🎨',title:'Enhance Creative Responses',desc:'Offer multiple approaches. Use analogies. Think outside conventional patterns.'}
+            };
+            if(recs[cat])recommendations.push({...recs[cat],priority:avg<2?'high':'medium',auto:document.getElementById('tog-learn').classList.contains('on')});
+        }
+    }
+    // Auto-improvements
+    if(document.getElementById('tog-tone').classList.contains('on')){
+        const toneRatings=catRatings['tone']||[];
+        if(toneRatings.length>=2){
+            const avg=toneRatings.reduce((a,b)=>a+b,0)/toneRatings.length;
+            if(avg<3.5){improvements++;addAutoLog('Auto-adjusted','Tone warmth increased based on feedback')}
+        }
+    }
+    if(document.getElementById('tog-verbosity').classList.contains('on')&&feedbackData.length>=5){
+        const recent=feedbackData.slice(-5);
+        const hasRepetitive=recent.some(f=>f.tags.includes('repetitive'));
+        if(hasRepetitive){improvements++;addAutoLog('Auto-adjusted','Response verbosity reduced — repetitive tag detected')}
+    }
+}
+
+function renderAll(){
+    // Stats
+    const total=feedbackData.length;
+    document.getElementById('stat-total').textContent=total;
+    if(total>0){
+        const avg=(feedbackData.reduce((a,b)=>a+b.rating,0)/total).toFixed(1);
+        document.getElementById('stat-avg').textContent=avg+'⭐';
+        // NPS: promoters(4-5) - detractors(1-2)
+        const promoters=feedbackData.filter(f=>f.rating>=4).length;
+        const detractors=feedbackData.filter(f=>f.rating<=2).length;
+        const nps=Math.round((promoters-detractors)/total*100);
+        document.getElementById('stat-nps').textContent=(nps>0?'+':'')+nps;
+        document.getElementById('stat-nps').style.color=nps>20?'#44bb44':nps<-20?'#ff4444':'#f5a623';
+    }
+    document.getElementById('stat-patterns').textContent=patterns.length;
+    document.getElementById('stat-improvements').textContent=improvements;
+    renderGauge();renderTrend();renderPatterns();renderRecs();renderCategoryBars();renderTimeline();
+}
+
+function renderGauge(){
+    const c=document.getElementById('gauge-canvas');const ctx=c.getContext('2d');
+    ctx.clearRect(0,0,200,110);
+    const avg=feedbackData.length?feedbackData.reduce((a,b)=>a+b.rating,0)/feedbackData.length:2.5;
+    const pct=(avg-1)/4;
+    // Draw arc
+    ctx.lineWidth=14;
+ctx.strokeStyle='#1a1a2e';ctx.beginPath();ctx.arc(100,100,70,Math.PI,0);ctx.stroke();
+    const grad=ctx.createLinearGradient(0,0,200,0);
+    grad.addColorStop(0,'#ff4444');grad.addColorStop(0.5,'#f5a623');grad.addColorStop(1,'#44bb44');
+    ctx.strokeStyle=grad;ctx.beginPath();ctx.arc(100,100,70,Math.PI,Math.PI+Math.PI*pct);ctx.stroke();
+    // Needle
+    const angle=Math.PI+Math.PI*pct;
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();
+    ctx.moveTo(100,100);ctx.lineTo(100+Math.cos(angle)*55,100+Math.sin(angle)*55);ctx.stroke();
+    const label=avg>=4?'Positive':avg>=3?'Neutral':avg>=2?'Concerning':'Critical';
+    document.getElementById('sentiment-label').textContent=`${label} (${avg.toFixed(1)}/5)`;
+    document.getElementById('sentiment-label').style.color=avg>=4?'#44bb44':avg>=3?'#f5a623':avg>=2?'#ff9f40':'#ff4444';
+}
+
+function renderTrend(){
+    const c=document.getElementById('trend-canvas');const ctx=c.getContext('2d');
+    const w=c.width=c.parentElement.offsetWidth;const h=c.height=150;
+    ctx.clearRect(0,0,w,h);
+    if(!feedbackData.length)return;
+    let filtered=[...feedbackData];
+    const now=Date.now();
+    if(trendRange==='7d')filtered=filtered.filter(f=>now-f.time.getTime()<7*86400000);
+    else if(trendRange==='30d')filtered=filtered.filter(f=>now-f.time.getTime()<30*86400000);
+    if(!filtered.length)return;
+    // Group by day
+    const days={};
+    filtered.forEach(f=>{const d=f.time.toISOString().slice(0,10);if(!days[d])days[d]=[];days[d].push(f.rating)});
+    const points=Object.entries(days).sort().map(([d,r])=>({d,avg:r.reduce((a,b)=>a+b,0)/r.length}));
+    if(points.length<2)return;
+    const pad=30;const xStep=(w-2*pad)/(points.length-1);
+    // Grid
+    ctx.strokeStyle='#222';ctx.lineWidth=1;
+    for(let i=1;i<=5;i++){const y=h-pad-(i-1)/(4)*(h-2*pad);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-pad,y);ctx.stroke()}
+    // Line
+    ctx.strokeStyle='#6c63ff';ctx.lineWidth=2;ctx.beginPath();
+    points.forEach((p,i)=>{const x=pad+i*xStep;const y=h-pad-(p.avg-1)/4*(h-2*pad);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+    ctx.stroke();
+    // Dots
+    points.forEach((p,i)=>{const x=pad+i*xStep;const y=h-pad-(p.avg-1)/4*(h-2*pad);
+        ctx.fillStyle=p.avg>=4?'#44bb44':p.avg>=3?'#f5a623':'#ff4444';
+        ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill()});
+    // Labels
+    ctx.fillStyle='#666';ctx.font='10px sans-serif';ctx.textAlign='center';
+    points.forEach((p,i)=>{if(i%(Math.ceil(points.length/6))===0||i===points.length-1){
+        const x=pad+i*xStep;ctx.fillText(p.d.slice(5),x,h-5)}});
+}
+
+function renderPatterns(){
+    document.getElementById('patterns-list').innerHTML=patterns.length?patterns.map(p=>
+        `<div class="pattern-card">
+            <span class="severity severity-${p.severity}">${p.severity.toUpperCase()}</span>
+            <span style="font-size:.85rem;margin-left:.5rem">${p.msg}</span>
+        </div>`
+    ).join(''):'<p style="color:#666;font-size:.9rem;text-align:center;padding:2rem">Submit more feedback to detect patterns</p>';
+}
+
+function renderRecs(){
+    document.getElementById('rec-list').innerHTML=recommendations.length?recommendations.map(r=>
+        `<div class="rec-item">
+            <div class="rec-icon">${r.icon}</div>
+            <div class="rec-text">
+                <h4>${r.title}${r.auto?'<span class="auto-badge">AUTO-APPLY</span>':''}</h4>
+                <p>${r.desc}</p>
+            </div>
+        </div>`
+    ).join(''):'<p style="color:#666;font-size:.9rem;text-align:center;padding:2rem">No recommendations yet — keep collecting feedback</p>';
+}
+
+function renderCategoryBars(){
+    const catRatings={};
+    feedbackData.forEach(f=>{if(!catRatings[f.category])catRatings[f.category]=[];catRatings[f.category].push(f.rating)});
+    const entries=Object.entries(catRatings).map(([c,r])=>({cat:c,avg:r.reduce((a,b)=>a+b,0)/r.length,count:r.length})).sort((a,b)=>b.avg-a.avg);
+    document.getElementById('category-bars').innerHTML=entries.length?entries.map(e=>
+        `<div class="insight-bar">
+            <span class="label">${CAT_LABELS[e.cat]}</span>
+            <div class="bar-bg"><div class="bar-fill" style="width:${e.avg/5*100}%;background:${CAT_COLORS[e.cat]}"></div></div>
+            <span class="pct">${e.avg.toFixed(1)} (${e.count})</span>
+        </div>`
+    ).join(''):'<p style="color:#666;font-size:.9rem;text-align:center;padding:2rem">No data yet</p>';
+}
+
+function renderTimeline(){
+    let items=[];
+    feedbackData.forEach(f=>items.push({time:f.time,type:f.sentiment,html:`<strong>${CAT_LABELS[f.category]}</strong> — ${f.rating}⭐ ${f.details||''} ${f.tags.map(t=>'<span class="tag">'+t+'</span>').join('')}`}));
+    patterns.forEach(p=>items.push({time:new Date(),type:'pattern',html:`🔍 <strong>Pattern:</strong> ${p.msg}`}));
+    if(timelineFilter!=='all')items=items.filter(i=>timelineFilter==='positive'?i.type==='positive':timelineFilter==='negative'?i.type==='negative':timelineFilter==='pattern'?i.type==='pattern':i.type==='improvement');
+    items.sort((a,b)=>b.time-a.time);
+    const colors={positive:'#44bb44',negative:'#ff4444',neutral:'#f5a623',pattern:'#6c63ff',improvement:'#36a2eb'};
+    document.getElementById('timeline').innerHTML=items.length?items.slice(0,50).map(i=>
+        `<div class="timeline-item">
+            <div class="timeline-dot" style="background:${colors[i.type]||'#666'}"></div>
+            <div class="timeline-content">${i.html}<div class="meta">${timeAgo(i.time)}</div></div>
+        </div>`
+    ).join(''):'<p style="color:#666;text-align:center;padding:2rem">No items to show</p>';
+}
+
+function setTrendRange(r){trendRange=r;renderTrend()}
+function filterTimeline(f){timelineFilter=f;renderTimeline()}
+function timeAgo(d){const s=Math.floor((Date.now()-new Date(d).getTime())/1000);if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago'}
+
+function exportData(){
+    const blob=new Blob([JSON.stringify({feedback:feedbackData,patterns,recommendations,improvements},null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='feedback-loop-export.json';a.click();
+}
+function resetAll(){feedbackData=[];patterns=[];recommendations=[];autoLog=[];improvements=0;renderAll();renderAutoLog()}
+
+function runAnalysis(){detectPatterns();generateRecommendations();renderAll()}
+
+renderAll();
+</script>
+</body>
+</html>
