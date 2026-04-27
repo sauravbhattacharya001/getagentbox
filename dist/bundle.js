@@ -7045,7 +7045,6 @@ var AIGlossary = (function () {
 
 /* === src/modules/pipeline-builder.js === */
 
-
 /* ────────── Integration Pipeline Builder ────────── */
 var PipelineBuilder = (function () {
   'use strict';
@@ -7086,6 +7085,25 @@ var PipelineBuilder = (function () {
     'gmail+sheets':            { name: 'Email → Data', flow: 'AgentBox extracts data from incoming emails and logs it into spreadsheets.' }
   };
 
+  // Pre-built O(1) tool lookup by id — avoids linear scan in findTool()
+  var _toolById = {};
+  for (var _i = 0; _i < INTEGRATIONS.length; _i++) {
+    _toolById[INTEGRATIONS[_i].id] = INTEGRATIONS[_i];
+  }
+
+  // Pre-parsed pipeline entries with split keys — avoids re-splitting on
+  // every updatePipeline() call and enables fast Set-based membership checks
+  var _pipelineEntries = [];
+  (function () {
+    var keys = Object.keys(PIPELINES);
+    for (var i = 0; i < keys.length; i++) {
+      _pipelineEntries.push({
+        parts: keys[i].split('+'),
+        pipeline: PIPELINES[keys[i]]
+      });
+    }
+  })();
+
   var selected = [];
   var _section = null;
 
@@ -7100,23 +7118,37 @@ var PipelineBuilder = (function () {
     updatePipeline();
   }
 
+  /** Create a tool button element for the grid. */
+  function _createToolButton(tool) {
+    var btn = document.createElement('button');
+    btn.className = 'pipeline-tool-btn';
+    btn.setAttribute('data-tool', tool.id);
+    btn.setAttribute('aria-pressed', 'false');
+    btn.setAttribute('role', 'switch');
+    btn.setAttribute('aria-label', 'Add ' + tool.name + ' to pipeline');
+    btn.setAttribute('title', tool.desc);
+
+    var iconSpan = document.createElement('span');
+    iconSpan.className = 'pipeline-tool-icon';
+    iconSpan.textContent = tool.icon;
+
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'pipeline-tool-name';
+    nameSpan.textContent = tool.name;
+
+    btn.appendChild(iconSpan);
+    btn.appendChild(nameSpan);
+    btn.addEventListener('click', function () { toggleTool(tool.id); });
+    return btn;
+  }
+
   function renderToolGrid() {
     var grid = section().querySelector('.pipeline-tool-grid');
     if (!grid) return;
-    grid.innerHTML = '';
-    INTEGRATIONS.forEach(function (tool) {
-      var btn = document.createElement('button');
-      btn.className = 'pipeline-tool-btn';
-      btn.setAttribute('data-tool', tool.id);
-      btn.setAttribute('aria-pressed', 'false');
-      btn.setAttribute('role', 'switch');
-      btn.setAttribute('aria-label', 'Add ' + tool.name + ' to pipeline');
-      btn.setAttribute('title', tool.desc);
-      btn.innerHTML = '<span class="pipeline-tool-icon">' + tool.icon +
-        '</span><span class="pipeline-tool-name">' + tool.name + '</span>';
-      btn.addEventListener('click', function () { toggleTool(tool.id); });
-      grid.appendChild(btn);
-    });
+    while (grid.firstChild) grid.removeChild(grid.firstChild);
+    for (var i = 0; i < INTEGRATIONS.length; i++) {
+      grid.appendChild(_createToolButton(INTEGRATIONS[i]));
+    }
   }
 
   function toggleTool(id) {
@@ -7142,6 +7174,124 @@ var PipelineBuilder = (function () {
     }
   }
 
+  // ── DOM builders for pipeline visualization ──────────────────────
+
+  /** Create a single pipeline node (icon + name). */
+  function _createPipelineNode(tool) {
+    var node = document.createElement('div');
+    node.className = 'pipeline-node';
+
+    var icon = document.createElement('span');
+    icon.className = 'pipeline-node-icon';
+    icon.textContent = tool.icon;
+
+    var name = document.createElement('span');
+    name.className = 'pipeline-node-name';
+    name.textContent = tool.name;
+
+    node.appendChild(icon);
+    node.appendChild(name);
+    return node;
+  }
+
+  /** Create an arrow separator between pipeline nodes. */
+  function _createArrow() {
+    var arrow = document.createElement('div');
+    arrow.className = 'pipeline-arrow';
+    arrow.setAttribute('aria-hidden', 'true');
+    arrow.textContent = '→';
+    return arrow;
+  }
+
+  /** Create the central AgentBox hub element. */
+  function _createHub() {
+    var hub = document.createElement('div');
+    hub.className = 'pipeline-hub';
+
+    var icon = document.createElement('span');
+    icon.className = 'pipeline-hub-icon';
+    icon.textContent = '🤖';
+
+    var label = document.createElement('span');
+    label.className = 'pipeline-hub-label';
+    label.textContent = 'AgentBox';
+
+    var sub = document.createElement('span');
+    sub.className = 'pipeline-hub-sub';
+    sub.textContent = 'connects everything';
+
+    hub.appendChild(icon);
+    hub.appendChild(label);
+    hub.appendChild(sub);
+    return hub;
+  }
+
+  /** Build the flow visualization (nodes + arrows + hub) for the current selection. */
+  function _buildVisualization() {
+    var frag = document.createDocumentFragment();
+    var flow = document.createElement('div');
+    flow.className = 'pipeline-flow';
+
+    for (var i = 0; i < selected.length; i++) {
+      var tool = _toolById[selected[i]];
+      if (!tool) continue;
+      flow.appendChild(_createPipelineNode(tool));
+      if (i < selected.length - 1) {
+        flow.appendChild(_createArrow());
+      }
+    }
+
+    frag.appendChild(flow);
+    frag.appendChild(_createHub());
+    return frag;
+  }
+
+  /** Create a single pipeline result card (name + description). */
+  function _createResultCard(pipeline) {
+    var card = document.createElement('div');
+    card.className = 'pipeline-result-card';
+
+    var name = document.createElement('strong');
+    name.className = 'pipeline-result-name';
+    name.textContent = pipeline.name;
+
+    var flowP = document.createElement('p');
+    flowP.className = 'pipeline-result-flow';
+    flowP.textContent = pipeline.flow;
+
+    card.appendChild(name);
+    card.appendChild(flowP);
+    return card;
+  }
+
+  /** Build the description section showing matched pipelines or a generic message. */
+  function _buildDescription(matches) {
+    var wrapper = document.createElement('div');
+
+    if (matches.length === 0) {
+      wrapper.className = 'pipeline-result';
+      var p = document.createElement('p');
+      p.className = 'pipeline-generic';
+      p.textContent = 'AgentBox can connect these tools and automate workflows between them. Add more tools to see specific pipeline recipes!';
+      wrapper.appendChild(p);
+    } else {
+      wrapper.className = 'pipeline-results-list';
+
+      var title = document.createElement('h4');
+      title.className = 'pipeline-results-title';
+      title.textContent = '🔗 ' + matches.length + ' automation' + (matches.length > 1 ? 's' : '') + ' available';
+      wrapper.appendChild(title);
+
+      for (var i = 0; i < matches.length; i++) {
+        wrapper.appendChild(_createResultCard(matches[i]));
+      }
+    }
+
+    return wrapper;
+  }
+
+  // ── Core update logic ────────────────────────────────────────────
+
   function updatePipeline() {
     var viz = section().querySelector('.pipeline-visualization');
     var desc = section().querySelector('.pipeline-description');
@@ -7150,71 +7300,43 @@ var PipelineBuilder = (function () {
 
     if (counter) counter.textContent = selected.length + ' / 5 tools selected';
 
+    // Clear previous content
+    while (viz.firstChild) viz.removeChild(viz.firstChild);
+    while (desc.firstChild) desc.removeChild(desc.firstChild);
+
     if (selected.length === 0) {
-      viz.innerHTML = '<p class="pipeline-empty">Select tools above to build your agent pipeline</p>';
-      desc.innerHTML = '';
+      var empty = document.createElement('p');
+      empty.className = 'pipeline-empty';
+      empty.textContent = 'Select tools above to build your agent pipeline';
+      viz.appendChild(empty);
       return;
     }
 
-    // Build visual pipeline
-    var html = '<div class="pipeline-flow">';
-    for (var i = 0; i < selected.length; i++) {
-      var tool = findTool(selected[i]);
-      if (!tool) continue;
-      html += '<div class="pipeline-node">';
-      html += '<span class="pipeline-node-icon">' + tool.icon + '</span>';
-      html += '<span class="pipeline-node-name">' + tool.name + '</span>';
-      html += '</div>';
-      if (i < selected.length - 1) {
-        html += '<div class="pipeline-arrow" aria-hidden="true">→</div>';
-      }
-    }
-    html += '</div>';
+    viz.appendChild(_buildVisualization());
 
-    // AgentBox hub in center
-    html += '<div class="pipeline-hub">';
-    html += '<span class="pipeline-hub-icon">🤖</span>';
-    html += '<span class="pipeline-hub-label">AgentBox</span>';
-    html += '<span class="pipeline-hub-sub">connects everything</span>';
-    html += '</div>';
-
-    viz.innerHTML = html;
-
-    // Find matching pipelines
     var matches = findPipelines();
-    if (matches.length === 0) {
-      desc.innerHTML = '<div class="pipeline-result"><p class="pipeline-generic">AgentBox can connect these tools and automate workflows between them. Add more tools to see specific pipeline recipes!</p></div>';
-    } else {
-      var descHtml = '<div class="pipeline-results-list">';
-      descHtml += '<h4 class="pipeline-results-title">🔗 ' + matches.length + ' automation' + (matches.length > 1 ? 's' : '') + ' available</h4>';
-      for (var m = 0; m < matches.length; m++) {
-        descHtml += '<div class="pipeline-result-card">';
-        descHtml += '<strong class="pipeline-result-name">' + matches[m].name + '</strong>';
-        descHtml += '<p class="pipeline-result-flow">' + matches[m].flow + '</p>';
-        descHtml += '</div>';
-      }
-      descHtml += '</div>';
-      desc.innerHTML = descHtml;
-    }
+    desc.appendChild(_buildDescription(matches));
   }
 
   function findTool(id) {
-    for (var i = 0; i < INTEGRATIONS.length; i++) {
-      if (INTEGRATIONS[i].id === id) return INTEGRATIONS[i];
-    }
-    return null;
+    return _toolById[id] || null;
   }
 
   function findPipelines() {
+    // Build a Set of selected ids for O(1) membership checks
+    var selectedSet = {};
+    for (var s = 0; s < selected.length; s++) {
+      selectedSet[selected[s]] = true;
+    }
+
     var matches = [];
-    var keys = Object.keys(PIPELINES);
-    for (var k = 0; k < keys.length; k++) {
-      var parts = keys[k].split('+');
+    for (var k = 0; k < _pipelineEntries.length; k++) {
+      var parts = _pipelineEntries[k].parts;
       var allPresent = true;
       for (var p = 0; p < parts.length; p++) {
-        if (selected.indexOf(parts[p]) < 0) { allPresent = false; break; }
+        if (!selectedSet[parts[p]]) { allPresent = false; break; }
       }
-      if (allPresent) matches.push(PIPELINES[keys[k]]);
+      if (allPresent) matches.push(_pipelineEntries[k].pipeline);
     }
     return matches;
   }
