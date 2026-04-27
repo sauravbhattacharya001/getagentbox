@@ -1,0 +1,89 @@
+name: 🔒 Security Vulnerability
+description: Report a security issue (XSS, data exposure, dependency vulnerability, etc.)
+title: "[Security]: "
+labels: ["security", "priority: high"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **For critical vulnerabilities** that could expose user data or enable attacks,
+        please email the maintainer directly instead of opening a public issue.
+
+        For non-critical security improvements (CSP headers, dependency updates, etc.),
+        this template is fine.
+
+  - type: dropdown
+    id: vulnerability-type
+    attributes:
+      label: Vulnerability Type
+      description: What category does this fall into?
+      options:
+        - Cross-Site Scripting (XSS)
+        - Content injection
+        - Open redirect
+        - Insecure dependency
+        - Missing security headers (CSP, HSTS, etc.)
+        - Mixed content (HTTP resources on HTTPS page)
+        - Sensitive data exposure
+        - Clickjacking
+        - Subresource Integrity (SRI) missing
+        - Third-party script risk
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Estimated Severity
+      description: How impactful is this vulnerability?
+      options:
+        - Critical (active exploitation possible)
+        - High (user data at risk)
+        - Medium (security best practice violation)
+        - Low (defense-in-depth improvement)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the vulnerability and its potential impact
+      placeholder: "The chat demo injects user input into innerHTML without sanitization..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we verify this issue? Include a proof of concept if possible.
+      placeholder: |
+        1. Open the landing page
+        2. Open browser DevTools console
+        3. Execute: ...
+        4. Observe: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected-components
+    attributes:
+      label: Affected Components
+      description: Which files, scripts, or page sections are involved?
+      placeholder: "index.html lines 200-215, chat-demo.js handleInput()"
+
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested Fix
+      description: How would you remediate this? Include code snippets if helpful.
+
+  - type: checkboxes
+    id: disclosure
+    attributes:
+      label: Responsible Disclosure
+      options:
+        - label: I have not publicly disclosed this vulnerability elsewhere
+          required: true

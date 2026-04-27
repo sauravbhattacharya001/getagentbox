@@ -1,0 +1,90 @@
+name: ♿ Accessibility Issue
+description: Report barriers that prevent people from using the site (screen readers, keyboard nav, color contrast, etc.)
+title: "[A11y]: "
+labels: ["accessibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Accessibility matters. Help us make the landing page usable for everyone.
+
+  - type: dropdown
+    id: a11y-category
+    attributes:
+      label: Accessibility Category
+      description: What kind of barrier are you reporting?
+      options:
+        - Screen reader incompatibility
+        - Keyboard navigation blocked
+        - Focus management / focus trap
+        - Color contrast insufficient
+        - Missing alt text or ARIA labels
+        - Motion / animation sensitivity (prefers-reduced-motion)
+        - Text too small or not resizable
+        - Touch target too small
+        - Language / reading direction
+        - Semantic HTML issues
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: wcag-level
+    attributes:
+      label: WCAG Guideline (if known)
+      description: Which WCAG success criterion does this relate to?
+      options:
+        - "1.1.1 Non-text Content"
+        - "1.3.1 Info and Relationships"
+        - "1.4.1 Use of Color"
+        - "1.4.3 Contrast (Minimum)"
+        - "1.4.11 Non-text Contrast"
+        - "2.1.1 Keyboard"
+        - "2.1.2 No Keyboard Trap"
+        - "2.4.3 Focus Order"
+        - "2.4.7 Focus Visible"
+        - "2.5.5 Target Size"
+        - "3.1.1 Language of Page"
+        - "4.1.2 Name, Role, Value"
+        - "Not sure / Other"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What's the barrier?
+      description: Describe what's inaccessible and who it affects
+      placeholder: "The FAQ accordion items can't be toggled with Enter/Space keys, blocking keyboard-only users..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: assistive-tech
+    attributes:
+      label: Assistive Technology Used
+      description: What tools revealed the issue?
+      placeholder: |
+        - NVDA 2024.1 + Chrome 124
+        - axe DevTools scan
+        - Lighthouse accessibility audit (score: 78)
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Accessible Behavior
+      description: How should it work for users with this need?
+      placeholder: "Accordion headers should be focusable buttons that toggle with Enter or Space..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshots / Audit Output
+      description: Drag and drop screenshots, Lighthouse reports, or axe scan results
+      placeholder: Paste or drag images here
+
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested Fix
+      description: How would you fix this? Code snippets welcome.

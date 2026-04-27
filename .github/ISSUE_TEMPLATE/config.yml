@@ -1,8 +1,11 @@
 blank_issues_enabled: true
 contact_links:
-  - name: 💬 Try AgentBox
+  - name: 🤖 Try AgentBox
     url: https://t.me/AgentBox11Bot
-    about: Start chatting with AgentBox on Telegram — 20 free messages/day
+    about: Start chatting with AgentBox on Telegram - 20 free messages/day
   - name: 🌐 Live Site
     url: https://sauravbhattacharya001.github.io/getagentbox/
     about: Visit the landing page to see features and interactive demos
+  - name: 💬 Questions & Discussion
+    url: https://github.com/sauravbhattacharya001/getagentbox/discussions
+    about: Ask questions or start a discussion (no issue needed)
