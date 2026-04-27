@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Task Decomposer — AgentBox</title>
+    <meta name="description" content="Describe a complex goal and watch AgentBox autonomously break it into a dependency graph of sub-tasks with effort estimates, critical path, and smart scheduling.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #fbbf24;
+            --color-danger: #ef4444;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .td-header { text-align: center; padding: 2rem 1rem 1rem; }
+        .td-header h1 {
+            font-size: 2.2rem; margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent), var(--color-primary-alt));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .td-header p { color: var(--color-text-muted); max-width: 640px; margin: 0 auto; }
+        .td-back {
+            position: absolute; top: 1rem; left: 1rem;
+            color: var(--color-text-muted); text-decoration: none; font-size: 0.9rem;
+        }
+        .td-back:hover { color: var(--color-primary); }
+
+        /* Input area */
+        .td-input-area {
+            max-width: 720px; margin: 1.5rem auto; padding: 0 1rem;
+            display: flex; gap: 0.5rem; flex-wrap: wrap;
+        }
+        .td-input-area textarea {
+            flex: 1; min-width: 280px; padding: 0.75rem 1rem; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle); background: var(--color-surface);
+            color: var(--color-text); font-size: 0.95rem; resize: vertical;
+            min-height: 56px; max-height: 200px; outline: none;
+            font-family: inherit; transition: border 0.2s;
+        }
+        .td-input-area textarea:focus { border-color: var(--color-primary); }
+        .td-btn {
+            padding: 0.6rem 1.2rem; border: 1px solid rgba(255,255,255,0.15);
+            border-radius: var(--radius-sm); background: var(--color-surface);
+            color: var(--color-text); cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+            white-space: nowrap; align-self: flex-end;
+        }
+        .td-btn:hover { background: var(--color-surface-hover); }
+        .td-btn.primary { border-color: var(--color-primary); color: var(--color-primary); }
+        .td-btn.primary:hover { background: rgba(0, 212, 255, 0.15); }
+        .td-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Presets */
+        .td-presets {
+            max-width: 720px; margin: 0 auto 1rem; padding: 0 1rem;
+            display: flex; gap: 0.4rem; flex-wrap: wrap;
+        }
+        .td-preset {
+            padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.75rem;
+            border: 1px solid var(--border-subtle); background: var(--color-surface);
+            color: var(--color-text-muted); cursor: pointer; transition: all 0.2s;
+        }
+        .td-preset:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+        /* Stats bar */
+        .td-stats {
+            max-width: 900px; margin: 0 auto 1rem; padding: 0 1rem;
+            display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+        }
+        .td-stat {
+            background: var(--color-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm); padding: 0.6rem 1rem; text-align: center;
+            min-width: 120px;
+        }
+        .td-stat-val { font-size: 1.4rem; font-weight: 700; }
+        .td-stat-lbl { font-size: 0.7rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Controls row */
+        .td-controls {
+            max-width: 900px; margin: 0 auto 1rem; padding: 0 1rem;
+            display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;
+        }
+
+        /* Canvas */
+        .td-canvas-wrap {
+            max-width: 960px; margin: 0 auto; padding: 0 1rem;
+        }
+        .td-canvas {
+            width: 100%; height: 520px; border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md); background: var(--color-bg-mid);
+            position: relative; overflow: hidden; cursor: grab;
+        }
+        .td-canvas:active { cursor: grabbing; }
+        .td-canvas svg { width: 100%; height: 100%; }
+
+        /* Gantt */
+        .td-gantt-wrap {
+            max-width: 960px; margin: 1rem auto; padding: 0 1rem;
+        }
+        .td-gantt-title {
+            font-size: 1rem; margin-bottom: 0.5rem; color: var(--color-text-muted);
+        }
+        .td-gantt {
+            background: var(--color-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm); overflow: hidden;
+        }
+        .td-gantt-row {
+            display: flex; align-items: center; padding: 0.35rem 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;
+        }
+        .td-gantt-label { width: 160px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .td-gantt-bar-area { flex: 1; height: 20px; position: relative; }
+        .td-gantt-bar {
+            position: absolute; top: 2px; height: 16px; border-radius: 4px;
+            transition: all 0.3s; opacity: 0.85;
+        }
+        .td-gantt-bar.critical { opacity: 1; box-shadow: 0 0 8px rgba(0,212,255,0.4); }
+
+        /* Detail panel */
+        .td-detail {
+            max-width: 960px; margin: 1rem auto; padding: 0 1rem;
+        }
+        .td-detail-panel {
+            background: var(--color-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md); padding: 1.2rem; display: none;
+        }
+        .td-detail-panel.open { display: block; }
+        .td-detail-panel h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .td-detail-row { display: flex; gap: 1rem; margin-bottom: 0.3rem; font-size: 0.85rem; }
+        .td-detail-key { color: var(--color-text-muted); min-width: 100px; }
+
+        /* Log */
+        .td-log-wrap { max-width: 960px; margin: 1rem auto; padding: 0 1rem; }
+        .td-log {
+            background: var(--color-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm); padding: 0.75rem; max-height: 180px;
+            overflow-y: auto; font-size: 0.75rem; font-family: monospace;
+            color: var(--color-text-muted);
+        }
+        .td-log-entry { margin-bottom: 0.2rem; }
+        .td-log-entry .time { color: var(--color-primary); margin-right: 0.5rem; }
+
+        /* Footer */
+        .td-footer {
+            text-align: center; padding: 2rem 1rem; margin-top: 2rem;
+            font-size: 0.8rem; color: var(--color-text-muted);
+        }
+
+        /* Tooltip */
+        .td-tooltip {
+            position: absolute; background: #222; color: #fff; padding: 0.5rem 0.7rem;
+            border-radius: 6px; font-size: 0.75rem; pointer-events: none;
+            z-index: 100; box-shadow: var(--shadow-md); max-width: 220px;
+            opacity: 0; transition: opacity 0.15s;
+        }
+        .td-tooltip.show { opacity: 1; }
+
+        @media (max-width: 600px) {
+            .td-header h1 { font-size: 1.5rem; }
+            .td-canvas { height: 380px; }
+            .td-gantt-label { width: 100px; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="td-back">← Back to AgentBox</a>
+
+    <header class="td-header">
+        <h1>🧩 Autonomous Task Decomposer</h1>
+        <p>Describe a complex goal. AgentBox autonomously decomposes it into a dependency graph of sub-tasks with effort estimates, critical-path analysis, and smart scheduling.</p>
+    </header>
+
+    <div class="td-input-area">
+        <textarea id="goalInput" placeholder="Describe your goal... e.g. 'Build a mobile app for tracking fitness goals with social features'" rows="2"></textarea>
+        <button class="td-btn primary" id="decomposeBtn" onclick="decompose()">🧠 Decompose</button>
+        <button class="td-btn" id="exportBtn" onclick="exportJSON()" disabled>📥 Export JSON</button>
+    </div>
+
+    <div class="td-presets">
+        <button class="td-preset" onclick="loadPreset(0)">🚀 Launch a SaaS Product</button>
+        <button class="td-preset" onclick="loadPreset(1)">📱 Build a Mobile App</button>
+        <button class="td-preset" onclick="loadPreset(2)">🎓 Online Course Platform</button>
+        <button class="td-preset" onclick="loadPreset(3)">🏠 Smart Home Setup</button>
+        <button class="td-preset" onclick="loadPreset(4)">📊 Data Pipeline</button>
+        <button class="td-preset" onclick="loadPreset(5)">🤖 Deploy AI Agent Fleet</button>
+    </div>
+
+    <div class="td-stats" id="statsBar" style="display:none">
+        <div class="td-stat"><div class="td-stat-val" id="statTasks">0</div><div class="td-stat-lbl">Tasks</div></div>
+        <div class="td-stat"><div class="td-stat-val" id="statDepth">0</div><div class="td-stat-lbl">Max Depth</div></div>
+        <div class="td-stat"><div class="td-stat-val" id="statCritical">0</div><div class="td-stat-lbl">Critical Path</div></div>
+        <div class="td-stat"><div class="td-stat-val" id="statEffort">0h</div><div class="td-stat-lbl">Total Effort</div></div>
+        <div class="td-stat"><div class="td-stat-val" id="statSpan">0h</div><div class="td-stat-lbl">Min Span</div></div>
+        <div class="td-stat"><div class="td-stat-val" id="statParallel">0</div><div class="td-stat-lbl">Parallelism</div></div>
+    </div>
+
+    <div class="td-controls" id="controlsBar" style="display:none">
+        <button class="td-btn" onclick="toggleView('graph')">📊 Graph View</button>
+        <button class="td-btn" onclick="toggleView('gantt')">📅 Gantt View</button>
+        <button class="td-btn" onclick="highlightCritical()">🔥 Critical Path</button>
+        <button class="td-btn" onclick="autoSchedule()">⚡ Auto-Schedule</button>
+        <button class="td-btn" onclick="reDecompose()">🔄 Re-decompose</button>
+    </div>
+
+    <div class="td-canvas-wrap" id="graphWrap">
+        <div class="td-canvas" id="graphCanvas">
+            <svg id="graphSvg"></svg>
+            <div class="td-tooltip" id="tooltip"></div>
+        </div>
+    </div>
+
+    <div class="td-gantt-wrap" id="ganttWrap" style="display:none">
+        <div class="td-gantt-title">📅 Gantt Schedule</div>
+        <div class="td-gantt" id="ganttChart"></div>
+    </div>
+
+    <div class="td-detail">
+        <div class="td-detail-panel" id="detailPanel">
+            <h3 id="detailTitle">Task Details</h3>
+            <div class="td-detail-row"><span class="td-detail-key">Description</span><span id="detailDesc">—</span></div>
+            <div class="td-detail-row"><span class="td-detail-key">Effort</span><span id="detailEffort">—</span></div>
+            <div class="td-detail-row"><span class="td-detail-key">Priority</span><span id="detailPriority">—</span></div>
+            <div class="td-detail-row"><span class="td-detail-key">Dependencies</span><span id="detailDeps">—</span></div>
+            <div class="td-detail-row"><span class="td-detail-key">Category</span><span id="detailCategory">—</span></div>
+            <div class="td-detail-row"><span class="td-detail-key">Risk</span><span id="detailRisk">—</span></div>
+            <div class="td-detail-row"><span class="td-detail-key">Start (scheduled)</span><span id="detailStart">—</span></div>
+            <div class="td-detail-row"><span class="td-detail-key">On Critical Path</span><span id="detailCritical">—</span></div>
+        </div>
+    </div>
+
+    <div class="td-log-wrap">
+        <div class="td-log" id="agentLog"></div>
+    </div>
+
+    <footer class="td-footer">
+        🤖 AgentBox — Autonomous Task Decomposer &middot; AI-powered project planning
+    </footer>
+
+<script>
+/* ── Data ── */
+const PRESETS = [
+    { goal: "Launch a SaaS product for team project management", tasks: [
+        { id: "t1", name: "Market Research", desc: "Analyze competitors and identify target audience", effort: 16, priority: "high", category: "planning", risk: "low", deps: [] },
+        { id: "t2", name: "Define MVP Scope", desc: "Identify core features for minimum viable product", effort: 8, priority: "high", category: "planning", risk: "medium", deps: ["t1"] },
+        { id: "t3", name: "UX Wireframes", desc: "Design user flows and low-fidelity wireframes", effort: 20, priority: "high", category: "design", risk: "low", deps: ["t2"] },
+        { id: "t4", name: "Brand & Visual Design", desc: "Logo, color palette, design system", effort: 16, priority: "medium", category: "design", risk: "low", deps: ["t2"] },
+        { id: "t5", name: "Backend Architecture", desc: "Design API, database schema, auth system", effort: 24, priority: "high", category: "engineering", risk: "high", deps: ["t2"] },
+        { id: "t6", name: "Frontend Scaffold", desc: "Set up React app, routing, state management", effort: 12, priority: "high", category: "engineering", risk: "low", deps: ["t3"] },
+        { id: "t7", name: "Auth & User Management", desc: "Signup, login, roles, permissions", effort: 20, priority: "high", category: "engineering", risk: "medium", deps: ["t5"] },
+        { id: "t8", name: "Core Project Board", desc: "Kanban board with drag-and-drop, task CRUD", effort: 32, priority: "high", category: "engineering", risk: "medium", deps: ["t5", "t6"] },
+        { id: "t9", name: "Real-time Collaboration", desc: "WebSocket-based live updates and presence", effort: 24, priority: "medium", category: "engineering", risk: "high", deps: ["t8"] },
+        { id: "t10", name: "Notification System", desc: "Email + in-app notifications for assignments and updates", effort: 16, priority: "medium", category: "engineering", risk: "low", deps: ["t7", "t8"] },
+        { id: "t11", name: "Payment Integration", desc: "Stripe subscription billing with free trial", effort: 16, priority: "high", category: "engineering", risk: "medium", deps: ["t7"] },
+        { id: "t12", name: "Landing Page", desc: "Marketing site with pricing, features, CTA", effort: 12, priority: "high", category: "marketing", risk: "low", deps: ["t4"] },
+        { id: "t13", name: "CI/CD Pipeline", desc: "Automated testing, staging, production deploys", effort: 8, priority: "medium", category: "devops", risk: "low", deps: ["t5"] },
+        { id: "t14", name: "Beta Testing", desc: "Invite beta users, collect feedback, iterate", effort: 24, priority: "high", category: "testing", risk: "medium", deps: ["t8", "t7", "t11"] },
+        { id: "t15", name: "Launch Campaign", desc: "Product Hunt, social media, email campaign", effort: 16, priority: "high", category: "marketing", risk: "medium", deps: ["t12", "t14"] }
+    ]},
+    { goal: "Build a mobile fitness tracking app with social features", tasks: [
+        { id: "t1", name: "User Research", desc: "Survey target users, analyze fitness app landscape", effort: 12, priority: "high", category: "planning", risk: "low", deps: [] },
+        { id: "t2", name: "Feature Specification", desc: "Define workout tracking, goals, social feed", effort: 8, priority: "high", category: "planning", risk: "low", deps: ["t1"] },
+        { id: "t3", name: "App Wireframes", desc: "Mobile-first UX for workout logging and feed", effort: 16, priority: "high", category: "design", risk: "low", deps: ["t2"] },
+        { id: "t4", name: "Backend API", desc: "REST API for users, workouts, social graph", effort: 24, priority: "high", category: "engineering", risk: "medium", deps: ["t2"] },
+        { id: "t5", name: "React Native Setup", desc: "Project scaffold, navigation, component library", effort: 10, priority: "high", category: "engineering", risk: "low", deps: ["t3"] },
+        { id: "t6", name: "Workout Tracker", desc: "Exercise logging, sets/reps, timer, history", effort: 28, priority: "high", category: "engineering", risk: "medium", deps: ["t4", "t5"] },
+        { id: "t7", name: "Goal System", desc: "Set weekly/monthly goals, progress tracking, streaks", effort: 16, priority: "high", category: "engineering", risk: "low", deps: ["t6"] },
+        { id: "t8", name: "Social Feed", desc: "Follow friends, share workouts, likes, comments", effort: 24, priority: "medium", category: "engineering", risk: "medium", deps: ["t4", "t5"] },
+        { id: "t9", name: "Push Notifications", desc: "Workout reminders, friend activity, goal alerts", effort: 12, priority: "medium", category: "engineering", risk: "low", deps: ["t6", "t8"] },
+        { id: "t10", name: "Health Kit Integration", desc: "Sync with Apple Health / Google Fit", effort: 16, priority: "medium", category: "engineering", risk: "high", deps: ["t6"] },
+        { id: "t11", name: "Leaderboards", desc: "Weekly challenges, friend rankings, badges", effort: 14, priority: "low", category: "engineering", risk: "low", deps: ["t7", "t8"] },
+        { id: "t12", name: "App Store Prep", desc: "Screenshots, description, review guidelines", effort: 8, priority: "high", category: "marketing", risk: "low", deps: ["t6", "t8"] },
+        { id: "t13", name: "Beta Test", desc: "TestFlight / internal testing, crash reporting", effort: 16, priority: "high", category: "testing", risk: "medium", deps: ["t9", "t10"] }
+    ]},
+    { goal: "Build an online course platform with live classes", tasks: [
+        { id: "t1", name: "Platform Requirements", desc: "Define course types, user roles, monetization", effort: 10, priority: "high", category: "planning", risk: "low", deps: [] },
+        { id: "t2", name: "Content Management System", desc: "Course builder with modules, lessons, quizzes", effort: 32, priority: "high", category: "engineering", risk: "medium", deps: ["t1"] },
+        { id: "t3", name: "Video Hosting Pipeline", desc: "Upload, transcode, adaptive streaming", effort: 24, priority: "high", category: "engineering", risk: "high", deps: ["t1"] },
+        { id: "t4", name: "Live Class System", desc: "WebRTC video rooms, chat, screen sharing", effort: 28, priority: "high", category: "engineering", risk: "high", deps: ["t3"] },
+        { id: "t5", name: "Student Dashboard", desc: "Progress tracking, certificates, bookmarks", effort: 16, priority: "medium", category: "engineering", risk: "low", deps: ["t2"] },
+        { id: "t6", name: "Payment & Subscriptions", desc: "Course purchases, subscription tiers, payouts to instructors", effort: 20, priority: "high", category: "engineering", risk: "medium", deps: ["t1"] },
+        { id: "t7", name: "Instructor Portal", desc: "Analytics, student management, earnings dashboard", effort: 18, priority: "medium", category: "engineering", risk: "low", deps: ["t2", "t6"] },
+        { id: "t8", name: "Discussion Forums", desc: "Per-course forums with threading and moderation", effort: 14, priority: "low", category: "engineering", risk: "low", deps: ["t2"] },
+        { id: "t9", name: "Search & Discovery", desc: "Full-text course search, filters, recommendations", effort: 12, priority: "medium", category: "engineering", risk: "low", deps: ["t2"] },
+        { id: "t10", name: "Marketing Site", desc: "Landing page, instructor recruitment, SEO", effort: 14, priority: "high", category: "marketing", risk: "low", deps: ["t1"] },
+        { id: "t11", name: "Load Testing", desc: "Simulate concurrent live classes, stress test video", effort: 10, priority: "high", category: "testing", risk: "medium", deps: ["t4", "t5"] },
+        { id: "t12", name: "Beta Launch", desc: "Onboard 10 instructors, 100 students, iterate", effort: 20, priority: "high", category: "testing", risk: "medium", deps: ["t7", "t11"] }
+    ]},
+    { goal: "Set up a smart home automation system", tasks: [
+        { id: "t1", name: "Needs Assessment", desc: "Audit rooms, identify automation opportunities", effort: 4, priority: "high", category: "planning", risk: "low", deps: [] },
+        { id: "t2", name: "Hub Selection", desc: "Choose smart home hub (Home Assistant, SmartThings)", effort: 4, priority: "high", category: "planning", risk: "medium", deps: ["t1"] },
+        { id: "t3", name: "Network Upgrade", desc: "Mesh WiFi, dedicated IoT VLAN, static IPs", effort: 8, priority: "high", category: "infrastructure", risk: "medium", deps: ["t1"] },
+        { id: "t4", name: "Lighting Automation", desc: "Smart bulbs, motion sensors, circadian schedules", effort: 10, priority: "high", category: "devices", risk: "low", deps: ["t2", "t3"] },
+        { id: "t5", name: "Climate Control", desc: "Smart thermostat, room sensors, seasonal schedules", effort: 8, priority: "high", category: "devices", risk: "low", deps: ["t2", "t3"] },
+        { id: "t6", name: "Security System", desc: "Cameras, door sensors, smart locks, alarm", effort: 12, priority: "high", category: "devices", risk: "medium", deps: ["t2", "t3"] },
+        { id: "t7", name: "Voice Assistants", desc: "Place speakers, configure routines, multi-room audio", effort: 6, priority: "medium", category: "devices", risk: "low", deps: ["t4", "t5"] },
+        { id: "t8", name: "Scene Automation", desc: "Morning, away, movie, sleep scenes with triggers", effort: 8, priority: "medium", category: "automation", risk: "low", deps: ["t4", "t5", "t6"] },
+        { id: "t9", name: "Energy Monitoring", desc: "Smart plugs, energy dashboard, cost alerts", effort: 6, priority: "low", category: "monitoring", risk: "low", deps: ["t2"] },
+        { id: "t10", name: "Presence Detection", desc: "Phone-based geo-fencing, BLE beacons", effort: 6, priority: "medium", category: "automation", risk: "medium", deps: ["t8"] },
+        { id: "t11", name: "Remote Access", desc: "VPN, secure cloud relay, mobile app setup", effort: 6, priority: "medium", category: "infrastructure", risk: "high", deps: ["t6", "t8"] },
+        { id: "t12", name: "Family Onboarding", desc: "Train household, create user profiles, document scenes", effort: 4, priority: "high", category: "testing", risk: "low", deps: ["t7", "t10"] }
+    ]},
+    { goal: "Build a real-time data pipeline for analytics", tasks: [
+        { id: "t1", name: "Requirements & Sources", desc: "Identify data sources, volume, latency requirements", effort: 8, priority: "high", category: "planning", risk: "low", deps: [] },
+        { id: "t2", name: "Schema Design", desc: "Define event schemas, versioning strategy", effort: 10, priority: "high", category: "planning", risk: "medium", deps: ["t1"] },
+        { id: "t3", name: "Kafka Cluster", desc: "Deploy Kafka brokers, configure topics, partitions", effort: 12, priority: "high", category: "infrastructure", risk: "medium", deps: ["t1"] },
+        { id: "t4", name: "Data Ingestion Layer", desc: "Connectors for APIs, databases, webhooks", effort: 16, priority: "high", category: "engineering", risk: "medium", deps: ["t2", "t3"] },
+        { id: "t5", name: "Stream Processing", desc: "Flink/Spark Streaming for transforms, enrichment", effort: 24, priority: "high", category: "engineering", risk: "high", deps: ["t4"] },
+        { id: "t6", name: "Data Lake Storage", desc: "S3/GCS with partitioning, compaction, lifecycle", effort: 10, priority: "high", category: "infrastructure", risk: "low", deps: ["t5"] },
+        { id: "t7", name: "Data Warehouse", desc: "Load into Snowflake/BigQuery, dbt models", effort: 16, priority: "high", category: "engineering", risk: "medium", deps: ["t6"] },
+        { id: "t8", name: "Dashboard Layer", desc: "Metabase/Grafana dashboards for key metrics", effort: 12, priority: "medium", category: "visualization", risk: "low", deps: ["t7"] },
+        { id: "t9", name: "Alerting & Anomaly Detection", desc: "Threshold alerts, statistical anomaly detection", effort: 14, priority: "medium", category: "monitoring", risk: "medium", deps: ["t5"] },
+        { id: "t10", name: "Data Quality Checks", desc: "Schema validation, freshness, completeness monitors", effort: 10, priority: "high", category: "monitoring", risk: "low", deps: ["t5"] },
+        { id: "t11", name: "Backfill System", desc: "Historical replay, idempotent re-processing", effort: 12, priority: "medium", category: "engineering", risk: "high", deps: ["t5", "t6"] },
+        { id: "t12", name: "Documentation & Runbooks", desc: "Architecture docs, on-call playbooks, SLAs", effort: 8, priority: "medium", category: "documentation", risk: "low", deps: ["t8", "t9", "t10"] }
+    ]},
+    { goal: "Deploy an autonomous AI agent fleet for customer support", tasks: [
+        { id: "t1", name: "Define Agent Roles", desc: "Triage, FAQ, escalation, sentiment analysis roles", effort: 10, priority: "high", category: "planning", risk: "low", deps: [] },
+        { id: "t2", name: "Knowledge Base", desc: "Index help docs, past tickets, product manuals", effort: 16, priority: "high", category: "data", risk: "medium", deps: ["t1"] },
+        { id: "t3", name: "LLM Selection & Tuning", desc: "Evaluate models, fine-tune for domain, set guardrails", effort: 20, priority: "high", category: "engineering", risk: "high", deps: ["t1"] },
+        { id: "t4", name: "Triage Agent", desc: "Auto-classify tickets by urgency, topic, sentiment", effort: 16, priority: "high", category: "engineering", risk: "medium", deps: ["t2", "t3"] },
+        { id: "t5", name: "FAQ Agent", desc: "Answer common questions from knowledge base", effort: 14, priority: "high", category: "engineering", risk: "low", deps: ["t2", "t3"] },
+        { id: "t6", name: "Escalation Agent", desc: "Detect frustration, hand off to human with context", effort: 12, priority: "high", category: "engineering", risk: "medium", deps: ["t4"] },
+        { id: "t7", name: "Multi-channel Integration", desc: "Email, chat widget, Slack, Telegram connectors", effort: 18, priority: "high", category: "engineering", risk: "medium", deps: ["t4", "t5"] },
+        { id: "t8", name: "Agent Orchestrator", desc: "Route conversations between agents, manage state", effort: 20, priority: "high", category: "engineering", risk: "high", deps: ["t4", "t5", "t6"] },
+        { id: "t9", name: "Observability Dashboard", desc: "Agent performance, resolution rates, CSAT tracking", effort: 14, priority: "medium", category: "monitoring", risk: "low", deps: ["t8"] },
+        { id: "t10", name: "Safety & Guardrails", desc: "Content filtering, hallucination detection, audit logs", effort: 12, priority: "high", category: "safety", risk: "medium", deps: ["t3"] },
+        { id: "t11", name: "A/B Testing Framework", desc: "Compare agent versions, measure resolution quality", effort: 10, priority: "medium", category: "testing", risk: "low", deps: ["t8", "t9"] },
+        { id: "t12", name: "Continuous Learning", desc: "Feedback loop: human corrections → model updates", effort: 16, priority: "medium", category: "engineering", risk: "high", deps: ["t8", "t10"] },
+        { id: "t13", name: "Staged Rollout", desc: "10% → 50% → 100% traffic with kill switches", effort: 10, priority: "high", category: "devops", risk: "medium", deps: ["t10", "t11"] }
+    ]}
+];
+
+const CATEGORY_COLORS = {
+    planning: "#00d4ff", design: "#a855f7", engineering: "#646cff", marketing: "#f97316",
+    devops: "#22d3ee", testing: "#fbbf24", infrastructure: "#4ade80", devices: "#34d399",
+    automation: "#818cf8", monitoring: "#fb923c", data: "#c084fc", safety: "#ef4444",
+    documentation: "#94a3b8", visualization: "#e879f9"
+};
+
+let tasks = [];
+let scheduled = [];
+let criticalPath = new Set();
+let currentView = "graph";
+let panX = 0, panY = 0, dragging = false, lastMouse = { x: 0, y: 0 };
+
+/* ── Logging ── */
+function log(msg) {
+    const el = document.getElementById("agentLog");
+    const t = new Date().toLocaleTimeString();
+    el.innerHTML += `<div class="td-log-entry"><span class="time">${t}</span>${msg}</div>`;
+    el.scrollTop = el.scrollHeight;
+}
+
+/* ── Presets ── */
+function loadPreset(idx) {
+    const p = PRESETS[idx];
+    document.getElementById("goalInput").value = p.goal;
+    tasks = JSON.parse(JSON.stringify(p.tasks));
+    log(`📋 Loaded preset: "${p.goal}" (${tasks.length} tasks)`);
+    runAnalysis();
+}
+
+/* ── Decomposition Engine ── */
+function decompose() {
+    const goal = document.getElementById("goalInput").value.trim();
+    if (!goal) return;
+    log(`🧠 Decomposing: "${goal}"`);
+    // Heuristic decomposition: tokenize goal and generate plausible tasks
+    tasks = generateTasks(goal);
+    log(`✅ Generated ${tasks.length} sub-tasks`);
+    runAnalysis();
+}
+
+function generateTasks(goal) {
+    const gl = goal.toLowerCase();
+    const result = [];
+    let id = 0;
+    const mk = (name, desc, effort, priority, category, risk, deps) => {
+        id++;
+        return { id: "t" + id, name, desc, effort, priority, category, risk, deps };
+    };
+    // Always start with planning
+    result.push(mk("Research & Requirements", "Analyze domain, identify stakeholders and constraints", 10, "high", "planning", "low", []));
+    result.push(mk("Define Scope", "Prioritize features for first iteration", 6, "high", "planning", "low", ["t1"]));
+
+    if (gl.match(/app|mobile|ios|android|flutter|react native/)) {
+        result.push(mk("UX Design", "Wireframes and user flow design", 14, "high", "design", "low", ["t2"]));
+        result.push(mk("Backend API", "Server, database, authentication", 22, "high", "engineering", "medium", ["t2"]));
+        result.push(mk("Frontend Development", "Build UI components and screens", 26, "high", "engineering", "medium", ["t3", "t4"]));
+        result.push(mk("Push Notifications", "Alert system for events and updates", 10, "medium", "engineering", "low", ["t5"]));
+    } else if (gl.match(/web|site|landing|saas|platform/)) {
+        result.push(mk("Architecture Design", "System design, tech stack selection", 10, "high", "engineering", "medium", ["t2"]));
+        result.push(mk("Database & API", "Schema design, REST/GraphQL endpoints", 20, "high", "engineering", "medium", ["t3"]));
+        result.push(mk("Frontend Build", "Responsive UI, routing, state management", 22, "high", "engineering", "medium", ["t3", "t4"]));
+        result.push(mk("Authentication", "User registration, login, roles", 12, "high", "engineering", "medium", ["t4"]));
+    } else if (gl.match(/data|pipeline|analytics|etl/)) {
+        result.push(mk("Source Mapping", "Identify and catalog data sources", 8, "high", "data", "low", ["t2"]));
+        result.push(mk("Ingestion Layer", "Build connectors and stream processors", 18, "high", "engineering", "medium", ["t3"]));
+        result.push(mk("Transform & Enrich", "Data cleaning, joining, feature engineering", 20, "high", "engineering", "high", ["t4"]));
+        result.push(mk("Storage Layer", "Data lake / warehouse configuration", 12, "high", "infrastructure", "medium", ["t5"]));
+    } else if (gl.match(/ai|agent|bot|ml|model/)) {
+        result.push(mk("Model Selection", "Evaluate and select AI/ML models", 12, "high", "engineering", "high", ["t2"]));
+        result.push(mk("Training Data Prep", "Collect, clean, and label training data", 18, "high", "data", "medium", ["t2"]));
+        result.push(mk("Model Training", "Train, validate, tune hyperparameters", 20, "high", "engineering", "high", ["t3", "t4"]));
+        result.push(mk("Integration API", "Serve model predictions via API", 14, "high", "engineering", "medium", ["t5"]));
+    } else {
+        result.push(mk("Design & Prototyping", "Create prototypes and validate approach", 14, "high", "design", "low", ["t2"]));
+        result.push(mk("Core Implementation", "Build primary functionality", 28, "high", "engineering", "medium", ["t3"]));
+        result.push(mk("Secondary Features", "Additional capabilities and integrations", 18, "medium", "engineering", "low", ["t4"]));
+        result.push(mk("Configuration & Setup", "User-facing settings and customization", 10, "medium", "engineering", "low", ["t4"]));
+    }
+
+    // Common tail tasks
+    const lastEngId = "t" + id;
+    if (gl.match(/social|community|team|collab/)) {
+        result.push(mk("Social Features", "Sharing, following, commenting, activity feed", 18, "medium", "engineering", "medium", [lastEngId]));
+    }
+    if (gl.match(/pay|billing|subscri|monetiz|commerce/)) {
+        result.push(mk("Payment Integration", "Billing, subscriptions, invoicing", 14, "high", "engineering", "medium", [lastEngId]));
+    }
+    const preTestId = "t" + id;
+    result.push(mk("Testing & QA", "Automated tests, manual QA, bug fixes", 14, "high", "testing", "medium", [preTestId]));
+    result.push(mk("Deployment & DevOps", "CI/CD, monitoring, infrastructure", 10, "medium", "devops", "low", ["t" + id]));
+    result.push(mk("Documentation", "User guides, API docs, onboarding", 8, "medium", "documentation", "low", ["t" + id]));
+    const prelaunchId = "t" + id;
+    result.push(mk("Launch", "Go-live, announce, monitor metrics", 6, "high", "marketing", "medium", [prelaunchId]));
+
+    return result;
+}
+
+function reDecompose() {
+    const goal = document.getElementById("goalInput").value.trim();
+    if (!goal) return;
+    log("🔄 Re-decomposing with variation...");
+    // Add slight randomization to efforts
+    tasks = generateTasks(goal);
+    tasks.forEach(t => {
+        t.effort = Math.max(2, t.effort + Math.floor(Math.random() * 7) - 3);
+    });
+    log(`✅ Re-generated ${tasks.length} tasks with varied estimates`);
+    runAnalysis();
+}
+
+/* ── Critical Path Analysis ── */
+function computeCriticalPath() {
+    // Forward pass: earliest start/finish
+    const es = {}, ef = {};
+    const topo = topoSort();
+    for (const t of topo) {
+        const maxPre = t.deps.length ? Math.max(...t.deps.map(d => ef[d] || 0)) : 0;
+        es[t.id] = maxPre;
+        ef[t.id] = maxPre + t.effort;
+    }
+    const projectEnd = Math.max(...tasks.map(t => ef[t.id]));
+
+    // Backward pass: latest start/finish
+    const ls = {}, lf = {};
+    for (const t of [...topo].reverse()) {
+        const successors = tasks.filter(s => s.deps.includes(t.id));
+        lf[t.id] = successors.length ? Math.min(...successors.map(s => ls[s.id])) : projectEnd;
+        ls[t.id] = lf[t.id] - t.effort;
+    }
+
+    // Slack = 0 means critical
+    criticalPath = new Set();
+    for (const t of tasks) {
+        const slack = ls[t.id] - es[t.id];
+        if (Math.abs(slack) < 0.001) criticalPath.add(t.id);
+    }
+
+    return { es, ef, ls, lf, projectEnd };
+}
+
+function topoSort() {
+    const visited = new Set(), sorted = [];
+    const taskMap = Object.fromEntries(tasks.map(t => [t.id, t]));
+    function visit(id) {
+        if (visited.has(id)) return;
+        visited.add(id);
+        const t = taskMap[id];
+        if (t) t.deps.forEach(d => visit(d));
+        if (t) sorted.push(t);
+    }
+    tasks.forEach(t => visit(t.id));
+    return sorted;
+}
+
+/* ── Auto-Schedule ── */
+function autoSchedule() {
+    log("⚡ Running auto-scheduler (greedy parallel scheduling)...");
+    const { es, ef, projectEnd } = computeCriticalPath();
+    scheduled = tasks.map(t => ({
+        ...t,
+        start: es[t.id],
+        end: ef[t.id],
+        isCritical: criticalPath.has(t.id)
+    }));
+    renderGantt();
+    log(`📅 Scheduled ${tasks.length} tasks. Critical path: ${criticalPath.size} tasks. Min span: ${projectEnd}h`);
+}
+
+/* ── Analysis Entry ── */
+function runAnalysis() {
+    const { es, ef, projectEnd } = computeCriticalPath();
+    scheduled = tasks.map(t => ({
+        ...t, start: es[t.id], end: ef[t.id], isCritical: criticalPath.has(t.id)
+    }));
+
+    // Stats
+    const maxDepth = computeMaxDepth();
+    const totalEffort = tasks.reduce((s, t) => s + t.effort, 0);
+    const parallelism = totalEffort > 0 ? (totalEffort / projectEnd).toFixed(1) : 0;
+    document.getElementById("statTasks").textContent = tasks.length;
+    document.getElementById("statDepth").textContent = maxDepth;
+    document.getElementById("statCritical").textContent = criticalPath.size;
+    document.getElementById("statEffort").textContent = totalEffort + "h";
+    document.getElementById("statSpan").textContent = projectEnd + "h";
+    document.getElementById("statParallel").textContent = parallelism + "×";
+
+    document.getElementById("statsBar").style.display = "flex";
+    document.getElementById("controlsBar").style.display = "flex";
+    document.getElementById("exportBtn").disabled = false;
+
+    renderGraph();
+    renderGantt();
+    toggleView(currentView);
+}
+
+function computeMaxDepth() {
+    const memo = {};
+    const taskMap = Object.fromEntries(tasks.map(t => [t.id, t]));
+    function depth(id) {
+        if (memo[id] !== undefined) return memo[id];
+        const t = taskMap[id];
+        if (!t || !t.deps.length) return (memo[id] = 0);
+        return (memo[id] = 1 + Math.max(...t.deps.map(d => depth(d))));
+    }
+    tasks.forEach(t => depth(t.id));
+    return Math.max(0, ...Object.values(memo));
+}
+
+/* ── Graph Rendering (SVG) ── */
+function renderGraph() {
+    const svg = document.getElementById("graphSvg");
+    const wrap = document.getElementById("graphCanvas");
+    const W = wrap.clientWidth;
+    const H = wrap.clientHeight;
+
+    // Layered layout using depth
+    const taskMap = Object.fromEntries(tasks.map(t => [t.id, t]));
+    const depths = {};
+    function getDepth(id) {
+        if (depths[id] !== undefined) return depths[id];
+        const t = taskMap[id];
+        if (!t || !t.deps.length) return (depths[id] = 0);
+        return (depths[id] = 1 + Math.max(...t.deps.map(d => getDepth(d))));
+    }
+    tasks.forEach(t => getDepth(t.id));
+
+    const maxD = Math.max(0, ...Object.values(depths));
+    const layers = {};
+    tasks.forEach(t => {
+        const d = depths[t.id];
+        if (!layers[d]) layers[d] = [];
+        layers[d].push(t);
+    });
+
+    // Position nodes
+    const positions = {};
+    const padX = 80, padY = 50;
+    const layerW = maxD > 0 ? (W - 2 * padX) / maxD : 0;
+    for (let d = 0; d <= maxD; d++) {
+        const col = layers[d] || [];
+        const layerH = col.length > 0 ? (H - 2 * padY) / col.length : 0;
+        col.forEach((t, i) => {
+            positions[t.id] = {
+                x: padX + d * layerW,
+                y: padY + i * layerH + layerH / 2
+            };
+        });
+    }
+
+    let html = "";
+    // Edges
+    for (const t of tasks) {
+        const to = positions[t.id];
+        for (const depId of t.deps) {
+            const from = positions[depId];
+            if (!from || !to) continue;
+            const isCrit = criticalPath.has(t.id) && criticalPath.has(depId);
+            const color = isCrit ? "#00d4ff" : "rgba(255,255,255,0.15)";
+            const width = isCrit ? 2.5 : 1;
+            // Curved edge
+            const midX = (from.x + to.x) / 2;
+            html += `<path d="M${from.x},${from.y} C${midX},${from.y} ${midX},${to.y} ${to.x},${to.y}"
+                fill="none" stroke="${color}" stroke-width="${width}"
+                marker-end="url(#arrow${isCrit ? 'Crit' : ''})"/>`;
+        }
+    }
+
+    // Arrow markers
+    html = `<defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="rgba(255,255,255,0.3)"/>
+        </marker>
+        <marker id="arrowCrit" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#00d4ff"/>
+        </marker>
+    </defs>` + html;
+
+    // Nodes
+    for (const t of tasks) {
+        const p = positions[t.id];
+        const color = CATEGORY_COLORS[t.category] || "#646cff";
+        const isCrit = criticalPath.has(t.id);
+        const r = isCrit ? 22 : 18;
+        const stroke = isCrit ? "rgba(0,212,255,0.6)" : "rgba(255,255,255,0.1)";
+        const sw = isCrit ? 2.5 : 1;
+        html += `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${color}" stroke="${stroke}" stroke-width="${sw}"
+            opacity="0.85" style="cursor:pointer" data-task="${t.id}"
+            onmouseenter="showTooltip(event,'${t.id}')" onmouseleave="hideTooltip()"
+            onclick="showDetail('${t.id}')"/>`;
+        // Label
+        const shortName = t.name.length > 14 ? t.name.slice(0, 13) + "…" : t.name;
+        html += `<text x="${p.x}" y="${p.y + r + 14}" text-anchor="middle" fill="#ccc" font-size="9" pointer-events="none">${shortName}</text>`;
+        // Effort badge
+        html += `<text x="${p.x}" y="${p.y + 4}" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" pointer-events="none">${t.effort}h</text>`;
+    }
+
+    svg.innerHTML = html;
+}
+
+/* ── Gantt Rendering ── */
+function renderGantt() {
+    const container = document.getElementById("ganttChart");
+    const projectEnd = scheduled.length ? Math.max(...scheduled.map(s => s.end)) : 1;
+    let html = "";
+    for (const t of scheduled) {
+        const leftPct = (t.start / projectEnd * 100).toFixed(1);
+        const widthPct = Math.max(2, (t.effort / projectEnd * 100)).toFixed(1);
+        const color = CATEGORY_COLORS[t.category] || "#646cff";
+        const critClass = t.isCritical ? " critical" : "";
+        html += `<div class="td-gantt-row" onclick="showDetail('${t.id}')" style="cursor:pointer">
+            <div class="td-gantt-label" title="${t.name}">${t.name}</div>
+            <div class="td-gantt-bar-area">
+                <div class="td-gantt-bar${critClass}" style="left:${leftPct}%;width:${widthPct}%;background:${color}" title="${t.effort}h (start: ${t.start}h)"></div>
+            </div>
+        </div>`;
+    }
+    container.innerHTML = html;
+}
+
+/* ── View Toggle ── */
+function toggleView(view) {
+    currentView = view;
+    document.getElementById("graphWrap").style.display = view === "graph" ? "block" : "none";
+    document.getElementById("ganttWrap").style.display = view === "gantt" ? "block" : "none";
+}
+
+/* ── Highlight Critical Path ── */
+function highlightCritical() {
+    log(`🔥 Critical path: ${[...criticalPath].map(id => {
+        const t = tasks.find(x => x.id === id);
+        return t ? t.name : id;
+    }).join(" → ")}`);
+    renderGraph();
+}
+
+/* ── Tooltip ── */
+function showTooltip(e, taskId) {
+    const t = tasks.find(x => x.id === taskId);
+    if (!t) return;
+    const tip = document.getElementById("tooltip");
+    tip.innerHTML = `<strong>${t.name}</strong><br>${t.desc}<br>⏱ ${t.effort}h · ${t.priority} priority · ${t.risk} risk`;
+    tip.classList.add("show");
+    const rect = document.getElementById("graphCanvas").getBoundingClientRect();
+    tip.style.left = (e.clientX - rect.left + 12) + "px";
+    tip.style.top = (e.clientY - rect.top - 10) + "px";
+}
+function hideTooltip() {
+    document.getElementById("tooltip").classList.remove("show");
+}
+
+/* ── Detail Panel ── */
+function showDetail(taskId) {
+    const t = tasks.find(x => x.id === taskId);
+    if (!t) return;
+    const s = scheduled.find(x => x.id === taskId);
+    document.getElementById("detailTitle").textContent = "📌 " + t.name;
+    document.getElementById("detailDesc").textContent = t.desc;
+    document.getElementById("detailEffort").textContent = t.effort + " hours";
+    document.getElementById("detailPriority").textContent = t.priority;
+    document.getElementById("detailDeps").textContent = t.deps.length ? t.deps.map(d => {
+        const dep = tasks.find(x => x.id === d);
+        return dep ? dep.name : d;
+    }).join(", ") : "None (root task)";
+    document.getElementById("detailCategory").textContent = t.category;
+    document.getElementById("detailRisk").textContent = t.risk;
+    document.getElementById("detailStart").textContent = s ? "Hour " + s.start : "—";
+    document.getElementById("detailCritical").textContent = criticalPath.has(t.id) ? "✅ Yes" : "No";
+    document.getElementById("detailPanel").classList.add("open");
+}
+
+/* ── Export ── */
+function exportJSON() {
+    const data = {
+        goal: document.getElementById("goalInput").value,
+        tasks: scheduled.length ? scheduled : tasks,
+        criticalPath: [...criticalPath],
+        stats: {
+            totalTasks: tasks.length,
+            totalEffort: tasks.reduce((s, t) => s + t.effort, 0),
+            criticalPathLength: criticalPath.size,
+            minSpan: scheduled.length ? Math.max(...scheduled.map(s => s.end)) : null
+        },
+        exportedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "task-decomposition.json"; a.click();
+    URL.revokeObjectURL(url);
+    log("📥 Exported task decomposition as JSON");
+}
+
+/* ── Pan (graph canvas) ── */
+const canvas = document.getElementById("graphCanvas");
+canvas.addEventListener("mousedown", e => { dragging = true; lastMouse = { x: e.clientX, y: e.clientY }; });
+canvas.addEventListener("mousemove", e => {
+    if (!dragging) return;
+    panX += e.clientX - lastMouse.x;
+    panY += e.clientY - lastMouse.y;
+    lastMouse = { x: e.clientX, y: e.clientY };
+    document.getElementById("graphSvg").style.transform = `translate(${panX}px, ${panY}px)`;
+});
+window.addEventListener("mouseup", () => { dragging = false; });
+
+/* ── Init ── */
+log("🧩 Autonomous Task Decomposer ready. Enter a goal or pick a preset.");
+</script>
+</body>
+</html>
