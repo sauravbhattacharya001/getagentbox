@@ -193,6 +193,7 @@ getagentbox/
 │   ├── changelog.html                      # Visual changelog
 │   ├── customization.md                    # Customization guide
 │   └── modules.md                          # Module documentation
+│   └── TESTING.md                          # Testing guide & conventions
 │
 ├── vendor/                                 # Vendored dependencies
 ├── __tests__/                              # Jest test suites
@@ -278,6 +279,27 @@ The Dockerfile uses a multi-stage build:
 2. **Stage 2** — Serves via `nginx:alpine` with security headers, gzip, and a `/healthz` endpoint
 
 Runs as a non-root user for production security.
+
+---
+
+## 🧪 Testing
+
+The project has a comprehensive test suite with 66 test files covering all interactive modules.
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage report
+npm run test:coverage
+
+# Run a specific test
+npx jest __tests__/storage.test.js
+```
+
+Coverage thresholds (enforced in CI): 70% lines, 70% statements, 60% branches, 60% functions.
+
+See the full [Testing Guide](docs/TESTING.md) for architecture details, conventions, and troubleshooting.
 
 ---
 
