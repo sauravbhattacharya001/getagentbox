@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Agent Swarm Orchestrator</title>
+    <meta name="description" content="Interactive multi-agent swarm coordination demo. Deploy agent swarms, watch them collaborate in real-time, and see how autonomous agents divide and conquer complex tasks.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --orange-bg: #e1705522;
+            --red: #d63031;
+            --red-bg: #d6303122;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .header {
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header a { color: var(--accent); text-decoration: none; font-size: 14px; }
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 32px;
+        }
+        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+        .panel h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .canvas-wrap {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        canvas { display: block; width: 100%; height: auto; }
+        .controls { display: flex; flex-direction: column; gap: 16px; }
+        .mission-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 14px;
+            resize: none;
+            font-family: inherit;
+        }
+        .mission-input:focus { outline: none; border-color: var(--accent); }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+        .btn-primary:hover { background: var(--accent-light); }
+        .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+        .btn-preset {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            font-size: 12px;
+        }
+        .btn-preset:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-preset.active { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+        .presets { display: flex; gap: 8px; flex-wrap: wrap; }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+        .slider-row label {
+            min-width: 100px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .slider-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+        .slider-row .val {
+            min-width: 24px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        .log-panel {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            height: 220px;
+            overflow-y: auto;
+            padding: 12px;
+            font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        .log-panel::-webkit-scrollbar { width: 6px; }
+        .log-panel::-webkit-scrollbar-track { background: transparent; }
+        .log-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .log-entry { opacity: 0; animation: fadeIn .3s forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        .metrics-bar {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            text-align: center;
+        }
+        .metric-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+        .metric-card .value { font-size: 24px; font-weight: 700; color: var(--accent); }
+        .progress-wrap {
+            grid-column: 1 / -1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+        }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .progress-header .title { font-size: 14px; font-weight: 600; }
+        .progress-header .pct { font-size: 20px; font-weight: 700; color: var(--accent); }
+        .progress-track {
+            height: 10px;
+            background: var(--surface-3);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--purple), var(--accent));
+            border-radius: 5px;
+            width: 0%;
+            transition: width .5s ease;
+        }
+        .health-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .health-green { background: var(--green-bg); color: var(--green); }
+        .health-yellow { background: var(--yellow-bg); color: var(--yellow); }
+        .health-red { background: var(--red-bg); color: var(--red); }
+        .summary-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.7);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+        .summary-overlay.visible { display: flex; }
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        .summary-card h2 { font-size: 20px; margin-bottom: 8px; }
+        .summary-card .grade {
+            font-size: 48px;
+            font-weight: 800;
+            margin: 16px 0;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .summary-stats .item { padding: 10px; background: var(--surface-2); border-radius: var(--radius-sm); }
+        .summary-stats .item .lbl { font-size: 11px; color: var(--text-muted); }
+        .summary-stats .item .val { font-size: 16px; font-weight: 600; }
+        .summary-findings { text-align: left; margin: 16px 0; }
+        .summary-findings h3 { font-size: 14px; margin-bottom: 8px; }
+        .summary-findings li { font-size: 13px; margin-left: 20px; color: var(--text-muted); margin-bottom: 4px; }
+        .btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+        .total-agents { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← Back</a>
+        <h1>🐝 Agent Swarm Orchestrator</h1>
+    </div>
+
+    <div class="container">
+        <div class="canvas-wrap">
+            <canvas id="swarmCanvas" width="600" height="500"></canvas>
+        </div>
+
+        <div class="controls">
+            <div class="panel">
+                <h2>🎯 Mission</h2>
+                <textarea class="mission-input" id="missionInput" rows="2" placeholder="Describe a mission, e.g. 'Research competitor pricing and compile a report'"></textarea>
+                <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                    <button class="btn btn-primary" id="deployBtn" onclick="deploySwarm()">Deploy Swarm</button>
+                    <button class="btn btn-preset" onclick="loadPreset('research')">📊 Market Research</button>
+                    <button class="btn btn-preset" onclick="loadPreset('code')">🔍 Code Review</button>
+                    <button class="btn btn-preset" onclick="loadPreset('incident')">🚨 Incident Response</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>👥 Swarm Composition</h2>
+                <div class="slider-row">
+                    <label>🟣 Coordinator</label>
+                    <input type="range" min="1" max="3" value="1" id="slCoord" oninput="updateSlider()">
+                    <span class="val" id="valCoord">1</span>
+                </div>
+                <div class="slider-row">
+                    <label>🟢 Worker</label>
+                    <input type="range" min="1" max="5" value="2" id="slWorker" oninput="updateSlider()">
+                    <span class="val" id="valWorker">2</span>
+                </div>
+                <div class="slider-row">
+                    <label>🔵 Scout</label>
+                    <input type="range" min="1" max="4" value="1" id="slScout" oninput="updateSlider()">
+                    <span class="val" id="valScout">1</span>
+                </div>
+                <div class="slider-row">
+                    <label>🟠 Analyst</label>
+                    <input type="range" min="1" max="4" value="1" id="slAnalyst" oninput="updateSlider()">
+                    <span class="val" id="valAnalyst">1</span>
+                </div>
+                <div class="total-agents">Total agents: <strong id="totalAgents">5</strong></div>
+            </div>
+
+            <div class="panel">
+                <h2>📋 Activity Log</h2>
+                <div class="log-panel" id="logPanel"></div>
+            </div>
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-header">
+                <span class="title">Mission Progress</span>
+                <span class="pct" id="pctLabel">0%</span>
+                <span class="health-badge health-green" id="healthBadge">● Healthy</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+
+        <div class="metrics-bar">
+            <div class="metric-card"><div class="label">Tasks Done</div><div class="value" id="metTasks">0</div></div>
+            <div class="metric-card"><div class="label">Messages</div><div class="value" id="metMsgs">0</div></div>
+            <div class="metric-card"><div class="label">Time Elapsed</div><div class="value" id="metTime">0s</div></div>
+            <div class="metric-card"><div class="label">Efficiency</div><div class="value" id="metEff">—</div></div>
+        </div>
+    </div>
+
+    <div class="summary-overlay" id="summaryOverlay">
+        <div class="summary-card">
+            <h2>🎉 Mission Complete</h2>
+            <div class="grade" id="sumGrade" style="color:var(--green)">A</div>
+            <div id="sumMission" style="color:var(--text-muted);font-size:13px;margin-bottom:12px"></div>
+            <div class="summary-stats" id="sumStats"></div>
+            <div class="summary-findings"><h3>Key Findings</h3><ul id="sumFindings"></ul></div>
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="closeSummary()">Close</button>
+                <button class="btn btn-preset" onclick="exportReport()">📥 Export JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const ROLES = {
+        coordinator: { color: '#6c5ce7', icon: 'C', emoji: '🟣', label: 'Coordinator' },
+        worker:      { color: '#00b894', icon: 'W', emoji: '🟢', label: 'Worker' },
+        scout:       { color: '#00d4ff', icon: 'S', emoji: '🔵', label: 'Scout' },
+        analyst:     { color: '#e17055', icon: 'A', emoji: '🟠', label: 'Analyst' }
+    };
+
+    const PRESETS = {
+        research: {
+            mission: 'Research competitor pricing and compile a market analysis report',
+            tasks: [
+                { name: 'Identify top competitors', role: 'scout', duration: 3000 },
+                { name: 'Scrape pricing pages', role: 'worker', duration: 4000 },
+                { name: 'Analyze pricing tiers', role: 'analyst', duration: 3500 },
+                { name: 'Compare feature sets', role: 'worker', duration: 3000 },
+                { name: 'Assess market positioning', role: 'analyst', duration: 2500 },
+                { name: 'Generate final report', role: 'coordinator', duration: 3000 }
+            ],
+            findings: [
+                'Competitor A undercuts on entry tier by 22%',
+                'Feature parity gap identified in enterprise segment',
+                'Market trending toward usage-based pricing models',
+                'Three emerging competitors detected in adjacent space',
+                'Recommended: adjust mid-tier pricing by -15%'
+            ]
+        },
+        code: {
+            mission: 'Perform comprehensive code review on the authentication module',
+            tasks: [
+                { name: 'Clone repository & index files', role: 'worker', duration: 2000 },
+                { name: 'Run static analysis', role: 'worker', duration: 3500 },
+                { name: 'Security vulnerability scan', role: 'scout', duration: 4000 },
+                { name: 'Code style & lint check', role: 'worker', duration: 2500 },
+                { name: 'Performance audit', role: 'analyst', duration: 3500 },
+                { name: 'Dependency risk assessment', role: 'scout', duration: 2000 },
+                { name: 'Compile findings & recommendations', role: 'coordinator', duration: 2500 }
+            ],
+            findings: [
+                'SQL injection vector in login handler (Critical)',
+                'JWT token expiry set to 30 days — recommend 1 hour',
+                '3 unused dependencies with known CVEs',
+                'Auth middleware missing rate limiting',
+                'Test coverage at 34% — below 80% threshold'
+            ]
+        },
+        incident: {
+            mission: 'Investigate and resolve production API latency spike',
+            tasks: [
+                { name: 'Detect anomaly pattern', role: 'scout', duration: 2000 },
+                { name: 'Assess severity & blast radius', role: 'analyst', duration: 2500 },
+                { name: 'Isolate affected services', role: 'worker', duration: 3000 },
+                { name: 'Root cause analysis', role: 'analyst', duration: 4000 },
+                { name: 'Apply hotfix', role: 'worker', duration: 3000 },
+                { name: 'Verify resolution & monitor', role: 'scout', duration: 3000 },
+                { name: 'Draft postmortem', role: 'coordinator', duration: 2000 }
+            ],
+            findings: [
+                'Root cause: N+1 query in user-feed endpoint after v2.4 deploy',
+                'Blast radius: 12% of API requests affected',
+                'Mean latency spiked from 120ms to 2.8s',
+                'Hotfix: added eager loading — latency restored to 95ms',
+                'Recommendation: add query count alerting to CI pipeline'
+            ]
+        }
+    };
+
+    let agents = [];
+    let messages = [];
+    let simRunning = false;
+    let simStartTime = 0;
+    let simTasks = [];
+    let simFindings = [];
+    let simMission = '';
+    let completedTasks = 0;
+    let msgCount = 0;
+    let animFrame = null;
+    let logEntries = [];
+    let taskQueue = [];
+    let currentPreset = null;
+    let reportData = null;
+
+    function updateSlider() {
+        document.getElementById('valCoord').textContent = document.getElementById('slCoord').value;
+        document.getElementById('valWorker').textContent = document.getElementById('slWorker').value;
+        document.getElementById('valScout').textContent = document.getElementById('slScout').value;
+        document.getElementById('valAnalyst').textContent = document.getElementById('slAnalyst').value;
+        const total = +document.getElementById('slCoord').value + +document.getElementById('slWorker').value +
+                      +document.getElementById('slScout').value + +document.getElementById('slAnalyst').value;
+        document.getElementById('totalAgents').textContent = total;
+    }
+
+    function loadPreset(key) {
+        currentPreset = key;
+        document.getElementById('missionInput').value = PRESETS[key].mission;
+        document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    function buildAgents() {
+        agents = [];
+        const canvas = document.getElementById('swarmCanvas');
+        const cx = canvas.width / 2, cy = canvas.height / 2;
+        const counts = {
+            coordinator: +document.getElementById('slCoord').value,
+            worker: +document.getElementById('slWorker').value,
+            scout: +document.getElementById('slScout').value,
+            analyst: +document.getElementById('slAnalyst').value
+        };
+        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+        let idx = 0;
+        for (const [role, count] of Object.entries(counts)) {
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * idx / total) - Math.PI / 2;
+                const r = 140 + Math.random() * 40;
+                agents.push({
+                    id: `${role}-${i + 1}`,
+                    role,
+                    x: cx + r * Math.cos(angle),
+                    y: cy + r * Math.sin(angle),
+                    baseX: cx + r * Math.cos(angle),
+                    baseY: cy + r * Math.sin(angle),
+                    active: false,
+                    pulse: 0,
+                    task: null,
+                    phase: 0
+                });
+                idx++;
+            }
+        }
+    }
+
+    function addLog(emoji, agentId, text) {
+        const now = new Date();
+        const ts = now.toTimeString().slice(0, 8);
+        const panel = document.getElementById('logPanel');
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.innerHTML = `<span style="color:var(--text-muted)">[${ts}]</span> ${emoji} <strong>${agentId}</strong> ${text}`;
+        panel.appendChild(div);
+        panel.scrollTop = panel.scrollHeight;
+        logEntries.push({ time: ts, agent: agentId, text });
+    }
+
+    function sendMessage(fromIdx, toIdx) {
+        if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0) return;
+        const from = agents[fromIdx];
+        const to = agents[toIdx];
+        messages.push({
+            fromX: from.x, fromY: from.y,
+            toX: to.x, toY: to.y,
+            progress: 0,
+            color: ROLES[from.role].color
+        });
+        msgCount++;
+    }
+
+    function findAgent(role) {
+        const candidates = agents.filter(a => a.role === role && !a.active);
+        if (candidates.length) return candidates[Math.floor(Math.random() * candidates.length)];
+        const all = agents.filter(a => a.role === role);
+        return all.length ? all[Math.floor(Math.random() * all.length)] : agents[0];
+    }
+
+    function generateCustomTasks(mission) {
+        const words = mission.toLowerCase();
+        const tasks = [
+            { name: 'Analyze mission parameters', role: 'coordinator', duration: 2000 },
+            { name: 'Scout for relevant data sources', role: 'scout', duration: 3000 },
+            { name: 'Gather primary information', role: 'worker', duration: 3500 },
+            { name: 'Process and classify data', role: 'worker', duration: 3000 },
+            { name: 'Identify patterns and anomalies', role: 'analyst', duration: 3500 },
+            { name: 'Synthesize findings', role: 'coordinator', duration: 2500 }
+        ];
+        const findings = [
+            'Primary objective achieved with high confidence',
+            'Identified 3 actionable insights from gathered data',
+            'Cross-referenced findings across multiple sources',
+            'Anomaly detected — flagged for human review',
+            'Recommended next steps generated'
+        ];
+        return { tasks, findings };
+    }
+
+    function deploySwarm() {
+        if (simRunning) return;
+        const mission = document.getElementById('missionInput').value.trim();
+        if (!mission) { document.getElementById('missionInput').focus(); return; }
+
+        simRunning = true;
+        document.getElementById('deployBtn').disabled = true;
+        document.getElementById('logPanel').innerHTML = '';
+        logEntries = [];
+        completedTasks = 0;
+        msgCount = 0;
+        messages = [];
+        simStartTime = Date.now();
+        simMission = mission;
+
+        let preset = null;
+        for (const k of Object.keys(PRESETS)) {
+            if (PRESETS[k].mission === mission) { preset = PRESETS[k]; break; }
+        }
+        if (!preset) {
+            const gen = generateCustomTasks(mission);
+            simTasks = gen.tasks;
+            simFindings = gen.findings;
+        } else {
+            simTasks = preset.tasks;
+            simFindings = preset.findings;
+        }
+
+        buildAgents();
+        updateMetrics(0);
+
+        addLog('🟣', 'Coordinator', `Mission received: "${mission}"`);
+        addLog('🟣', 'Coordinator', `Deploying swarm of ${agents.length} agents...`);
+
+        // Schedule tasks
+        let delay = 2000;
+        taskQueue = [];
+        simTasks.forEach((task, i) => {
+            taskQueue.push(setTimeout(() => startTask(task, i), delay));
+            delay += task.duration + 500;
+        });
+        taskQueue.push(setTimeout(() => finishMission(), delay + 1000));
+
+        if (!animFrame) animate();
+    }
+
+    function startTask(task, index) {
+        const agent = findAgent(task.role);
+        const role = ROLES[task.role];
+        agent.active = true;
+        agent.task = task.name;
+
+        addLog(role.emoji, agent.id, `started: ${task.name}`);
+
+        // Send message from coordinator
+        const coordIdx = agents.findIndex(a => a.role === 'coordinator');
+        const agentIdx = agents.indexOf(agent);
+        if (coordIdx !== agentIdx) sendMessage(coordIdx, agentIdx);
+
+        // Simulate mid-task comms
+        const midComm = setTimeout(() => {
+            if (!simRunning) return;
+            const others = agents.filter((a, i) => i !== agentIdx && a.role !== agent.role);
+            if (others.length) {
+                const target = others[Math.floor(Math.random() * others.length)];
+                sendMessage(agentIdx, agents.indexOf(target));
+                addLog(role.emoji, agent.id, `shared data with ${target.id}`);
+            }
+        }, task.duration * 0.5);
+
+        // Complete task
+        const complete = setTimeout(() => {
+            if (!simRunning) return;
+            agent.active = false;
+            agent.task = null;
+            completedTasks++;
+            addLog(role.emoji, agent.id, `completed: ${task.name} ✓`);
+            sendMessage(agentIdx, coordIdx >= 0 ? coordIdx : 0);
+            updateMetrics((completedTasks / simTasks.length) * 100);
+        }, task.duration);
+
+        taskQueue.push(midComm, complete);
+    }
+
+    function updateMetrics(pct) {
+        document.getElementById('pctLabel').textContent = Math.round(pct) + '%';
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('metTasks').textContent = completedTasks;
+        document.getElementById('metMsgs').textContent = msgCount;
+        const elapsed = Math.round((Date.now() - simStartTime) / 1000);
+        document.getElementById('metTime').textContent = elapsed + 's';
+
+        const eff = completedTasks > 0 ? Math.min(100, Math.round((completedTasks / Math.max(1, elapsed / 5)) * 20)) : 0;
+        document.getElementById('metEff').textContent = eff > 0 ? eff + '%' : '—';
+
+        const badge = document.getElementById('healthBadge');
+        const activeCount = agents.filter(a => a.active).length;
+        const util = agents.length > 0 ? activeCount / agents.length : 0;
+        if (util > 0.6) { badge.className = 'health-badge health-green'; badge.textContent = '● Optimal'; }
+        else if (util > 0.2) { badge.className = 'health-badge health-yellow'; badge.textContent = '● Nominal'; }
+        else { badge.className = 'health-badge health-green'; badge.textContent = '● Healthy'; }
+    }
+
+    function finishMission() {
+        simRunning = false;
+        document.getElementById('deployBtn').disabled = false;
+        updateMetrics(100);
+
+        const elapsed = Math.round((Date.now() - simStartTime) / 1000);
+        const efficiency = Math.min(100, Math.round((completedTasks / Math.max(1, elapsed / 5)) * 20));
+        const grade = efficiency >= 80 ? 'A' : efficiency >= 60 ? 'B' : 'C';
+        const gradeColor = grade === 'A' ? 'var(--green)' : grade === 'B' ? 'var(--yellow)' : 'var(--orange)';
+
+        addLog('🎉', 'Swarm', `Mission complete! Grade: ${grade} | ${completedTasks} tasks | ${msgCount} messages | ${elapsed}s`);
+
+        reportData = {
+            timestamp: new Date().toISOString(),
+            mission: simMission,
+            grade,
+            efficiency,
+            agentCount: agents.length,
+            tasksCompleted: completedTasks,
+            messagesExchanged: msgCount,
+            timeElapsed: elapsed,
+            findings: simFindings,
+            taskLog: logEntries
+        };
+
+        document.getElementById('sumGrade').textContent = grade;
+        document.getElementById('sumGrade').style.color = gradeColor;
+        document.getElementById('sumMission').textContent = simMission;
+        document.getElementById('sumStats').innerHTML = `
+            <div class="item"><div class="lbl">Tasks Completed</div><div class="val">${completedTasks}</div></div>
+            <div class="item"><div class="lbl">Messages Exchanged</div><div class="val">${msgCount}</div></div>
+            <div class="item"><div class="lbl">Time Elapsed</div><div class="val">${elapsed}s</div></div>
+            <div class="item"><div class="lbl">Agents Deployed</div><div class="val">${agents.length}</div></div>
+        `;
+        document.getElementById('sumFindings').innerHTML = simFindings.map(f => `<li>${f}</li>`).join('');
+        document.getElementById('summaryOverlay').classList.add('visible');
+    }
+
+    function closeSummary() {
+        document.getElementById('summaryOverlay').classList.remove('visible');
+    }
+
+    function exportReport() {
+        if (!reportData) return;
+        const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'swarm-report.json';
+        a.click();
+    }
+
+    // Canvas animation
+    function animate() {
+        const canvas = document.getElementById('swarmCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        const now = Date.now();
+
+        ctx.clearRect(0, 0, W, H);
+
+        // Background grid
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+        for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+        // Center hub
+        ctx.beginPath();
+        ctx.arc(W / 2, H / 2, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#2a2a2a';
+        ctx.fill();
+        ctx.strokeStyle = '#3a3a3a';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Connection lines (dashed)
+        agents.forEach((a, i) => {
+            agents.forEach((b, j) => {
+                if (j <= i) return;
+                if (!a.active && !b.active) return;
+                ctx.save();
+                ctx.setLineDash([4, 8]);
+                ctx.strokeStyle = a.active && b.active ? '#333' : '#222';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.stroke();
+                ctx.restore();
+            });
+        });
+
+        // Messages in flight
+        messages = messages.filter(m => m.progress < 1);
+        messages.forEach(m => {
+            m.progress += 0.02;
+            const t = m.progress;
+            const mx = m.fromX + (m.toX - m.fromX) * t;
+            const my = m.fromY + (m.toY - m.fromY) * t;
+            // Bezier curve offset
+            const midX = (m.fromX + m.toX) / 2 + (m.fromY - m.toY) * 0.15;
+            const midY = (m.fromY + m.toY) / 2 + (m.toX - m.fromX) * 0.15;
+            const bx = (1 - t) * (1 - t) * m.fromX + 2 * (1 - t) * t * midX + t * t * m.toX;
+            const by = (1 - t) * (1 - t) * m.fromY + 2 * (1 - t) * t * midY + t * t * m.toY;
+
+            ctx.beginPath();
+            ctx.arc(bx, by, 3, 0, Math.PI * 2);
+            ctx.fillStyle = m.color;
+            ctx.fill();
+            // Trail
+            ctx.beginPath();
+            ctx.arc(bx, by, 6, 0, Math.PI * 2);
+            ctx.fillStyle = m.color + '33';
+            ctx.fill();
+        });
+
+        // Agents
+        agents.forEach(a => {
+            const role = ROLES[a.role];
+            const t = now / 1000;
+
+            // Floating motion
+            a.x = a.baseX + Math.sin(t * 0.8 + a.baseX) * 4;
+            a.y = a.baseY + Math.cos(t * 0.6 + a.baseY) * 4;
+
+            // Glow when active
+            if (a.active) {
+                const glowR = 28 + Math.sin(t * 4) * 4;
+                ctx.beginPath();
+                ctx.arc(a.x, a.y, glowR, 0, Math.PI * 2);
+                ctx.fillStyle = role.color + '22';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(a.x, a.y, glowR + 6, 0, Math.PI * 2);
+                ctx.fillStyle = role.color + '11';
+                ctx.fill();
+            }
+
+            // Agent circle
+            ctx.beginPath();
+            ctx.arc(a.x, a.y, 20, 0, Math.PI * 2);
+            ctx.fillStyle = a.active ? role.color + 'cc' : role.color + '66';
+            ctx.fill();
+            ctx.strokeStyle = role.color;
+            ctx.lineWidth = a.active ? 2.5 : 1.5;
+            ctx.stroke();
+
+            // Icon letter
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(role.icon, a.x, a.y);
+
+            // Agent label
+            ctx.font = '10px -apple-system, sans-serif';
+            ctx.fillStyle = '#888';
+            ctx.fillText(a.id, a.x, a.y + 30);
+
+            // Task label when active
+            if (a.active && a.task) {
+                ctx.font = '9px -apple-system, sans-serif';
+                ctx.fillStyle = role.color;
+                const taskText = a.task.length > 25 ? a.task.slice(0, 22) + '...' : a.task;
+                ctx.fillText(taskText, a.x, a.y + 40);
+            }
+        });
+
+        // Update time metric
+        if (simRunning) {
+            const elapsed = Math.round((now - simStartTime) / 1000);
+            document.getElementById('metTime').textContent = elapsed + 's';
+            document.getElementById('metMsgs').textContent = msgCount;
+        }
+
+        animFrame = requestAnimationFrame(animate);
+    }
+
+    // Init
+    buildAgents();
+    animate();
+    updateSlider();
+    </script>
+</body>
+</html>
