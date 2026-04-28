@@ -9,3 +9,6 @@ contact_links:
   - name: 💬 Questions & Discussion
     url: https://github.com/sauravbhattacharya001/getagentbox/discussions
     about: Ask questions or start a discussion (no issue needed)
+  - name: 📋 Supported Browsers
+    url: https://sauravbhattacharya001.github.io/getagentbox/faq.html
+    about: Check FAQ for supported browsers and known compatibility notes

@@ -1,0 +1,98 @@
+name: "\U0001F517 Integration Request"
+description: Request a new integration, webhook, or third-party service connection
+labels: ["enhancement", "integration"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Integration Request
+        Suggest a new integration or service connection for AgentBox.
+
+  - type: dropdown
+    id: integration-category
+    attributes:
+      label: Integration Category
+      description: What kind of integration are you requesting?
+      options:
+        - Messaging platform (Slack, Discord, Teams, etc.)
+        - CRM / Customer support (Zendesk, Intercom, etc.)
+        - Developer tools (GitHub, GitLab, Jira, etc.)
+        - Cloud / Infrastructure (AWS, GCP, Azure, etc.)
+        - Analytics / Monitoring (Datadog, Grafana, etc.)
+        - AI / ML service (OpenAI, Anthropic, HuggingFace, etc.)
+        - Database / Storage (Postgres, Redis, S3, etc.)
+        - Authentication (OAuth, SAML, SSO provider)
+        - Webhook / API endpoint
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: input
+    id: service-name
+    attributes:
+      label: Service / Platform Name
+      description: "The specific service you'd like integrated"
+      placeholder: "e.g., Notion, Linear, PagerDuty"
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: "Describe the workflow or scenario where this integration would help. What problem does it solve?"
+      placeholder: "I want to automatically create Jira tickets when AgentBox detects an anomaly in the pulse monitor, so our team can track issues without manual entry..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Data Flow Direction
+      description: How should data flow between AgentBox and this service?
+      options:
+        - "Inbound — service sends data to AgentBox"
+        - "Outbound — AgentBox sends data to service"
+        - "Bidirectional — both directions"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How important is this to you?
+      options:
+        - "Critical — blocking my adoption of AgentBox"
+        - "High — would significantly improve my workflow"
+        - "Medium — nice to have, would use regularly"
+        - "Low — occasional use, not urgent"
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-info
+    attributes:
+      label: API / Documentation Links
+      description: "If you know of relevant API docs or developer resources, share them here."
+      placeholder: "https://developers.notion.com/reference"
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Current Workaround
+      description: "How are you handling this today without the integration?"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution Interest
+      options:
+        - label: "I'm willing to help implement this integration"
+          required: false
+        - label: "I can help test a beta version of this integration"
+          required: false

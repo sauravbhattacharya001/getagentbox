@@ -1,0 +1,117 @@
+name: "\U0001F310 Browser Compatibility Issue"
+description: Report a cross-browser or device-specific rendering/behavior problem
+labels: ["bug", "browser-compat"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Browser Compatibility Report
+        Help us ensure AgentBox works across all browsers and devices.
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      description: Which browser are you experiencing the issue in?
+      options:
+        - Chrome (desktop)
+        - Firefox (desktop)
+        - Safari (desktop)
+        - Edge (desktop)
+        - Chrome (Android)
+        - Safari (iOS)
+        - Firefox (Android)
+        - Samsung Internet
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser Version
+      description: "e.g., Chrome 126.0.6478.55"
+      placeholder: "Version number"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS Sonoma (14)
+        - macOS Ventura (13)
+        - Ubuntu / Linux
+        - Android 14+
+        - Android 13
+        - iOS 17+
+        - iOS 16
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: input
+    id: page
+    attributes:
+      label: Affected Page(s)
+      description: "Which page(s) show the issue? e.g., index.html, decision-matrix.html"
+      placeholder: "Page URL or filename"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Type of Compatibility Issue
+      options:
+        - Layout / CSS rendering broken
+        - JavaScript functionality not working
+        - Interactive demo not responding
+        - Fonts or icons not loading
+        - Animation / transition glitch
+        - Touch / gesture not working (mobile)
+        - Responsive design breakpoint issue
+        - Web API not supported
+        - Console errors present
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the issue and how it differs from expected behavior in other browsers.
+      placeholder: "In Firefox the decision matrix drag-and-drop doesn't register drop events, but it works fine in Chrome..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Screen Recording
+      description: "Comparison screenshots showing the issue vs. expected rendering are very helpful."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How much does this affect usability?
+      options:
+        - "Critical — page is unusable in this browser"
+        - "Major — key feature broken but page loads"
+        - "Minor — cosmetic or non-blocking difference"
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: "Have you found any workaround? (e.g., works in incognito, works after clearing cache)"
+    validations:
+      required: false
