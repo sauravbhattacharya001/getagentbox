@@ -8888,14 +8888,43 @@ var ScenarioPlanner = (function () {
     }
   ];
 
+  // DOMUtil.escapeHtml is provided by dom-utils.js (loaded before this module in build order)
+  var escapeHtml = DOMUtil.escapeHtml;
+
   var running = false;
   var timers = [];
 
+  // Cached DOM references — resolved once in init(), avoids
+  // repeated getElementById calls in startPlanning/resetPlanner.
+  var _els = null;
+
+  function _getEls() {
+    if (!_els) {
+      _els = {
+        workspace:   document.getElementById('scenarioWorkspace'),
+        goal:        document.getElementById('scenarioGoal'),
+        status:      document.getElementById('scenarioAgentStatus'),
+        phases:      document.getElementById('scenarioPhases'),
+        summary:     document.getElementById('scenarioSummary'),
+        customInput: document.getElementById('scenarioCustomInput'),
+        customBtn:   document.getElementById('scenarioCustomBtn'),
+        resetBtn:    document.getElementById('scenarioResetBtn')
+      };
+    }
+    return _els;
+  }
+
+  /** Schedule a timeout and register it for cleanup on reset. */
+  function schedule(fn, ms) {
+    var id = setTimeout(fn, ms);
+    timers.push(id);
+    return id;
+  }
+
   function init() {
     var presetBtns = document.querySelectorAll('.scenario-preset-btn');
-    var customBtn = document.getElementById('scenarioCustomBtn');
-    var customInput = document.getElementById('scenarioCustomInput');
-    var resetBtn = document.getElementById('scenarioResetBtn');
+    // Eagerly resolve and cache DOM refs
+    var els = _getEls();
 
     if (!presetBtns.length) return;
 
@@ -8908,22 +8937,22 @@ var ScenarioPlanner = (function () {
       });
     });
 
-    if (customBtn && customInput) {
-      customBtn.addEventListener('click', function () {
-        var val = customInput.value.trim();
+    if (els.customBtn && els.customInput) {
+      els.customBtn.addEventListener('click', function () {
+        var val = els.customInput.value.trim();
         if (!val || running) return;
         presetBtns.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
         startPlanning(val);
       });
-      customInput.addEventListener('keydown', function (e) {
+      els.customInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
-          customBtn.click();
+          els.customBtn.click();
         }
       });
     }
 
-    if (resetBtn) {
-      resetBtn.addEventListener('click', function () { resetPlanner(); });
+    if (els.resetBtn) {
+      els.resetBtn.addEventListener('click', function () { resetPlanner(); });
     }
   }
 
@@ -8938,34 +8967,24 @@ var ScenarioPlanner = (function () {
     return customPlan;
   }
 
-  function escapeHtml(str) {
-    var el = document.createElement('span');
-    el.textContent = str;
-    return el.innerHTML;
-  }
-
   function startPlanning(scenario) {
     running = true;
     clearTimers();
 
-    var workspace = document.getElementById('scenarioWorkspace');
-    var goalEl = document.getElementById('scenarioGoal');
-    var statusEl = document.getElementById('scenarioAgentStatus');
-    var phasesEl = document.getElementById('scenarioPhases');
-    var summaryEl = document.getElementById('scenarioSummary');
+    var els = _getEls();
 
     // Reset
-    phasesEl.innerHTML = '';
-    summaryEl.hidden = true;
-    summaryEl.innerHTML = '';
-    statusEl.className = 'scenario-agent-status';
-    workspace.hidden = false;
+    els.phases.innerHTML = '';
+    els.summary.hidden = true;
+    els.summary.innerHTML = '';
+    els.status.className = 'scenario-agent-status';
+    els.workspace.hidden = false;
 
     var safeScenario = escapeHtml(scenario.length > 100 ? scenario.substring(0, 97) + '...' : scenario);
-    goalEl.innerHTML = '\u{1F3AF} <strong>Goal:</strong> ' + safeScenario;
+    els.goal.innerHTML = '\u{1F3AF} <strong>Goal:</strong> ' + safeScenario;
 
     var plan = getPlan(scenario);
-    animatePhases(plan, phasesEl, statusEl, summaryEl);
+    animatePhases(plan, els.phases, els.status, els.summary);
   }
 
   function animatePhases(plan, phasesEl, statusEl, summaryEl) {
@@ -8991,21 +9010,18 @@ var ScenarioPlanner = (function () {
       phasesEl.appendChild(phaseEl);
 
       // Trigger visibility transition
-      var tid1 = setTimeout(function () { phaseEl.classList.add('visible'); }, 50);
-      timers.push(tid1);
+      schedule(function () { phaseEl.classList.add('visible'); }, 50);
 
       var stepsContainer = phaseEl.querySelector('.scenario-phase-steps');
       animateSteps(phase.steps, stepsContainer, phaseIndex, function () {
         var phaseStatusEl = document.getElementById('phaseStatus' + phaseIndex);
         if (phaseStatusEl) phaseStatusEl.textContent = '\u2705 complete';
         phaseIndex++;
-        var tid2 = setTimeout(nextPhase, 500);
-        timers.push(tid2);
+        schedule(nextPhase, 500);
       });
     }
 
-    var tid0 = setTimeout(nextPhase, 400);
-    timers.push(tid0);
+    schedule(nextPhase, 400);
   }
 
   function animateSteps(steps, container, phaseIdx, onDone) {
@@ -9025,12 +9041,9 @@ var ScenarioPlanner = (function () {
         '<span>' + escapeHtml(step.text) + '</span>';
       container.appendChild(stepEl);
 
-      var tid1 = setTimeout(function () {
-        stepEl.classList.add('visible');
-      }, 50);
-      timers.push(tid1);
+      schedule(function () { stepEl.classList.add('visible'); }, 50);
 
-      var tid2 = setTimeout(function () {
+      schedule(function () {
         var icon = stepEl.querySelector('.scenario-step-icon');
         if (icon) {
           icon.textContent = '\u2713';
@@ -9039,7 +9052,6 @@ var ScenarioPlanner = (function () {
         stepIndex++;
         nextStep();
       }, step.delay);
-      timers.push(tid2);
     }
 
     nextStep();
@@ -9070,21 +9082,17 @@ var ScenarioPlanner = (function () {
     clearTimers();
     running = false;
 
-    var workspace = document.getElementById('scenarioWorkspace');
-    var phasesEl = document.getElementById('scenarioPhases');
-    var summaryEl = document.getElementById('scenarioSummary');
-    var statusEl = document.getElementById('scenarioAgentStatus');
-    var customInput = document.getElementById('scenarioCustomInput');
+    var els = _getEls();
     var presetBtns = document.querySelectorAll('.scenario-preset-btn');
 
-    if (workspace) workspace.hidden = true;
-    if (phasesEl) phasesEl.innerHTML = '';
-    if (summaryEl) { summaryEl.hidden = true; summaryEl.innerHTML = ''; }
-    if (statusEl) {
-      statusEl.textContent = '\u{1F916} AgentBox is thinking...';
-      statusEl.className = 'scenario-agent-status';
+    if (els.workspace) els.workspace.hidden = true;
+    if (els.phases) els.phases.innerHTML = '';
+    if (els.summary) { els.summary.hidden = true; els.summary.innerHTML = ''; }
+    if (els.status) {
+      els.status.textContent = '\u{1F916} AgentBox is thinking...';
+      els.status.className = 'scenario-agent-status';
     }
-    if (customInput) customInput.value = '';
+    if (els.customInput) els.customInput.value = '';
     presetBtns.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
   }
 
