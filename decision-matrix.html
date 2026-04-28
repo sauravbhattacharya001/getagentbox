@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Matrix Builder — AgentBox</title>
+    <meta name="description" content="Describe a decision and watch AgentBox autonomously identify criteria, weight them, score options, run sensitivity analysis, and recommend the best choice.">
+    <style>
+        :root {
+            --color-primary: #00d4ff;
+            --color-primary-alt: #646cff;
+            --color-accent: #7b2cbf;
+            --color-success: #4ade80;
+            --color-warning: #fbbf24;
+            --color-danger: #ef4444;
+            --color-bg-deep: #1a1a2e;
+            --color-bg-mid: #16213e;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.1);
+            --color-text: #fff;
+            --color-text-muted: #a0a0a0;
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-deep);
+            color: var(--color-text);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .dm-header { text-align: center; padding: 2rem 1rem 1rem; }
+        .dm-header h1 {
+            font-size: 2.2rem; margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent), var(--color-primary-alt));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .dm-header p { color: var(--color-text-muted); max-width: 640px; margin: 0 auto; }
+        .dm-back {
+            position: absolute; top: 1rem; left: 1rem;
+            color: var(--color-text-muted); text-decoration: none; font-size: 0.9rem;
+        }
+        .dm-back:hover { color: var(--color-primary); }
+
+        /* Input area */
+        .dm-input-area {
+            max-width: 720px; margin: 1.5rem auto; padding: 0 1rem;
+            display: flex; gap: 0.5rem; flex-wrap: wrap;
+        }
+        .dm-input-area textarea {
+            flex: 1; min-width: 280px; padding: 0.75rem 1rem; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle); background: var(--color-surface);
+            color: var(--color-text); font-size: 0.95rem; resize: vertical;
+            min-height: 56px; max-height: 200px; outline: none;
+            font-family: inherit; transition: border 0.2s;
+        }
+        .dm-input-area textarea:focus { border-color: var(--color-primary); }
+        .dm-btn {
+            padding: 0.6rem 1.2rem; border: 1px solid rgba(255,255,255,0.15);
+            border-radius: var(--radius-sm); background: var(--color-surface);
+            color: var(--color-text); cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+            white-space: nowrap; align-self: flex-end;
+        }
+        .dm-btn:hover { background: var(--color-surface-hover); }
+        .dm-btn.primary { border-color: var(--color-primary); color: var(--color-primary); }
+        .dm-btn.primary:hover { background: rgba(0, 212, 255, 0.15); }
+        .dm-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Presets */
+        .dm-presets {
+            max-width: 720px; margin: 0 auto 1rem; padding: 0 1rem;
+            display: flex; gap: 0.4rem; flex-wrap: wrap;
+        }
+        .dm-preset {
+            padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.75rem;
+            border: 1px solid var(--border-subtle); background: var(--color-surface);
+            color: var(--color-text-muted); cursor: pointer; transition: all 0.2s;
+        }
+        .dm-preset:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+        /* Stats bar */
+        .dm-stats {
+            max-width: 960px; margin: 0 auto 1rem; padding: 0 1rem;
+            display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+        }
+        .dm-stat {
+            background: var(--color-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm); padding: 0.6rem 1rem; text-align: center;
+            min-width: 120px;
+        }
+        .dm-stat-val { font-size: 1.4rem; font-weight: 700; }
+        .dm-stat-lbl { font-size: 0.7rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Controls */
+        .dm-controls {
+            max-width: 960px; margin: 0 auto 1rem; padding: 0 1rem;
+            display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;
+        }
+
+        /* Matrix table */
+        .dm-matrix-wrap {
+            max-width: 960px; margin: 0 auto 1rem; padding: 0 1rem; overflow-x: auto;
+        }
+        .dm-matrix {
+            width: 100%; border-collapse: collapse; font-size: 0.85rem;
+            background: var(--color-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md); overflow: hidden;
+        }
+        .dm-matrix th, .dm-matrix td {
+            padding: 0.6rem 0.8rem; text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .dm-matrix th {
+            background: rgba(255,255,255,0.03); font-size: 0.75rem;
+            text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);
+        }
+        .dm-matrix th.weight-cell { font-size: 0.65rem; }
+        .dm-matrix td:first-child { text-align: left; font-weight: 600; }
+        .dm-matrix tr.winner { background: rgba(0, 212, 255, 0.08); }
+        .dm-matrix tr.winner td:first-child { color: var(--color-primary); }
+        .dm-matrix .score-cell {
+            font-weight: 700; font-size: 0.95rem;
+        }
+        .dm-matrix .bar-cell {
+            position: relative;
+        }
+        .dm-matrix .bar-cell .bar-bg {
+            position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+            height: 18px; border-radius: 4px; opacity: 0.25;
+        }
+        .dm-matrix .bar-cell .bar-val {
+            position: relative; z-index: 1;
+        }
+
+        /* Radar chart */
+        .dm-radar-wrap {
+            max-width: 960px; margin: 0 auto 1rem; padding: 0 1rem; text-align: center;
+        }
+        .dm-radar-title {
+            font-size: 1rem; margin-bottom: 0.5rem; color: var(--color-text-muted);
+        }
+        .dm-radar-canvas {
+            display: inline-block; border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md); background: var(--color-bg-mid); overflow: hidden;
+        }
+
+        /* Sensitivity analysis */
+        .dm-sensitivity-wrap {
+            max-width: 960px; margin: 0 auto 1rem; padding: 0 1rem;
+        }
+        .dm-sensitivity-title {
+            font-size: 1rem; margin-bottom: 0.5rem; color: var(--color-text-muted);
+        }
+        .dm-sensitivity {
+            background: var(--color-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm); padding: 0.75rem;
+        }
+        .dm-sens-row {
+            display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;
+            font-size: 0.8rem; flex-wrap: wrap;
+        }
+        .dm-sens-label { width: 140px; flex-shrink: 0; color: var(--color-text-muted); }
+        .dm-sens-slider { flex: 1; min-width: 120px; accent-color: var(--color-primary); }
+        .dm-sens-value { width: 40px; text-align: right; font-weight: 600; }
+        .dm-sens-impact { font-size: 0.75rem; color: var(--color-warning); min-width: 160px; }
+
+        /* Recommendation panel */
+        .dm-recommendation {
+            max-width: 960px; margin: 0 auto 1rem; padding: 0 1rem;
+        }
+        .dm-rec-panel {
+            background: var(--color-surface); border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: var(--radius-md); padding: 1.2rem; display: none;
+        }
+        .dm-rec-panel.open { display: block; }
+        .dm-rec-panel h3 {
+            font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--color-primary);
+        }
+        .dm-rec-verdict {
+            font-size: 1rem; margin-bottom: 0.5rem; line-height: 1.5;
+        }
+        .dm-rec-reasoning {
+            font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5;
+        }
+        .dm-rec-confidence {
+            display: inline-block; margin-top: 0.5rem; padding: 0.3rem 0.8rem;
+            border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+        }
+        .dm-rec-confidence.high { background: rgba(74, 222, 128, 0.15); color: var(--color-success); border: 1px solid rgba(74, 222, 128, 0.3); }
+        .dm-rec-confidence.medium { background: rgba(251, 191, 36, 0.15); color: var(--color-warning); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .dm-rec-confidence.low { background: rgba(239, 68, 68, 0.15); color: var(--color-danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* Log */
+        .dm-log-wrap { max-width: 960px; margin: 1rem auto; padding: 0 1rem; }
+        .dm-log {
+            background: var(--color-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm); padding: 0.75rem; max-height: 180px;
+            overflow-y: auto; font-size: 0.75rem; font-family: monospace;
+            color: var(--color-text-muted);
+        }
+        .dm-log-entry { margin-bottom: 0.2rem; }
+        .dm-log-entry .time { color: var(--color-primary); margin-right: 0.5rem; }
+
+        /* Footer */
+        .dm-footer {
+            text-align: center; padding: 2rem 1rem; margin-top: 2rem;
+            font-size: 0.8rem; color: var(--color-text-muted);
+        }
+
+        /* Legend */
+        .dm-legend {
+            max-width: 960px; margin: 0 auto 0.5rem; padding: 0 1rem;
+            display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+            font-size: 0.7rem; color: var(--color-text-muted);
+        }
+        .dm-legend-dot {
+            display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+            margin-right: 4px; vertical-align: middle;
+        }
+
+        @media (max-width: 600px) {
+            .dm-header h1 { font-size: 1.5rem; }
+            .dm-matrix { font-size: 0.75rem; }
+            .dm-sens-label { width: 100px; }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="dm-back">&larr; Back to AgentBox</a>
+
+    <header class="dm-header">
+        <h1>⚖️ Decision Matrix Builder</h1>
+        <p>Describe a decision with options. AgentBox autonomously identifies evaluation criteria, assigns weights, scores each option, runs sensitivity analysis, and recommends the best choice with confidence levels.</p>
+    </header>
+
+    <div class="dm-input-area">
+        <textarea id="decisionInput" placeholder="Describe your decision... e.g. 'Should I use React, Vue, or Svelte for my new web app?'" rows="2"></textarea>
+        <button class="dm-btn primary" id="analyzeBtn" onclick="analyze()">🧠 Analyze</button>
+        <button class="dm-btn" id="exportBtn" onclick="exportJSON()" disabled>📥 Export</button>
+    </div>
+
+    <div class="dm-presets">
+        <button class="dm-preset" onclick="loadPreset(0)">💻 Choose a Frontend Framework</button>
+        <button class="dm-preset" onclick="loadPreset(1)">☁️ Cloud Provider Selection</button>
+        <button class="dm-preset" onclick="loadPreset(2)">🏠 Buy vs Rent a Home</button>
+        <button class="dm-preset" onclick="loadPreset(3)">🚗 Electric vs Hybrid vs Gas Car</button>
+        <button class="dm-preset" onclick="loadPreset(4)">📱 Hire In-house vs Outsource</button>
+        <button class="dm-preset" onclick="loadPreset(5)">🤖 Choose an AI Model Provider</button>
+    </div>
+
+    <div class="dm-stats" id="statsBar" style="display:none">
+        <div class="dm-stat"><div class="dm-stat-val" id="statOptions">0</div><div class="dm-stat-lbl">Options</div></div>
+        <div class="dm-stat"><div class="dm-stat-val" id="statCriteria">0</div><div class="dm-stat-lbl">Criteria</div></div>
+        <div class="dm-stat"><div class="dm-stat-val" id="statWinner">—</div><div class="dm-stat-lbl">Recommended</div></div>
+        <div class="dm-stat"><div class="dm-stat-val" id="statConfidence">—</div><div class="dm-stat-lbl">Confidence</div></div>
+        <div class="dm-stat"><div class="dm-stat-val" id="statMargin">—</div><div class="dm-stat-lbl">Win Margin</div></div>
+        <div class="dm-stat"><div class="dm-stat-val" id="statRobust">—</div><div class="dm-stat-lbl">Robustness</div></div>
+    </div>
+
+    <div class="dm-controls" id="controlsBar" style="display:none">
+        <button class="dm-btn" onclick="toggleView('matrix')">📊 Matrix</button>
+        <button class="dm-btn" onclick="toggleView('radar')">🕸️ Radar</button>
+        <button class="dm-btn" onclick="toggleView('sensitivity')">🎛️ Sensitivity</button>
+        <button class="dm-btn" onclick="reAnalyze()">🔄 Re-analyze</button>
+    </div>
+
+    <div class="dm-matrix-wrap" id="matrixWrap">
+        <table class="dm-matrix" id="matrixTable"></table>
+    </div>
+
+    <div class="dm-radar-wrap" id="radarWrap" style="display:none">
+        <div class="dm-radar-title">🕸️ Option Comparison Radar</div>
+        <div class="dm-radar-canvas"><canvas id="radarCanvas" width="500" height="500"></canvas></div>
+        <div class="dm-legend" id="radarLegend"></div>
+    </div>
+
+    <div class="dm-sensitivity-wrap" id="sensitivityWrap" style="display:none">
+        <div class="dm-sensitivity-title">🎛️ Sensitivity Analysis — Adjust Criteria Weights</div>
+        <div class="dm-sensitivity" id="sensitivityPanel"></div>
+    </div>
+
+    <div class="dm-recommendation">
+        <div class="dm-rec-panel" id="recPanel">
+            <h3>🤖 AgentBox Recommendation</h3>
+            <div class="dm-rec-verdict" id="recVerdict"></div>
+            <div class="dm-rec-reasoning" id="recReasoning"></div>
+            <div id="recConfWrap"></div>
+        </div>
+    </div>
+
+    <div class="dm-log-wrap">
+        <div class="dm-log" id="agentLog"></div>
+    </div>
+
+    <footer class="dm-footer">
+        🤖 AgentBox — Decision Matrix Builder &middot; AI-powered multi-criteria decision analysis
+    </footer>
+
+<script>
+/* ── Preset Data ── */
+var PRESETS = [
+    {
+        question: "Should I use React, Vue, or Svelte for my new web app?",
+        options: ["React", "Vue", "Svelte"],
+        criteria: [
+            { name: "Learning Curve", weight: 15, scores: [6, 8, 9], type: "lower-better" },
+            { name: "Ecosystem & Libraries", weight: 20, scores: [10, 8, 5] },
+            { name: "Performance", weight: 18, scores: [7, 7, 10] },
+            { name: "Job Market", weight: 15, scores: [10, 7, 4] },
+            { name: "Developer Experience", weight: 14, scores: [7, 8, 10] },
+            { name: "Community Support", weight: 10, scores: [10, 8, 6] },
+            { name: "Bundle Size", weight: 8, scores: [5, 7, 10], type: "lower-better" }
+        ]
+    },
+    {
+        question: "Which cloud provider should we choose: AWS, Azure, or GCP?",
+        options: ["AWS", "Azure", "GCP"],
+        criteria: [
+            { name: "Service Breadth", weight: 18, scores: [10, 9, 8] },
+            { name: "Pricing", weight: 20, scores: [6, 7, 8] },
+            { name: "AI/ML Services", weight: 16, scores: [8, 7, 10] },
+            { name: "Enterprise Support", weight: 14, scores: [9, 10, 7] },
+            { name: "Global Regions", weight: 10, scores: [10, 9, 8] },
+            { name: "Developer Tools", weight: 12, scores: [8, 7, 9] },
+            { name: "Vendor Lock-in Risk", weight: 10, scores: [5, 6, 7], type: "lower-better" }
+        ]
+    },
+    {
+        question: "Should I buy or rent a home in my city?",
+        options: ["Buy a Home", "Rent an Apartment", "Rent a House"],
+        criteria: [
+            { name: "Monthly Cost", weight: 22, scores: [4, 8, 6], type: "lower-better" },
+            { name: "Equity Building", weight: 20, scores: [10, 1, 1] },
+            { name: "Flexibility to Move", weight: 15, scores: [3, 10, 9] },
+            { name: "Space & Privacy", weight: 14, scores: [9, 5, 8] },
+            { name: "Maintenance Burden", weight: 12, scores: [3, 9, 6], type: "lower-better" },
+            { name: "Tax Benefits", weight: 10, scores: [9, 2, 2] },
+            { name: "Upfront Cost", weight: 7, scores: [2, 9, 8], type: "lower-better" }
+        ]
+    },
+    {
+        question: "Should I get an electric, hybrid, or gas car?",
+        options: ["Full Electric (EV)", "Plug-in Hybrid", "Gas/Petrol"],
+        criteria: [
+            { name: "Fuel/Energy Cost", weight: 20, scores: [10, 7, 3] },
+            { name: "Purchase Price", weight: 18, scores: [4, 5, 8] },
+            { name: "Range Anxiety", weight: 14, scores: [5, 8, 10] },
+            { name: "Environmental Impact", weight: 16, scores: [10, 7, 3] },
+            { name: "Maintenance Cost", weight: 12, scores: [9, 6, 4] },
+            { name: "Charging Infrastructure", weight: 10, scores: [5, 7, 10] },
+            { name: "Resale Value", weight: 10, scores: [6, 5, 7] }
+        ]
+    },
+    {
+        question: "Should we hire an in-house dev team or outsource development?",
+        options: ["In-house Team", "Outsource (Agency)", "Hybrid Model"],
+        criteria: [
+            { name: "Cost Efficiency", weight: 22, scores: [4, 8, 7] },
+            { name: "Quality Control", weight: 18, scores: [9, 5, 7] },
+            { name: "Speed to Start", weight: 14, scores: [4, 9, 7] },
+            { name: "IP Protection", weight: 12, scores: [10, 5, 8] },
+            { name: "Scalability", weight: 10, scores: [5, 9, 8] },
+            { name: "Cultural Alignment", weight: 12, scores: [10, 4, 7] },
+            { name: "Long-term Value", weight: 12, scores: [9, 4, 7] }
+        ]
+    },
+    {
+        question: "Which AI model provider to use: OpenAI, Anthropic, or Google?",
+        options: ["OpenAI (GPT)", "Anthropic (Claude)", "Google (Gemini)"],
+        criteria: [
+            { name: "Model Quality", weight: 22, scores: [9, 9, 8] },
+            { name: "Pricing (per token)", weight: 18, scores: [6, 7, 9] },
+            { name: "Context Window", weight: 14, scores: [7, 10, 10] },
+            { name: "API Reliability", weight: 14, scores: [8, 8, 7] },
+            { name: "Safety & Alignment", weight: 12, scores: [7, 10, 7] },
+            { name: "Multimodal Support", weight: 10, scores: [9, 7, 10] },
+            { name: "Open-source Ecosystem", weight: 10, scores: [6, 5, 8] }
+        ]
+    }
+];
+
+var OPTION_COLORS = ["#00d4ff", "#a855f7", "#4ade80", "#f97316", "#ec4899", "#22d3ee"];
+
+var currentData = null;
+var currentView = "matrix";
+var activeWeights = null;
+
+/* ── Logging ── */
+function log(msg) {
+    var el = document.getElementById("agentLog");
+    var t = new Date().toLocaleTimeString();
+    el.innerHTML += '<div class="dm-log-entry"><span class="time">' + t + '</span>' + escapeHtml(msg) + '</div>';
+    el.scrollTop = el.scrollHeight;
+}
+
+function escapeHtml(str) {
+    var d = document.createElement("div");
+    d.appendChild(document.createTextNode(str));
+    return d.innerHTML;
+}
+
+/* ── Load Preset ── */
+function loadPreset(idx) {
+    var p = PRESETS[idx];
+    document.getElementById("decisionInput").value = p.question;
+    currentData = JSON.parse(JSON.stringify(p));
+    activeWeights = currentData.criteria.map(function(c) { return c.weight; });
+    log('📋 Loaded preset: "' + p.question + '" (' + p.options.length + ' options, ' + p.criteria.length + ' criteria)');
+    runFullAnalysis();
+}
+
+/* ── Heuristic Analyze ── */
+function analyze() {
+    var q = document.getElementById("decisionInput").value.trim();
+    if (!q) return;
+    log('🧠 Analyzing decision: "' + q + '"');
+    currentData = generateDecisionData(q);
+    activeWeights = currentData.criteria.map(function(c) { return c.weight; });
+    log('✅ Identified ' + currentData.options.length + ' options and ' + currentData.criteria.length + ' criteria');
+    runFullAnalysis();
+}
+
+function generateDecisionData(q) {
+    var ql = q.toLowerCase();
+    var options, criteria;
+
+    if (ql.match(/language|python|java|rust|go|typescript|kotlin/)) {
+        options = ["Python", "TypeScript", "Rust", "Go"];
+        criteria = [
+            { name: "Learning Curve", weight: 14, scores: [9, 7, 4, 7] },
+            { name: "Performance", weight: 18, scores: [4, 5, 10, 9] },
+            { name: "Ecosystem", weight: 16, scores: [10, 9, 6, 7] },
+            { name: "Type Safety", weight: 14, scores: [4, 9, 10, 8] },
+            { name: "Job Market", weight: 15, scores: [9, 9, 6, 7] },
+            { name: "Tooling", weight: 12, scores: [7, 9, 8, 8] },
+            { name: "Concurrency", weight: 11, scores: [5, 5, 9, 10] }
+        ];
+    } else if (ql.match(/database|db|postgres|mongo|mysql|sqlite/)) {
+        options = ["PostgreSQL", "MongoDB", "MySQL", "SQLite"];
+        criteria = [
+            { name: "Query Power", weight: 20, scores: [10, 7, 8, 6] },
+            { name: "Scalability", weight: 18, scores: [8, 9, 7, 3] },
+            { name: "Ease of Setup", weight: 14, scores: [6, 7, 7, 10] },
+            { name: "JSON Support", weight: 12, scores: [8, 10, 5, 6] },
+            { name: "Community", weight: 12, scores: [9, 8, 10, 7] },
+            { name: "Performance", weight: 14, scores: [8, 7, 8, 9] },
+            { name: "ACID Compliance", weight: 10, scores: [10, 5, 9, 8] }
+        ];
+    } else if (ql.match(/city|move|relocat|live|seattle|sf|nyc|austin/)) {
+        options = ["Seattle", "San Francisco", "Austin", "New York"];
+        criteria = [
+            { name: "Cost of Living", weight: 22, scores: [5, 3, 8, 2] },
+            { name: "Job Market (Tech)", weight: 20, scores: [9, 10, 8, 9] },
+            { name: "Weather", weight: 12, scores: [5, 8, 6, 5] },
+            { name: "Culture & Nightlife", weight: 12, scores: [7, 8, 7, 10] },
+            { name: "Nature Access", weight: 14, scores: [10, 8, 5, 3] },
+            { name: "Public Transit", weight: 10, scores: [5, 7, 3, 10] },
+            { name: "Safety", weight: 10, scores: [7, 5, 6, 5] }
+        ];
+    } else if (ql.match(/laptop|computer|mac|dell|thinkpad|desktop/)) {
+        options = ["MacBook Pro", "ThinkPad X1", "Dell XPS", "Framework"];
+        criteria = [
+            { name: "Build Quality", weight: 18, scores: [10, 9, 8, 7] },
+            { name: "Performance", weight: 18, scores: [9, 8, 9, 7] },
+            { name: "Price", weight: 16, scores: [4, 6, 6, 8] },
+            { name: "Repairability", weight: 14, scores: [2, 5, 4, 10] },
+            { name: "Battery Life", weight: 14, scores: [10, 8, 7, 6] },
+            { name: "Port Selection", weight: 10, scores: [5, 8, 7, 10] },
+            { name: "Keyboard", weight: 10, scores: [7, 10, 7, 7] }
+        ];
+    } else if (ql.match(/invest|stock|bond|crypto|etf|fund/)) {
+        options = ["Index ETFs", "Individual Stocks", "Bonds", "Real Estate"];
+        criteria = [
+            { name: "Expected Return", weight: 22, scores: [7, 9, 4, 7] },
+            { name: "Risk Level", weight: 20, scores: [7, 4, 9, 6] },
+            { name: "Liquidity", weight: 14, scores: [10, 9, 8, 3] },
+            { name: "Diversification", weight: 14, scores: [10, 3, 6, 5] },
+            { name: "Effort Required", weight: 12, scores: [10, 3, 9, 4] },
+            { name: "Tax Efficiency", weight: 10, scores: [8, 5, 6, 7] },
+            { name: "Inflation Hedge", weight: 8, scores: [6, 6, 3, 9] }
+        ];
+    } else {
+        // Generic fallback: extract options from "X or Y or Z" / "X vs Y vs Z"
+        var parts = q.replace(/\?/g, "").split(/\s+(?:or|vs|versus|against)\s+/i);
+        if (parts.length >= 2) {
+            options = parts.map(function(p) { return p.replace(/^(should i |which |choose |pick |select |between )/i, "").trim(); });
+            options = options.filter(function(o) { return o.length > 0 && o.length < 50; }).slice(0, 5);
+        }
+        if (!options || options.length < 2) {
+            options = ["Option A", "Option B", "Option C"];
+        }
+        var n = options.length;
+        criteria = [
+            { name: "Cost", weight: 20, scores: makeScores(n) },
+            { name: "Quality", weight: 18, scores: makeScores(n) },
+            { name: "Ease of Use", weight: 16, scores: makeScores(n) },
+            { name: "Scalability", weight: 14, scores: makeScores(n) },
+            { name: "Community/Support", weight: 12, scores: makeScores(n) },
+            { name: "Long-term Viability", weight: 12, scores: makeScores(n) },
+            { name: "Risk", weight: 8, scores: makeScores(n), type: "lower-better" }
+        ];
+    }
+
+    return { question: q, options: options, criteria: criteria };
+}
+
+function makeScores(n) {
+    var arr = [];
+    for (var i = 0; i < n; i++) arr.push(Math.floor(Math.random() * 6) + 4);
+    return arr;
+}
+
+function reAnalyze() {
+    if (!currentData) return;
+    log("🔄 Re-analyzing with variation...");
+    currentData.criteria.forEach(function(c) {
+        c.scores = c.scores.map(function(s) {
+            return Math.max(1, Math.min(10, s + Math.floor(Math.random() * 3) - 1));
+        });
+    });
+    runFullAnalysis();
+}
+
+/* ── Core Analysis ── */
+function computeWeightedScores(weights) {
+    var totalWeight = weights.reduce(function(a, b) { return a + b; }, 0);
+    var optionScores = currentData.options.map(function() { return 0; });
+
+    currentData.criteria.forEach(function(c, ci) {
+        var w = (weights[ci] || 0) / totalWeight;
+        currentData.options.forEach(function(_, oi) {
+            optionScores[oi] += c.scores[oi] * w;
+        });
+    });
+
+    return optionScores;
+}
+
+function getWinnerInfo(scores) {
+    var maxScore = -1, winnerIdx = 0, secondScore = -1;
+    scores.forEach(function(s, i) {
+        if (s > maxScore) { secondScore = maxScore; maxScore = s; winnerIdx = i; }
+        else if (s > secondScore) secondScore = s;
+    });
+    var margin = maxScore - secondScore;
+    var pctMargin = maxScore > 0 ? ((margin / maxScore) * 100).toFixed(1) : 0;
+    return { idx: winnerIdx, score: maxScore, margin: margin, pctMargin: pctMargin };
+}
+
+function computeRobustness() {
+    // Monte Carlo: jitter all weights ±30% and see how often winner stays
+    var baseScores = computeWeightedScores(activeWeights);
+    var baseWinner = getWinnerInfo(baseScores).idx;
+    var wins = 0, trials = 200;
+    for (var t = 0; t < trials; t++) {
+        var jittered = activeWeights.map(function(w) {
+            return Math.max(1, w * (0.7 + Math.random() * 0.6));
+        });
+        var scores = computeWeightedScores(jittered);
+        if (getWinnerInfo(scores).idx === baseWinner) wins++;
+    }
+    return Math.round(wins / trials * 100);
+}
+
+function getConfidenceLevel(margin, robustness) {
+    if (margin > 0.8 && robustness > 80) return "high";
+    if (margin > 0.3 && robustness > 55) return "medium";
+    return "low";
+}
+
+/* ── Full Analysis Pipeline ── */
+function runFullAnalysis() {
+    log("📊 Computing weighted scores...");
+    var scores = computeWeightedScores(activeWeights);
+    var winner = getWinnerInfo(scores);
+
+    log("🔍 Running sensitivity analysis (200 Monte Carlo trials)...");
+    var robustness = computeRobustness();
+
+    var confidence = getConfidenceLevel(winner.margin, robustness);
+    log("🏆 Winner: " + currentData.options[winner.idx] + " (score: " + winner.score.toFixed(2) + ", confidence: " + confidence + ")");
+
+    // Stats
+    document.getElementById("statOptions").textContent = currentData.options.length;
+    document.getElementById("statCriteria").textContent = currentData.criteria.length;
+    document.getElementById("statWinner").textContent = currentData.options[winner.idx];
+    document.getElementById("statConfidence").textContent = confidence.charAt(0).toUpperCase() + confidence.slice(1);
+    document.getElementById("statMargin").textContent = "+" + winner.pctMargin + "%";
+    document.getElementById("statRobust").textContent = robustness + "%";
+
+    document.getElementById("statsBar").style.display = "flex";
+    document.getElementById("controlsBar").style.display = "flex";
+    document.getElementById("exportBtn").disabled = false;
+
+    renderMatrix(scores, winner);
+    renderRadar();
+    renderSensitivity();
+    renderRecommendation(scores, winner, robustness, confidence);
+    toggleView(currentView);
+}
+
+/* ── Matrix Rendering ── */
+function renderMatrix(scores, winner) {
+    var table = document.getElementById("matrixTable");
+    var html = "<thead><tr><th>Option</th>";
+    currentData.criteria.forEach(function(c, ci) {
+        html += '<th>' + escapeHtml(c.name) + '<br><span class="weight-cell">w=' + activeWeights[ci] + '%</span></th>';
+    });
+    html += '<th class="score-cell">Total</th></tr></thead><tbody>';
+
+    var maxTotal = Math.max.apply(null, scores);
+
+    currentData.options.forEach(function(opt, oi) {
+        var isWinner = oi === winner.idx;
+        html += '<tr' + (isWinner ? ' class="winner"' : '') + '>';
+        html += '<td>' + (isWinner ? '🏆 ' : '') + escapeHtml(opt) + '</td>';
+        currentData.criteria.forEach(function(c) {
+            var s = c.scores[oi];
+            var pct = (s / 10 * 100).toFixed(0);
+            var color = s >= 8 ? 'var(--color-success)' : s >= 5 ? 'var(--color-warning)' : 'var(--color-danger)';
+            html += '<td class="bar-cell"><span class="bar-bg" style="width:' + pct + '%;background:' + color + '"></span><span class="bar-val">' + s + '/10</span></td>';
+        });
+        var pctBar = maxTotal > 0 ? (scores[oi] / maxTotal * 100).toFixed(0) : 0;
+        var totalColor = isWinner ? 'var(--color-primary)' : 'var(--color-text)';
+        html += '<td class="score-cell" style="color:' + totalColor + '">' + scores[oi].toFixed(2) + '</td>';
+        html += '</tr>';
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+}
+
+/* ── Radar Chart ── */
+function renderRadar() {
+    var canvas = document.getElementById("radarCanvas");
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height;
+    var cx = W / 2, cy = H / 2;
+    var maxR = Math.min(cx, cy) - 60;
+    var n = currentData.criteria.length;
+    if (n < 3) return;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid rings
+    for (var ring = 1; ring <= 5; ring++) {
+        var r = maxR * ring / 5;
+        ctx.beginPath();
+        for (var i = 0; i <= n; i++) {
+            var angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+            var x = cx + r * Math.cos(angle);
+            var y = cy + r * Math.sin(angle);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.stroke();
+    }
+
+    // Axis lines and labels
+    for (var i = 0; i < n; i++) {
+        var angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+        var ex = cx + maxR * Math.cos(angle);
+        var ey = cy + maxR * Math.sin(angle);
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey);
+        ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.stroke();
+
+        var lx = cx + (maxR + 30) * Math.cos(angle);
+        var ly = cy + (maxR + 30) * Math.sin(angle);
+        ctx.fillStyle = "#a0a0a0"; ctx.font = "11px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(currentData.criteria[i].name, lx, ly);
+    }
+
+    // Option polygons
+    currentData.options.forEach(function(opt, oi) {
+        ctx.beginPath();
+        for (var i = 0; i <= n; i++) {
+            var ci = i % n;
+            var val = currentData.criteria[ci].scores[oi] / 10;
+            var angle = (Math.PI * 2 * ci / n) - Math.PI / 2;
+            var x = cx + maxR * val * Math.cos(angle);
+            var y = cy + maxR * val * Math.sin(angle);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        var color = OPTION_COLORS[oi % OPTION_COLORS.length];
+        ctx.fillStyle = color.replace(")", ",0.1)").replace("rgb", "rgba").replace("#", "");
+        // Use hex to rgba
+        ctx.fillStyle = hexToRgba(color, 0.1);
+        ctx.fill();
+        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+    });
+
+    // Legend
+    var legend = document.getElementById("radarLegend");
+    legend.innerHTML = currentData.options.map(function(opt, oi) {
+        var color = OPTION_COLORS[oi % OPTION_COLORS.length];
+        return '<span><span class="dm-legend-dot" style="background:' + color + '"></span>' + escapeHtml(opt) + '</span>';
+    }).join("");
+}
+
+function hexToRgba(hex, alpha) {
+    hex = hex.replace("#", "");
+    var r = parseInt(hex.substring(0, 2), 16);
+    var g = parseInt(hex.substring(2, 4), 16);
+    var b = parseInt(hex.substring(4, 6), 16);
+    return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+}
+
+/* ── Sensitivity Analysis ── */
+function renderSensitivity() {
+    var panel = document.getElementById("sensitivityPanel");
+    var html = "";
+    currentData.criteria.forEach(function(c, ci) {
+        var w = activeWeights[ci];
+        html += '<div class="dm-sens-row">';
+        html += '<span class="dm-sens-label">' + escapeHtml(c.name) + '</span>';
+        html += '<input type="range" class="dm-sens-slider" min="0" max="40" value="' + w + '" data-ci="' + ci + '" oninput="onWeightChange(this)">';
+        html += '<span class="dm-sens-value" id="sensVal' + ci + '">' + w + '%</span>';
+        html += '<span class="dm-sens-impact" id="sensImpact' + ci + '"></span>';
+        html += '</div>';
+    });
+    panel.innerHTML = html;
+    updateSensitivityImpacts();
+}
+
+function onWeightChange(el) {
+    var ci = parseInt(el.getAttribute("data-ci"));
+    activeWeights[ci] = parseInt(el.value);
+    document.getElementById("sensVal" + ci).textContent = el.value + "%";
+    runFullAnalysis();
+}
+
+function updateSensitivityImpacts() {
+    var baseScores = computeWeightedScores(activeWeights);
+    var baseWinner = getWinnerInfo(baseScores).idx;
+
+    currentData.criteria.forEach(function(c, ci) {
+        // What if this criterion weight = 0?
+        var zeroW = activeWeights.slice();
+        zeroW[ci] = 0;
+        var zeroScores = computeWeightedScores(zeroW);
+        var zeroWinner = getWinnerInfo(zeroScores).idx;
+
+        var impactEl = document.getElementById("sensImpact" + ci);
+        if (zeroWinner !== baseWinner) {
+            impactEl.textContent = "⚠️ Removing flips winner to " + currentData.options[zeroWinner];
+            impactEl.style.color = "var(--color-danger)";
+        } else {
+            var diff = Math.abs(baseScores[baseWinner] - zeroScores[baseWinner]);
+            impactEl.textContent = "Stable (Δ " + diff.toFixed(2) + ")";
+            impactEl.style.color = "var(--color-text-muted)";
+        }
+    });
+}
+
+/* ── Recommendation ── */
+function renderRecommendation(scores, winner, robustness, confidence) {
+    var opt = currentData.options[winner.idx];
+    var panel = document.getElementById("recPanel");
+    panel.classList.add("open");
+
+    // Build reasoning
+    var strengths = [];
+    var weaknesses = [];
+    currentData.criteria.forEach(function(c, ci) {
+        var s = c.scores[winner.idx];
+        if (s >= 8) strengths.push(c.name + " (" + s + "/10)");
+        if (s <= 4) weaknesses.push(c.name + " (" + s + "/10)");
+    });
+
+    // Find runner-up
+    var sortedIdxs = scores.map(function(s, i) { return { s: s, i: i }; }).sort(function(a, b) { return b.s - a.s; });
+    var runnerUp = sortedIdxs.length > 1 ? currentData.options[sortedIdxs[1].i] : null;
+
+    var verdict = '<strong>' + escapeHtml(opt) + '</strong> is the recommended choice';
+    verdict += ' with a weighted score of <strong>' + winner.score.toFixed(2) + '</strong>';
+    if (runnerUp) {
+        verdict += ', beating ' + escapeHtml(runnerUp) + ' by ' + winner.pctMargin + '%.';
+    } else {
+        verdict += '.';
+    }
+
+    var reasoning = '';
+    if (strengths.length) reasoning += '<strong>Key strengths:</strong> ' + strengths.join(", ") + '. ';
+    if (weaknesses.length) reasoning += '<strong>Watch out for:</strong> ' + weaknesses.join(", ") + '. ';
+    reasoning += 'The recommendation held in <strong>' + robustness + '%</strong> of 200 Monte Carlo weight-jitter trials, ';
+    reasoning += confidence === "high" ? "indicating a robust and clear winner." :
+                 confidence === "medium" ? "suggesting a moderate lead — consider your personal priorities." :
+                 "indicating a close call — the decision may hinge on your specific priorities.";
+
+    document.getElementById("recVerdict").innerHTML = verdict;
+    document.getElementById("recReasoning").innerHTML = reasoning;
+    document.getElementById("recConfWrap").innerHTML =
+        '<span class="dm-rec-confidence ' + confidence + '">Confidence: ' + confidence.toUpperCase() + ' (' + robustness + '% robust)</span>';
+}
+
+/* ── View Toggle ── */
+function toggleView(view) {
+    currentView = view;
+    document.getElementById("matrixWrap").style.display = view === "matrix" ? "block" : "none";
+    document.getElementById("radarWrap").style.display = view === "radar" ? "block" : "none";
+    document.getElementById("sensitivityWrap").style.display = view === "sensitivity" ? "block" : "none";
+}
+
+/* ── Export ── */
+function exportJSON() {
+    if (!currentData) return;
+    var scores = computeWeightedScores(activeWeights);
+    var winner = getWinnerInfo(scores);
+    var robustness = computeRobustness();
+    var data = {
+        question: currentData.question,
+        options: currentData.options,
+        criteria: currentData.criteria.map(function(c, ci) {
+            return { name: c.name, weight: activeWeights[ci], scores: c.scores };
+        }),
+        results: {
+            weightedScores: currentData.options.map(function(o, i) { return { option: o, score: parseFloat(scores[i].toFixed(4)) }; }),
+            winner: currentData.options[winner.idx],
+            margin: winner.pctMargin + "%",
+            robustness: robustness + "%"
+        },
+        exportedAt: new Date().toISOString()
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "decision-matrix.json"; a.click();
+    URL.revokeObjectURL(url);
+    log("📥 Exported decision matrix as JSON");
+}
+
+/* ── Init ── */
+log("⚖️ Decision Matrix Builder ready. Describe a decision or pick a preset.");
+</script>
+</body>
+</html>
