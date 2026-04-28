@@ -8214,3 +8214,178 @@ select.wb-field-input { cursor: pointer; }
 .sla-low { background: rgba(52,199,89,0.15); color: #34c759; }
 .legal-container code { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
 [data-theme="light"] .legal-container code { background: rgba(0,0,0,0.06); }
+
+/* ── Scenario Planner ───────────────────────────────────────────── */
+.scenario-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+.scenario-preset-btn {
+    padding: 0.75rem 1.25rem;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--card-bg, #f8f9fa);
+    color: var(--text);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.scenario-preset-btn:hover {
+    border-color: var(--accent, #6c5ce7);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.15);
+}
+.scenario-preset-btn[aria-pressed="true"] {
+    background: var(--accent, #6c5ce7);
+    color: #fff;
+    border-color: var(--accent, #6c5ce7);
+}
+.scenario-custom {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 500px;
+    margin: 0 auto 2rem;
+}
+.scenario-custom-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--card-bg, #fff);
+    color: var(--text);
+    font-size: 0.95rem;
+}
+.scenario-custom-input:focus {
+    outline: none;
+    border-color: var(--accent, #6c5ce7);
+}
+.scenario-custom-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--accent, #6c5ce7);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.scenario-custom-btn:hover { opacity: 0.85; }
+.scenario-workspace {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: left;
+}
+.scenario-header { margin-bottom: 1.5rem; }
+.scenario-goal {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+}
+.scenario-agent-status {
+    font-size: 0.9rem;
+    color: var(--text-muted, #888);
+    animation: scenarioPulse 1.5s ease-in-out infinite;
+}
+@keyframes scenarioPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.scenario-agent-status.done {
+    animation: none;
+    color: var(--success, #00b894);
+}
+.scenario-phase {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card-bg, #f8f9fa);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.scenario-phase.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.scenario-phase-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+}
+.scenario-phase-status {
+    font-size: 0.8rem;
+    color: var(--text-muted, #888);
+    margin-left: auto;
+    font-weight: 400;
+}
+.scenario-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+    color: var(--text);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.scenario-step.visible { opacity: 1; }
+.scenario-step-icon {
+    flex-shrink: 0;
+    width: 18px;
+    text-align: center;
+}
+.scenario-step-icon.pending { color: var(--text-muted, #888); }
+.scenario-step-icon.done { color: var(--success, #00b894); }
+.scenario-summary {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(108,92,231,0.08), rgba(0,184,148,0.08));
+    border-radius: 12px;
+    text-align: center;
+}
+.scenario-summary-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 0.75rem;
+}
+.scenario-summary-stat { text-align: center; }
+.scenario-summary-stat .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent, #6c5ce7);
+}
+.scenario-summary-stat .label {
+    font-size: 0.8rem;
+    color: var(--text-muted, #888);
+}
+.scenario-summary-insight {
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-top: 0.5rem;
+}
+.scenario-reset-btn {
+    display: block;
+    margin: 1.5rem auto 0;
+    padding: 0.6rem 1.5rem;
+    background: transparent;
+    color: var(--accent, #6c5ce7);
+    border: 2px solid var(--accent, #6c5ce7);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.scenario-reset-btn:hover {
+    background: var(--accent, #6c5ce7);
+    color: #fff;
+}

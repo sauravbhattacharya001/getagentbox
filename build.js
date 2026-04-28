@@ -62,6 +62,7 @@ const files = [
   'src/modules/help-chat-widget.js',
   'src/modules/share-card-generator.js',
   'src/modules/speed-challenge.js',
+  'src/modules/scenario-planner.js',
   'src/modules/privacy-checkup.js',
   'src/modules/referral-program.js',
   'src/modules/init.js',

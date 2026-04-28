@@ -54,6 +54,7 @@
                 <li role="none"><a href="#growthTimelineSection" role="menuitem">Journey</a></li>
                 <li role="none"><a href="#shareCardSection" role="menuitem">Share Card</a></li>
                 <li role="none"><a href="#speedChallengeSection" role="menuitem">Speed</a></li>
+                <li role="none"><a href="#scenarioPlannerSection" role="menuitem">Scenarios</a></li>
                 <li role="none"><a href="#privacyCheckupSection" role="menuitem">Privacy</a></li>
                 <li role="none"><a href="#feedbackSection" role="menuitem">Feedback</a></li>
                 <li role="none"><a href="#workflowBuilderSection" role="menuitem">Workflows</a></li>
@@ -2173,6 +2174,35 @@
         </div>
 
         <div class="showcase-grid" id="showcaseGrid" role="list" aria-label="Community projects"></div>
+    </section>
+
+    <!-- Scenario Planner -->
+    <section class="section scenario-planner-section" id="scenarioPlannerSection" aria-labelledby="scenarioPlannerTitle">
+        <h2 class="section-title" id="scenarioPlannerTitle">🧩 Scenario Planner</h2>
+        <p class="section-subtitle">Describe a real-life situation and watch AgentBox autonomously plan &amp; execute</p>
+
+        <div class="scenario-presets" role="group" aria-label="Choose a scenario">
+            <button class="scenario-preset-btn" data-scenario="Plan a surprise birthday dinner for 8 people this Saturday" aria-pressed="false">🎂 Birthday Dinner</button>
+            <button class="scenario-preset-btn" data-scenario="I'm moving to a new city next month and need to set everything up" aria-pressed="false">🏠 City Move</button>
+            <button class="scenario-preset-btn" data-scenario="Prepare for a job interview at a tech company next week" aria-pressed="false">💼 Job Interview</button>
+            <button class="scenario-preset-btn" data-scenario="Organize a weekend camping trip for a group of friends" aria-pressed="false">⛺ Camping Trip</button>
+            <button class="scenario-preset-btn" data-scenario="Launch a side project and get first 100 users" aria-pressed="false">🚀 Side Project</button>
+        </div>
+
+        <div class="scenario-custom">
+            <input type="text" id="scenarioCustomInput" class="scenario-custom-input" placeholder="Or type your own scenario..." maxlength="200" aria-label="Custom scenario">
+            <button class="scenario-custom-btn" id="scenarioCustomBtn">Plan It</button>
+        </div>
+
+        <div class="scenario-workspace" id="scenarioWorkspace" hidden>
+            <div class="scenario-header">
+                <div class="scenario-goal" id="scenarioGoal"></div>
+                <div class="scenario-agent-status" id="scenarioAgentStatus">🤖 AgentBox is thinking...</div>
+            </div>
+            <div class="scenario-phases" id="scenarioPhases"></div>
+            <div class="scenario-summary" id="scenarioSummary" hidden></div>
+            <button class="scenario-reset-btn" id="scenarioResetBtn">Try Another Scenario</button>
+        </div>
     </section>
 
     <!-- Speed Challenge -->
