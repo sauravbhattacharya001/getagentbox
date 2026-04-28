@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentBox Component Catalog</title>
+  <meta name="description" content="Interactive reference catalog for all AgentBox landing page UI components — APIs, DOM targets, initialization, and usage examples.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --border: #2a2d3a;
+      --text: #e4e4e7;
+      --muted: #9ca3af;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --cyan: #06b6d4;
+      --orange: #f97316;
+      --pink: #ec4899;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+    h1 { font-size: 2.4rem; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 2.5rem; }
+    h2 {
+      font-size: 1.6rem;
+      margin: 3rem 0 1.2rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--accent-light);
+    }
+    h3 { font-size: 1.15rem; margin: 1.8rem 0 0.6rem; color: var(--text); }
+    p { margin-bottom: 1rem; color: var(--muted); }
+    a { color: var(--accent-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      background: #2a2d3a;
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      font-size: 0.88em;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+    }
+    pre {
+      background: #1e2030;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      overflow-x: auto;
+      margin-bottom: 1.2rem;
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+    pre code { background: none; padding: 0; }
+    ul, ol { margin: 0 0 1.2rem 1.5rem; color: var(--muted); }
+    li { margin-bottom: 0.3rem; }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+      padding: 1.2rem 1.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .stat-item { text-align: center; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--accent-light); }
+    .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Filter Tabs */
+    .filter-bar {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      padding: 0.75rem;
+      background: var(--card);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .filter-btn {
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent-light); }
+    .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Component Card */
+    .component-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+    }
+    .component-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .component-card:hover { border-color: var(--accent); }
+    .component-card.hidden { display: none; }
+    .component-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.8rem;
+    }
+    .component-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .component-badge {
+      display: inline-block;
+      padding: 0.12rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-interactive { background: rgba(99,102,241,0.15); color: var(--accent-light); }
+    .badge-display { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-utility { background: rgba(234,179,8,0.15); color: var(--yellow); }
+    .badge-navigation { background: rgba(6,182,212,0.15); color: var(--cyan); }
+    .badge-overlay { background: rgba(236,72,153,0.15); color: var(--pink); }
+    .component-desc { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.8rem; }
+    .component-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+    .meta-item { display: flex; align-items: center; gap: 0.3rem; }
+    .meta-label { color: var(--text); font-weight: 500; }
+    .component-api {
+      margin-top: 0.8rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--border);
+    }
+    .api-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      margin-bottom: 0.3rem;
+      font-size: 0.84rem;
+    }
+    .api-method { color: var(--cyan); font-family: 'Fira Code', monospace; font-size: 0.82rem; }
+    .api-desc { color: var(--muted); }
+
+    /* Back link */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .container { padding: 1.5rem 1rem; }
+      h1 { font-size: 1.8rem; }
+      .stats-bar { flex-direction: column; align-items: flex-start; }
+      .component-meta { flex-direction: column; gap: 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link">&larr; Back to Documentation</a>
+
+    <h1>&#x1F4E6; Component Catalog</h1>
+    <p class="subtitle">Complete reference for all 55 UI modules powering the AgentBox landing page. Each component follows the IIFE revealing-module pattern and exposes a public API via a global variable.</p>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-value">55</div>
+        <div class="stat-label">Modules</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Dependencies</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">7</div>
+        <div class="stat-label">Categories</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">ES5</div>
+        <div class="stat-label">Compat Target</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">IIFE</div>
+        <div class="stat-label">Module Pattern</div>
+      </div>
+    </div>
+
+    <!-- Architecture Overview -->
+    <h2 id="architecture">Module Architecture</h2>
+    <p>Every module follows a consistent structure: a revealing module pattern (IIFE) assigned to a global variable. Modules self-initialize via <code>DOMContentLoaded</code> listeners or are bootstrapped from <code>init.js</code>. No imports, no bundler required at runtime.</p>
+
+    <pre><code>var ModuleName = (function () {
+  'use strict';
+
+  // Private state
+  var _el = null;
+
+  // Public API
+  function init(rootId) {
+    _el = document.getElementById(rootId);
+    if (!_el) return;
+    // ... setup
+  }
+
+  return { init: init };
+})();</code></pre>
+
+    <h3>Load Order</h3>
+    <p>The build script (<code>build.js</code>) concatenates modules in dependency order into <code>dist/bundle.js</code>:</p>
+    <ol>
+      <li><strong>Foundation:</strong> <code>storage.js</code> &rarr; <code>dom-utils.js</code> &rarr; <code>globals.js</code></li>
+      <li><strong>Templates:</strong> <code>_typing-indicator-template.js</code></li>
+      <li><strong>Modules:</strong> All 49 feature modules (order defined in <code>build.js</code>)</li>
+      <li><strong>Bootstrap:</strong> <code>init.js</code> (calls <code>.init()</code> on lazy modules)</li>
+      <li><strong>Top-level:</strong> <code>benchmarks.js</code>, <code>command-reference.js</code>, <code>role-demo-picker.js</code>, <code>migration-guide.js</code>, <code>workflow-builder.js</code>, <code>capability-radar.js</code></li>
+    </ol>
+
+    <h3>Shared Utilities</h3>
+    <p>Modules may depend on these shared globals (always loaded first):</p>
+    <ul>
+      <li><code>DOMUtil.escapeHtml(str)</code> &mdash; XSS-safe HTML encoding via a reused text node</li>
+      <li><code>AgentBoxStorage</code> &mdash; Namespaced localStorage wrapper with JSON serialization</li>
+      <li><code>TypingIndicatorTemplate</code> &mdash; Reusable three-dot typing animation HTML</li>
+    </ul>
+
+    <!-- Category Filter -->
+    <h2 id="catalog">Component Reference</h2>
+
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-cat="all">All (55)</button>
+      <button class="filter-btn" data-cat="interactive">Interactive (22)</button>
+      <button class="filter-btn" data-cat="display">Display (14)</button>
+      <button class="filter-btn" data-cat="utility">Utility (8)</button>
+      <button class="filter-btn" data-cat="navigation">Navigation (5)</button>
+      <button class="filter-btn" data-cat="overlay">Overlay (6)</button>
+    </div>
+
+    <div class="component-grid" id="componentGrid">
+
+      <!-- ═══════════════ FOUNDATION / UTILITY ═══════════════ -->
+
+      <div class="component-card" data-category="utility">
+        <div class="component-header">
+          <span class="component-name">DOMUtil</span>
+          <span class="component-badge badge-utility">Utility</span>
+        </div>
+        <div class="component-desc">Shared DOM helpers. Provides XSS-safe HTML escaping using the browser's native text-node encoding. Reuses a single element to avoid per-call allocation.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/dom-utils.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> None (pure utility)</span>
+        </div>
+        <div class="component-api">
+          <div class="api-row"><span class="api-method">escapeHtml(str)</span><span class="api-desc">Returns HTML-safe string</span></div>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="utility">
+        <div class="component-header">
+          <span class="component-name">AgentBoxStorage</span>
+          <span class="component-badge badge-utility">Utility</span>
+        </div>
+        <div class="component-desc">Namespaced localStorage wrapper. Handles JSON serialization, key prefixing, and graceful fallback when storage is unavailable (private browsing).</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/storage.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> None (pure utility)</span>
+        </div>
+        <div class="component-api">
+          <div class="api-row"><span class="api-method">get(key)</span><span class="api-desc">Retrieve stored value (parsed from JSON)</span></div>
+          <div class="api-row"><span class="api-method">set(key, value)</span><span class="api-desc">Persist value (serialized to JSON)</span></div>
+          <div class="api-row"><span class="api-method">remove(key)</span><span class="api-desc">Delete a stored key</span></div>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="utility">
+        <div class="component-header">
+          <span class="component-name">Globals</span>
+          <span class="component-badge badge-utility">Utility</span>
+        </div>
+        <div class="component-desc">Shared constants and configuration. Houses feature flags, timing values, and section ID mappings used across multiple modules.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/globals.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> None (constants only)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="utility">
+        <div class="component-header">
+          <span class="component-name">TypingIndicatorTemplate</span>
+          <span class="component-badge badge-utility">Utility</span>
+        </div>
+        <div class="component-desc">Reusable typing animation HTML template. Provides the three-dot bouncing animation consumed by ChatDemo, Playground, and HelpChatWidget.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/_typing-indicator-template.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> None (returns HTML string)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="utility">
+        <div class="component-header">
+          <span class="component-name">Newsletter</span>
+          <span class="component-badge badge-utility">Utility</span>
+        </div>
+        <div class="component-desc">Email signup form handler. Validates email format, shows success/error states, and would POST to an endpoint in production.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/newsletter.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #newsletterForm</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="utility">
+        <div class="component-header">
+          <span class="component-name">StatusDashboard</span>
+          <span class="component-badge badge-utility">Utility</span>
+        </div>
+        <div class="component-desc">Service status display. Shows uptime indicators and recent incident history for AgentBox infrastructure components.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/status-dashboard.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #statusDashboardRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="utility">
+        <div class="component-header">
+          <span class="component-name">ActivityFeed</span>
+          <span class="component-badge badge-utility">Utility</span>
+        </div>
+        <div class="component-desc">Real-time activity feed simulation. Shows a stream of agent actions (reminders set, searches performed, images analyzed) to demonstrate capability breadth.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/activity-feed.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #activityFeedRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="utility">
+        <div class="component-header">
+          <span class="component-name">AccessibilityPanel</span>
+          <span class="component-badge badge-utility">Utility</span>
+        </div>
+        <div class="component-desc">Accessibility settings panel. Allows users to adjust font size, contrast, motion preferences, and screen reader announcements at runtime.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/accessibility-panel.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #a11yPanelRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════ INTERACTIVE ═══════════════ -->
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">Playground</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Chat playground with pattern-matched responses. Simulates conversation with the AgentBox agent. Enforces security limits: max 500 chars input, max 50 messages in DOM to prevent resource exhaustion.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/playground.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #playgroundSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+          <span class="meta-item"><span class="meta-label">Depends:</span> TypingIndicatorTemplate</span>
+        </div>
+        <div class="component-api">
+          <div class="api-row"><span class="api-method">init()</span><span class="api-desc">Bind form submit, resolve DOM elements</span></div>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">Calculator</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Time-saved calculator with range sliders. Computes weekly/monthly/yearly time savings based on user's task frequency inputs. Uses cached DOM refs to avoid per-frame lookups during slider drag.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/calculator.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #calculatorSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+        <div class="component-api">
+          <div class="api-row"><span class="api-method">init()</span><span class="api-desc">Resolve section, bind slider input listeners</span></div>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">CapacityPlanner</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Capacity planning tool. Lets users estimate API usage, storage, and compute needs based on team size and usage patterns.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/capacity-planner.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #capacityPlannerSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">ChatDemo</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Animated chat demonstration. Shows a scripted conversation simulating real AgentBox interactions with typing indicators, message bubbles, and timed reveals.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/chat-demo.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #demoSection</span>
+          <span class="meta-item"><span class="meta-label">Depends:</span> TypingIndicatorTemplate</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">ScenarioPlanner</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Multi-phase task simulation. Shows how AgentBox breaks complex requests into Understand &rarr; Plan &rarr; Execute phases with animated step reveals and progress tracking.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/scenario-planner.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #scenarioPlannerRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">PipelineBuilder</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Integration pipeline designer. Users select two services to see how AgentBox connects them. Supports 12 integrations (Gmail, Slack, Calendar, Notion, GitHub, Jira, Sheets, Drive, Twitter, Linear, Discord, Telegram) with 18 pre-built pipeline descriptions.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/pipeline-builder.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #pipelineBuilderRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">SpeedChallenge</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Side-by-side speed comparison. Races a traditional browser search (7 steps, ~10.5s) against an AgentBox query (3 steps, ~1.5s) with animated progress bars.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/speed-challenge.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #speedChallengeRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">OnboardingQuiz</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Multi-step quiz that recommends a plan. Asks about use case, team size, and priorities to suggest the best AgentBox tier with a personalized summary.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/onboarding-quiz.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #quizSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">PersonalityConfigurator</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Agent personality customizer. Lets users tweak formality, humor, verbosity, and emoji usage to preview how their agent would respond with different settings.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/personality-configurator.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #personalitySection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">PrivacyCheckup</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Privacy concern assessment. Asks users weighted questions about their data concerns and shows how AgentBox addresses each one, building a personalized privacy score.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/privacy-checkup.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #privacyCheckupRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">ApiExplorer</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Interactive API endpoint browser. Displays available AgentBox API endpoints with request/response examples and lets users try sample calls.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/api-explorer.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #apiExplorerRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">WorkflowBuilder</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Visual workflow designer. Drag-and-drop interface for building automation chains. Initialized lazily from <code>init.js</code> to defer above-the-fold cost.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/workflow-builder.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #workflowBuilderRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> init.js (lazy)</span>
+        </div>
+        <div class="component-api">
+          <div class="api-row"><span class="api-method">init(rootId)</span><span class="api-desc">Mount workflow canvas into target element</span></div>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">CapabilityRadar</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Radar/spider chart showing AgentBox capability scores across dimensions (memory, search, integrations, etc.). Initialized lazily from <code>init.js</code>.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/capability-radar.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #capabilityRadarRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> init.js (lazy)</span>
+        </div>
+        <div class="component-api">
+          <div class="api-row"><span class="api-method">init(rootId)</span><span class="api-desc">Render radar chart into element</span></div>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">SetupChecklist</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Step-by-step onboarding checklist with progress tracking. Persists completion state to localStorage via AgentBoxStorage. Initialized lazily from <code>init.js</code>.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/setup-checklist.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #setupChecklistRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> init.js (lazy)</span>
+          <span class="meta-item"><span class="meta-label">Depends:</span> AgentBoxStorage</span>
+        </div>
+        <div class="component-api">
+          <div class="api-row"><span class="api-method">init(rootId)</span><span class="api-desc">Build checklist UI and restore saved state</span></div>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">QuickStartWizard</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Multi-step wizard guiding users through initial agent setup &mdash; name, personality, preferred integrations, and notification preferences.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/quick-start-wizard.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #wizardSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">WorkflowTemplates</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Pre-built workflow template browser. Displays categorized automation templates users can preview and activate with one click.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/workflow-templates.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #workflowTemplatesRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">FeatureBoard</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Feature voting board. Users can upvote requested features to influence the roadmap. Persists vote state to localStorage.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/feature-board.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #featureBoardRoot</span>
+          <span class="meta-item"><span class="meta-label">Depends:</span> AgentBoxStorage</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">PromptGallery</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Curated prompt example gallery. Showcases effective prompts by category with copy-to-clipboard and "try it" integration with the Playground module.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/prompt-gallery.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #promptGallerySection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">ShareCardGenerator</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Social sharing card creator. Generates customized share cards for Twitter/LinkedIn with dynamic content from user's agent configuration.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/share-card-generator.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #shareCardRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">ReferralProgram</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Referral link generator and tracker. Shows users their referral stats and generates shareable invite links. Initialized from <code>init.js</code>.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/referral-program.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #referralRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> init.js (lazy)</span>
+        </div>
+        <div class="component-api">
+          <div class="api-row"><span class="api-method">init()</span><span class="api-desc">Build referral UI and generate link</span></div>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="interactive">
+        <div class="component-header">
+          <span class="component-name">CommandsCheatSheet</span>
+          <span class="component-badge badge-interactive">Interactive</span>
+        </div>
+        <div class="component-desc">Searchable command reference table. All available agent commands with syntax, examples, and category filtering.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/commands-cheat-sheet.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #commandRefSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════ DISPLAY ═══════════════ -->
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">Stats</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Animated number counters. Counts up from zero to target values when section scrolls into view using IntersectionObserver. Uses requestAnimationFrame for smooth 60fps animation.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/stats.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #statsSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (IntersectionObserver)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">Testimonials</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Testimonial card carousel. Rotates user quotes with avatar, name, and role. Supports auto-advance and manual navigation dots.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/testimonials.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #testimonialSlider</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">Pricing</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Pricing tier cards with feature comparison. Highlights recommended plan and supports monthly/annual toggle.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/pricing.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #pricingSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">FAQ</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Accordion FAQ section. Click-to-expand with smooth height transitions. Supports keyboard navigation (Enter/Space) for accessibility.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/faq.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #faqSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">HowItWorks</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Step-by-step process illustration. Numbered cards with icons showing the onboarding flow from Telegram &rarr; first message &rarr; personalization.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/how-it-works.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #howItWorks</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">Roadmap</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Product roadmap timeline. Displays upcoming features in a chronological timeline with status indicators (shipped / in-progress / planned).</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/roadmap.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #roadmapSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">ComparisonTable</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Feature comparison matrix. Side-by-side comparison of AgentBox vs competitors with checkmarks, crosses, and explanatory tooltips.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/comparison-table.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #comparisonSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">GrowthTimeline</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Product milestones timeline. Animated reveal of company/product history events as they scroll into view.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/growth-timeline.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #growthTimelineRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">SuccessStories</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Detailed user success story cards. Longer-form case studies with before/after metrics and user quotes.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/success-stories.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #storiesSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">BeforeAfter</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Before/after comparison showing user workflows before and after AgentBox adoption with visual side-by-side layout.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/before-after.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #beforeAfterSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">Trust</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Trust signals section. Displays security certifications, uptime guarantees, and data handling policies with animated reveal.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/trust.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #trustSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">Integrations</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Integration logo grid. Displays supported service logos with hover tooltips describing what each integration enables.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/integrations.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #integrationsSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">UseCases</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Use case showcase cards. Categorized scenarios (personal, professional, developer) with expandable detail views.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/use-cases.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #usecasesSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">CommunityShowcase</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">Community contribution highlights. Showcases user-built integrations, prompts, and workflows shared by the community.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/community-showcase.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #communityShowcaseRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">AIGlossary</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">AI terminology glossary. Searchable list of AI/ML terms with concise definitions, helping non-technical users understand the product.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/aiglossary.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #glossaryRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="display">
+        <div class="component-header">
+          <span class="component-name">Changelog</span>
+          <span class="component-badge badge-display">Display</span>
+        </div>
+        <div class="component-desc">In-page changelog viewer. Renders recent product updates with version numbers, dates, and categorized change types (feature/fix/improvement).</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/changelog.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #changelogRoot</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════ NAVIGATION ═══════════════ -->
+
+      <div class="component-card" data-category="navigation">
+        <div class="component-header">
+          <span class="component-name">SiteNav</span>
+          <span class="component-badge badge-navigation">Navigation</span>
+        </div>
+        <div class="component-desc">Main navigation bar. Responsive hamburger menu, smooth-scroll to sections, active state tracking via IntersectionObserver, sticky on scroll.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/site-nav.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #siteNav, #navToggle, #navLinks</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="navigation">
+        <div class="component-header">
+          <span class="component-name">ScrollProgress</span>
+          <span class="component-badge badge-navigation">Navigation</span>
+        </div>
+        <div class="component-desc">Page scroll progress indicator. Thin colored bar at the top of the viewport showing read progress (0&ndash;100%).</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/scroll-progress.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> Creates own element (appends to body)</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="navigation">
+        <div class="component-header">
+          <span class="component-name">SectionMinimap</span>
+          <span class="component-badge badge-navigation">Navigation</span>
+        </div>
+        <div class="component-desc">Sidebar minimap showing page sections as fixed-position dots. Click-to-jump and active section highlighting via IntersectionObserver.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/section-minimap.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> Creates own element (fixed sidebar)</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="navigation">
+        <div class="component-header">
+          <span class="component-name">ThemeToggle</span>
+          <span class="component-badge badge-navigation">Navigation</span>
+        </div>
+        <div class="component-desc">Dark/light theme switcher. Toggles CSS custom properties and persists preference to localStorage. Respects <code>prefers-color-scheme</code> on first visit.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/theme-toggle.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #themeToggle, #themeIcon</span>
+          <span class="meta-item"><span class="meta-label">Depends:</span> AgentBoxStorage</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="navigation">
+        <div class="component-header">
+          <span class="component-name">ShareFab</span>
+          <span class="component-badge badge-navigation">Navigation</span>
+        </div>
+        <div class="component-desc">Floating action button for social sharing. Expands to show share options (Twitter, LinkedIn, Copy Link).</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/share-fab.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> Creates own element (fixed position)</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════ OVERLAY ═══════════════ -->
+
+      <div class="component-card" data-category="overlay">
+        <div class="component-header">
+          <span class="component-name">CommandPalette</span>
+          <span class="component-badge badge-overlay">Overlay</span>
+        </div>
+        <div class="component-desc">Cmd+K command palette. Fuzzy-search overlay for quick navigation to any section or action. Keyboard-driven with arrow key selection and Escape to dismiss.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/command-palette.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> Creates overlay (appends to body)</span>
+          <span class="meta-item"><span class="meta-label">Trigger:</span> Ctrl/Cmd + K</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="overlay">
+        <div class="component-header">
+          <span class="component-name">ShortcutsHelp</span>
+          <span class="component-badge badge-overlay">Overlay</span>
+        </div>
+        <div class="component-desc">Keyboard shortcuts reference dialog. Shows all available keyboard shortcuts in a modal overlay. Triggered by <code>?</code> key.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/shortcuts-help.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> Creates modal (appends to body)</span>
+          <span class="meta-item"><span class="meta-label">Trigger:</span> ? key</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="overlay">
+        <div class="component-header">
+          <span class="component-name">FeatureTour</span>
+          <span class="component-badge badge-overlay">Overlay</span>
+        </div>
+        <div class="component-desc">Guided product tour overlay. Step-by-step spotlight tour highlighting key sections with tooltips, navigation arrows, and progress dots. Only runs on first visit.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/feature-tour.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> Creates overlay (appends to body)</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (first-visit check via AgentBoxStorage)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="overlay">
+        <div class="component-header">
+          <span class="component-name">HelpChatWidget</span>
+          <span class="component-badge badge-overlay">Overlay</span>
+        </div>
+        <div class="component-desc">Floating help chat bubble. Expandable mini-chat in the bottom-right corner for quick questions, styled to match the AgentBox chat UI.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/help-chat-widget.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> Creates widget (fixed bottom-right)</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+          <span class="meta-item"><span class="meta-label">Depends:</span> TypingIndicatorTemplate</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="overlay">
+        <div class="component-header">
+          <span class="component-name">SocialProofToasts</span>
+          <span class="component-badge badge-overlay">Overlay</span>
+        </div>
+        <div class="component-desc">Periodic toast notifications showing recent sign-ups. Non-intrusive, auto-dismissing popups (&ldquo;Sarah from NYC just joined&rdquo;) to create social proof.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/social-proof-toasts.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> Creates toasts (fixed bottom-left)</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded, delayed start)</span>
+        </div>
+      </div>
+
+      <div class="component-card" data-category="overlay">
+        <div class="component-header">
+          <span class="component-name">NotificationPreview</span>
+          <span class="component-badge badge-overlay">Overlay</span>
+        </div>
+        <div class="component-desc">Push notification mockup. Shows what AgentBox notifications look like on mobile (iOS/Android style) with customizable content.</div>
+        <div class="component-meta">
+          <span class="meta-item"><span class="meta-label">File:</span> src/modules/notification-preview.js</span>
+          <span class="meta-item"><span class="meta-label">DOM:</span> #notificationSection</span>
+          <span class="meta-item"><span class="meta-label">Init:</span> Self (DOMContentLoaded)</span>
+        </div>
+      </div>
+
+    </div><!-- /component-grid -->
+
+    <!-- Conventions -->
+    <h2 id="conventions">Development Conventions</h2>
+
+    <h3>Adding a New Module</h3>
+    <ol>
+      <li>Create <code>src/modules/your-module.js</code> using the IIFE revealing-module pattern</li>
+      <li>Add the file path to the <code>files</code> array in <code>build.js</code> (before <code>init.js</code>)</li>
+      <li>If the module needs explicit initialization, add a <code>ModuleName.init('rootId')</code> call in <code>src/modules/init.js</code></li>
+      <li>Add the corresponding HTML section in <code>index.html</code> with a unique ID matching the module's expected root</li>
+      <li>Run <code>npm run build</code> to regenerate <code>dist/bundle.js</code></li>
+      <li>Add tests in <code>__tests__/</code> following existing patterns (see <a href="TESTING.md">Testing Guide</a>)</li>
+    </ol>
+
+    <h3>Naming Rules</h3>
+    <ul>
+      <li><strong>Global variable:</strong> <code>PascalCase</code> (e.g., <code>ScenarioPlanner</code>)</li>
+      <li><strong>File name:</strong> <code>kebab-case.js</code> (e.g., <code>scenario-planner.js</code>)</li>
+      <li><strong>DOM root ID:</strong> <code>camelCase</code> + <code>Root</code> or <code>Section</code> suffix</li>
+      <li><strong>Private members:</strong> Underscore prefix (<code>_el</code>, <code>_handleClick</code>)</li>
+    </ul>
+
+    <h3>Security Requirements</h3>
+    <ul>
+      <li>All user-supplied strings must pass through <code>DOMUtil.escapeHtml()</code> before innerHTML insertion</li>
+      <li>No <code>eval()</code>, <code>Function()</code>, or inline event handlers</li>
+      <li>Respect the Content-Security-Policy: no inline scripts, no external script sources</li>
+      <li>Input length limits on any text field (see Playground's <code>MAX_INPUT_LENGTH</code> pattern)</li>
+      <li>DOM child limits to prevent memory exhaustion (see Playground's <code>MAX_MESSAGES</code> pattern)</li>
+    </ul>
+
+    <h3>Performance Patterns</h3>
+    <ul>
+      <li>Cache DOM references in module-level vars &mdash; resolve once in <code>init()</code>, reuse on every event</li>
+      <li>Use <code>IntersectionObserver</code> for scroll-triggered animations (never raw scroll listeners)</li>
+      <li>Lazy-init modules that aren't above the fold (register in <code>init.js</code>)</li>
+      <li>Use <code>requestAnimationFrame</code> for visual updates, never <code>setInterval</code></li>
+      <li>Debounce resize/input handlers with <code>setTimeout</code></li>
+    </ul>
+
+    <h3>Accessibility Checklist</h3>
+    <ul>
+      <li>All interactive elements must be keyboard-reachable (natural tab order or <code>tabindex</code>)</li>
+      <li>Use <code>role</code>, <code>aria-label</code>, <code>aria-expanded</code> attributes on custom widgets</li>
+      <li>Respect <code>prefers-reduced-motion</code> &mdash; disable or simplify animations when set</li>
+      <li>Color alone must never convey meaning &mdash; always pair with icons or text labels</li>
+      <li>Focus trapping required in modals and overlay components</li>
+    </ul>
+
+    <!-- Footer -->
+    <div style="margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.82rem;">
+      <p>AgentBox Component Catalog &mdash; Generated from source analysis of all 55 <code>src/modules/</code> files. See <a href="architecture.html">Architecture Guide</a> for system-level documentation or <a href="TESTING.md">Testing Guide</a> for test coverage details.</p>
+    </div>
+  </div>
+</body>
+</html>
