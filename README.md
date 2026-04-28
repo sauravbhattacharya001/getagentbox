@@ -13,6 +13,7 @@
 [![codecov](https://codecov.io/gh/sauravbhattacharya001/getagentbox/branch/master/graph/badge.svg)](https://codecov.io/gh/sauravbhattacharya001/getagentbox)
 [![Deploy](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/pages.yml/badge.svg)](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/pages.yml)
 [![Docker](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/docker.yml/badge.svg)](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/docker.yml)
+[![CodeQL](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/codeql.yml/badge.svg)](https://github.com/sauravbhattacharya001/getagentbox/actions/workflows/codeql.yml)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](#-tech-stack)
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)](#-tech-stack)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)](#-tech-stack)
@@ -23,6 +24,9 @@
 [![Last Commit](https://img.shields.io/github/last-commit/sauravbhattacharya001/getagentbox)](https://github.com/sauravbhattacharya001/getagentbox/commits/master)
 [![Repo Size](https://img.shields.io/github/repo-size/sauravbhattacharya001/getagentbox)](https://github.com/sauravbhattacharya001/getagentbox)
 [![Stars](https://img.shields.io/github/stars/sauravbhattacharya001/getagentbox?style=flat)](https://github.com/sauravbhattacharya001/getagentbox/stargazers)
+[![Issues](https://img.shields.io/github/issues/sauravbhattacharya001/getagentbox)](https://github.com/sauravbhattacharya001/getagentbox/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Maintenance](https://img.shields.io/maintenance/yes/2026)](https://github.com/sauravbhattacharya001/getagentbox/commits/master)
 
 An AI assistant that remembers you, searches the web, sets reminders, understands images, and lives right in Telegram. No signup, no app to install — just open Telegram and start chatting.
 
