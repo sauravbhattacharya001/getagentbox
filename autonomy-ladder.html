@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Agent Autonomy Ladder</title>
+    <meta name="description" content="Interactive demo showing how AI agents handle tasks at 5 progressive autonomy levels. Watch trust build as your agent earns more independence.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --orange-bg: #e1705522;
+            --red: #d63031;
+            --red-bg: #d6303122;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .header {
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header a { color: var(--accent); text-decoration: none; font-size: 14px; }
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 32px;
+        }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+        .panel h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .task-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 400px;
+        }
+        .task-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            animation: slideIn 0.4s ease forwards;
+            opacity: 0;
+            transform: translateX(40px);
+        }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        .task-card.completed { border-color: var(--green); }
+        .task-card.waiting { border-color: var(--yellow); }
+        .task-card.error { border-color: var(--red); }
+        .task-icon { font-size: 24px; flex-shrink: 0; }
+        .task-info { flex: 1; min-width: 0; }
+        .task-name { font-size: 14px; font-weight: 600; }
+        .task-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .risk-low { background: var(--green-bg); color: var(--green); }
+        .risk-medium { background: var(--yellow-bg); color: var(--yellow); }
+        .risk-high { background: var(--orange-bg); color: var(--orange); }
+        .risk-critical { background: var(--red-bg); color: var(--red); }
+        .task-action {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: var(--accent-light); }
+        .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+        .btn-danger { background: var(--red); color: #fff; }
+        .btn-danger:hover { background: #e04040; }
+        .btn-ghost {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-approve { background: var(--green); color: #fff; }
+        .btn-approve:hover { background: #00cca0; }
+        .btn-preset {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            font-size: 12px;
+        }
+        .btn-preset:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-preset.active { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+        .controls { display: flex; flex-direction: column; gap: 16px; }
+        .autonomy-slider-wrap {
+            padding: 20px;
+            background: var(--surface-2);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        .autonomy-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .autonomy-labels span { text-align: center; width: 60px; }
+        .autonomy-labels span.active { color: var(--accent); font-weight: 700; }
+        .level-display {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .level-display .level-num {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+        .level-display .level-name {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        .gauge-wrap {
+            display: flex;
+            justify-content: center;
+            padding: 16px 0;
+        }
+        .gauge-svg { width: 180px; height: 110px; }
+        .gauge-label {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .gauge-value {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-top: -4px;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .metric-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            text-align: center;
+        }
+        .metric-card .label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+        .metric-card .value { font-size: 20px; font-weight: 700; color: var(--accent); }
+        .presets { display: flex; gap: 8px; flex-wrap: wrap; }
+        .speed-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .speed-row label { color: var(--text-muted); min-width: 50px; }
+        .speed-row select {
+            flex: 1;
+            padding: 6px 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 13px;
+        }
+        .btn-row { display: flex; gap: 10px; }
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+            line-height: 1.8;
+        }
+        .history-list::-webkit-scrollbar { width: 6px; }
+        .history-list::-webkit-scrollbar-track { background: transparent; }
+        .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .history-entry { opacity: 0; animation: fadeIn .3s forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        .summary-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.7);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+        .summary-overlay.visible { display: flex; }
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            max-width: 520px;
+            width: 90%;
+            text-align: center;
+        }
+        .summary-card h2 { font-size: 20px; margin-bottom: 8px; }
+        .summary-card .grade {
+            font-size: 48px;
+            font-weight: 800;
+            margin: 16px 0;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .summary-stats .item { padding: 10px; background: var(--surface-2); border-radius: var(--radius-sm); }
+        .summary-stats .item .lbl { font-size: 11px; color: var(--text-muted); }
+        .summary-stats .item .val { font-size: 16px; font-weight: 600; }
+        .summary-findings { text-align: left; margin: 16px 0; }
+        .summary-findings h3 { font-size: 14px; margin-bottom: 8px; }
+        .summary-findings li { font-size: 13px; margin-left: 20px; color: var(--text-muted); margin-bottom: 4px; }
+        .auto-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--accent-bg);
+            color: var(--accent);
+        }
+        .auto-badge.escalated { background: var(--yellow-bg); color: var(--yellow); }
+        .processing-spinner {
+            width: 18px; height: 18px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 60px 20px;
+            font-size: 14px;
+        }
+        .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← Back</a>
+        <h1>🪜 Agent Autonomy Ladder</h1>
+    </div>
+
+    <div class="container">
+        <div>
+            <div class="panel" style="margin-bottom:16px">
+                <h2>📋 Task Feed</h2>
+                <div class="task-feed" id="taskFeed">
+                    <div class="empty-state">
+                        <div class="icon">🤖</div>
+                        <div>Pick an autonomy level and hit <strong>Start Simulation</strong></div>
+                        <div style="margin-top:6px;font-size:12px">Watch how your agent handles tasks at different trust levels</div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>📜 Action Log</h2>
+                <div class="history-list" id="historyList">
+                    <div style="color:var(--text-muted);font-size:12px">No actions yet.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="panel">
+                <h2>⚙️ Autonomy Level</h2>
+                <div class="autonomy-slider-wrap">
+                    <div class="level-display">
+                        <div class="level-num" id="levelNum">1</div>
+                        <div class="level-name" id="levelName">Manual</div>
+                    </div>
+                    <input type="range" id="autonomySlider" min="1" max="5" value="1" step="1">
+                    <div class="autonomy-labels" id="autonomyLabels">
+                        <span class="active">Manual</span>
+                        <span>Suggest</span>
+                        <span>Auto-Low</span>
+                        <span>Auto-High</span>
+                        <span>Full Auto</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🎯 Presets</h2>
+                <div class="presets">
+                    <button class="btn btn-preset" onclick="window.loadPreset('support')">💬 Support</button>
+                    <button class="btn btn-preset" onclick="window.loadPreset('devops')">🛠️ DevOps</button>
+                    <button class="btn btn-preset" onclick="window.loadPreset('finance')">💰 Finance</button>
+                </div>
+                <div style="margin-top:12px">
+                    <div class="speed-row">
+                        <label>Speed</label>
+                        <select id="speedSelect">
+                            <option value="slow">Slow</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="fast">Fast</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="btn-row" style="margin-top:14px">
+                    <button class="btn btn-primary" id="startBtn" onclick="window.startSimulation()">▶ Start</button>
+                    <button class="btn btn-ghost" id="pauseBtn" onclick="window.togglePause()" disabled>⏸ Pause</button>
+                    <button class="btn btn-ghost" id="resetBtn" onclick="window.resetSimulation()">↺ Reset</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🛡️ Trust Score</h2>
+                <div class="gauge-wrap">
+                    <svg class="gauge-svg" viewBox="0 0 180 110">
+                        <path d="M 20 100 A 70 70 0 0 1 160 100" fill="none" stroke="#2a2a2a" stroke-width="12" stroke-linecap="round"/>
+                        <path id="gaugeArc" d="M 20 100 A 70 70 0 0 1 160 100" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="0 220"/>
+                    </svg>
+                </div>
+                <div class="gauge-value" id="trustValue">0</div>
+                <div class="gauge-label">Trust builds as tasks complete successfully</div>
+            </div>
+
+            <div class="panel">
+                <h2>📊 Stats</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card"><div class="label">Completed</div><div class="value" id="statCompleted">0</div></div>
+                    <div class="metric-card"><div class="label">Avg Time</div><div class="value" id="statAvgTime">—</div></div>
+                    <div class="metric-card"><div class="label">Interventions</div><div class="value" id="statInterventions">0</div></div>
+                    <div class="metric-card"><div class="label">Errors Caught</div><div class="value" id="statErrors">0</div></div>
+                </div>
+                <div style="margin-top:12px;text-align:center">
+                    <button class="btn btn-ghost btn-sm" onclick="window.exportJSON()">📥 Export JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="summary-overlay" id="summaryOverlay">
+        <div class="summary-card">
+            <h2>🪜 Simulation Complete</h2>
+            <div class="grade" id="summaryGrade" style="color:var(--accent)">—</div>
+            <div id="summarySubtitle" style="color:var(--text-muted);font-size:14px;margin-bottom:12px"></div>
+            <div class="summary-stats" id="summaryStats"></div>
+            <div class="summary-findings" id="summaryFindings"></div>
+            <div class="btn-row" style="justify-content:center;margin-top:20px">
+                <button class="btn btn-primary" onclick="window.closeSummary()">Close</button>
+                <button class="btn btn-ghost" onclick="window.exportJSON()">📥 Export JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        /* ── Task definitions ── */
+        var TASK_POOL = [
+            { icon: '📧', name: 'Reply to customer email', risk: 'low', category: 'support' },
+            { icon: '📊', name: 'Generate weekly report', risk: 'low', category: 'finance' },
+            { icon: '📝', name: 'Update documentation', risk: 'low', category: 'devops' },
+            { icon: '🔔', name: 'Send status notification', risk: 'low', category: 'support' },
+            { icon: '🔄', name: 'Restart failing service', risk: 'medium', category: 'devops' },
+            { icon: '💰', name: 'Process refund $47.50', risk: 'medium', category: 'finance' },
+            { icon: '📦', name: 'Scale up worker pods', risk: 'medium', category: 'devops' },
+            { icon: '👤', name: 'Escalate support ticket', risk: 'medium', category: 'support' },
+            { icon: '🗑️', name: 'Delete inactive accounts', risk: 'high', category: 'finance' },
+            { icon: '🚀', name: 'Deploy to production', risk: 'high', category: 'devops' },
+            { icon: '🔧', name: 'Modify database schema', risk: 'high', category: 'devops' },
+            { icon: '📋', name: 'Bulk close stale tickets', risk: 'high', category: 'support' },
+            { icon: '🔐', name: 'Modify access permissions', risk: 'critical', category: 'devops' },
+            { icon: '💳', name: 'Process payment $2,500', risk: 'critical', category: 'finance' },
+            { icon: '🧹', name: 'Purge customer data (GDPR)', risk: 'critical', category: 'support' },
+            { icon: '🏗️', name: 'Tear down staging env', risk: 'critical', category: 'devops' }
+        ];
+
+        var RISK_ORDER = { low: 0, medium: 1, high: 2, critical: 3 };
+
+        var LEVEL_NAMES = ['', 'Manual', 'Suggest', 'Auto-Low', 'Auto-High', 'Autonomous'];
+        var LEVEL_DESCS = [
+            '',
+            'Agent waits for your approval on every action',
+            'Agent suggests actions with confidence scores',
+            'Auto-handles routine tasks, asks for risky ones',
+            'Handles most tasks, only escalates critical',
+            'Fully autonomous — reports after acting'
+        ];
+
+        /* ── Speed configs (ms between tasks) ── */
+        var SPEED_MAP = { slow: 3000, normal: 1800, fast: 900 };
+
+        /* ── State ── */
+        var state = {
+            level: 1,
+            running: false,
+            paused: false,
+            trustScore: 0,
+            tasksCompleted: 0,
+            totalResponseTime: 0,
+            interventions: 0,
+            errorsCaught: 0,
+            taskQueue: [],
+            history: [],
+            currentPreset: null,
+            timerId: null,
+            taskCount: 0,
+            maxTasks: 15,
+            pendingApproval: null
+        };
+
+        /* ── DOM refs ── */
+        var elSlider = document.getElementById('autonomySlider');
+        var elLevelNum = document.getElementById('levelNum');
+        var elLevelName = document.getElementById('levelName');
+        var elLabels = document.getElementById('autonomyLabels');
+        var elFeed = document.getElementById('taskFeed');
+        var elHistory = document.getElementById('historyList');
+        var elStartBtn = document.getElementById('startBtn');
+        var elPauseBtn = document.getElementById('pauseBtn');
+        var elGaugeArc = document.getElementById('gaugeArc');
+        var elTrustValue = document.getElementById('trustValue');
+        var elStatCompleted = document.getElementById('statCompleted');
+        var elStatAvgTime = document.getElementById('statAvgTime');
+        var elStatInterventions = document.getElementById('statInterventions');
+        var elStatErrors = document.getElementById('statErrors');
+        var elSummaryOverlay = document.getElementById('summaryOverlay');
+
+        /* ── Autonomy slider ── */
+        function updateLevel() {
+            var v = parseInt(elSlider.value);
+            state.level = v;
+            elLevelNum.textContent = v;
+            elLevelName.textContent = LEVEL_NAMES[v];
+            var spans = elLabels.querySelectorAll('span');
+            for (var i = 0; i < spans.length; i++) {
+                spans[i].className = (i === v - 1) ? 'active' : '';
+            }
+        }
+        elSlider.addEventListener('input', updateLevel);
+
+        /* ── Gauge update ── */
+        var GAUGE_TOTAL = 220; // approximate arc length
+        function updateGauge() {
+            var pct = state.trustScore / 100;
+            var dashLen = pct * GAUGE_TOTAL;
+            elGaugeArc.setAttribute('stroke-dasharray', dashLen + ' ' + GAUGE_TOTAL);
+            var color = state.trustScore >= 70 ? 'var(--green)' : state.trustScore >= 40 ? 'var(--yellow)' : 'var(--accent)';
+            elGaugeArc.setAttribute('stroke', color);
+            elTrustValue.textContent = state.trustScore;
+        }
+
+        /* ── Stats update ── */
+        function updateStats() {
+            elStatCompleted.textContent = state.tasksCompleted;
+            elStatAvgTime.textContent = state.tasksCompleted > 0
+                ? (state.totalResponseTime / state.tasksCompleted).toFixed(1) + 's'
+                : '—';
+            elStatInterventions.textContent = state.interventions;
+            elStatErrors.textContent = state.errorsCaught;
+            updateGauge();
+        }
+
+        /* ── Determine auto-handling based on level and risk ── */
+        function getAutoThreshold(level) {
+            // returns max risk that auto-completes: -1 = nothing, 0=low, 1=medium, 2=high, 3=critical
+            if (level <= 1) return -1;       // Manual: nothing auto
+            if (level === 2) return -1;       // Suggest: nothing auto, but shows suggestions
+            if (level === 3) return 0;        // Auto-Low: auto low only
+            if (level === 4) return 2;        // Auto-High: auto up to high
+            return 3;                          // Autonomous: auto everything
+        }
+
+        function shouldAutoHandle(level, riskStr) {
+            var threshold = getAutoThreshold(level);
+            return RISK_ORDER[riskStr] <= threshold;
+        }
+
+        /* ── Task generation ── */
+        function generateTask() {
+            var pool = TASK_POOL;
+            if (state.currentPreset) {
+                pool = TASK_POOL.filter(function(t) { return t.category === state.currentPreset; });
+                if (pool.length === 0) pool = TASK_POOL;
+            }
+            var tmpl = pool[Math.floor(Math.random() * pool.length)];
+            return {
+                id: ++state.taskCount,
+                icon: tmpl.icon,
+                name: tmpl.name,
+                risk: tmpl.risk,
+                category: tmpl.category,
+                status: 'pending',
+                action: null,
+                responseTime: 0,
+                confidence: Math.floor(70 + Math.random() * 28)
+            };
+        }
+
+        /* ── Simulate response time ── */
+        function getResponseTime(level, risk) {
+            var base = { low: 1.2, medium: 2.5, high: 4.0, critical: 6.0 };
+            var mult = [0, 5.0, 3.0, 1.5, 0.8, 0.4]; // faster at higher autonomy
+            return parseFloat((base[risk] * mult[level] * (0.8 + Math.random() * 0.4)).toFixed(1));
+        }
+
+        /* ── Mistake chance ── */
+        function rollMistake(level, risk) {
+            // Higher autonomy on risky tasks = small mistake chance
+            if (level < 3) return false;
+            var chance = 0;
+            if (level === 3) chance = risk === 'medium' ? 0.05 : 0;
+            else if (level === 4) chance = RISK_ORDER[risk] >= 2 ? 0.08 : 0.02;
+            else chance = RISK_ORDER[risk] >= 2 ? 0.12 : 0.04;
+            return Math.random() < chance;
+        }
+
+        /* ── Render task card ── */
+        function renderTaskCard(task) {
+            var card = document.createElement('div');
+            card.className = 'task-card';
+            card.id = 'task-' + task.id;
+
+            var riskClass = 'risk-' + task.risk;
+            var actionHTML = '';
+
+            if (task.status === 'pending') {
+                if (shouldAutoHandle(state.level, task.risk)) {
+                    actionHTML = '<div class="processing-spinner"></div>';
+                } else if (state.level === 2) {
+                    actionHTML = '<span class="auto-badge">💡 ' + task.confidence + '% confident</span>' +
+                        '<button class="btn btn-approve btn-sm" onclick="window.approveTask(' + task.id + ')">✓</button>' +
+                        '<button class="btn btn-danger btn-sm" onclick="window.rejectTask(' + task.id + ')">✗</button>';
+                } else {
+                    actionHTML = '<span class="auto-badge escalated">⏳ Awaiting</span>' +
+                        '<button class="btn btn-approve btn-sm" onclick="window.approveTask(' + task.id + ')">Approve</button>';
+                }
+            } else if (task.status === 'completed') {
+                card.className += ' completed';
+                var badge = task.action === 'auto' ? '<span class="auto-badge">⚡ Auto</span>' : '<span class="auto-badge escalated">👤 Manual</span>';
+                actionHTML = badge + ' <span style="color:var(--green);font-size:14px">✓</span>';
+            } else if (task.status === 'error') {
+                card.className += ' error';
+                actionHTML = '<span style="color:var(--red);font-size:12px">⚠ Caught & fixed</span>';
+            } else if (task.status === 'rejected') {
+                actionHTML = '<span style="color:var(--text-muted);font-size:12px">Skipped</span>';
+            }
+
+            card.innerHTML = '<span class="task-icon">' + task.icon + '</span>' +
+                '<div class="task-info"><div class="task-name">' + task.name + '</div>' +
+                '<div class="task-meta"><span class="risk-badge ' + riskClass + '">' + task.risk.toUpperCase() + '</span> · ' + task.responseTime + 's</div></div>' +
+                '<div class="task-action">' + actionHTML + '</div>';
+            return card;
+        }
+
+        /* ── History log ── */
+        function addHistoryEntry(text) {
+            if (state.history.length === 0) {
+                elHistory.innerHTML = '';
+            }
+            state.history.push(text);
+            var div = document.createElement('div');
+            div.className = 'history-entry';
+            div.textContent = text;
+            elHistory.prepend(div);
+        }
+
+        /* ── Process a single task ── */
+        function processTask(task) {
+            var level = state.level;
+            var auto = shouldAutoHandle(level, task.risk);
+            task.responseTime = getResponseTime(level, task.risk);
+
+            if (auto) {
+                // Check for mistake
+                if (rollMistake(level, task.risk)) {
+                    task.status = 'error';
+                    task.action = 'auto-error';
+                    state.errorsCaught++;
+                    state.trustScore = Math.max(0, state.trustScore - (RISK_ORDER[task.risk] >= 2 ? 8 : 3));
+                    state.totalResponseTime += task.responseTime;
+                    state.tasksCompleted++;
+                    addHistoryEntry('⚠ Error on "' + task.name + '" — agent caught & self-corrected (trust -' + (RISK_ORDER[task.risk] >= 2 ? 8 : 3) + ')');
+                } else {
+                    task.status = 'completed';
+                    task.action = 'auto';
+                    var gain = Math.max(1, 5 - RISK_ORDER[task.risk]);
+                    state.trustScore = Math.min(100, state.trustScore + gain);
+                    state.totalResponseTime += task.responseTime;
+                    state.tasksCompleted++;
+                    addHistoryEntry('⚡ Auto-completed "' + task.name + '" in ' + task.responseTime + 's (trust +' + gain + ')');
+                }
+                refreshTaskCard(task);
+                updateStats();
+            } else {
+                // Needs approval
+                state.pendingApproval = task;
+                task.status = 'pending';
+                if (level === 2) {
+                    addHistoryEntry('💡 Suggesting action for "' + task.name + '" (' + task.confidence + '% confidence)');
+                } else {
+                    addHistoryEntry('⏳ Awaiting approval for "' + task.name + '" (' + task.risk + ' risk)');
+                }
+                state.interventions++;
+                refreshTaskCard(task);
+                updateStats();
+            }
+        }
+
+        function refreshTaskCard(task) {
+            var old = document.getElementById('task-' + task.id);
+            if (old) {
+                var newCard = renderTaskCard(task);
+                old.replaceWith(newCard);
+            }
+        }
+
+        /* ── Approve / Reject ── */
+        window.approveTask = function(taskId) {
+            var task = state.taskQueue.find(function(t) { return t.id === taskId; });
+            if (!task || task.status !== 'pending') return;
+            task.status = 'completed';
+            task.action = 'manual';
+            var gain = Math.max(1, 4 - RISK_ORDER[task.risk]);
+            state.trustScore = Math.min(100, state.trustScore + gain);
+            state.totalResponseTime += task.responseTime;
+            state.tasksCompleted++;
+            state.pendingApproval = null;
+            addHistoryEntry('👤 Approved "' + task.name + '" (trust +' + gain + ')');
+            refreshTaskCard(task);
+            updateStats();
+            // Resume queue
+            if (state.running && !state.paused) scheduleNext();
+        };
+
+        window.rejectTask = function(taskId) {
+            var task = state.taskQueue.find(function(t) { return t.id === taskId; });
+            if (!task || task.status !== 'pending') return;
+            task.status = 'rejected';
+            task.action = 'rejected';
+            state.pendingApproval = null;
+            addHistoryEntry('✗ Rejected "' + task.name + '"');
+            refreshTaskCard(task);
+            updateStats();
+            if (state.running && !state.paused) scheduleNext();
+        };
+
+        /* ── Simulation loop ── */
+        function scheduleNext() {
+            if (state.timerId) clearTimeout(state.timerId);
+            if (!state.running || state.paused) return;
+            if (state.pendingApproval) return; // waiting for user
+
+            var speed = document.getElementById('speedSelect').value;
+            var delay = SPEED_MAP[speed] || 1800;
+
+            state.timerId = setTimeout(function() {
+                if (!state.running || state.paused) return;
+                if (state.taskQueue.length >= state.maxTasks) {
+                    finishSimulation();
+                    return;
+                }
+                var task = generateTask();
+                state.taskQueue.push(task);
+
+                // Remove empty state
+                var empty = elFeed.querySelector('.empty-state');
+                if (empty) empty.remove();
+
+                elFeed.prepend(renderTaskCard(task));
+
+                // Auto-process after brief delay (visual effect)
+                setTimeout(function() { processTask(task); }, 600);
+
+                // If auto-handled, schedule next; if manual, wait for approval
+                if (shouldAutoHandle(state.level, task.risk)) {
+                    scheduleNext();
+                }
+                // else: scheduleNext will be called from approve/reject
+            }, delay);
+        }
+
+        /* ── Start / Pause / Reset ── */
+        window.startSimulation = function() {
+            if (state.running) return;
+            state.running = true;
+            state.paused = false;
+            elStartBtn.disabled = true;
+            elPauseBtn.disabled = false;
+            elPauseBtn.textContent = '⏸ Pause';
+            elSlider.disabled = true;
+            elFeed.innerHTML = '';
+            scheduleNext();
+        };
+
+        window.togglePause = function() {
+            if (!state.running) return;
+            state.paused = !state.paused;
+            elPauseBtn.textContent = state.paused ? '▶ Resume' : '⏸ Pause';
+            if (!state.paused) scheduleNext();
+        };
+
+        window.resetSimulation = function() {
+            if (state.timerId) clearTimeout(state.timerId);
+            state.running = false;
+            state.paused = false;
+            state.trustScore = 0;
+            state.tasksCompleted = 0;
+            state.totalResponseTime = 0;
+            state.interventions = 0;
+            state.errorsCaught = 0;
+            state.taskQueue = [];
+            state.history = [];
+            state.taskCount = 0;
+            state.pendingApproval = null;
+            state.currentPreset = null;
+            elStartBtn.disabled = false;
+            elPauseBtn.disabled = true;
+            elPauseBtn.textContent = '⏸ Pause';
+            elSlider.disabled = false;
+            elFeed.innerHTML = '<div class="empty-state"><div class="icon">🤖</div><div>Pick an autonomy level and hit <strong>Start Simulation</strong></div><div style="margin-top:6px;font-size:12px">Watch how your agent handles tasks at different trust levels</div></div>';
+            elHistory.innerHTML = '<div style="color:var(--text-muted);font-size:12px">No actions yet.</div>';
+            document.querySelectorAll('.btn-preset').forEach(function(b) { b.classList.remove('active'); });
+            updateStats();
+        };
+
+        /* ── Presets ── */
+        window.loadPreset = function(preset) {
+            state.currentPreset = preset;
+            document.querySelectorAll('.btn-preset').forEach(function(b) { b.classList.remove('active'); });
+            var labels = { support: '💬 Support', devops: '🛠️ DevOps', finance: '💰 Finance' };
+            document.querySelectorAll('.btn-preset').forEach(function(b) {
+                if (b.textContent.trim() === (labels[preset] || '').trim()) b.classList.add('active');
+            });
+        };
+
+        /* ── Finish / Summary ── */
+        function finishSimulation() {
+            state.running = false;
+            if (state.timerId) clearTimeout(state.timerId);
+            elStartBtn.disabled = false;
+            elPauseBtn.disabled = true;
+            elSlider.disabled = false;
+
+            var score = state.trustScore;
+            var grade = score >= 90 ? 'S' : score >= 75 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+            var color = score >= 75 ? 'var(--green)' : score >= 50 ? 'var(--yellow)' : 'var(--red)';
+
+            document.getElementById('summaryGrade').textContent = grade;
+            document.getElementById('summaryGrade').style.color = color;
+            document.getElementById('summarySubtitle').textContent =
+                'Level ' + state.level + ' (' + LEVEL_NAMES[state.level] + ') — Trust: ' + score + '/100';
+
+            var statsEl = document.getElementById('summaryStats');
+            statsEl.innerHTML =
+                '<div class="item"><div class="lbl">Tasks Completed</div><div class="val">' + state.tasksCompleted + '</div></div>' +
+                '<div class="item"><div class="lbl">Avg Response</div><div class="val">' + (state.tasksCompleted > 0 ? (state.totalResponseTime / state.tasksCompleted).toFixed(1) + 's' : '—') + '</div></div>' +
+                '<div class="item"><div class="lbl">Interventions</div><div class="val">' + state.interventions + '</div></div>' +
+                '<div class="item"><div class="lbl">Errors Caught</div><div class="val">' + state.errorsCaught + '</div></div>';
+
+            var findings = [];
+            if (state.level >= 4 && state.errorsCaught === 0) findings.push('Perfect autonomous run — zero errors');
+            if (state.level === 1) findings.push('Full manual control — maximum safety, minimum speed');
+            if (state.interventions > state.tasksCompleted * 0.5) findings.push('High intervention rate — consider raising autonomy');
+            if (state.errorsCaught > 2) findings.push('Multiple errors detected — consider lowering autonomy for high-risk tasks');
+            if (score >= 80) findings.push('Strong trust established — agent is reliable at this level');
+            if (findings.length === 0) findings.push('Balanced run — good trust trajectory');
+
+            var findingsEl = document.getElementById('summaryFindings');
+            findingsEl.innerHTML = '<h3>Insights</h3><ul>' + findings.map(function(f) { return '<li>' + f + '</li>'; }).join('') + '</ul>';
+
+            elSummaryOverlay.classList.add('visible');
+        }
+
+        window.closeSummary = function() {
+            elSummaryOverlay.classList.remove('visible');
+        };
+
+        /* ── Export ── */
+        window.exportJSON = function() {
+            var data = {
+                autonomyLevel: state.level,
+                levelName: LEVEL_NAMES[state.level],
+                trustScore: state.trustScore,
+                tasksCompleted: state.tasksCompleted,
+                avgResponseTime: state.tasksCompleted > 0 ? parseFloat((state.totalResponseTime / state.tasksCompleted).toFixed(1)) : 0,
+                interventions: state.interventions,
+                errorsCaught: state.errorsCaught,
+                preset: state.currentPreset,
+                tasks: state.taskQueue.map(function(t) {
+                    return { name: t.name, risk: t.risk, status: t.status, action: t.action, responseTime: t.responseTime };
+                }),
+                history: state.history
+            };
+            var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'autonomy-ladder-results.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        };
+
+        /* ── Expose internals for testing ── */
+        window._autonomyLadder = {
+            state: state,
+            TASK_POOL: TASK_POOL,
+            RISK_ORDER: RISK_ORDER,
+            LEVEL_NAMES: LEVEL_NAMES,
+            SPEED_MAP: SPEED_MAP,
+            generateTask: generateTask,
+            shouldAutoHandle: shouldAutoHandle,
+            getAutoThreshold: getAutoThreshold,
+            getResponseTime: getResponseTime,
+            rollMistake: rollMistake,
+            processTask: processTask,
+            updateStats: updateStats,
+            updateLevel: updateLevel,
+            updateGauge: updateGauge,
+            addHistoryEntry: addHistoryEntry,
+            finishSimulation: finishSimulation,
+            scheduleNext: scheduleNext
+        };
+
+        /* init */
+        updateLevel();
+        updateStats();
+    })();
+    </script>
+</body>
+</html>
