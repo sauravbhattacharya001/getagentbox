@@ -87,6 +87,67 @@ The [live landing page](https://sauravbhattacharya001.github.io/getagentbox/) in
 
 ---
 
+## 🧰 Pages & Interactive Tools
+
+Beyond the main landing page, the site includes 30+ standalone pages with interactive tools and resources:
+
+### Planning & Analysis
+
+| Page | Description |
+|:---|:---|
+| [ROI Calculator](https://sauravbhattacharya001.github.io/getagentbox/roi-calculator.html) | Calculate time and cost savings from agent automation |
+| [Capacity Planner](https://sauravbhattacharya001.github.io/getagentbox/capacity-planner.html) | Estimate infrastructure needs for your workload |
+| [Decision Matrix](https://sauravbhattacharya001.github.io/getagentbox/decision-matrix.html) | Compare AgentBox against alternatives with weighted criteria |
+| [Capability Matrix](https://sauravbhattacharya001.github.io/getagentbox/capability-matrix.html) | Feature-by-feature breakdown of agent capabilities |
+| [Readiness Assessment](https://sauravbhattacharya001.github.io/getagentbox/readiness.html) | Evaluate whether your team is ready for AI agents |
+
+### Development & Integration
+
+| Page | Description |
+|:---|:---|
+| [API Docs](https://sauravbhattacharya001.github.io/getagentbox/api-docs.html) | Full API reference for programmatic integration |
+| [CLI Playground](https://sauravbhattacharya001.github.io/getagentbox/cli-playground.html) | Try AgentBox CLI commands in an interactive terminal |
+| [Webhooks](https://sauravbhattacharya001.github.io/getagentbox/webhooks.html) | Configure and test webhook integrations |
+| [SDK](https://sauravbhattacharya001.github.io/getagentbox/sdk.html) | SDK documentation for building on top of AgentBox |
+| [Sandbox](https://sauravbhattacharya001.github.io/getagentbox/sandbox.html) | Isolated testing environment for experiments |
+
+### Agent Intelligence
+
+| Page | Description |
+|:---|:---|
+| [Persona Creator](https://sauravbhattacharya001.github.io/getagentbox/persona-creator.html) | Design custom agent personalities |
+| [Autonomy Ladder](https://sauravbhattacharya001.github.io/getagentbox/autonomy-ladder.html) | Configure agent autonomy levels |
+| [Memory Palace](https://sauravbhattacharya001.github.io/getagentbox/memory-palace.html) | Visualize and manage agent memory |
+| [Sentiment Analyzer](https://sauravbhattacharya001.github.io/getagentbox/sentiment-analyzer.html) | Real-time conversation sentiment tracking |
+| [Task Decomposer](https://sauravbhattacharya001.github.io/getagentbox/task-decomposer.html) | Break complex tasks into agent-executable steps |
+| [Evolution Lab](https://sauravbhattacharya001.github.io/getagentbox/evolution-lab.html) | Experiment with agent behavior evolution |
+| [Negotiation Arena](https://sauravbhattacharya001.github.io/getagentbox/negotiation-arena.html) | Multi-agent negotiation simulations |
+
+### Operations & Monitoring
+
+| Page | Description |
+|:---|:---|
+| [Status Page](https://sauravbhattacharya001.github.io/getagentbox/status-page.html) | Live service health dashboard |
+| [Uptime History](https://sauravbhattacharya001.github.io/getagentbox/uptime-history.html) | Historical availability data |
+| [Pulse Monitor](https://sauravbhattacharya001.github.io/getagentbox/pulse-monitor.html) | Real-time system metrics |
+| [Metrics Simulator](https://sauravbhattacharya001.github.io/getagentbox/metrics-simulator.html) | Simulate load and capacity scenarios |
+| [SLA Dashboard](https://sauravbhattacharya001.github.io/getagentbox/sla-dashboard.html) | Service level agreement tracking |
+| [Watchdog](https://sauravbhattacharya001.github.io/getagentbox/watchdog.html) | Automated health monitoring |
+| [Postmortems](https://sauravbhattacharya001.github.io/getagentbox/postmortems.html) | Incident analysis and learnings |
+
+### Resources
+
+| Page | Description |
+|:---|:---|
+| [Tutorials](https://sauravbhattacharya001.github.io/getagentbox/tutorials.html) | Step-by-step guides for common workflows |
+| [Use Case Explorer](https://sauravbhattacharya001.github.io/getagentbox/use-case-explorer.html) | Interactive use case discovery |
+| [Knowledge Base](https://sauravbhattacharya001.github.io/getagentbox/knowledge-base.html) | Searchable help articles |
+| [Glossary](https://sauravbhattacharya001.github.io/getagentbox/glossary.html) | AI and agent terminology |
+| [Workflow Builder](https://sauravbhattacharya001.github.io/getagentbox/workflow-builder.html) | Visual drag-and-drop workflow designer |
+| [Migration Guide](https://sauravbhattacharya001.github.io/getagentbox/migrate.html) | Migrate from other AI assistants |
+
+---
+
 ## 🏗️ Architecture
 
 ```
@@ -126,7 +187,7 @@ The [live landing page](https://sauravbhattacharya001.github.io/getagentbox/) in
 
 | Layer | Technology | Purpose |
 |:---|:---|:---|
-| **Frontend** | HTML5 + CSS3 + Vanilla JS | Zero-dependency, single-file landing page |
+| **Frontend** | HTML5 + CSS3 + Vanilla JS | Zero-dependency, multi-page static site |
 | **Hosting** | GitHub Pages | Free static hosting with automatic HTTPS |
 | **Container** | Docker (nginx:alpine) | Production-ready containerized deployment |
 | **Bot** | Telegram Bot API | Messaging platform integration |
@@ -266,6 +327,16 @@ php -S localhost:8000
 
 No build step required for page edits. Modify HTML/CSS/JS and refresh your browser.
 
+### Build
+
+```bash
+# Install dev dependencies (Jest for testing)
+npm install
+
+# Run the build script (processes templates)
+node build.js
+```
+
 ### 🐳 Docker
 
 ```bash
@@ -309,13 +380,14 @@ See the full [Testing Guide](docs/TESTING.md) for architecture details, conventi
 
 ## 🔒 Security
 
-The landing page includes several security measures:
+See [SECURITY.md](SECURITY.md) for the full security policy and vulnerability reporting process.
 
-- **Content Security Policy** — Restricts script/style/image sources
-- **X-Content-Type-Options** — Prevents MIME-type sniffing
-- **Referrer Policy** — Controls referrer information leakage
-- **`rel="noopener noreferrer"`** — On all external links
-- **Docker** — Non-root user, minimal Alpine image, security headers via nginx
+- **Strict CSP** — `default-src 'self'` with no inline scripts or external CDNs
+- **XSS-hardened** — No user input in innerHTML; all dynamic content from static app data
+- **Vendored dependencies** — GoatCounter loaded locally, eliminating CDN supply-chain risk
+- **9 security headers** — CSP, HSTS, COOP, COEP, CORP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- **Docker** — Non-root user, multi-stage build, Alpine minimal image, health checks
+- **No cookies** — Privacy-first analytics via GoatCounter
 
 ---
 
@@ -327,6 +399,21 @@ The landing page includes several security measures:
 - **No external deps** — Loads fast everywhere, no CDN dependency
 - **Interactive demos** — Animated chat simulations to show real usage patterns
 - **Privacy-first analytics** — GoatCounter (cookie-free, GDPR-compliant)
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+The site supports keyboard navigation for power users:
+
+| Shortcut | Action |
+|:---|:---|
+| `?` | Open keyboard shortcuts help overlay |
+| `Ctrl+K` / `⌘+K` | Open command palette |
+| `T` | Toggle light/dark theme |
+| `Esc` | Close overlays and modals |
+
+Full accessibility support includes skip-to-content links, ARIA labels, focus management, and screen reader announcements.
 
 ---
 
