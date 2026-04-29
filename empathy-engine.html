@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Empathy Engine - AgentBox</title>
+<meta name="description" content="Interactive demo: watch an AI agent detect emotional tone in real-time and adapt its communication style for better human connection.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f1117;--bg2:#1a1d27;--bg3:#242834;--text:#e4e6ed;--text2:#9ca3af;--accent:#6c63ff;--accent2:#818cf8;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--orange:#f97316;--blue:#3b82f6;--pink:#ec4899;--cyan:#06b6d4;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.3)}
+[data-theme=light]{--bg:#f8f9fb;--bg2:#fff;--bg3:#e5e7eb;--text:#1f2937;--text2:#6b7280;--shadow:0 4px 24px rgba(0,0,0,.08)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+nav{background:var(--bg2);border-bottom:1px solid var(--bg3);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-logo{color:var(--text);text-decoration:none;font-weight:700;font-size:1.15rem}
+.nav-right{display:flex;gap:.75rem;align-items:center}
+.theme-btn{background:var(--bg3);border:none;color:var(--text);padding:.4rem .7rem;border-radius:8px;cursor:pointer;font-size:1rem}
+header{text-align:center;padding:3rem 1.5rem 1.5rem}
+header h1{font-size:2rem;background:linear-gradient(135deg,var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
+header p{color:var(--text2);max-width:640px;margin:0 auto}
+main{max-width:1200px;margin:0 auto;padding:0 1.5rem 3rem}
+.card{background:var(--bg2);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);margin-bottom:1.25rem}
+.card h3{margin-bottom:.75rem;font-size:1.1rem;display:flex;align-items:center;gap:.5rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
+@media(max-width:800px){.grid2,.grid3{grid-template-columns:1fr}}
+textarea{width:100%;height:100px;background:var(--bg3);color:var(--text);border:1px solid var(--bg3);border-radius:8px;padding:.75rem;font-family:inherit;font-size:.9rem;resize:vertical}
+textarea:focus{outline:none;border-color:var(--accent)}
+.btn{padding:.5rem 1rem;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600;transition:transform .15s,opacity .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-secondary{background:var(--bg3);color:var(--text)}
+.btn-sm{padding:.35rem .75rem;font-size:.8rem}
+.btn-row{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
+.preset-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem}
+.preset{padding:.3rem .65rem;border-radius:20px;font-size:.75rem;font-weight:600;border:1px solid var(--bg3);background:var(--bg3);color:var(--text2);cursor:pointer;transition:.2s}
+.preset:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Radar canvas */
+.radar-wrap{display:flex;justify-content:center;align-items:center;padding:1rem 0}
+canvas#radarChart{max-width:280px;max-height:280px}
+
+/* Gauges */
+.gauge-bar{height:8px;border-radius:4px;background:var(--bg3);overflow:hidden;margin-top:.4rem}
+.gauge-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.gauge-label{display:flex;justify-content:space-between;font-size:.8rem;color:var(--text2);margin-top:.25rem}
+.big-num{font-size:2.5rem;font-weight:800;text-align:center;line-height:1}
+.big-sub{text-align:center;color:var(--text2);font-size:.85rem;margin-top:.25rem}
+
+/* Strategy badge */
+.strategy-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.2rem;border-radius:30px;font-weight:700;font-size:1rem;margin:.75rem 0;transition:.4s}
+.strategy-icon{font-size:1.3rem}
+
+/* Chat timeline */
+.chat-timeline{max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;padding-right:.25rem}
+.chat-msg{display:flex;align-items:flex-start;gap:.65rem;padding:.6rem .75rem;border-radius:8px;background:var(--bg3);font-size:.85rem;animation:fadeSlide .3s ease}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg.user-msg{border-left:3px solid var(--accent)}
+.chat-msg.agent-msg{border-left:3px solid var(--green)}
+.chat-role{font-weight:700;font-size:.75rem;text-transform:uppercase;color:var(--text2);min-width:45px}
+.chat-text{flex:1}
+.chat-badges{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem}
+.emo-badge{padding:.15rem .45rem;border-radius:12px;font-size:.65rem;font-weight:600;color:#fff}
+
+/* Adaptation log */
+.log-list{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:.4rem}
+.log-entry{padding:.5rem .65rem;border-radius:6px;background:var(--bg3);font-size:.8rem;border-left:3px solid var(--accent);animation:fadeSlide .3s ease}
+.log-entry .log-time{color:var(--text2);font-size:.7rem}
+
+/* Journey chart */
+canvas#journeyChart{width:100%;height:200px;border-radius:8px;background:var(--bg3)}
+
+/* Tone slider */
+.tone-track{display:flex;align-items:center;gap:.75rem;margin:.5rem 0}
+.tone-label{font-size:.8rem;color:var(--text2);min-width:55px}
+.tone-bar{flex:1;height:6px;border-radius:3px;background:var(--bg3);position:relative}
+.tone-indicator{width:14px;height:14px;border-radius:50%;background:var(--accent);position:absolute;top:-4px;transition:left .6s ease}
+
+/* Suggested response */
+.suggested{background:var(--bg3);border-radius:8px;padding:.75rem;font-size:.85rem;line-height:1.7;margin-top:.5rem;border:1px dashed var(--accent);min-height:60px}
+.suggested em{color:var(--accent2);font-style:normal;border-bottom:1px dotted var(--accent2)}
+
+/* Empathy score ring */
+.ring-wrap{position:relative;width:100px;height:100px;margin:0 auto}
+canvas.ring-canvas{width:100px;height:100px}
+.ring-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.6rem;font-weight:800}
+
+footer{text-align:center;padding:2rem;color:var(--text2);font-size:.8rem;border-top:1px solid var(--bg3)}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">← AgentBox</a>
+  <div class="nav-right">
+    <button class="theme-btn" id="themeToggle" aria-label="Toggle theme">🌙</button>
+  </div>
+</nav>
+<header>
+  <h1>🫀 Agent Empathy Engine</h1>
+  <p>Watch how an AI agent detects emotional tone in real-time and adapts its communication style — from active listening to solution sprints — for truly empathetic interactions.</p>
+</header>
+<main>
+  <!-- Input -->
+  <div class="card">
+    <h3>💬 Send a Message</h3>
+    <div class="preset-row" id="presets"></div>
+    <textarea id="userInput" placeholder="Type a message to see how the agent adapts its empathy and communication style..."></textarea>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="sendBtn">Send Message</button>
+      <button class="btn btn-secondary" id="scenarioBtn">▶ Run Scenario</button>
+      <button class="btn btn-secondary" id="clearBtn">Clear Chat</button>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <!-- Left column -->
+    <div>
+      <!-- Emotion Radar -->
+      <div class="card">
+        <h3>🎯 Emotion Radar</h3>
+        <div class="radar-wrap"><canvas id="radarChart" width="280" height="280"></canvas></div>
+      </div>
+      <!-- Journey map -->
+      <div class="card">
+        <h3>📈 Emotional Journey</h3>
+        <canvas id="journeyChart" width="700" height="200"></canvas>
+      </div>
+    </div>
+    <!-- Right column -->
+    <div>
+      <!-- Style adaptation -->
+      <div class="card">
+        <h3>🎭 Style Adaptation</h3>
+        <div id="strategyBadge" class="strategy-badge" style="background:var(--accent);color:#fff">
+          <span class="strategy-icon">🤝</span><span id="strategyName">Rapport Builder</span>
+        </div>
+        <div class="tone-track">
+          <span class="tone-label">Formal</span>
+          <div class="tone-bar"><div class="tone-indicator" id="toneIndicator" style="left:50%"></div></div>
+          <span class="tone-label" style="text-align:right">Casual</span>
+        </div>
+        <div style="margin-top:.75rem">
+          <div style="display:flex;align-items:center;gap:1rem">
+            <div class="ring-wrap"><canvas class="ring-canvas" id="empathyRing" width="200" height="200"></canvas><div class="ring-num" id="empathyNum">50</div></div>
+            <div><div style="font-weight:600">Empathy Level</div><div style="font-size:.8rem;color:var(--text2)" id="empathyDesc">Balanced engagement</div></div>
+          </div>
+        </div>
+        <div style="margin-top:1rem"><strong style="font-size:.85rem">Suggested Response:</strong>
+          <div class="suggested" id="suggestedResponse">Send a message to see the agent's empathetic response...</div>
+        </div>
+      </div>
+      <!-- Adaptation log -->
+      <div class="card">
+        <h3>📋 Adaptation Log</h3>
+        <div class="log-list" id="logList"><div class="log-entry"><span class="log-time">Ready</span> — Engine initialized. Send a message to begin.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat timeline -->
+  <div class="card">
+    <h3>🗨️ Conversation Timeline</h3>
+    <div class="chat-timeline" id="chatTimeline">
+      <div style="color:var(--text2);font-size:.85rem;text-align:center;padding:2rem 0">No messages yet. Type something above or pick a scenario!</div>
+    </div>
+  </div>
+</main>
+<footer>AgentBox — Empathy Engine Demo &middot; All analysis runs client-side. No data leaves your browser.</footer>
+
+<script>
+(function(){
+'use strict';
+
+/* ── Theme ── */
+const html=document.documentElement,themeBtn=document.getElementById('themeToggle');
+function setTheme(t){html.setAttribute('data-theme',t);themeBtn.textContent=t==='dark'?'🌙':'☀️';localStorage.setItem('theme',t)}
+themeBtn.addEventListener('click',()=>setTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+setTheme(localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'));
+
+/* ── Emotion keywords ── */
+const EMOTIONS={
+  frustration:{color:'#ef4444',keywords:['broken','doesnt work','doesn\'t work','not working','terrible','angry','furious','waste','useless','stupid','ridiculous','unacceptable','awful','horrible','hate','worst','annoyed','irritated','fed up','sick of','garbage','trash','pathetic','disappointed','fail','failed','failing','bug','buggy','crash','crashed'],patterns:[/!{2,}/,/[A-Z]{4,}/,/wtf|omg|smh/i]},
+  joy:{color:'#22c55e',keywords:['love','great','amazing','thank','thanks','wonderful','happy','awesome','fantastic','brilliant','excellent','perfect','beautiful','delighted','impressed','pleased','glad','enjoy','incredible','superb','outstanding','best','favorite','recommend','wow'],patterns:[/:\)|<3|❤|🎉|😊|👍|🙌/,/!$/]},
+  confusion:{color:'#f97316',keywords:['don\'t understand','dont understand','confused','unclear','what does','how do i','how does','what is','where is','can\'t find','cannot find','lost','stuck','no idea','makes no sense','help me','explain','confusing','complicated','weird','strange','unexpected'],patterns:[/\?{2,}/,/\?\s*$/]},
+  urgency:{color:'#ec4899',keywords:['asap','urgent','immediately','deadline','critical','emergency','right now','hurry','rush','time-sensitive','production down','outage','blocking','blocker','can\'t wait','need now','priority','p0','p1','incident','downtime','sev1','sev 1'],patterns:[/ASAP|URGENT|CRITICAL|EMERGENCY/,/!!+/]},
+  trust:{color:'#3b82f6',keywords:['reliable','always works','recommend','confident','depend on','trust','trustworthy','solid','stable','consistent','never fails','rock solid','dependable','count on','faith','proven','track record','safe','secure','professional'],patterns:[]},
+  anxiety:{color:'#eab308',keywords:['worried','afraid','risk','what if','concern','nervous','scary','fear','uncertain','doubt','hesitant','uneasy','anxious','might break','could fail','not sure','risky','dangerous','vulnerable','exposed','threat','lose data','data loss'],patterns:[/what if/i]}
+};
+
+const EMOTION_KEYS=Object.keys(EMOTIONS);
+const EMOTION_COLORS=Object.fromEntries(EMOTION_KEYS.map(k=>[k,EMOTIONS[k].color]));
+
+function detectEmotions(text){
+  const lower=text.toLowerCase();
+  const scores={};
+  for(const[emo,cfg] of Object.entries(EMOTIONS)){
+    let s=0;
+    for(const kw of cfg.keywords){if(lower.includes(kw))s+=15}
+    for(const pat of cfg.patterns){if(pat.test(text))s+=12}
+    scores[emo]=Math.min(100,Math.max(0,s));
+  }
+  // Normalize: at least one nonzero if text has content
+  const mx=Math.max(...Object.values(scores));
+  if(mx===0&&text.trim().length>3){scores.trust=15}
+  return scores;
+}
+
+/* ── Strategies ── */
+const STRATEGIES=[
+  {name:'Active Listening',icon:'👂',color:'#ef4444',trigger:'frustration',desc:'Acknowledge feelings, mirror language, validate before solving',tone:.35,empathyBase:85},
+  {name:'Solution Sprint',icon:'⚡',color:'#ec4899',trigger:'urgency',desc:'Direct, concise, action-oriented — cut to the fix fast',tone:.6,empathyBase:60},
+  {name:'Gentle Guide',icon:'🧭',trigger:'confusion',color:'#f97316',desc:'Step-by-step, simple language, concrete examples',tone:.45,empathyBase:75},
+  {name:'Celebration Mode',icon:'🎉',trigger:'joy',color:'#22c55e',desc:'Enthusiastic, reinforce the positive experience',tone:.8,empathyBase:70},
+  {name:'Trust Builder',icon:'🛡️',trigger:'anxiety',color:'#eab308',desc:'Reassurance, evidence, guarantees — calm the worry',tone:.4,empathyBase:80},
+  {name:'Rapport Builder',icon:'🤝',trigger:'trust',color:'#6c63ff',desc:'Warm, conversational, relationship-focused',tone:.65,empathyBase:65}
+];
+
+function pickStrategy(scores){
+  let best=STRATEGIES[5],bestScore=0;
+  for(const st of STRATEGIES){
+    const s=scores[st.trigger]||0;
+    if(s>bestScore){bestScore=s;best=st}
+  }
+  return best;
+}
+
+/* ── Response generator ── */
+const RESPONSES={
+  frustration:[
+    "I completely understand your frustration — <em>that's not the experience you deserve</em>. Let me look into this right away and get it sorted for you.",
+    "I hear you, and <em>I'm sorry you're dealing with this</em>. That sounds really annoying. Let me dig into exactly what's going wrong.",
+    "You're right to be upset — <em>this shouldn't be happening</em>. I'm going to prioritize getting this fixed for you right now.",
+    "<em>I can see why that would be incredibly frustrating.</em> Let me take ownership of this and make sure we get it resolved properly."
+  ],
+  joy:[
+    "That's wonderful to hear! 🎉 <em>It makes my day knowing things are working great for you.</em> Is there anything else I can help make even better?",
+    "<em>So glad you're having a great experience!</em> That kind of feedback really means a lot. Let me know if you'd like to explore any other features.",
+    "Amazing! <em>Your enthusiasm is contagious!</em> 😊 Would you like me to show you a few more things you might love?",
+    "<em>That's exactly what we aim for!</em> Really happy it's clicking for you. Want to take it to the next level?"
+  ],
+  confusion:[
+    "No worries at all — <em>let me walk you through this step by step</em>. First, here's the simplest way to think about it...",
+    "<em>Great question!</em> I know this can seem complex at first. Let me break it down into simple pieces for you.",
+    "I understand the confusion — <em>it's not as obvious as it should be</em>. Here's a straightforward explanation with an example...",
+    "<em>You're not alone in finding this tricky.</em> Let me give you a clear, step-by-step guide to get you on track."
+  ],
+  urgency:[
+    "⚡ <em>On it immediately.</em> Here's what you need to do right now: check the status, apply the fix, verify. Let me walk you through each step fast.",
+    "<em>I understand this is critical.</em> Let's skip the pleasantries and get straight to the solution. Step 1: ...",
+    "🚨 <em>Treating this as top priority.</em> Here's the quickest path to resolution — follow these exact steps.",
+    "<em>Got it — time-sensitive. Moving fast.</em> Here's your action plan in order of priority."
+  ],
+  anxiety:[
+    "<em>I understand your concern, and it's completely valid.</em> Let me reassure you — here's exactly how we keep things safe and protected.",
+    "I hear your worry. <em>Let me give you the facts so you can feel confident</em> about what's happening and what safeguards are in place.",
+    "<em>Your caution shows good judgment.</em> Here are the specific protections and guarantees we have in place for exactly this scenario.",
+    "<em>That's a smart thing to think about.</em> Rest assured — we've designed multiple safety layers to handle exactly that concern."
+  ],
+  trust:[
+    "<em>Thanks for your confidence!</em> We take that trust seriously. Here's how we continue to earn it every day.",
+    "<em>It's great to have you as part of the community.</em> Your support means a lot. Here's something new you might find valuable...",
+    "<em>Really appreciate you sharing that.</em> We're always working to maintain the reliability you've come to expect.",
+    "<em>That kind of trust is something we never take for granted.</em> Let me show you what's coming next that I think you'll love."
+  ]
+};
+
+function generateResponse(scores){
+  const strat=pickStrategy(scores);
+  const pool=RESPONSES[strat.trigger]||RESPONSES.trust;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+/* ── Presets ── */
+const PRESETS=[
+  {label:'😤 Frustrated Customer',text:'This is absolutely ridiculous! I\'ve been waiting THREE DAYS for a response and nothing works. Your product is broken and your support is useless!!'},
+  {label:'😕 Confused Newcomer',text:'I just signed up but I don\'t understand how to set up my first agent. Where do I go? What does "workspace" mean? I\'m completely lost.'},
+  {label:'😊 Happy User',text:'Just wanted to say I absolutely love this product! It\'s been amazing for our team. Best tool we\'ve used in years. Thank you!'},
+  {label:'🚨 Urgent Crisis',text:'URGENT: Our production system is DOWN. We need this fixed IMMEDIATELY. This is a P0 incident and every minute of downtime costs us money!!'},
+  {label:'😰 Anxious About Security',text:'I\'m worried about data security. What if there\'s a breach? We handle sensitive customer data and I\'m nervous about putting it in a new system.'},
+  {label:'🤝 Loyal Advocate',text:'We\'ve been using AgentBox for 2 years and it\'s been rock solid. I recommend it to everyone. You can always count on it working.'},
+  {label:'😤→😊 Escalation Recovery',text:'Look, I was really angry earlier about that bug. But your team followed up quickly and actually fixed it. I appreciate that a lot. Thanks!'},
+  {label:'😕→⚡ Confused + Urgent',text:'I don\'t understand how the API works and I have a deadline tomorrow!! Can someone please explain this quickly? I\'m running out of time!'},
+  {label:'😰→🤝 Anxiety to Trust',text:'I was initially very worried about migrating, but after seeing your security docs and talking to your team, I feel much more confident. Great job on the documentation.'},
+  {label:'🎭 Mixed Signals',text:'The product is great most of the time but sometimes it crashes randomly and I can\'t figure out why. I love it when it works but it\'s frustrating when it doesn\'t.'}
+];
+
+const SCENARIOS=[
+  {name:'Support Escalation',messages:['Your product has been down for 2 hours. This is unacceptable!','I already tried restarting. Nothing works! Do you even test this stuff?','...okay, the fix you suggested actually worked. Sorry for being harsh.','Actually, the response time was impressive. Thank you for the quick help!']},
+  {name:'Onboarding Journey',messages:['Hi, I just signed up. How does this work?','I don\'t understand what an "agent workspace" is. Can you explain?','Oh, that makes sense! So I just drag and drop to configure?','This is actually really intuitive once you get started. Love it!']},
+  {name:'Security Audit',messages:['We need to evaluate your security posture before purchasing. What certifications do you have?','What about data residency? We\'re concerned about where our data is stored.','The SOC 2 report looks solid. What about incident response times?','I\'m feeling much more confident. This is thorough. Let\'s move forward.']},
+  {name:'Feature Request Arc',messages:['I wish the dashboard had dark mode. The white background hurts my eyes.','Actually the whole UI could use a refresh. Some parts feel outdated.','Wait, you already have a dark mode? Where is that setting? I can\'t find it!','Found it! Wow, this looks great. Sorry for the confusion earlier!']}
+];
+
+/* ── State ── */
+let chatHistory=[];
+let journeyData=[];
+let currentScores={frustration:0,joy:0,confusion:0,urgency:0,trust:0,anxiety:0};
+
+/* ── DOM refs ── */
+const userInput=document.getElementById('userInput');
+const sendBtn=document.getElementById('sendBtn');
+const scenarioBtn=document.getElementById('scenarioBtn');
+const clearBtn=document.getElementById('clearBtn');
+const presetRow=document.getElementById('presets');
+const chatTimeline=document.getElementById('chatTimeline');
+const logList=document.getElementById('logList');
+const strategyBadge=document.getElementById('strategyBadge');
+const strategyNameEl=document.getElementById('strategyName');
+const toneIndicator=document.getElementById('toneIndicator');
+const empathyNum=document.getElementById('empathyNum');
+const empathyDesc=document.getElementById('empathyDesc');
+const suggestedResponse=document.getElementById('suggestedResponse');
+const radarCanvas=document.getElementById('radarChart');
+const radarCtx=radarCanvas.getContext('2d');
+const journeyCanvas=document.getElementById('journeyChart');
+const journeyCtx=journeyCanvas.getContext('2d');
+const empathyRingCanvas=document.getElementById('empathyRing');
+const empathyRingCtx=empathyRingCanvas.getContext('2d');
+
+/* ── Presets rendering ── */
+PRESETS.forEach(p=>{
+  const btn=document.createElement('button');
+  btn.className='preset';btn.textContent=p.label;
+  btn.addEventListener('click',()=>{userInput.value=p.text;userInput.focus()});
+  presetRow.appendChild(btn);
+});
+
+/* ── Radar chart ── */
+let animatedScores={frustration:0,joy:0,confusion:0,urgency:0,trust:0,anxiety:0};
+function drawRadar(){
+  const w=radarCanvas.width,h=radarCanvas.height,cx=w/2,cy=h/2,r=Math.min(cx,cy)-30;
+  radarCtx.clearRect(0,0,w,h);
+  const n=EMOTION_KEYS.length;
+  const angleStep=Math.PI*2/n;
+  // Grid
+  for(let ring=1;ring<=4;ring++){
+    radarCtx.beginPath();
+    const rr=r*ring/4;
+    for(let i=0;i<=n;i++){
+      const a=-Math.PI/2+angleStep*i;
+      const x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;
+      i===0?radarCtx.moveTo(x,y):radarCtx.lineTo(x,y);
+    }
+    radarCtx.strokeStyle='rgba(150,150,170,.15)';radarCtx.lineWidth=1;radarCtx.stroke();
+  }
+  // Axes + labels
+  EMOTION_KEYS.forEach((k,i)=>{
+    const a=-Math.PI/2+angleStep*i;
+    radarCtx.beginPath();radarCtx.moveTo(cx,cy);
+    radarCtx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+    radarCtx.strokeStyle='rgba(150,150,170,.2)';radarCtx.stroke();
+    const lx=cx+Math.cos(a)*(r+18),ly=cy+Math.sin(a)*(r+18);
+    radarCtx.fillStyle=EMOTION_COLORS[k];radarCtx.font='bold 11px sans-serif';radarCtx.textAlign='center';radarCtx.textBaseline='middle';
+    radarCtx.fillText(k.charAt(0).toUpperCase()+k.slice(1),lx,ly);
+  });
+  // Data polygon
+  radarCtx.beginPath();
+  EMOTION_KEYS.forEach((k,i)=>{
+    const a=-Math.PI/2+angleStep*i;
+    const v=(animatedScores[k]||0)/100*r;
+    const x=cx+Math.cos(a)*v,y=cy+Math.sin(a)*v;
+    i===0?radarCtx.moveTo(x,y):radarCtx.lineTo(x,y);
+  });
+  radarCtx.closePath();
+  radarCtx.fillStyle='rgba(108,99,255,.2)';radarCtx.fill();
+  radarCtx.strokeStyle='rgba(108,99,255,.8)';radarCtx.lineWidth=2;radarCtx.stroke();
+  // Dots
+  EMOTION_KEYS.forEach((k,i)=>{
+    const a=-Math.PI/2+angleStep*i;
+    const v=(animatedScores[k]||0)/100*r;
+    const x=cx+Math.cos(a)*v,y=cy+Math.sin(a)*v;
+    radarCtx.beginPath();radarCtx.arc(x,y,4,0,Math.PI*2);
+    radarCtx.fillStyle=EMOTION_COLORS[k];radarCtx.fill();
+  });
+}
+
+function animateRadar(target){
+  const start={...animatedScores};
+  const dur=500;let t0=null;
+  function tick(ts){
+    if(!t0)t0=ts;
+    const p=Math.min(1,(ts-t0)/dur);
+    const ease=1-Math.pow(1-p,3);
+    EMOTION_KEYS.forEach(k=>{animatedScores[k]=start[k]+(target[k]-start[k])*ease});
+    drawRadar();
+    if(p<1)requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ── Empathy ring ── */
+let animatedEmpathy=50;
+function drawEmpathyRing(target){
+  const start=animatedEmpathy;const dur=500;let t0=null;
+  function tick(ts){
+    if(!t0)t0=ts;const p=Math.min(1,(ts-t0)/dur);const ease=1-Math.pow(1-p,3);
+    animatedEmpathy=start+(target-start)*ease;
+    const c=empathyRingCanvas,ctx=empathyRingCtx,w=c.width,h=c.height,cx=w/2,cy=h/2,r=w/2-12;
+    ctx.clearRect(0,0,w,h);
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='rgba(150,150,170,.15)';ctx.lineWidth=10;ctx.stroke();
+    const angle=-Math.PI/2+Math.PI*2*(animatedEmpathy/100);
+    ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,angle);
+    const hue=animatedEmpathy<40?0:animatedEmpathy<70?45:140;
+    ctx.strokeStyle=`hsl(${hue},70%,55%)`;ctx.lineWidth=10;ctx.lineCap='round';ctx.stroke();
+    empathyNum.textContent=Math.round(animatedEmpathy);
+    if(p<1)requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ── Journey chart ── */
+function drawJourney(){
+  const c=journeyCanvas,ctx=journeyCtx;
+  c.width=c.offsetWidth*2;c.height=400;ctx.scale(2,2);
+  const w=c.offsetWidth,h=200,pad=30;
+  ctx.clearRect(0,0,w,h);
+  if(journeyData.length<2)return;
+  const n=journeyData.length;
+  const xStep=(w-pad*2)/(n-1);
+  EMOTION_KEYS.forEach(k=>{
+    ctx.beginPath();
+    journeyData.forEach((d,i)=>{
+      const x=pad+i*xStep,y=h-pad-(d[k]/100*(h-pad*2));
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle=EMOTION_COLORS[k];ctx.lineWidth=2;ctx.globalAlpha=.7;ctx.stroke();ctx.globalAlpha=1;
+  });
+  // Legend
+  let lx=pad;
+  EMOTION_KEYS.forEach(k=>{
+    ctx.fillStyle=EMOTION_COLORS[k];ctx.font='bold 10px sans-serif';
+    ctx.fillRect(lx,8,12,8);ctx.fillText(k.charAt(0).toUpperCase()+k.slice(1),lx+16,16);
+    lx+=ctx.measureText(k).width+34;
+  });
+}
+
+/* ── Add to chat timeline ── */
+function addChatMessage(role,text,scores){
+  if(chatHistory.length===0){chatTimeline.innerHTML=''}
+  const div=document.createElement('div');
+  div.className='chat-msg '+(role==='user'?'user-msg':'agent-msg');
+  const top=EMOTION_KEYS.filter(k=>scores[k]>20).sort((a,b)=>scores[b]-scores[a]).slice(0,3);
+  const badges=top.map(k=>`<span class="emo-badge" style="background:${EMOTION_COLORS[k]}">${k} ${scores[k]}</span>`).join('');
+  div.innerHTML=`<span class="chat-role">${role}</span><div class="chat-text">${text}<div class="chat-badges">${badges}</div></div>`;
+  chatTimeline.appendChild(div);
+  chatTimeline.scrollTop=chatTimeline.scrollHeight;
+}
+
+/* ── Add to log ── */
+function addLog(msg){
+  const div=document.createElement('div');
+  div.className='log-entry';
+  const now=new Date().toLocaleTimeString();
+  div.innerHTML=`<span class="log-time">${now}</span> — ${msg}`;
+  logList.prepend(div);
+}
+
+/* ── Process message ── */
+function processMessage(text){
+  const scores=detectEmotions(text);
+  currentScores=scores;
+  const strat=pickStrategy(scores);
+
+  // Update radar
+  animateRadar(scores);
+
+  // Update strategy badge
+  strategyBadge.style.background=strat.color;
+  strategyNameEl.textContent=strat.name;
+  strategyBadge.querySelector('.strategy-icon').textContent=strat.icon;
+
+  // Tone
+  toneIndicator.style.left=`${strat.tone*100}%`;
+
+  // Empathy
+  const empathy=Math.min(100,strat.empathyBase+Math.floor(Math.max(...Object.values(scores))/5));
+  drawEmpathyRing(empathy);
+  const descs=['Minimal engagement','Low empathy','Moderate empathy','High empathy','Deep emotional attunement'];
+  empathyDesc.textContent=descs[Math.min(4,Math.floor(empathy/20))];
+
+  // Suggested response
+  const resp=generateResponse(scores);
+  suggestedResponse.innerHTML=resp;
+
+  // Add messages to chat
+  addChatMessage('user',escapeHtml(text),scores);
+  const agentScores={};EMOTION_KEYS.forEach(k=>agentScores[k]=0);
+  agentScores.trust=40;agentScores.joy=20;
+  chatHistory.push({role:'user',text,scores});
+
+  // Add agent message
+  const cleanResp=resp.replace(/<\/?em>/g,'');
+  addChatMessage('agent',resp,agentScores);
+  chatHistory.push({role:'agent',text:cleanResp,scores:agentScores});
+
+  // Journey data
+  journeyData.push({...scores});
+  drawJourney();
+
+  // Log
+  const topEmo=EMOTION_KEYS.reduce((a,b)=>scores[a]>scores[b]?a:b);
+  addLog(`Detected <strong>${topEmo}</strong> (${scores[topEmo]}) → Switched to <strong>${strat.name}</strong> → Empathy ${empathy}%`);
+  if(scores.frustration>50)addLog(`⚠️ High frustration detected → Lowered formality ${Math.round((1-strat.tone)*40)}%`);
+  if(scores.urgency>50)addLog(`⚡ Urgency spike → Activated Solution Sprint mode`);
+}
+
+function escapeHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+/* ── Event handlers ── */
+sendBtn.addEventListener('click',()=>{
+  const text=userInput.value.trim();
+  if(!text)return;
+  processMessage(text);
+  userInput.value='';
+});
+userInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendBtn.click()}});
+
+clearBtn.addEventListener('click',()=>{
+  chatHistory=[];journeyData=[];
+  chatTimeline.innerHTML='<div style="color:var(--text2);font-size:.85rem;text-align:center;padding:2rem 0">No messages yet.</div>';
+  logList.innerHTML='<div class="log-entry"><span class="log-time">Ready</span> — Engine reset.</div>';
+  animateRadar({frustration:0,joy:0,confusion:0,urgency:0,trust:0,anxiety:0});
+  drawEmpathyRing(50);
+  suggestedResponse.innerHTML='Send a message to see the agent\'s empathetic response...';
+  drawJourney();
+});
+
+/* ── Scenario runner ── */
+let scenarioIdx=0;
+scenarioBtn.addEventListener('click',async()=>{
+  const sc=SCENARIOS[scenarioIdx%SCENARIOS.length];
+  scenarioIdx++;
+  scenarioBtn.disabled=true;scenarioBtn.textContent=`▶ ${sc.name}...`;
+  addLog(`🎬 Starting scenario: <strong>${sc.name}</strong>`);
+  for(const msg of sc.messages){
+    userInput.value=msg;
+    await new Promise(r=>setTimeout(r,1200));
+    processMessage(msg);
+    userInput.value='';
+    await new Promise(r=>setTimeout(r,800));
+  }
+  scenarioBtn.disabled=false;scenarioBtn.textContent='▶ Run Scenario';
+  addLog(`✅ Scenario <strong>${sc.name}</strong> complete`);
+});
+
+/* ── Initial draw ── */
+drawRadar();
+drawEmpathyRing(50);
+drawJourney();
+
+})();
+</script>
+</body>
+</html>
