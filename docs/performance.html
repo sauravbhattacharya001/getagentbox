@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance &amp; Optimization — AgentBox Docs</title>
+    <meta name="description" content="Performance tuning guide for AgentBox — bundle analysis, lazy loading, Core Web Vitals, caching strategies, and module-level optimization.">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --bg-card: #1a1d28;
+            --bg-code: #252830;
+            --text: #e0e0e8;
+            --text-dim: #8b8fa0;
+            --accent: #4a9eff;
+            --accent-hover: #70b4ff;
+            --border: #2d3040;
+            --green: #4ade80;
+            --yellow: #facc15;
+            --red: #f87171;
+            --purple: #a78bfa;
+            --orange: #fb923c;
+            --cyan: #22d3ee;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 3rem 2rem;
+            max-width: 920px;
+            margin: 0 auto;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent-hover); text-decoration: underline; }
+        h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-dim); font-size: 1.1rem; margin-bottom: 2rem; }
+        h2 {
+            font-size: 1.5rem;
+            margin: 2.8rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--accent);
+        }
+        h3 { font-size: 1.15rem; margin: 1.8rem 0 0.6rem; color: var(--purple); }
+        h4 { font-size: 1rem; margin: 1.2rem 0 0.4rem; color: var(--text); }
+        p { margin-bottom: 1rem; color: var(--text-dim); }
+        strong { color: var(--text); }
+        code {
+            background: var(--bg-code);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            font-size: 0.88em;
+            font-family: 'Fira Code', 'Cascadia Code', monospace;
+        }
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin-bottom: 1.2rem;
+            font-size: 0.84rem;
+            line-height: 1.5;
+        }
+        pre code { background: none; padding: 0; }
+        ul, ol { margin: 0 0 1.2rem 1.5rem; color: var(--text-dim); }
+        li { margin-bottom: 0.4rem; }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem;
+        }
+        .metric-card .label { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.3rem; }
+        .metric-card .value { font-size: 1.4rem; font-weight: 700; }
+        .metric-card .target { color: var(--text-dim); font-size: 0.8rem; margin-top: 0.2rem; }
+        .good { color: var(--green); }
+        .warn { color: var(--yellow); }
+        .bad { color: var(--red); }
+        .tip-box {
+            background: var(--bg-card);
+            border-left: 3px solid var(--green);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.2rem;
+            margin: 1.2rem 0;
+        }
+        .tip-box.warning { border-left-color: var(--yellow); }
+        .tip-box.danger { border-left-color: var(--red); }
+        .tip-box .tip-title { font-weight: 700; margin-bottom: 0.3rem; }
+        .tip-box.warning .tip-title { color: var(--yellow); }
+        .tip-box.danger .tip-title { color: var(--red); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0;
+            font-size: 0.9rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th { color: var(--text); font-weight: 600; }
+        td { color: var(--text-dim); }
+        .breadcrumb { margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .breadcrumb a { color: var(--text-dim); }
+        .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; margin-bottom: 2rem; }
+        .toc h3 { margin: 0 0 0.8rem; color: var(--text); font-size: 1rem; }
+        .toc ol { margin: 0 0 0 1.2rem; }
+        .toc li { margin-bottom: 0.3rem; }
+        .toc a { color: var(--text-dim); font-size: 0.9rem; }
+        .toc a:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<nav class="breadcrumb">
+    <a href="index.html">Docs</a> &rarr; Performance &amp; Optimization
+</nav>
+
+<h1>&#9889; Performance &amp; Optimization</h1>
+<p class="subtitle">Measure, analyze, and improve AgentBox load times, runtime efficiency, and Core Web Vitals scores.</p>
+
+<div class="toc">
+    <h3>Contents</h3>
+    <ol>
+        <li><a href="#overview">Performance Overview</a></li>
+        <li><a href="#core-web-vitals">Core Web Vitals Targets</a></li>
+        <li><a href="#bundle">Bundle Analysis</a></li>
+        <li><a href="#lazy-loading">Lazy Loading Strategy</a></li>
+        <li><a href="#critical-path">Critical Rendering Path</a></li>
+        <li><a href="#module-tiers">Module Load Tiers</a></li>
+        <li><a href="#caching">Caching &amp; CDN</a></li>
+        <li><a href="#images">Image Optimization</a></li>
+        <li><a href="#runtime">Runtime Performance</a></li>
+        <li><a href="#measuring">Measuring Performance</a></li>
+        <li><a href="#docker-perf">Docker &amp; Nginx Tuning</a></li>
+        <li><a href="#checklist">Optimization Checklist</a></li>
+    </ol>
+</div>
+
+<!-- §1 Overview -->
+<h2 id="overview">1. Performance Overview</h2>
+
+<p>AgentBox ships as a <strong>zero-dependency</strong> landing page with 60+ JavaScript modules concatenated into a single bundle via <code>build.js</code>. The architecture uses IIFE modules, IntersectionObserver-based lazy initialization, and localStorage for state persistence. This guide covers how to keep load times fast as the module count grows.</p>
+
+<h3>Architecture Characteristics</h3>
+<ul>
+    <li><strong>Single-page</strong> — all content in <code>index.html</code> with no client-side routing</li>
+    <li><strong>No framework overhead</strong> — vanilla JS IIFEs, no virtual DOM diffing</li>
+    <li><strong>Concatenation bundler</strong> — <code>build.js</code> merges all modules into <code>dist/bundle.js</code> (no tree-shaking)</li>
+    <li><strong>Lazy init</strong> — many modules defer initialization until their DOM section scrolls into view</li>
+    <li><strong>Gzip</strong> — Nginx Docker config enables gzip for HTML, CSS, and JS</li>
+</ul>
+
+<!-- §2 Core Web Vitals -->
+<h2 id="core-web-vitals">2. Core Web Vitals Targets</h2>
+
+<p>These are the targets AgentBox aims to hit, aligned with Google's Core Web Vitals thresholds:</p>
+
+<div class="metric-grid">
+    <div class="metric-card">
+        <div class="label">Largest Contentful Paint (LCP)</div>
+        <div class="value good">&lt; 2.5s</div>
+        <div class="target">Hero section renders fast because it's static HTML</div>
+    </div>
+    <div class="metric-card">
+        <div class="label">Interaction to Next Paint (INP)</div>
+        <div class="value good">&lt; 200ms</div>
+        <div class="target">All event handlers are lightweight synchronous operations</div>
+    </div>
+    <div class="metric-card">
+        <div class="label">Cumulative Layout Shift (CLS)</div>
+        <div class="value good">&lt; 0.1</div>
+        <div class="target">No lazy-loaded images or injected ads that shift content</div>
+    </div>
+    <div class="metric-card">
+        <div class="label">First Contentful Paint (FCP)</div>
+        <div class="value good">&lt; 1.8s</div>
+        <div class="target">CSS is inline or minimal; no render-blocking requests</div>
+    </div>
+</div>
+
+<!-- §3 Bundle Analysis -->
+<h2 id="bundle">3. Bundle Analysis</h2>
+
+<p>The build script (<code>build.js</code>) concatenates modules in dependency order into <code>dist/bundle.js</code>. Since there is no tree-shaking, every module is included regardless of whether the user scrolls to it.</p>
+
+<h3>Analyzing Bundle Size</h3>
+<pre><code># Build and measure
+npm run build
+
+# Quick size check (uncompressed vs gzip estimate)
+ls -lh dist/bundle.js
+gzip -k dist/bundle.js &amp;&amp; ls -lh dist/bundle.js.gz &amp;&amp; rm dist/bundle.js.gz
+
+# Per-module size breakdown (approximate)
+node -e "
+  const fs = require('fs');
+  const src = fs.readFileSync('dist/bundle.js', 'utf8');
+  const parts = src.split(/\/\* === (.+?) === \*\//);
+  const sizes = [];
+  for (let i = 1; i &lt; parts.length; i += 2) {
+    sizes.push({ file: parts[i], kb: (parts[i+1].length / 1024).toFixed(1) });
+  }
+  sizes.sort((a, b) =&gt; b.kb - a.kb);
+  sizes.forEach(s =&gt; console.log(s.kb.padStart(8) + ' KB  ' + s.file));
+  console.log('Total:', (src.length / 1024).toFixed(1), 'KB');
+"</code></pre>
+
+<div class="tip-box">
+    <div class="tip-title">&#128161; Tip</div>
+    <p>The biggest modules are typically <code>chat-demo.js</code>, <code>pipeline-builder.js</code>, and <code>playground.js</code> which contain large template strings. These are prime candidates for lazy loading.</p>
+</div>
+
+<h3>Module Load Order</h3>
+<p>The concatenation order in <code>build.js</code> is critical. Dependencies must load before dependents:</p>
+<ol>
+    <li><strong>Foundation:</strong> <code>storage.js</code> &rarr; <code>dom-utils.js</code> &rarr; <code>globals.js</code></li>
+    <li><strong>Templates:</strong> <code>_typing-indicator-template.js</code></li>
+    <li><strong>Core sections:</strong> chat-demo, testimonials, pricing, FAQ, how-it-works, stats</li>
+    <li><strong>Interactive tools:</strong> calculator, capacity-planner, pipeline-builder, etc.</li>
+    <li><strong>Chrome/UX:</strong> site-nav, theme-toggle, scroll-progress, command-palette</li>
+    <li><strong>Bootstrap:</strong> <code>init.js</code> (must be last — wires everything together)</li>
+</ol>
+
+<!-- §4 Lazy Loading -->
+<h2 id="lazy-loading">4. Lazy Loading Strategy</h2>
+
+<p>AgentBox uses <code>IntersectionObserver</code> to defer module initialization until the user scrolls near a section. This is the primary performance lever — the JS parses immediately but heavy DOM construction waits until needed.</p>
+
+<h3>How It Works</h3>
+<pre><code>// Pattern used by most modules:
+(function () {
+  'use strict';
+
+  function init() {
+    // Heavy DOM construction, event binding, etc.
+  }
+
+  // Defer until section is visible
+  var section = document.getElementById('my-section');
+  if (!section) return;
+
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting) {
+        observer.disconnect();
+        init();
+      }
+    }, { rootMargin: '200px' });
+    observer.observe(section);
+  } else {
+    // Fallback: initialize immediately
+    init();
+  }
+})();</code></pre>
+
+<h3>Modules That Should Always Lazy-Load</h3>
+<table>
+    <thead>
+        <tr><th>Module</th><th>Reason</th><th>Trigger</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>pipeline-builder</code></td><td>Large SVG/canvas rendering</td><td>Scroll to section</td></tr>
+        <tr><td><code>playground</code></td><td>Code editor with syntax highlighting</td><td>Scroll to section</td></tr>
+        <tr><td><code>scenario-planner</code></td><td>Complex state machine UI</td><td>Scroll to section</td></tr>
+        <tr><td><code>workflow-builder</code></td><td>Drag-and-drop graph editor</td><td>Scroll to section</td></tr>
+        <tr><td><code>api-explorer</code></td><td>Request builder with response rendering</td><td>Scroll to section</td></tr>
+        <tr><td><code>capability-radar</code></td><td>Canvas-based radar chart</td><td>Scroll to section</td></tr>
+        <tr><td><code>speed-challenge</code></td><td>Interactive game UI</td><td>User opt-in</td></tr>
+    </tbody>
+</table>
+
+<h3>Modules That Must Load Eagerly</h3>
+<table>
+    <thead>
+        <tr><th>Module</th><th>Reason</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>storage.js</code></td><td>Shared localStorage wrapper used by all modules</td></tr>
+        <tr><td><code>dom-utils.js</code></td><td>DOM query helpers used everywhere</td></tr>
+        <tr><td><code>globals.js</code></td><td>Feature flags and shared constants</td></tr>
+        <tr><td><code>theme-toggle.js</code></td><td>Prevents FOUC (flash of unstyled content)</td></tr>
+        <tr><td><code>site-nav.js</code></td><td>Navigation must work immediately</td></tr>
+        <tr><td><code>init.js</code></td><td>Bootstrap orchestrator</td></tr>
+    </tbody>
+</table>
+
+<!-- §5 Critical Path -->
+<h2 id="critical-path">5. Critical Rendering Path</h2>
+
+<p>The critical rendering path for AgentBox's first paint:</p>
+
+<pre><code>1. HTML download + parse (index.html)
+2. Inline CSS / &lt;style&gt; blocks (no external stylesheet blocking in dev)
+   Production: styles.css (single file, gzipped)
+3. Hero section renders (static HTML, no JS needed)
+4. bundle.js downloads (deferred or at body end)
+5. IIFE modules execute:
+   a. storage.js, dom-utils.js, globals.js (fast, no DOM writes)
+   b. theme-toggle applies saved theme (prevents FOUC)
+   c. site-nav initializes
+   d. IntersectionObservers registered for below-fold sections
+6. User sees interactive hero + nav within ~1-2s</code></pre>
+
+<div class="tip-box warning">
+    <div class="tip-title">&#9888;&#65039; Watch Out</div>
+    <p>Adding <code>&lt;script&gt;</code> tags in the <code>&lt;head&gt;</code> without <code>defer</code> or <code>async</code> will block the critical rendering path. Always load JS at the end of <code>&lt;body&gt;</code> or use <code>defer</code>.</p>
+</div>
+
+<!-- §6 Module Tiers -->
+<h2 id="module-tiers">6. Module Load Tiers</h2>
+
+<p>Organize modules into three tiers based on when they need to be active:</p>
+
+<table>
+    <thead>
+        <tr><th>Tier</th><th>When</th><th>Examples</th><th>Budget</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>T0 — Critical</strong></td>
+            <td>Before first paint</td>
+            <td>storage, dom-utils, globals, theme-toggle, site-nav</td>
+            <td>&lt; 15 KB gzipped</td>
+        </tr>
+        <tr>
+            <td><strong>T1 — Above-fold</strong></td>
+            <td>Within 1s of load</td>
+            <td>chat-demo, hero stats, pricing, testimonials</td>
+            <td>&lt; 30 KB gzipped</td>
+        </tr>
+        <tr>
+            <td><strong>T2 — Below-fold</strong></td>
+            <td>On scroll (IntersectionObserver)</td>
+            <td>All interactive tools, tutorials, playground</td>
+            <td>No hard limit</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- §7 Caching -->
+<h2 id="caching">7. Caching &amp; CDN</h2>
+
+<h3>Nginx Cache Headers (Docker)</h3>
+<p>The Dockerfile's nginx config sets these cache policies:</p>
+<pre><code># HTML: short cache, must revalidate
+location ~* \.(html)$ {
+    expires 1h;
+    add_header Cache-Control "public, must-revalidate";
+}
+
+# Static assets: long cache with content-hash filenames
+location ~* \.(js|css|png|jpg|svg|woff2)$ {
+    expires 30d;
+    add_header Cache-Control "public, immutable";
+}</code></pre>
+
+<h3>Cache-Busting Strategy</h3>
+<p>Since <code>bundle.js</code> doesn't include a content hash in its filename, cache invalidation relies on the HTML's 1-hour TTL. For production deployments:</p>
+<pre><code># Option 1: Add version query string in index.html
+&lt;script src="dist/bundle.js?v=2.0.0"&gt;&lt;/script&gt;
+
+# Option 2: Modify build.js to include a hash
+const crypto = require('crypto');
+const hash = crypto.createHash('md5').update(bundle).digest('hex').slice(0, 8);
+const outPath = path.join(distDir, `bundle.${hash}.js`);</code></pre>
+
+<h3>CDN Recommendations</h3>
+<ul>
+    <li><strong>GitHub Pages</strong> — free, automatic CDN via Fastly; set <code>Cache-Control</code> via <code>_headers</code> file</li>
+    <li><strong>Cloudflare</strong> — put in front of Docker deploy for edge caching + DDoS protection</li>
+    <li><strong>Self-hosted</strong> — enable gzip and set <code>Cache-Control: public, max-age=86400</code> for HTML, <code>max-age=2592000, immutable</code> for hashed assets</li>
+</ul>
+
+<!-- §8 Images -->
+<h2 id="images">8. Image Optimization</h2>
+
+<p>AgentBox is primarily text and SVG-based, but if you add images:</p>
+<ul>
+    <li>Use <code>loading="lazy"</code> on all below-fold <code>&lt;img&gt;</code> tags</li>
+    <li>Specify <code>width</code> and <code>height</code> attributes to prevent CLS</li>
+    <li>Prefer SVG for icons and diagrams (already the norm in AgentBox)</li>
+    <li>Use WebP/AVIF with <code>&lt;picture&gt;</code> fallback for photographs</li>
+    <li>Keep hero images under 100 KB — they block LCP</li>
+</ul>
+
+<pre><code>&lt;picture&gt;
+  &lt;source srcset="hero.avif" type="image/avif"&gt;
+  &lt;source srcset="hero.webp" type="image/webp"&gt;
+  &lt;img src="hero.jpg" alt="AgentBox dashboard"
+       width="1200" height="630" loading="eager"&gt;
+&lt;/picture&gt;</code></pre>
+
+<!-- §9 Runtime Performance -->
+<h2 id="runtime">9. Runtime Performance</h2>
+
+<h3>DOM Batch Writes</h3>
+<p>AgentBox modules should batch DOM mutations to avoid layout thrashing:</p>
+<pre><code>// BAD: read-write-read-write (forces multiple reflows)
+var height = el.offsetHeight;
+el.style.height = (height + 10) + 'px';
+var width = el.offsetWidth;
+el.style.width = (width + 10) + 'px';
+
+// GOOD: batch reads, then batch writes
+var height = el.offsetHeight;
+var width = el.offsetWidth;
+el.style.height = (height + 10) + 'px';
+el.style.width = (width + 10) + 'px';</code></pre>
+
+<h3>Event Delegation</h3>
+<p>Instead of attaching listeners to every button in a list, delegate to the parent:</p>
+<pre><code>// GOOD: single listener on parent
+document.getElementById('feature-grid').addEventListener('click', function (e) {
+  var card = e.target.closest('[data-feature]');
+  if (card) handleFeatureClick(card.dataset.feature);
+});</code></pre>
+
+<h3>Animation Performance</h3>
+<ul>
+    <li>Use <code>transform</code> and <code>opacity</code> for animations (GPU-composited, no layout)</li>
+    <li>Avoid animating <code>width</code>, <code>height</code>, <code>top</code>, <code>left</code> (triggers layout)</li>
+    <li>Use <code>will-change: transform</code> sparingly — only on elements about to animate</li>
+    <li>Prefer CSS transitions over JS <code>setInterval</code> animations</li>
+</ul>
+
+<h3>localStorage Performance</h3>
+<p>The <code>StorageUtil</code> wrapper is synchronous and touches the main thread. Avoid calling it in hot loops:</p>
+<pre><code>// BAD: read storage on every scroll event
+window.addEventListener('scroll', function () {
+  var prefs = StorageUtil.getJSON('prefs', {});  // synchronous I/O
+  // ...
+});
+
+// GOOD: cache in memory, write on debounced save
+var prefs = StorageUtil.getJSON('prefs', {});
+window.addEventListener('scroll', debounce(function () {
+  StorageUtil.setJSON('prefs', prefs);
+}, 1000));</code></pre>
+
+<!-- §10 Measuring -->
+<h2 id="measuring">10. Measuring Performance</h2>
+
+<h3>Lighthouse</h3>
+<pre><code># Chrome DevTools: Lighthouse tab → Generate report
+# CLI:
+npx lighthouse http://localhost:8080 --output html --output-path report.html
+
+# CI (GitHub Actions):
+- uses: treosh/lighthouse-ci-action@v12
+  with:
+    urls: 'https://sauravbhattacharya001.github.io/getagentbox/'
+    budgetPath: '.github/lighthouse-budget.json'</code></pre>
+
+<h3>Performance API</h3>
+<pre><code>// Measure module init time
+performance.mark('chat-demo-start');
+ChatDemo.init();
+performance.mark('chat-demo-end');
+performance.measure('ChatDemo init', 'chat-demo-start', 'chat-demo-end');
+
+// Log all module timings
+performance.getEntriesByType('measure').forEach(function (m) {
+  console.log(m.name + ': ' + m.duration.toFixed(1) + 'ms');
+});</code></pre>
+
+<h3>Bundle Size Monitoring</h3>
+<p>Add a size check to CI to prevent regressions:</p>
+<pre><code># .github/workflows/ci.yml addition:
+- name: Bundle size check
+  run: |
+    npm run build
+    SIZE=$(stat -f%z dist/bundle.js 2>/dev/null || stat -c%s dist/bundle.js)
+    MAX=524288  # 512 KB limit
+    echo "Bundle: $SIZE bytes (max: $MAX)"
+    if [ "$SIZE" -gt "$MAX" ]; then
+      echo "::error::Bundle exceeds 512 KB limit!"
+      exit 1
+    fi</code></pre>
+
+<!-- §11 Docker & Nginx -->
+<h2 id="docker-perf">11. Docker &amp; Nginx Tuning</h2>
+
+<h3>Gzip Configuration</h3>
+<p>The default Dockerfile enables gzip but can be tuned further:</p>
+<pre><code># Already enabled in Dockerfile nginx config:
+gzip on;
+gzip_types text/html text/css application/javascript text/plain;
+gzip_min_length 256;
+
+# Additional optimizations:
+gzip_comp_level 6;          # Balance compression ratio vs CPU
+gzip_vary on;               # Serve different content to gzip-capable clients
+gzip_static on;             # Serve pre-compressed .gz files if they exist</code></pre>
+
+<h3>Pre-Compression at Build Time</h3>
+<pre><code># Add to Dockerfile build stage or CI:
+RUN gzip -k -9 /usr/share/nginx/html/*.js \
+    /usr/share/nginx/html/*.css \
+    /usr/share/nginx/html/*.html
+
+# Then enable gzip_static in nginx:
+gzip_static on;</code></pre>
+
+<p>Pre-compression avoids CPU cost on every request. Combined with <code>gzip_static on</code>, Nginx serves the <code>.gz</code> file directly when the client supports gzip.</p>
+
+<h3>HTTP/2 Server Push (advanced)</h3>
+<pre><code># If running behind a reverse proxy that supports HTTP/2:
+location / {
+    http2_push /dist/bundle.js;
+    http2_push /styles.css;
+}</code></pre>
+
+<!-- §12 Checklist -->
+<h2 id="checklist">12. Optimization Checklist</h2>
+
+<table>
+    <thead>
+        <tr><th>Check</th><th>Impact</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>JS loaded at end of <code>&lt;body&gt;</code> or with <code>defer</code></td><td>Unblocks first paint</td><td class="good">&#10003;</td></tr>
+        <tr><td>CSS is minimal / inline for above-fold</td><td>Faster FCP</td><td class="good">&#10003;</td></tr>
+        <tr><td>Gzip enabled in Docker nginx</td><td>~70% smaller transfers</td><td class="good">&#10003;</td></tr>
+        <tr><td>IntersectionObserver lazy init for below-fold modules</td><td>Faster TTI</td><td class="good">&#10003;</td></tr>
+        <tr><td>No external font downloads</td><td>Avoids FOIT/FOUT</td><td class="good">&#10003;</td></tr>
+        <tr><td>Zero runtime dependencies</td><td>No framework overhead</td><td class="good">&#10003;</td></tr>
+        <tr><td>Content-hash in bundle filename</td><td>Long-lived cache</td><td class="warn">TODO</td></tr>
+        <tr><td>Pre-compressed <code>.gz</code> assets</td><td>Lower server CPU</td><td class="warn">TODO</td></tr>
+        <tr><td>Lighthouse CI in GitHub Actions</td><td>Prevents regressions</td><td class="warn">TODO</td></tr>
+        <tr><td><code>gzip_static on</code> in nginx</td><td>Serve pre-compressed files</td><td class="warn">TODO</td></tr>
+        <tr><td>Bundle size budget in CI</td><td>Prevents bloat</td><td class="warn">TODO</td></tr>
+    </tbody>
+</table>
+
+<div class="tip-box">
+    <div class="tip-title">&#128640; Quick Wins</div>
+    <p>The three highest-impact optimizations you can do today:</p>
+    <ol>
+        <li><strong>Pre-compress assets</strong> at build time with <code>gzip -9</code> and enable <code>gzip_static</code> — saves CPU on every request</li>
+        <li><strong>Add content hashes</strong> to bundle filenames — enables immutable caching (30-day <code>max-age</code>)</li>
+        <li><strong>Add Lighthouse CI</strong> — catches performance regressions before they ship</li>
+    </ol>
+</div>
+
+<hr style="border: none; border-top: 1px solid var(--border); margin: 3rem 0 1.5rem;">
+
+<p style="text-align: center; color: var(--text-dim); font-size: 0.85rem;">
+    <a href="index.html">Home</a> &middot;
+    <a href="getting-started.html">Getting Started</a> &middot;
+    <a href="architecture.html">Architecture</a> &middot;
+    <a href="component-catalog.html">Components</a> &middot;
+    <a href="plugin-development.html">Plugins</a> &middot;
+    <a href="changelog.html">Changelog</a>
+</p>
+
+</body>
+</html>
