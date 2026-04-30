@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox — Cost Optimizer</title>
+    <meta name="description" content="Analyze token usage, simulate model configurations, and get AI-powered optimization recommendations to reduce agent costs by up to 60%.">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --bg3: #1a1a2e;
+            --text: #e0e0e8;
+            --text2: #8888a0;
+            --accent: #6c63ff;
+            --accent2: #00c853;
+            --accent3: #ff6b9d;
+            --accent4: #ffc107;
+            --border: #2a2a3e;
+            --card-bg: #16161f;
+            --shadow: rgba(0,0,0,0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .back-link {
+            display: inline-block;
+            padding: 1rem 2rem;
+            font-size: 0.9rem;
+            color: var(--text2);
+        }
+        .back-link:hover { color: var(--accent); }
+
+        header {
+            text-align: center;
+            padding: 2rem 1rem 1rem;
+        }
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent4));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        header p {
+            color: var(--text2);
+            max-width: 650px;
+            margin: 0 auto;
+            font-size: 1.05rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem 3rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0;
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 0.7rem 1.2rem;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            font-size: 0.9rem;
+            color: var(--text2);
+            border: 1px solid transparent;
+            border-bottom: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab:hover { color: var(--text); background: var(--bg3); }
+        .tab.active {
+            color: var(--accent);
+            background: var(--card-bg);
+            border-color: var(--border);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .panel h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+        .panel h3 {
+            font-size: 1rem;
+            margin-bottom: 0.7rem;
+            color: var(--text2);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text2);
+            margin-bottom: 0.3rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+        .btn-secondary {
+            background: var(--bg3);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { border-color: var(--accent); }
+
+        .metric-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .metric-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0.3rem 0;
+        }
+        .metric-card .label {
+            font-size: 0.8rem;
+            color: var(--text2);
+        }
+        .metric-card .change {
+            font-size: 0.75rem;
+            margin-top: 0.3rem;
+        }
+        .metric-card .change.good { color: var(--accent2); }
+        .metric-card .change.bad { color: var(--accent3); }
+
+        .chart-container {
+            width: 100%;
+            height: 250px;
+            position: relative;
+            margin: 1rem 0;
+        }
+        .chart-bar-group {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 200px;
+            padding: 0 0.5rem;
+        }
+        .chart-bar {
+            flex: 1;
+            border-radius: 4px 4px 0 0;
+            min-width: 8px;
+            position: relative;
+            transition: height 0.5s ease;
+            cursor: pointer;
+        }
+        .chart-bar:hover { opacity: 0.8; }
+        .chart-bar .tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .chart-bar:hover .tooltip { display: block; }
+        .chart-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text2);
+            padding: 0.3rem 0.5rem;
+        }
+
+        .recommendation {
+            background: var(--bg3);
+            border-left: 3px solid var(--accent2);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.2rem;
+            margin-bottom: 0.8rem;
+        }
+        .recommendation.warning { border-left-color: var(--accent4); }
+        .recommendation.critical { border-left-color: var(--accent3); }
+        .recommendation .title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+        .recommendation .desc {
+            font-size: 0.85rem;
+            color: var(--text2);
+        }
+        .recommendation .savings {
+            font-size: 0.8rem;
+            color: var(--accent2);
+            margin-top: 0.3rem;
+            font-weight: 600;
+        }
+
+        .model-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+        .model-row.header {
+            color: var(--text2);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .badge-green { background: rgba(0,200,83,0.15); color: var(--accent2); }
+        .badge-yellow { background: rgba(255,193,7,0.15); color: var(--accent4); }
+        .badge-red { background: rgba(255,107,157,0.15); color: var(--accent3); }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+        .timeline-item .time {
+            color: var(--text2);
+            white-space: nowrap;
+            min-width: 60px;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .toggle-btn {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--text2);
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .toggle-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .waterfall {
+            margin: 1rem 0;
+        }
+        .waterfall-row {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .waterfall-label {
+            width: 120px;
+            font-size: 0.8rem;
+            color: var(--text2);
+            text-align: right;
+        }
+        .waterfall-bar-container {
+            flex: 1;
+            height: 24px;
+            position: relative;
+        }
+        .waterfall-bar {
+            position: absolute;
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .score-ring {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 8px solid var(--bg3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin: 0 auto 1rem;
+            position: relative;
+        }
+        .score-ring .score-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .score-ring .score-label {
+            font-size: 0.7rem;
+            color: var(--text2);
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to AgentBox</a>
+
+    <header>
+        <h1>💰 Agent Cost Optimizer</h1>
+        <p>Analyze token usage patterns, simulate model configurations, and get autonomous optimization recommendations to reduce costs without sacrificing quality.</p>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="analyzer">Usage Analyzer</div>
+            <div class="tab" data-tab="simulator">Model Simulator</div>
+            <div class="tab" data-tab="optimizer">Auto-Optimizer</div>
+            <div class="tab" data-tab="forecaster">Cost Forecaster</div>
+        </div>
+
+        <!-- Tab 1: Usage Analyzer -->
+        <div class="tab-content active" id="tab-analyzer">
+            <div class="grid-3" id="metrics-summary">
+                <div class="metric-card">
+                    <div class="label">Monthly Token Spend</div>
+                    <div class="value" id="total-spend">$847</div>
+                    <div class="change bad">↑ 12% vs last month</div>
+                </div>
+                <div class="metric-card">
+                    <div class="label">Avg Cost / Task</div>
+                    <div class="value" id="cost-per-task">$0.34</div>
+                    <div class="change good">↓ 5% vs last month</div>
+                </div>
+                <div class="metric-card">
+                    <div class="label">Token Efficiency</div>
+                    <div class="value" id="efficiency-score">72%</div>
+                    <div class="change good">↑ 3pts vs last month</div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top:1.5rem">
+                <div class="panel">
+                    <h2>Token Usage by Category</h2>
+                    <div class="chart-container">
+                        <div class="chart-bar-group" id="usage-chart"></div>
+                        <div class="chart-labels">
+                            <span>Chat</span>
+                            <span>Code</span>
+                            <span>Search</span>
+                            <span>Summary</span>
+                            <span>Analysis</span>
+                            <span>Creative</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h2>Daily Spend (Last 14 Days)</h2>
+                    <div class="chart-container">
+                        <div class="chart-bar-group" id="daily-chart"></div>
+                        <div class="chart-labels">
+                            <span>Apr 16</span>
+                            <span></span>
+                            <span></span>
+                            <span>Apr 22</span>
+                            <span></span>
+                            <span></span>
+                            <span>Apr 29</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Waste Detection</h2>
+                <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1rem">Autonomous analysis of token waste patterns in your agent sessions</p>
+                <div id="waste-items"></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Model Simulator -->
+        <div class="tab-content" id="tab-simulator">
+            <div class="panel">
+                <h2>Model Configuration Simulator</h2>
+                <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1.5rem">Compare costs and quality across different model routing strategies</p>
+
+                <div class="grid-2">
+                    <div>
+                        <div class="form-group">
+                            <label>Primary Model</label>
+                            <select id="primary-model">
+                                <option value="gpt4o">GPT-4o ($2.50/1M in, $10/1M out)</option>
+                                <option value="claude-opus">Claude Opus ($15/1M in, $75/1M out)</option>
+                                <option value="claude-sonnet">Claude Sonnet ($3/1M in, $15/1M out)</option>
+                                <option value="gpt4o-mini">GPT-4o Mini ($0.15/1M in, $0.60/1M out)</option>
+                                <option value="gemini-pro">Gemini 2.5 Pro ($1.25/1M in, $10/1M out)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fallback Model</label>
+                            <select id="fallback-model">
+                                <option value="gpt4o-mini">GPT-4o Mini ($0.15/1M in, $0.60/1M out)</option>
+                                <option value="claude-haiku">Claude Haiku ($0.25/1M in, $1.25/1M out)</option>
+                                <option value="gemini-flash">Gemini Flash ($0.075/1M in, $0.30/1M out)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Routing Strategy</label>
+                            <select id="routing-strategy">
+                                <option value="complexity">Complexity-Based (auto-route by task difficulty)</option>
+                                <option value="always-primary">Always Primary (highest quality)</option>
+                                <option value="always-fallback">Always Fallback (lowest cost)</option>
+                                <option value="hybrid-70">Hybrid 70/30 (primary/fallback split)</option>
+                                <option value="adaptive">Adaptive (learn from quality scores)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Monthly Tasks</label>
+                            <input type="number" id="monthly-tasks" value="2500" min="100" max="100000">
+                        </div>
+                        <div class="form-group">
+                            <label>Avg Tokens per Task</label>
+                            <input type="number" id="avg-tokens" value="1500" min="100" max="50000">
+                        </div>
+                        <button class="btn btn-primary" onclick="runSimulation()">Run Simulation</button>
+                    </div>
+                    <div id="simulation-results">
+                        <div class="metric-card" style="margin-bottom:1rem">
+                            <div class="label">Estimated Monthly Cost</div>
+                            <div class="value" id="sim-cost">—</div>
+                        </div>
+                        <div class="metric-card" style="margin-bottom:1rem">
+                            <div class="label">Quality Score</div>
+                            <div class="value" id="sim-quality">—</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="label">Cost per Quality Point</div>
+                            <div class="value" id="sim-efficiency">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Model Comparison Matrix</h2>
+                <div class="model-row header">
+                    <div>Model</div>
+                    <div>Cost/1K tasks</div>
+                    <div>Quality</div>
+                    <div>Latency</div>
+                    <div>Rating</div>
+                </div>
+                <div id="model-matrix"></div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Auto-Optimizer -->
+        <div class="tab-content" id="tab-optimizer">
+            <div class="grid-2">
+                <div class="panel">
+                    <h2>Optimization Score</h2>
+                    <div class="score-ring" id="opt-score-ring">
+                        <div class="score-value" id="opt-score">68</div>
+                        <div class="score-label">/ 100</div>
+                    </div>
+                    <div style="text-align:center;margin-bottom:1rem">
+                        <span class="badge badge-yellow">Room for Improvement</span>
+                    </div>
+                    <div style="font-size:0.85rem;color:var(--text2)">
+                        <p>Your agent fleet is operating at 68% cost efficiency. The optimizer has identified 5 actionable recommendations that could save up to <strong style="color:var(--accent2)">$312/month</strong>.</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h2>Savings Waterfall</h2>
+                    <div class="waterfall" id="savings-waterfall"></div>
+                    <div style="text-align:center;margin-top:1rem;font-size:0.85rem;color:var(--text2)">
+                        Potential monthly savings breakdown by optimization type
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Autonomous Recommendations</h2>
+                <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1rem">AI-analyzed optimization opportunities ranked by impact and ease of implementation</p>
+                <div id="recommendations"></div>
+            </div>
+
+            <div class="panel">
+                <h2>Optimization Timeline</h2>
+                <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1rem">Suggested implementation order for maximum ROI</p>
+                <div id="timeline"></div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Cost Forecaster -->
+        <div class="tab-content" id="tab-forecaster">
+            <div class="panel">
+                <h2>Cost Forecast Configuration</h2>
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label>Growth Rate (tasks/month)</label>
+                        <select id="growth-rate">
+                            <option value="0">Stable (0%)</option>
+                            <option value="10" selected>Moderate (10%)</option>
+                            <option value="25">Fast (25%)</option>
+                            <option value="50">Hypergrowth (50%)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Apply Optimizations</label>
+                        <select id="apply-opts">
+                            <option value="none">None (current trajectory)</option>
+                            <option value="easy">Easy wins only</option>
+                            <option value="all" selected>All recommendations</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Forecast Period</label>
+                        <select id="forecast-period">
+                            <option value="3">3 months</option>
+                            <option value="6" selected>6 months</option>
+                            <option value="12">12 months</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="runForecast()">Generate Forecast</button>
+            </div>
+
+            <div class="grid-2">
+                <div class="panel">
+                    <h2>Projected Monthly Costs</h2>
+                    <div class="chart-container">
+                        <div class="chart-bar-group" id="forecast-chart"></div>
+                        <div class="chart-labels" id="forecast-labels"></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h2>Forecast Summary</h2>
+                    <div id="forecast-summary">
+                        <p style="color:var(--text2);font-size:0.85rem">Configure parameters and click "Generate Forecast" to see projected costs.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Budget Alert Rules</h2>
+                <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1rem">Autonomous budget monitoring — get alerted before you overspend</p>
+                <div class="grid-3" id="budget-alerts">
+                    <div class="metric-card">
+                        <div class="label">Daily Budget</div>
+                        <div class="value" style="color:var(--accent2)">$35</div>
+                        <div class="progress-bar"><div class="fill" style="width:67%;background:var(--accent2)"></div></div>
+                        <div class="change">$23.45 used today</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">Weekly Budget</div>
+                        <div class="value" style="color:var(--accent4)">$200</div>
+                        <div class="progress-bar"><div class="fill" style="width:82%;background:var(--accent4)"></div></div>
+                        <div class="change warning">$164 used — 82% consumed</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">Monthly Budget</div>
+                        <div class="value" style="color:var(--accent)">$900</div>
+                        <div class="progress-bar"><div class="fill" style="width:55%;background:var(--accent)"></div></div>
+                        <div class="change">$495 used — on track</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Model pricing data
+    const models = {
+        'gpt4o': { name: 'GPT-4o', inCost: 2.5, outCost: 10, quality: 92, latency: 'Med' },
+        'claude-opus': { name: 'Claude Opus', inCost: 15, outCost: 75, quality: 96, latency: 'Slow' },
+        'claude-sonnet': { name: 'Claude Sonnet', inCost: 3, outCost: 15, quality: 90, latency: 'Med' },
+        'gpt4o-mini': { name: 'GPT-4o Mini', inCost: 0.15, outCost: 0.6, quality: 78, latency: 'Fast' },
+        'gemini-pro': { name: 'Gemini 2.5 Pro', inCost: 1.25, outCost: 10, quality: 91, latency: 'Med' },
+        'claude-haiku': { name: 'Claude Haiku', inCost: 0.25, outCost: 1.25, quality: 75, latency: 'Fast' },
+        'gemini-flash': { name: 'Gemini Flash', inCost: 0.075, outCost: 0.3, quality: 72, latency: 'Fast' }
+    };
+
+    // Initialize usage chart
+    function initUsageChart() {
+        const categories = [
+            { name: 'Chat', tokens: 850000, color: 'var(--accent)' },
+            { name: 'Code', tokens: 1200000, color: 'var(--accent2)' },
+            { name: 'Search', tokens: 400000, color: 'var(--accent4)' },
+            { name: 'Summary', tokens: 600000, color: 'var(--accent3)' },
+            { name: 'Analysis', tokens: 950000, color: '#9c27b0' },
+            { name: 'Creative', tokens: 300000, color: '#00bcd4' }
+        ];
+        const max = Math.max(...categories.map(c => c.tokens));
+        const chart = document.getElementById('usage-chart');
+        chart.innerHTML = categories.map(c => {
+            const h = (c.tokens / max * 180);
+            return `<div class="chart-bar" style="height:${h}px;background:${c.color}">
+                <span class="tooltip">${c.name}: ${(c.tokens/1000).toFixed(0)}K tokens</span>
+            </div>`;
+        }).join('');
+    }
+
+    // Initialize daily spend chart
+    function initDailyChart() {
+        const days = [28, 32, 25, 41, 35, 29, 38, 42, 31, 27, 36, 44, 33, 30];
+        const max = Math.max(...days);
+        const chart = document.getElementById('daily-chart');
+        chart.innerHTML = days.map((d, i) => {
+            const h = (d / max * 180);
+            const color = d > 40 ? 'var(--accent3)' : d > 35 ? 'var(--accent4)' : 'var(--accent)';
+            return `<div class="chart-bar" style="height:${h}px;background:${color}">
+                <span class="tooltip">Apr ${16+i}: $${d}</span>
+            </div>`;
+        }).join('');
+    }
+
+    // Initialize waste detection
+    function initWaste() {
+        const wastes = [
+            { type: 'critical', title: 'Redundant Context Injection', desc: 'System prompts repeated in 34% of multi-turn conversations. Estimated waste: 180K tokens/day.', savings: '$89/mo' },
+            { type: 'warning', title: 'Oversized Responses', desc: 'Agent produces >2000 token responses for simple queries 22% of the time. Could use concise mode.', savings: '$54/mo' },
+            { type: 'warning', title: 'Retry Storm Pattern', desc: 'Failed API calls trigger immediate retries without backoff. 8% of tokens spent on retried prompts.', savings: '$38/mo' },
+            { type: 'info', title: 'Unused Tool Calls', desc: 'Agent invokes search tool but discards results in 12% of sessions. Consider conditional routing.', savings: '$27/mo' }
+        ];
+        document.getElementById('waste-items').innerHTML = wastes.map(w =>
+            `<div class="recommendation ${w.type}">
+                <div class="title">${w.title}</div>
+                <div class="desc">${w.desc}</div>
+                <div class="savings">Potential savings: ${w.savings}</div>
+            </div>`
+        ).join('');
+    }
+
+    // Model comparison matrix
+    function initModelMatrix() {
+        const allModels = Object.values(models);
+        document.getElementById('model-matrix').innerHTML = allModels.map(m => {
+            const costPer1k = ((m.inCost * 1.5 + m.outCost * 0.5) / 1000 * 1500).toFixed(2);
+            const qualityBadge = m.quality >= 90 ? 'badge-green' : m.quality >= 75 ? 'badge-yellow' : 'badge-red';
+            const latencyBadge = m.latency === 'Fast' ? 'badge-green' : m.latency === 'Med' ? 'badge-yellow' : 'badge-red';
+            const rating = (m.quality / (parseFloat(costPer1k) + 0.1)).toFixed(1);
+            return `<div class="model-row">
+                <div>${m.name}</div>
+                <div>$${costPer1k}</div>
+                <div><span class="badge ${qualityBadge}">${m.quality}/100</span></div>
+                <div><span class="badge ${latencyBadge}">${m.latency}</span></div>
+                <div>${rating}</div>
+            </div>`;
+        }).join('');
+    }
+
+    // Simulation
+    function runSimulation() {
+        const primary = models[document.getElementById('primary-model').value];
+        const fallback = models[document.getElementById('fallback-model').value];
+        const strategy = document.getElementById('routing-strategy').value;
+        const tasks = parseInt(document.getElementById('monthly-tasks').value);
+        const avgTokens = parseInt(document.getElementById('avg-tokens').value);
+
+        let primaryRatio;
+        switch(strategy) {
+            case 'always-primary': primaryRatio = 1.0; break;
+            case 'always-fallback': primaryRatio = 0.0; break;
+            case 'hybrid-70': primaryRatio = 0.7; break;
+            case 'complexity': primaryRatio = 0.4; break;
+            case 'adaptive': primaryRatio = 0.35; break;
+            default: primaryRatio = 0.5;
+        }
+
+        const inTokens = avgTokens * 0.7;
+        const outTokens = avgTokens * 0.3;
+        const primaryCost = (inTokens * primary.inCost + outTokens * primary.outCost) / 1000000;
+        const fallbackCost = (inTokens * fallback.inCost + outTokens * fallback.outCost) / 1000000;
+        const totalCost = tasks * (primaryRatio * primaryCost + (1-primaryRatio) * fallbackCost);
+        const quality = primaryRatio * primary.quality + (1-primaryRatio) * fallback.quality;
+        const efficiency = (totalCost / quality).toFixed(4);
+
+        document.getElementById('sim-cost').textContent = '$' + totalCost.toFixed(0);
+        document.getElementById('sim-cost').style.color = totalCost > 500 ? 'var(--accent3)' : totalCost > 200 ? 'var(--accent4)' : 'var(--accent2)';
+        document.getElementById('sim-quality').textContent = quality.toFixed(1) + '/100';
+        document.getElementById('sim-efficiency').textContent = '$' + efficiency;
+    }
+
+    // Recommendations
+    function initRecommendations() {
+        const recs = [
+            { title: '🎯 Enable Complexity-Based Routing', desc: 'Route simple queries (greeting, FAQ, short answers) to GPT-4o Mini. Only escalate complex reasoning tasks to primary model.', savings: '$142/mo', type: '' },
+            { title: '📦 Implement Response Caching', desc: 'Cache identical or near-identical queries. Analysis shows 18% of your queries have >90% semantic similarity to previous ones.', savings: '$76/mo', type: '' },
+            { title: '✂️ Enable Prompt Compression', desc: 'Reduce system prompt tokens by 40% using structured compression. Current prompts average 800 tokens; could be 480.', savings: '$52/mo', type: 'warning' },
+            { title: '🔄 Add Streaming with Early-Stop', desc: 'For tasks with quality thresholds, stop generation when confidence is sufficient instead of producing max tokens.', savings: '$28/mo', type: 'warning' },
+            { title: '📊 Batch Non-Urgent Tasks', desc: 'Queue low-priority analysis tasks and batch-process during off-peak hours for volume discounts.', savings: '$14/mo', type: '' }
+        ];
+        document.getElementById('recommendations').innerHTML = recs.map(r =>
+            `<div class="recommendation ${r.type}">
+                <div class="title">${r.title}</div>
+                <div class="desc">${r.desc}</div>
+                <div class="savings">Estimated savings: ${r.savings}</div>
+            </div>`
+        ).join('');
+    }
+
+    // Savings waterfall
+    function initWaterfall() {
+        const items = [
+            { label: 'Model Routing', savings: 142, color: 'var(--accent)' },
+            { label: 'Caching', savings: 76, color: 'var(--accent2)' },
+            { label: 'Compression', savings: 52, color: 'var(--accent4)' },
+            { label: 'Early-Stop', savings: 28, color: 'var(--accent3)' },
+            { label: 'Batching', savings: 14, color: '#9c27b0' }
+        ];
+        const max = items.reduce((s, i) => s + i.savings, 0);
+        let cumulative = 0;
+        document.getElementById('savings-waterfall').innerHTML = items.map(item => {
+            const left = (cumulative / max * 100);
+            const width = (item.savings / max * 100);
+            cumulative += item.savings;
+            return `<div class="waterfall-row">
+                <div class="waterfall-label">${item.label}</div>
+                <div class="waterfall-bar-container">
+                    <div class="waterfall-bar" style="left:${left}%;width:${width}%;background:${item.color}">$${item.savings}</div>
+                </div>
+            </div>`;
+        }).join('') + `<div class="waterfall-row">
+            <div class="waterfall-label" style="font-weight:600;color:var(--accent2)">Total</div>
+            <div class="waterfall-bar-container">
+                <div class="waterfall-bar" style="left:0;width:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0.3">$${max}/mo</div>
+            </div>
+        </div>`;
+    }
+
+    // Timeline
+    function initTimeline() {
+        const steps = [
+            { time: 'Week 1', text: 'Enable complexity-based routing for chat & FAQ tasks → immediate $142/mo savings' },
+            { time: 'Week 2', text: 'Deploy semantic cache layer for repeated queries → adds $76/mo savings' },
+            { time: 'Week 3', text: 'Implement prompt compression across all system prompts → adds $52/mo savings' },
+            { time: 'Week 4', text: 'Enable streaming early-stop for bounded tasks → adds $28/mo savings' },
+            { time: 'Week 5', text: 'Set up batch queue for overnight processing → adds $14/mo savings' },
+            { time: 'Week 6', text: 'Review metrics, fine-tune thresholds, measure actual savings vs predicted' }
+        ];
+        document.getElementById('timeline').innerHTML = steps.map(s =>
+            `<div class="timeline-item"><div class="time">${s.time}</div><div>${s.text}</div></div>`
+        ).join('');
+    }
+
+    // Forecaster
+    function runForecast() {
+        const growth = parseInt(document.getElementById('growth-rate').value) / 100;
+        const opts = document.getElementById('apply-opts').value;
+        const months = parseInt(document.getElementById('forecast-period').value);
+
+        const baseCost = 847;
+        const savingsMap = { none: 0, easy: 218, all: 312 };
+        const savings = savingsMap[opts];
+
+        const projected = [];
+        const labels = [];
+        const now = new Date();
+        for (let i = 0; i < months; i++) {
+            const month = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
+            labels.push(month.toLocaleDateString('en', { month: 'short' }));
+            const rawCost = baseCost * Math.pow(1 + growth, i);
+            const optimizedCost = Math.max(50, rawCost - savings * (1 + growth * i * 0.3));
+            projected.push(opts === 'none' ? rawCost : optimizedCost);
+        }
+
+        const max = Math.max(...projected);
+        const chart = document.getElementById('forecast-chart');
+        chart.innerHTML = projected.map((cost, i) => {
+            const h = (cost / max * 180);
+            const color = cost > 1000 ? 'var(--accent3)' : cost > 700 ? 'var(--accent4)' : 'var(--accent2)';
+            return `<div class="chart-bar" style="height:${h}px;background:${color}">
+                <span class="tooltip">${labels[i]}: $${cost.toFixed(0)}</span>
+            </div>`;
+        }).join('');
+
+        document.getElementById('forecast-labels').innerHTML =
+            `<span>${labels[0]}</span><span>${labels[Math.floor(months/2)]}</span><span>${labels[months-1]}</span>`;
+
+        const finalCost = projected[projected.length - 1];
+        const noOptCost = baseCost * Math.pow(1 + growth, months - 1);
+        const totalSaved = opts !== 'none' ? (noOptCost * months - projected.reduce((s,c) => s+c, 0)).toFixed(0) : 0;
+
+        document.getElementById('forecast-summary').innerHTML = `
+            <div class="metric-card" style="margin-bottom:1rem">
+                <div class="label">Projected Cost (Month ${months})</div>
+                <div class="value" style="color:${finalCost > 1000 ? 'var(--accent3)' : 'var(--accent2)'}">$${finalCost.toFixed(0)}</div>
+            </div>
+            <div class="metric-card" style="margin-bottom:1rem">
+                <div class="label">Without Optimization (Month ${months})</div>
+                <div class="value" style="color:var(--text2)">$${noOptCost.toFixed(0)}</div>
+            </div>
+            ${opts !== 'none' ? `<div class="metric-card">
+                <div class="label">Total Savings Over ${months} Months</div>
+                <div class="value" style="color:var(--accent2)">$${totalSaved}</div>
+            </div>` : '<p style="color:var(--text2);font-size:0.85rem;margin-top:1rem">Enable optimizations to see potential savings.</p>'}
+        `;
+    }
+
+    // Initialize all
+    initUsageChart();
+    initDailyChart();
+    initWaste();
+    initModelMatrix();
+    initRecommendations();
+    initWaterfall();
+    initTimeline();
+    </script>
+</body>
+</html>
