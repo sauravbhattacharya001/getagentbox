@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Development Guide - AgentBox Docs</title>
+    <meta name="description" content="How to create custom AgentBox landing page modules: architecture, lifecycle hooks, DOM conventions, accessibility requirements, and testing patterns.">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --bg-card: #1a1d28;
+            --bg-code: #252830;
+            --text: #e0e0e8;
+            --text-dim: #8b8fa0;
+            --accent: #4a9eff;
+            --accent-hover: #70b4ff;
+            --border: #2d3040;
+            --green: #4ade80;
+            --yellow: #facc15;
+            --red: #f87171;
+            --purple: #a78bfa;
+            --orange: #fb923c;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 3rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent-hover); text-decoration: underline; }
+        h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-dim); font-size: 1.1rem; margin-bottom: 2.5rem; }
+        h2 {
+            font-size: 1.5rem;
+            margin: 3rem 0 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+        h3 { font-size: 1.15rem; margin: 2rem 0 0.6rem; color: var(--accent); }
+        h4 { font-size: 1rem; margin: 1.5rem 0 0.5rem; color: var(--purple); }
+        p { margin-bottom: 1rem; color: var(--text-dim); }
+        ul, ol { margin: 0 0 1.2rem 1.5rem; color: var(--text-dim); }
+        li { margin-bottom: 0.4rem; }
+        code {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            background: var(--bg-code);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1rem 0 1.5rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        pre code { background: none; padding: 0; }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .card h4 { margin-top: 0; }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-required { background: rgba(248,113,113,0.15); color: var(--red); }
+        .badge-recommended { background: rgba(250,204,21,0.15); color: var(--yellow); }
+        .badge-optional { background: rgba(74,158,255,0.15); color: var(--accent); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0 1.5rem;
+            font-size: 0.9rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th { color: var(--text); font-weight: 600; }
+        td { color: var(--text-dim); }
+        .toc {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .toc h3 { margin: 0 0 0.8rem; font-size: 1rem; }
+        .toc ol { margin: 0; padding-left: 1.2rem; }
+        .toc li { margin-bottom: 0.3rem; font-size: 0.9rem; }
+        .warning {
+            background: rgba(250,204,21,0.08);
+            border-left: 3px solid var(--yellow);
+            padding: 1rem 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .warning strong { color: var(--yellow); }
+        .tip {
+            background: rgba(74,222,128,0.08);
+            border-left: 3px solid var(--green);
+            padding: 1rem 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .tip strong { color: var(--green); }
+        .breadcrumb {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+        }
+        .breadcrumb a { color: var(--text-dim); }
+        .breadcrumb a:hover { color: var(--accent); }
+        .file-tree {
+            font-family: 'SF Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+            color: var(--text-dim);
+        }
+        .file-tree .dir { color: var(--accent); }
+        .file-tree .file { color: var(--text); }
+        .file-tree .comment { color: var(--text-dim); font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="breadcrumb">
+        <a href="index.html">Docs</a> &rarr; Plugin Development Guide
+    </div>
+
+    <h1>Plugin Development Guide</h1>
+    <p class="subtitle">Create custom AgentBox modules that integrate seamlessly with the landing page architecture, follow accessibility standards, and pass CI.</p>
+
+    <div class="toc">
+        <h3>Contents</h3>
+        <ol>
+            <li><a href="#architecture">Module Architecture Overview</a></li>
+            <li><a href="#scaffold">Scaffolding a New Module</a></li>
+            <li><a href="#lifecycle">Lifecycle &amp; Initialization</a></li>
+            <li><a href="#dom">DOM Conventions &amp; Selectors</a></li>
+            <li><a href="#state">State Management</a></li>
+            <li><a href="#accessibility">Accessibility Requirements</a></li>
+            <li><a href="#theming">Theme Integration</a></li>
+            <li><a href="#testing">Testing Your Module</a></li>
+            <li><a href="#build">Build Integration</a></li>
+            <li><a href="#checklist">Pre-Merge Checklist</a></li>
+        </ol>
+    </div>
+
+    <h2 id="architecture">1. Module Architecture Overview</h2>
+
+    <p>AgentBox uses a <strong>zero-dependency, IIFE-based module system</strong>. Each module is a self-contained file under <code>src/modules/</code> that exposes its API via an immediately-invoked function expression (IIFE). Modules are concatenated by <code>build.js</code> into the final <code>dist/</code> bundle.</p>
+
+    <h3>Key Principles</h3>
+    <ul>
+        <li><strong>No external dependencies</strong> &mdash; everything is vanilla JS (ES5-compatible where possible)</li>
+        <li><strong>DOM-scoped initialization</strong> &mdash; modules bind to specific container selectors, never the full document</li>
+        <li><strong>Graceful degradation</strong> &mdash; modules must handle missing DOM elements without throwing</li>
+        <li><strong>Accessibility-first</strong> &mdash; ARIA attributes, keyboard navigation, and focus management are mandatory</li>
+        <li><strong>Theme-aware</strong> &mdash; use CSS custom properties from <code>:root</code>, never hardcoded colors</li>
+    </ul>
+
+    <h3>Directory Layout</h3>
+    <div class="file-tree">
+        <span class="dir">src/</span><br>
+        &nbsp;&nbsp;<span class="dir">modules/</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="file">your-module.js</span> <span class="comment">&larr; module implementation</span><br>
+        <span class="dir">__tests__/</span><br>
+        &nbsp;&nbsp;<span class="file">your-module.test.js</span> <span class="comment">&larr; Jest + jsdom tests</span><br>
+        <span class="file">index.html</span> <span class="comment">&larr; section markup for the module</span><br>
+        <span class="file">styles.css</span> <span class="comment">&larr; component styles</span><br>
+    </div>
+
+    <h2 id="scaffold">2. Scaffolding a New Module</h2>
+
+    <p>Every module follows the same IIFE pattern. Here&rsquo;s the canonical template:</p>
+
+    <pre><code>// ---------------------------------------------------------------------------
+// MyWidget Module
+// ---------------------------------------------------------------------------
+
+var MyWidget = (function () {
+  'use strict';
+
+  // ── Private state ──────────────────────────────────────────────
+  var _container = null;
+  var _state = { initialized: false };
+
+  // ── Private helpers ────────────────────────────────────────────
+  function _render() {
+    if (!_container) return;
+    // Build or update DOM content
+  }
+
+  function _handleClick(e) {
+    var target = e.target.closest('[data-mywidget-action]');
+    if (!target) return;
+    var action = target.getAttribute('data-mywidget-action');
+    // Handle actions...
+  }
+
+  function _handleKeydown(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      _handleClick(e);
+    }
+  }
+
+  // ── Public API ─────────────────────────────────────────────────
+  function init(containerSelector) {
+    _container = typeof containerSelector === 'string'
+      ? document.querySelector(containerSelector)
+      : containerSelector;
+    if (!_container) return; // graceful exit if section not on page
+
+    _container.addEventListener('click', _handleClick);
+    _container.addEventListener('keydown', _handleKeydown);
+    _state.initialized = true;
+    _render();
+  }
+
+  function destroy() {
+    if (!_container) return;
+    _container.removeEventListener('click', _handleClick);
+    _container.removeEventListener('keydown', _handleKeydown);
+    _container = null;
+    _state.initialized = false;
+  }
+
+  return {
+    init: init,
+    destroy: destroy
+  };
+})();</code></pre>
+
+    <div class="tip">
+        <strong>Tip:</strong> Always include a <code>destroy()</code> method. It&rsquo;s needed for testing (cleanup between test cases) and for SPA-like page transitions if the landing page ever gets client-side routing.
+    </div>
+
+    <h2 id="lifecycle">3. Lifecycle &amp; Initialization</h2>
+
+    <p>Modules are initialized from the page-level script block at the bottom of <code>index.html</code>. The standard boot sequence is:</p>
+
+    <pre><code>document.addEventListener('DOMContentLoaded', function () {
+  // Core modules (always present)
+  SiteNav.init();
+  ThemeToggle.init();
+
+  // Feature modules (initialize only if their section exists)
+  if (document.getElementById('faqSection')) FAQ.init('#faqSection');
+  if (document.getElementById('myWidgetSection')) MyWidget.init('#myWidgetSection');
+});</code></pre>
+
+    <h3>Initialization Contract</h3>
+    <table>
+        <tr><th>Rule</th><th>Rationale</th></tr>
+        <tr><td>Check container exists before binding</td><td>Not all pages include all sections</td></tr>
+        <tr><td>Never throw from <code>init()</code></td><td>One broken module must not block others</td></tr>
+        <tr><td>Use event delegation on container</td><td>Reduces listener count, handles dynamic content</td></tr>
+        <tr><td>Support both selector string and Element</td><td>Flexibility for testing and programmatic use</td></tr>
+    </table>
+
+    <h2 id="dom">4. DOM Conventions &amp; Selectors</h2>
+
+    <h3>Naming Conventions</h3>
+    <ul>
+        <li><strong>Section IDs:</strong> <code>camelCase</code> with <code>Section</code> suffix &mdash; <code>id="myWidgetSection"</code></li>
+        <li><strong>CSS classes:</strong> kebab-case with module prefix &mdash; <code>.my-widget-item</code>, <code>.my-widget-active</code></li>
+        <li><strong>Data attributes:</strong> <code>data-{module}-{purpose}</code> &mdash; <code>data-mywidget-action="toggle"</code></li>
+        <li><strong>ARIA:</strong> Use semantic roles + <code>aria-expanded</code>, <code>aria-controls</code>, <code>aria-live</code> as needed</li>
+    </ul>
+
+    <h3>Example Section Markup</h3>
+    <pre><code>&lt;section id="myWidgetSection" class="section" aria-labelledby="myWidgetHeading"&gt;
+  &lt;h2 id="myWidgetHeading"&gt;My Widget&lt;/h2&gt;
+  &lt;div class="my-widget-container"&gt;
+    &lt;button class="my-widget-btn"
+            data-mywidget-action="activate"
+            aria-expanded="false"
+            aria-controls="myWidgetPanel"&gt;
+      Open Widget
+    &lt;/button&gt;
+    &lt;div id="myWidgetPanel" class="my-widget-panel" role="region" hidden&gt;
+      &lt;!-- Dynamic content rendered by module --&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+
+    <div class="warning">
+        <strong>Never use <code>document.querySelectorAll</code> without scoping.</strong> Always query within the module&rsquo;s container element to avoid cross-module interference and improve performance on large pages.
+    </div>
+
+    <h2 id="state">5. State Management</h2>
+
+    <p>AgentBox modules use a simple closure-based state pattern. For modules that need persistence across page loads, use the shared <code>storage.js</code> utility:</p>
+
+    <pre><code>// Reading persisted state (uses localStorage with JSON serialization)
+var Storage = window.AgentBoxStorage || { get: function() { return null; }, set: function() {} };
+
+function init(container) {
+  _container = document.querySelector(container);
+  if (!_container) return;
+
+  // Restore previous state if available
+  var saved = Storage.get('mywidget-state');
+  if (saved) {
+    _state = Object.assign(_state, saved);
+    _render(); // Reflect restored state immediately
+  }
+}
+
+function _persist() {
+  Storage.set('mywidget-state', { activeTab: _state.activeTab });
+}</code></pre>
+
+    <h4>State Rules</h4>
+    <ul>
+        <li>Keep state minimal &mdash; only persist user preferences, not computed/transient values</li>
+        <li>Always validate restored state (schema may have changed between versions)</li>
+        <li>Use a unique storage key prefixed with your module name</li>
+        <li>Respect the user&rsquo;s <code>prefers-reduced-data</code> / cookie consent before writing to storage</li>
+    </ul>
+
+    <h2 id="accessibility">6. Accessibility Requirements</h2>
+    <p><span class="badge badge-required">Required</span> All modules must meet WCAG 2.1 AA. The CI pipeline runs automated checks.</p>
+
+    <h3>Mandatory Accessibility Features</h3>
+    <table>
+        <tr><th>Feature</th><th>Implementation</th></tr>
+        <tr><td>Keyboard navigation</td><td>All interactive elements reachable via Tab; actions triggered by Enter/Space</td></tr>
+        <tr><td>Focus management</td><td>Visible focus ring (<code>:focus-visible</code>); focus trapped in modals/overlays</td></tr>
+        <tr><td>ARIA states</td><td><code>aria-expanded</code>, <code>aria-selected</code>, <code>aria-hidden</code> updated on interaction</td></tr>
+        <tr><td>Screen reader announcements</td><td>Use <code>aria-live="polite"</code> for dynamic content updates</td></tr>
+        <tr><td>Reduced motion</td><td>Respect <code>prefers-reduced-motion: reduce</code> &mdash; disable animations</td></tr>
+        <tr><td>Color contrast</td><td>Minimum 4.5:1 for text, 3:1 for large text and UI elements</td></tr>
+    </table>
+
+    <h3>Reduced Motion Pattern</h3>
+    <pre><code>var _prefersReducedMotion = window.matchMedia
+  ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  : false;
+
+function _animate(el, property, from, to, duration) {
+  if (_prefersReducedMotion) {
+    // Skip animation, apply final state immediately
+    el.style[property] = to;
+    return;
+  }
+  // ... animation logic
+}</code></pre>
+
+    <h2 id="theming">7. Theme Integration</h2>
+
+    <p>AgentBox supports light and dark themes via CSS custom properties. The <code>ThemeToggle</code> module manages the <code>data-theme</code> attribute on <code>&lt;html&gt;</code>.</p>
+
+    <h3>Using Theme Variables in CSS</h3>
+    <pre><code>.my-widget-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.my-widget-panel .label {
+  color: var(--text-dim);
+}
+.my-widget-panel .highlight {
+  color: var(--accent);
+}</code></pre>
+
+    <h3>Available CSS Variables</h3>
+    <table>
+        <tr><th>Variable</th><th>Dark Value</th><th>Usage</th></tr>
+        <tr><td><code>--bg</code></td><td><code>#0f1117</code></td><td>Page background</td></tr>
+        <tr><td><code>--bg-card</code></td><td><code>#1a1d28</code></td><td>Card/panel surfaces</td></tr>
+        <tr><td><code>--bg-code</code></td><td><code>#252830</code></td><td>Code block backgrounds</td></tr>
+        <tr><td><code>--text</code></td><td><code>#e0e0e8</code></td><td>Primary text</td></tr>
+        <tr><td><code>--text-dim</code></td><td><code>#8b8fa0</code></td><td>Secondary/muted text</td></tr>
+        <tr><td><code>--accent</code></td><td><code>#4a9eff</code></td><td>Links, highlights, primary actions</td></tr>
+        <tr><td><code>--border</code></td><td><code>#2d3040</code></td><td>Borders and dividers</td></tr>
+        <tr><td><code>--green</code></td><td><code>#4ade80</code></td><td>Success states</td></tr>
+        <tr><td><code>--yellow</code></td><td><code>#facc15</code></td><td>Warning states</td></tr>
+        <tr><td><code>--red</code></td><td><code>#f87171</code></td><td>Error/danger states</td></tr>
+    </table>
+
+    <div class="tip">
+        <strong>Tip:</strong> Never use <code>color: white</code> or <code>background: #1a1d28</code> directly. Always reference the CSS variable so themes switch correctly.
+    </div>
+
+    <h2 id="testing">8. Testing Your Module</h2>
+
+    <p>Tests live in <code>__tests__/your-module.test.js</code> and run with <strong>Jest + jsdom</strong>. The test environment simulates a browser DOM.</p>
+
+    <h3>Test File Template</h3>
+    <pre><code>/**
+ * @jest-environment jsdom
+ */
+
+'use strict';
+
+describe('MyWidget', () =&gt; {
+  let container;
+
+  beforeEach(() =&gt; {
+    // Set up minimal DOM structure the module expects
+    document.body.innerHTML = `
+      &lt;section id="myWidgetSection"&gt;
+        &lt;button data-mywidget-action="toggle" aria-expanded="false"
+                aria-controls="panel1"&gt;Toggle&lt;/button&gt;
+        &lt;div id="panel1" class="my-widget-panel" hidden&gt;&lt;/div&gt;
+      &lt;/section&gt;
+    `;
+    container = document.getElementById('myWidgetSection');
+
+    // Load the module (IIFE assigns to global)
+    require('../src/modules/your-module.js');
+  });
+
+  afterEach(() =&gt; {
+    // Clean up to prevent test leakage
+    if (typeof MyWidget !== 'undefined' &amp;&amp; MyWidget.destroy) {
+      MyWidget.destroy();
+    }
+    document.body.innerHTML = '';
+  });
+
+  test('init does not throw when container is missing', () =&gt; {
+    expect(() =&gt; MyWidget.init('#nonexistent')).not.toThrow();
+  });
+
+  test('click toggles aria-expanded', () =&gt; {
+    MyWidget.init('#myWidgetSection');
+    const btn = container.querySelector('[data-mywidget-action]');
+    btn.click();
+    expect(btn.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  test('keyboard Enter triggers action', () =&gt; {
+    MyWidget.init('#myWidgetSection');
+    const btn = container.querySelector('[data-mywidget-action]');
+    const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    btn.dispatchEvent(event);
+    expect(btn.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  test('destroy removes event listeners', () =&gt; {
+    MyWidget.init('#myWidgetSection');
+    MyWidget.destroy();
+    const btn = container.querySelector('[data-mywidget-action]');
+    btn.click();
+    // Should remain unchanged after destroy
+    expect(btn.getAttribute('aria-expanded')).toBe('false');
+  });
+});</code></pre>
+
+    <h3>Running Tests</h3>
+    <pre><code># Run all tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run a single test file
+npx jest __tests__/your-module.test.js --verbose</code></pre>
+
+    <h3>What to Test</h3>
+    <ul>
+        <li><strong>Initialization:</strong> Handles missing containers, duplicate init calls</li>
+        <li><strong>User interaction:</strong> Click, keyboard (Enter, Space, Escape, Arrow keys)</li>
+        <li><strong>ARIA state:</strong> Attributes update correctly after interactions</li>
+        <li><strong>Edge cases:</strong> Empty data, single items, maximum items</li>
+        <li><strong>Cleanup:</strong> <code>destroy()</code> removes listeners and resets state</li>
+        <li><strong>Accessibility:</strong> Focus management, <code>aria-live</code> regions update</li>
+    </ul>
+
+    <h2 id="build">9. Build Integration</h2>
+
+    <p>The build system (<code>build.js</code>) concatenates modules into a single bundle. To include your module:</p>
+
+    <ol>
+        <li>Place your module file at <code>src/modules/your-module.js</code></li>
+        <li>Add the HTML section to <code>index.html</code> with the appropriate <code>id</code></li>
+        <li>Add component styles to <code>styles.css</code> (grouped by module)</li>
+        <li>Add initialization call to the <code>DOMContentLoaded</code> handler in <code>index.html</code></li>
+        <li>Run <code>npm run build</code> to verify the bundle generates cleanly</li>
+    </ol>
+
+    <h3>Build Verification</h3>
+    <pre><code># Build the bundle
+npm run build
+
+# Verify no syntax errors in the concatenated output
+node -c dist/agentbox.js
+
+# Run the full test suite
+npm test</code></pre>
+
+    <h2 id="checklist">10. Pre-Merge Checklist</h2>
+
+    <div class="card">
+        <h4>Before pushing a new module, verify:</h4>
+        <ul>
+            <li>☐ Module follows IIFE pattern with <code>init()</code> and <code>destroy()</code></li>
+            <li>☐ Graceful no-op when container element is absent</li>
+            <li>☐ Event delegation used (listeners on container, not individual elements)</li>
+            <li>☐ All interactive elements have keyboard support (Enter + Space)</li>
+            <li>☐ ARIA attributes present: <code>role</code>, <code>aria-expanded</code>, <code>aria-controls</code>, <code>aria-label</code> as needed</li>
+            <li>☐ Reduced motion respected (<code>prefers-reduced-motion</code> check)</li>
+            <li>☐ Only CSS custom properties used for colors (no hardcoded hex in JS)</li>
+            <li>☐ Test file created with &ge;80% branch coverage for the module</li>
+            <li>☐ <code>npm test</code> passes with no new warnings</li>
+            <li>☐ <code>npm run build</code> succeeds and <code>node -c dist/agentbox.js</code> passes</li>
+            <li>☐ HTML section includes <code>aria-labelledby</code> pointing to heading</li>
+            <li>☐ No <code>console.log</code> calls (use conditional debug logging if needed)</li>
+            <li>☐ CSP-compatible: no inline scripts, no <code>eval()</code>, no external resource loads</li>
+            <li>☐ Storage keys prefixed with module name to avoid collisions</li>
+        </ul>
+    </div>
+
+    <div class="tip">
+        <strong>Need help?</strong> See the <a href="component-catalog.html">Component Catalog</a> for live examples of existing modules, or check <a href="architecture.html">Architecture</a> for the build pipeline details.
+    </div>
+
+    <hr style="border: none; border-top: 1px solid var(--border); margin: 3rem 0 1.5rem;">
+    <p style="font-size: 0.85rem; color: var(--text-dim);">
+        <a href="index.html">&larr; Back to Docs</a> &nbsp;|&nbsp;
+        <a href="component-catalog.html">Component Catalog</a> &nbsp;|&nbsp;
+        <a href="getting-started.html">Getting Started</a> &nbsp;|&nbsp;
+        <a href="architecture.html">Architecture</a>
+    </p>
+</body>
+</html>
