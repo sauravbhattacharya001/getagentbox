@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Agent Calibration Lab</title>
+    <meta name="description" content="Interactive demo showing AI agent confidence calibration. Visualize reliability diagrams, Brier scores, overconfidence detection, and calibration adjustment in real-time.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --orange-bg: #e1705522;
+            --red: #d63031;
+            --red-bg: #d6303122;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .header {
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header a { color: var(--accent); text-decoration: none; font-size: 14px; }
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 32px;
+        }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+        .full-width { grid-column: 1 / -1; }
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+        .panel h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface-2);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+        .btn-primary:hover { background: var(--accent-light); }
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        canvas {
+            width: 100%;
+            height: 300px;
+            border-radius: var(--radius-sm);
+            background: var(--surface-2);
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .metric-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            text-align: center;
+        }
+        .metric-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .metric-card .label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        .prediction-feed {
+            max-height: 320px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .prediction-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+        }
+        .prediction-item .conf-bar {
+            width: 60px;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--surface-3);
+            position: relative;
+            overflow: hidden;
+        }
+        .prediction-item .conf-bar .fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .prediction-item .outcome {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+        .outcome-correct { background: var(--green-bg); color: var(--green); }
+        .outcome-wrong { background: var(--red-bg); color: var(--red); }
+        .calibration-gauge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .gauge-ring {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 12px solid var(--surface-3);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .gauge-ring .score { font-size: 36px; font-weight: 700; }
+        .gauge-ring .sub { font-size: 11px; color: var(--text-muted); }
+        .insight-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .insight-list li {
+            padding: 10px 12px;
+            background: var(--surface-2);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--accent);
+            font-size: 13px;
+        }
+        .insight-list li.warn { border-left-color: var(--orange); }
+        .insight-list li.danger { border-left-color: var(--red); }
+        .insight-list li.good { border-left-color: var(--green); }
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .tab {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+        }
+        .tab.active { background: var(--accent-bg); color: var(--accent); }
+        .slider-group { margin: 12px 0; }
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .slider-group input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← AgentBox</a>
+        <h1>🎯 Agent Calibration Lab</h1>
+    </div>
+
+    <div class="container">
+        <!-- Top controls -->
+        <div class="panel full-width">
+            <h2>⚙️ Simulation Controls</h2>
+            <div class="controls">
+                <button class="btn btn-primary" id="btn-run">▶ Run Simulation</button>
+                <button class="btn" id="btn-pause">⏸ Pause</button>
+                <button class="btn" id="btn-reset">↺ Reset</button>
+                <span style="border-left:1px solid var(--border);margin:0 8px"></span>
+                <button class="btn active" data-preset="overconfident">Overconfident Agent</button>
+                <button class="btn" data-preset="underconfident">Underconfident Agent</button>
+                <button class="btn" data-preset="wellcalibrated">Well-Calibrated</button>
+                <button class="btn" data-preset="random">Random Agent</button>
+                <button class="btn" data-preset="adaptive">Self-Correcting</button>
+            </div>
+            <div class="metric-grid">
+                <div class="metric-card"><div class="value" id="m-brier">—</div><div class="label">Brier Score</div></div>
+                <div class="metric-card"><div class="value" id="m-ece">—</div><div class="label">ECE</div></div>
+                <div class="metric-card"><div class="value" id="m-accuracy">—</div><div class="label">Accuracy</div></div>
+                <div class="metric-card"><div class="value" id="m-confidence">—</div><div class="label">Avg Confidence</div></div>
+                <div class="metric-card"><div class="value" id="m-overconf">—</div><div class="label">Overconf. Rate</div></div>
+                <div class="metric-card"><div class="value" id="m-predictions">0</div><div class="label">Predictions</div></div>
+            </div>
+        </div>
+
+        <!-- Reliability Diagram -->
+        <div class="panel">
+            <h2>📊 Reliability Diagram</h2>
+            <canvas id="reliability-canvas"></canvas>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:8px">Perfect calibration = diagonal line. Bars above = overconfident. Below = underconfident.</p>
+        </div>
+
+        <!-- Calibration Gauge & Insights -->
+        <div class="panel">
+            <h2>🎯 Calibration Score</h2>
+            <div class="calibration-gauge">
+                <div class="gauge-ring" id="gauge">
+                    <div class="score" id="gauge-score">—</div>
+                    <div class="sub">/ 100</div>
+                </div>
+            </div>
+            <h2 style="margin-top:16px">💡 Autonomous Insights</h2>
+            <ul class="insight-list" id="insights">
+                <li>Run a simulation to generate insights...</li>
+            </ul>
+        </div>
+
+        <!-- Prediction Feed -->
+        <div class="panel">
+            <h2>📡 Live Prediction Feed</h2>
+            <div class="prediction-feed" id="feed"></div>
+        </div>
+
+        <!-- Calibration Adjustment -->
+        <div class="panel">
+            <h2>🔧 Calibration Adjustment</h2>
+            <div class="tabs">
+                <button class="tab active" data-tab="platt">Platt Scaling</button>
+                <button class="tab" data-tab="isotonic">Isotonic Regression</button>
+                <button class="tab" data-tab="temperature">Temperature Scaling</button>
+            </div>
+            <div id="tab-platt">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Logistic regression recalibration. Learns A and B to map: calibrated = σ(A·logit + B)</p>
+                <div class="slider-group">
+                    <label><span>Temperature (A)</span><span id="platt-a-val">1.0</span></label>
+                    <input type="range" id="platt-a" min="0.1" max="3" step="0.1" value="1.0">
+                </div>
+                <div class="slider-group">
+                    <label><span>Bias (B)</span><span id="platt-b-val">0.0</span></label>
+                    <input type="range" id="platt-b" min="-2" max="2" step="0.1" value="0.0">
+                </div>
+                <button class="btn btn-primary" id="btn-apply-cal" style="margin-top:12px">Apply Calibration</button>
+                <button class="btn" id="btn-auto-cal" style="margin-top:12px">🤖 Auto-Calibrate</button>
+            </div>
+            <div id="tab-isotonic" class="hidden">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Non-parametric monotonic mapping from raw confidence to calibrated probability.</p>
+                <canvas id="isotonic-canvas" style="height:200px"></canvas>
+                <button class="btn btn-primary" id="btn-fit-isotonic" style="margin-top:12px">Fit Isotonic Model</button>
+            </div>
+            <div id="tab-temperature" class="hidden">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Single-parameter temperature scaling: softmax(logits / T)</p>
+                <div class="slider-group">
+                    <label><span>Temperature T</span><span id="temp-val">1.0</span></label>
+                    <input type="range" id="temp-slider" min="0.1" max="5" step="0.1" value="1.0">
+                </div>
+                <button class="btn btn-primary" id="btn-apply-temp" style="margin-top:12px">Apply Temperature</button>
+                <button class="btn" id="btn-optimize-temp" style="margin-top:12px">🤖 Optimize Temperature</button>
+            </div>
+        </div>
+
+        <!-- Confidence Distribution -->
+        <div class="panel full-width">
+            <h2>📈 Confidence Distribution & Brier Score Over Time</h2>
+            <canvas id="distribution-canvas" style="height:200px"></canvas>
+        </div>
+    </div>
+
+    <script src="src/calibration-lab.js"></script>
+</body>
+</html>
