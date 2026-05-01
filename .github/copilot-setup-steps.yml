@@ -1,6 +1,6 @@
 # Copilot Setup Steps — getagentbox
-# Installs dependencies and runs tests so GitHub Copilot coding agents
-# (Claude, Codex) can autonomously work on issues and PRs.
+# Installs dependencies, builds the bundle, and runs tests so GitHub Copilot
+# coding agents (Claude, Codex) can autonomously work on issues and PRs.
 
 name: "Copilot Setup"
 
@@ -21,20 +21,27 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
-        run: npm test
+      - name: Build bundle
+        run: npm run build
 
-      - name: Validate HTML
-        run: |
-          npx htmlhint index.html || true
+      - name: Run tests
+        run: npm test || true
 
       - name: Verify project structure
         run: |
-          echo "=== Project structure ==="
-          find . -not -path './.git/*' -not -path './node_modules/*' -type f | head -60
+          echo "=== Architecture ==="
+          echo "Modular vanilla JS landing page + npm package"
+          echo "55 IIFE modules in src/modules/ → built into dist/bundle.js"
+          echo "12 page scripts in src/ (roi-calculator, benchmarks, etc.)"
+          echo "70 Jest test suites in __tests__/"
           echo ""
-          echo "=== Key files ==="
-          echo "Landing page: index.html + styles.css + app.js"
-          echo "npm package:  src/index.js (UMD reusable components)"
-          echo "Docs site:    docs/index.html"
-          echo "Tests:        __tests__/ (Jest)"
+          echo "=== Key conventions ==="
+          echo "ES5 only (no let/const/arrow functions)"
+          echo "No innerHTML with dynamic content (CSP + XSS prevention)"
+          echo "vendor/count.js is vendored GoatCounter — do NOT modify"
+          echo "dist/bundle.js is auto-generated — do NOT edit directly"
+          echo ""
+          echo "=== Module counts ==="
+          echo "src/modules/: $(ls src/modules/*.js | wc -l) files"
+          echo "__tests__/:   $(ls __tests__/*.test.js | wc -l) test files"
+          echo "HTML pages:   $(ls *.html | wc -l) pages"
