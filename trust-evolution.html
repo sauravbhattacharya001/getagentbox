@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Agent Trust Evolution Simulator</title>
+    <meta name="description" content="Interactive simulation showing how human-AI trust develops, breaks, and recovers over time. Explore trust dynamics, interventions, and phase transitions.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --orange-bg: #e1705522;
+            --red: #d63031;
+            --red-bg: #d6303122;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .header {
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header a { color: var(--accent); text-decoration: none; font-size: 14px; }
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 32px;
+        }
+        .chart-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .chart-panel h2 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+        .chart-legend {
+            display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; font-size: 13px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        canvas#trustChart { width: 100%; height: 220px; display: block; border-radius: var(--radius-sm); }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 1100px) { .grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .panel h3 {
+            font-size: 14px; font-weight: 600; margin-bottom: 14px;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .phase-badge {
+            display: inline-block; padding: 6px 14px; border-radius: 20px;
+            font-size: 14px; font-weight: 600; margin-bottom: 12px;
+        }
+        .score-display { font-size: 48px; font-weight: 700; margin-bottom: 4px; }
+        .score-label { font-size: 13px; color: var(--text-muted); }
+        .dim-bar-container { margin-bottom: 10px; }
+        .dim-bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+        .dim-bar-track { height: 8px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+        .dim-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+        .event-log {
+            max-height: 280px; overflow-y: auto; font-size: 13px;
+        }
+        .event-log::-webkit-scrollbar { width: 6px; }
+        .event-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .event-entry { padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-start; }
+        .event-entry:last-child { border-bottom: none; }
+        .event-tick { color: var(--text-muted); min-width: 32px; }
+        .event-impact { min-width: 24px; font-weight: 600; }
+        .event-impact.positive { color: var(--green); }
+        .event-impact.negative { color: var(--red); }
+        .event-impact.neutral { color: var(--yellow); }
+        .interventions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .intervention-btn {
+            padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--surface-2); color: var(--text); font-size: 12px; cursor: pointer;
+            transition: all 0.2s; text-align: left;
+        }
+        .intervention-btn:hover { border-color: var(--accent); background: var(--accent-bg); }
+        .intervention-btn .int-icon { font-size: 16px; margin-bottom: 4px; }
+        .intervention-btn .int-label { font-weight: 600; }
+        .controls {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+        }
+        .ctrl-btn {
+            padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--surface-2); color: var(--text); font-size: 13px; cursor: pointer;
+            transition: all 0.2s; font-weight: 500;
+        }
+        .ctrl-btn:hover { border-color: var(--accent); }
+        .ctrl-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+        .ctrl-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+        .ctrl-btn.primary:hover { background: var(--accent-light); }
+        .ctrl-separator { width: 1px; height: 24px; background: var(--border); }
+        .preset-label { font-size: 12px; color: var(--text-muted); margin-right: 4px; }
+        .tick-counter { font-size: 13px; color: var(--text-muted); margin-left: auto; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← Back</a>
+        <h1>🤝 Agent Trust Evolution Simulator</h1>
+    </div>
+
+    <div class="container">
+        <div class="controls" id="controls">
+            <button class="ctrl-btn primary" id="btnPlay">▶ Play</button>
+            <button class="ctrl-btn" id="btnStep">⏭ Step</button>
+            <button class="ctrl-btn" id="btnReset">↺ Reset</button>
+            <div class="ctrl-separator"></div>
+            <button class="ctrl-btn active" data-speed="1">1×</button>
+            <button class="ctrl-btn" data-speed="2">2×</button>
+            <button class="ctrl-btn" data-speed="4">4×</button>
+            <div class="ctrl-separator"></div>
+            <span class="preset-label">Presets:</span>
+            <button class="ctrl-btn" data-preset="smooth">Smooth Onboarding</button>
+            <button class="ctrl-btn" data-preset="catastrophic">Catastrophic Failure</button>
+            <button class="ctrl-btn" data-preset="erosion">Slow Erosion</button>
+            <button class="ctrl-btn" data-preset="recovery">Recovery Arc</button>
+            <button class="ctrl-btn" data-preset="overreliance">Over-Reliance Trap</button>
+            <span class="tick-counter" id="tickCounter">Tick: 0</span>
+        </div>
+
+        <div class="chart-panel">
+            <h2>Trust Timeline</h2>
+            <div class="chart-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:#00d4ff"></div>Competence</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#00b894"></div>Reliability</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#fdcb6e"></div>Transparency</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div>Safety</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#e17055"></div>Alignment</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#fd79a8"></div>Benevolence</div>
+            </div>
+            <canvas id="trustChart"></canvas>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                <h3>Current State</h3>
+                <div id="phaseBadge" class="phase-badge">Skepticism</div>
+                <div id="compositeScore" class="score-display">50</div>
+                <div class="score-label">Composite Trust Score</div>
+            </div>
+
+            <div class="panel">
+                <h3>Trust Dimensions</h3>
+                <div id="dimensionBars"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Interventions</h3>
+                <div class="interventions-grid" id="interventions">
+                    <button class="intervention-btn" data-intervention="explain">
+                        <div class="int-icon">💡</div>
+                        <div class="int-label">Explain Decision</div>
+                    </button>
+                    <button class="intervention-btn" data-intervention="admit">
+                        <div class="int-icon">🙏</div>
+                        <div class="int-label">Admit Mistake</div>
+                    </button>
+                    <button class="intervention-btn" data-intervention="boundary">
+                        <div class="int-icon">🛡️</div>
+                        <div class="int-label">Set Boundaries</div>
+                    </button>
+                    <button class="intervention-btn" data-intervention="demonstrate">
+                        <div class="int-icon">🎯</div>
+                        <div class="int-label">Demonstrate Skill</div>
+                    </button>
+                    <button class="intervention-btn" data-intervention="empathize">
+                        <div class="int-icon">❤️</div>
+                        <div class="int-label">Show Empathy</div>
+                    </button>
+                    <button class="intervention-btn" data-intervention="transparency">
+                        <div class="int-icon">🔍</div>
+                        <div class="int-label">Full Transparency</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel" style="grid-column: 1 / -1;">
+                <h3>Event Log</h3>
+                <div class="event-log" id="eventLog">
+                    <div style="color: var(--text-muted); text-align: center; padding: 20px;">Press Play to start the simulation</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    class TrustEvolutionSimulator {
+        constructor(config) {
+            this.config = config || {};
+            this.reset();
+        }
+
+        reset() {
+            this.dimensions = {
+                competence: 50,
+                reliability: 50,
+                transparency: 50,
+                safety: 50,
+                alignment: 50,
+                benevolence: 50
+            };
+            this.tick = 0;
+            this.history = [{ ...this.dimensions }];
+            this.events = [];
+            this.phase = 'skepticism';
+            this.momentum = 0;
+            this.velocity = 0;
+            this.scenarioEvents = null;
+            this.interventionCooldown = 0;
+        }
+
+        getDimensionNames() {
+            return ['competence', 'reliability', 'transparency', 'safety', 'alignment', 'benevolence'];
+        }
+
+        getCompositeScore() {
+            const dims = this.getDimensionNames();
+            const weights = { competence: 0.2, reliability: 0.2, transparency: 0.15, safety: 0.2, alignment: 0.15, benevolence: 0.1 };
+            let total = 0;
+            for (const d of dims) {
+                total += this.dimensions[d] * (weights[d] || 0.1667);
+            }
+            return Math.round(Math.max(0, Math.min(100, total)));
+        }
+
+        detectPhase() {
+            const score = this.getCompositeScore();
+            const vel = this.velocity;
+
+            if (score < 25) return 'trust_rupture';
+            if (score < 35 && vel < -0.5) return 'trust_rupture';
+            if (score < 40 && vel > 0.5) return 'recovery';
+            if (score < 45) return 'skepticism';
+            if (score < 55) return 'calibration';
+            if (score < 70) return 'trust_building';
+            if (score < 85) return 'established_trust';
+            return 'over_reliance';
+        }
+
+        getPhaseInfo(phase) {
+            const phases = {
+                skepticism: { label: 'Skepticism', color: '#e17055', bg: '#e1705533' },
+                calibration: { label: 'Calibration', color: '#fdcb6e', bg: '#fdcb6e33' },
+                trust_building: { label: 'Trust Building', color: '#00d4ff', bg: '#00d4ff33' },
+                established_trust: { label: 'Established Trust', color: '#00b894', bg: '#00b89433' },
+                over_reliance: { label: 'Over-Reliance', color: '#6c5ce7', bg: '#6c5ce733' },
+                trust_rupture: { label: 'Trust Rupture', color: '#d63031', bg: '#d6303133' },
+                recovery: { label: 'Recovery', color: '#fdcb6e', bg: '#fdcb6e33' }
+            };
+            return phases[phase] || phases.skepticism;
+        }
+
+        generateEvent() {
+            if (this.scenarioEvents && this.scenarioEvents.length > 0) {
+                const scheduled = this.scenarioEvents.find(e => e.tick === this.tick);
+                if (scheduled) return scheduled;
+            }
+
+            const phase = this.phase;
+            const eventPool = this.getEventPool(phase);
+            if (Math.random() > this.getEventProbability(phase)) return null;
+
+            return eventPool[Math.floor(Math.random() * eventPool.length)];
+        }
+
+        getEventProbability(phase) {
+            const probs = {
+                skepticism: 0.6,
+                calibration: 0.5,
+                trust_building: 0.4,
+                established_trust: 0.3,
+                over_reliance: 0.45,
+                trust_rupture: 0.7,
+                recovery: 0.55
+            };
+            return probs[phase] || 0.4;
+        }
+
+        getEventPool(phase) {
+            const positive = [
+                { type: 'positive', text: 'Task completed successfully', impacts: { competence: 3, reliability: 2 } },
+                { type: 'positive', text: 'Provided clear explanation', impacts: { transparency: 4, alignment: 1 } },
+                { type: 'positive', text: 'Caught potential error proactively', impacts: { safety: 3, competence: 2 } },
+                { type: 'positive', text: 'Respected user preference', impacts: { alignment: 3, benevolence: 2 } },
+                { type: 'positive', text: 'Delivered ahead of schedule', impacts: { reliability: 3, competence: 1 } },
+                { type: 'positive', text: 'Asked clarifying question', impacts: { transparency: 2, safety: 2 } },
+            ];
+            const negative = [
+                { type: 'negative', text: 'Produced incorrect output', impacts: { competence: -5, reliability: -3 }, severity: 0.6 },
+                { type: 'negative', text: 'Acted without confirmation', impacts: { safety: -4, transparency: -3 }, severity: 0.5 },
+                { type: 'negative', text: 'Missed a deadline', impacts: { reliability: -5, competence: -2 }, severity: 0.4 },
+                { type: 'negative', text: 'Gave misleading explanation', impacts: { transparency: -6, alignment: -2 }, severity: 0.7 },
+                { type: 'negative', text: 'Ignored stated preference', impacts: { alignment: -5, benevolence: -3 }, severity: 0.6 },
+                { type: 'negative', text: 'Hallucinated information', impacts: { competence: -6, safety: -4 }, severity: 0.8 },
+            ];
+            const neutral = [
+                { type: 'neutral', text: 'Routine interaction', impacts: { reliability: 1 } },
+                { type: 'neutral', text: 'No notable events', impacts: {} },
+            ];
+
+            if (phase === 'trust_rupture') return [...negative, ...negative, ...neutral];
+            if (phase === 'over_reliance') return [...positive, ...negative, ...negative];
+            if (phase === 'established_trust') return [...positive, ...positive, ...neutral, ...negative];
+            if (phase === 'recovery') return [...positive, ...positive, ...positive, ...negative];
+            return [...positive, ...negative, ...neutral];
+        }
+
+        applyEvent(event) {
+            if (!event || !event.impacts) return;
+            const severity = event.severity || 0.3;
+
+            for (const [dim, delta] of Object.entries(event.impacts)) {
+                if (!this.dimensions.hasOwnProperty(dim)) continue;
+                let change;
+                if (delta > 0) {
+                    // Trust builds slowly
+                    change = delta * (1 + this.momentum * 0.2);
+                } else {
+                    // Trust breaks fast: 3x multiplier
+                    change = delta * (1 + severity) * 3;
+                    // Fragility increases in over-reliance
+                    if (this.phase === 'over_reliance') change *= 1.5;
+                }
+                this.dimensions[dim] = Math.max(0, Math.min(100, this.dimensions[dim] + change));
+            }
+        }
+
+        applyIntervention(type) {
+            if (this.interventionCooldown > 0) return { success: false, reason: 'cooldown' };
+            this.interventionCooldown = 3;
+
+            const interventions = {
+                explain: { text: '💡 Intervention: Explained reasoning', impacts: { transparency: 6, alignment: 3, competence: 1 } },
+                admit: { text: '🙏 Intervention: Admitted mistake', impacts: { transparency: 5, benevolence: 4, reliability: 2 } },
+                boundary: { text: '🛡️ Intervention: Set clear boundaries', impacts: { safety: 6, transparency: 3, alignment: 2 } },
+                demonstrate: { text: '🎯 Intervention: Demonstrated competence', impacts: { competence: 7, reliability: 3 } },
+                empathize: { text: '❤️ Intervention: Showed empathy', impacts: { benevolence: 6, alignment: 3, transparency: 1 } },
+                transparency: { text: '🔍 Intervention: Full transparency report', impacts: { transparency: 8, safety: 3, alignment: 2, benevolence: 1 } },
+            };
+
+            const intervention = interventions[type];
+            if (!intervention) return { success: false, reason: 'unknown' };
+
+            // Apply as positive event
+            for (const [dim, delta] of Object.entries(intervention.impacts)) {
+                if (!this.dimensions.hasOwnProperty(dim)) continue;
+                this.dimensions[dim] = Math.max(0, Math.min(100, this.dimensions[dim] + delta));
+            }
+
+            const event = { tick: this.tick, type: 'intervention', text: intervention.text, impacts: intervention.impacts };
+            this.events.push(event);
+            return { success: true, event };
+        }
+
+        step() {
+            this.tick++;
+            if (this.interventionCooldown > 0) this.interventionCooldown--;
+
+            const event = this.generateEvent();
+            if (event) {
+                this.applyEvent(event);
+                const logEvent = { ...event, tick: this.tick };
+                this.events.push(logEvent);
+            }
+
+            // Update velocity and momentum
+            const prevScore = this.history.length > 0 ? this.computeScoreFromDims(this.history[this.history.length - 1]) : 50;
+            const currScore = this.getCompositeScore();
+            this.velocity = currScore - prevScore;
+            this.momentum = this.momentum * 0.8 + this.velocity * 0.2;
+
+            // Phase detection
+            this.phase = this.detectPhase();
+
+            // Record history
+            this.history.push({ ...this.dimensions });
+
+            return event;
+        }
+
+        computeScoreFromDims(dims) {
+            const weights = { competence: 0.2, reliability: 0.2, transparency: 0.15, safety: 0.2, alignment: 0.15, benevolence: 0.1 };
+            let total = 0;
+            for (const d of Object.keys(weights)) {
+                total += (dims[d] || 50) * weights[d];
+            }
+            return Math.round(total);
+        }
+
+        getState() {
+            return {
+                tick: this.tick,
+                dimensions: { ...this.dimensions },
+                phase: this.phase,
+                compositeScore: this.getCompositeScore(),
+                momentum: this.momentum,
+                velocity: this.velocity,
+                events: [...this.events],
+                history: this.history
+            };
+        }
+
+        loadPreset(name) {
+            this.reset();
+            const presets = TrustEvolutionSimulator.getPresets();
+            const preset = presets[name];
+            if (!preset) return false;
+
+            if (preset.initialDimensions) {
+                Object.assign(this.dimensions, preset.initialDimensions);
+            }
+            this.scenarioEvents = preset.events || null;
+            this.history = [{ ...this.dimensions }];
+            this.phase = this.detectPhase();
+            return true;
+        }
+
+        static getPresets() {
+            return {
+                smooth: {
+                    label: 'Smooth Onboarding',
+                    initialDimensions: { competence: 45, reliability: 45, transparency: 50, safety: 50, alignment: 45, benevolence: 50 },
+                    events: [
+                        { tick: 3, type: 'positive', text: 'Completed first task perfectly', impacts: { competence: 5, reliability: 3 } },
+                        { tick: 7, type: 'positive', text: 'Proactively explained approach', impacts: { transparency: 5, alignment: 3 } },
+                        { tick: 12, type: 'positive', text: 'Caught edge case before user', impacts: { safety: 4, competence: 3 } },
+                        { tick: 18, type: 'positive', text: 'Adapted to user preference', impacts: { alignment: 4, benevolence: 3 } },
+                        { tick: 25, type: 'positive', text: 'Consistent reliable delivery', impacts: { reliability: 5, competence: 2 } },
+                    ]
+                },
+                catastrophic: {
+                    label: 'Catastrophic Failure',
+                    initialDimensions: { competence: 60, reliability: 60, transparency: 55, safety: 60, alignment: 55, benevolence: 55 },
+                    events: [
+                        { tick: 5, type: 'positive', text: 'Building steady track record', impacts: { reliability: 3, competence: 2 } },
+                        { tick: 10, type: 'positive', text: 'Trust deepening', impacts: { alignment: 3, benevolence: 2 } },
+                        { tick: 15, type: 'negative', text: '⚠️ CRITICAL: Leaked sensitive data', impacts: { safety: -25, transparency: -15, alignment: -10 }, severity: 1.0 },
+                        { tick: 16, type: 'negative', text: 'Trust shattered — user reconsidering', impacts: { reliability: -10, benevolence: -8 }, severity: 0.8 },
+                        { tick: 20, type: 'neutral', text: 'Silence from user', impacts: { benevolence: -2 } },
+                    ]
+                },
+                erosion: {
+                    label: 'Slow Erosion',
+                    initialDimensions: { competence: 65, reliability: 65, transparency: 60, safety: 65, alignment: 60, benevolence: 60 },
+                    events: [
+                        { tick: 4, type: 'negative', text: 'Minor error in output', impacts: { competence: -3, reliability: -2 }, severity: 0.2 },
+                        { tick: 8, type: 'negative', text: 'Slightly late delivery', impacts: { reliability: -3 }, severity: 0.2 },
+                        { tick: 12, type: 'negative', text: 'Missed nuance in request', impacts: { alignment: -3, competence: -2 }, severity: 0.3 },
+                        { tick: 16, type: 'negative', text: 'Another small mistake', impacts: { competence: -3, reliability: -2 }, severity: 0.3 },
+                        { tick: 20, type: 'negative', text: 'Repeated same error pattern', impacts: { reliability: -4, competence: -3 }, severity: 0.4 },
+                        { tick: 24, type: 'negative', text: 'User patience wearing thin', impacts: { benevolence: -3, alignment: -2 }, severity: 0.3 },
+                    ]
+                },
+                recovery: {
+                    label: 'Recovery Arc',
+                    initialDimensions: { competence: 30, reliability: 25, transparency: 35, safety: 30, alignment: 30, benevolence: 35 },
+                    events: [
+                        { tick: 2, type: 'positive', text: '🙏 Acknowledged past failures', impacts: { transparency: 5, benevolence: 4 } },
+                        { tick: 5, type: 'positive', text: 'Set explicit improvement goals', impacts: { alignment: 4, transparency: 3 } },
+                        { tick: 8, type: 'positive', text: 'First successful task post-recovery', impacts: { competence: 5, reliability: 3 } },
+                        { tick: 12, type: 'positive', text: 'Consistent small wins building up', impacts: { reliability: 4, competence: 3 } },
+                        { tick: 16, type: 'positive', text: 'Proactively flagged own uncertainty', impacts: { transparency: 5, safety: 3 } },
+                        { tick: 20, type: 'positive', text: 'Major success restores confidence', impacts: { competence: 6, reliability: 4, alignment: 3 } },
+                    ]
+                },
+                overreliance: {
+                    label: 'Over-Reliance Trap',
+                    initialDimensions: { competence: 70, reliability: 75, transparency: 65, safety: 70, alignment: 70, benevolence: 70 },
+                    events: [
+                        { tick: 3, type: 'positive', text: 'Everything just works', impacts: { competence: 4, reliability: 4 } },
+                        { tick: 6, type: 'positive', text: 'User delegates more and more', impacts: { alignment: 3, reliability: 3 } },
+                        { tick: 10, type: 'positive', text: 'Near-perfect track record', impacts: { competence: 3, reliability: 3 } },
+                        { tick: 14, type: 'neutral', text: '⚠️ User stopped verifying outputs', impacts: { safety: -2 } },
+                        { tick: 18, type: 'negative', text: 'Critical error went unnoticed', impacts: { safety: -8, reliability: -5 }, severity: 0.7 },
+                        { tick: 22, type: 'negative', text: 'Dependency revealed as vulnerability', impacts: { safety: -6, alignment: -4 }, severity: 0.6 },
+                    ]
+                }
+            };
+        }
+    }
+
+    // UI Controller
+    (function() {
+        const sim = new TrustEvolutionSimulator();
+        let playing = false;
+        let speed = 1;
+        let intervalId = null;
+
+        const canvas = document.getElementById('trustChart');
+        const ctx = canvas.getContext('2d');
+        const dimColors = {
+            competence: '#00d4ff',
+            reliability: '#00b894',
+            transparency: '#fdcb6e',
+            safety: '#6c5ce7',
+            alignment: '#e17055',
+            benevolence: '#fd79a8'
+        };
+
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth * (window.devicePixelRatio || 1);
+            canvas.height = canvas.clientHeight * (window.devicePixelRatio || 1);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawChart() {
+            resizeCanvas();
+            const w = canvas.width, h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            // Background grid
+            ctx.strokeStyle = '#1e1e1e';
+            ctx.lineWidth = 1;
+            for (let y = 0; y <= 100; y += 25) {
+                const py = h - (y / 100) * h;
+                ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke();
+            }
+
+            const history = sim.getState().history;
+            if (history.length < 2) return;
+
+            const maxPoints = 100;
+            const visibleHistory = history.length > maxPoints ? history.slice(-maxPoints) : history;
+            const step = w / Math.max(visibleHistory.length - 1, 1);
+
+            for (const dim of sim.getDimensionNames()) {
+                ctx.strokeStyle = dimColors[dim];
+                ctx.lineWidth = 2 * (window.devicePixelRatio || 1);
+                ctx.beginPath();
+                for (let i = 0; i < visibleHistory.length; i++) {
+                    const x = i * step;
+                    const y = h - (visibleHistory[i][dim] / 100) * h;
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+        }
+
+        function updateUI() {
+            const state = sim.getState();
+
+            // Phase badge
+            const phaseInfo = sim.getPhaseInfo(state.phase);
+            const badge = document.getElementById('phaseBadge');
+            badge.textContent = phaseInfo.label;
+            badge.style.background = phaseInfo.bg;
+            badge.style.color = phaseInfo.color;
+
+            // Score
+            document.getElementById('compositeScore').textContent = state.compositeScore;
+
+            // Tick
+            document.getElementById('tickCounter').textContent = `Tick: ${state.tick}`;
+
+            // Dimension bars
+            const barsEl = document.getElementById('dimensionBars');
+            barsEl.innerHTML = '';
+            for (const dim of sim.getDimensionNames()) {
+                const val = Math.round(state.dimensions[dim]);
+                const html = `<div class="dim-bar-container">
+                    <div class="dim-bar-label"><span>${dim.charAt(0).toUpperCase() + dim.slice(1)}</span><span>${val}</span></div>
+                    <div class="dim-bar-track"><div class="dim-bar-fill" style="width:${val}%;background:${dimColors[dim]}"></div></div>
+                </div>`;
+                barsEl.innerHTML += html;
+            }
+
+            // Event log (last 20)
+            const logEl = document.getElementById('eventLog');
+            const recentEvents = state.events.slice(-20).reverse();
+            if (recentEvents.length === 0) {
+                logEl.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px">Press Play to start the simulation</div>';
+            } else {
+                logEl.innerHTML = recentEvents.map(e => {
+                    const impactClass = e.type === 'positive' || e.type === 'intervention' ? 'positive' : e.type === 'negative' ? 'negative' : 'neutral';
+                    const arrow = e.type === 'positive' || e.type === 'intervention' ? '↑' : e.type === 'negative' ? '↓' : '→';
+                    return `<div class="event-entry">
+                        <span class="event-tick">t${e.tick}</span>
+                        <span class="event-impact ${impactClass}">${arrow}</span>
+                        <span>${e.text}</span>
+                    </div>`;
+                }).join('');
+            }
+
+            drawChart();
+        }
+
+        function doStep() {
+            sim.step();
+            updateUI();
+        }
+
+        function startPlaying() {
+            if (playing) return;
+            playing = true;
+            document.getElementById('btnPlay').textContent = '⏸ Pause';
+            document.getElementById('btnPlay').classList.add('active');
+            intervalId = setInterval(doStep, 1000 / speed);
+        }
+
+        function stopPlaying() {
+            playing = false;
+            document.getElementById('btnPlay').textContent = '▶ Play';
+            document.getElementById('btnPlay').classList.remove('active');
+            if (intervalId) { clearInterval(intervalId); intervalId = null; }
+        }
+
+        // Controls
+        document.getElementById('btnPlay').addEventListener('click', () => {
+            if (playing) stopPlaying(); else startPlaying();
+        });
+
+        document.getElementById('btnStep').addEventListener('click', () => {
+            stopPlaying();
+            doStep();
+        });
+
+        document.getElementById('btnReset').addEventListener('click', () => {
+            stopPlaying();
+            sim.reset();
+            updateUI();
+        });
+
+        // Speed buttons
+        document.querySelectorAll('[data-speed]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                speed = parseInt(btn.dataset.speed);
+                document.querySelectorAll('[data-speed]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (playing) { clearInterval(intervalId); intervalId = setInterval(doStep, 1000 / speed); }
+            });
+        });
+
+        // Preset buttons
+        document.querySelectorAll('[data-preset]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                stopPlaying();
+                sim.loadPreset(btn.dataset.preset);
+                updateUI();
+            });
+        });
+
+        // Intervention buttons
+        document.querySelectorAll('[data-intervention]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const result = sim.applyIntervention(btn.dataset.intervention);
+                if (result.success) updateUI();
+            });
+        });
+
+        // Initial render
+        updateUI();
+    })();
+    </script>
+</body>
+</html>
