@@ -37,27 +37,58 @@ npx serve .
 
 ```
 getagentbox/
-├── index.html              # Main landing page
-├── styles.css              # All styles (responsive, dark theme, CSS vars)
-├── app.js                  # 21 interactive modules (~2,300 lines)
+├── index.html                  # Main landing page
+├── styles.css                  # All styles (responsive, dark theme, CSS vars)
+├── build.js                    # Bundle build script (concatenates modules)
+├── cookie-consent.js           # Cookie consent banner
 ├── src/
-│   └── index.js            # npm package — reusable FAQ, Pricing, Stats (UMD)
+│   ├── index.js                # npm package — reusable FAQ, Pricing, Stats (UMD)
+│   ├── roi-calculator.js       # ROI calculator (separate npm export)
+│   ├── modules/                # 55+ interactive module IIFEs
+│   │   ├── globals.js          # Shared constants and state
+│   │   ├── dom-utils.js        # Safe DOM manipulation utilities
+│   │   ├── storage.js          # localStorage abstraction layer
+│   │   ├── init.js             # Module initialization orchestrator
+│   │   ├── chat-demo.js        # Live chat simulation demo
+│   │   ├── pricing.js          # Pricing toggle and comparison
+│   │   ├── faq.js              # FAQ accordion
+│   │   ├── stats.js            # Animated statistics counters
+│   │   ├── pipeline-builder.js # Visual pipeline constructor
+│   │   ├── playground.js       # Interactive API playground
+│   │   └── ...                 # 45+ more modules (see build.js for full list)
+│   ├── benchmarks.js           # Performance benchmark charts
+│   ├── capability-radar.js     # Capability radar visualization
+│   ├── command-reference.js    # CLI command reference
+│   ├── migration-guide.js      # Migration wizard
+│   ├── role-demo-picker.js     # Role-based demo selector
+│   ├── setup-checklist.js      # Interactive setup checklist
+│   └── workflow-builder.js     # Visual workflow builder
+├── dist/
+│   └── bundle.js               # Auto-generated bundle (DO NOT edit directly)
 ├── vendor/
-│   └── count.js            # Vendored GoatCounter analytics (DO NOT modify)
-├── __tests__/              # 50+ Jest + jsdom test suites
-│   ├── index.test.js       # Core app.js module tests
-│   ├── lib.test.js         # npm package tests
-│   └── *.test.js           # Per-feature tests (sitenav, status, trust, etc.)
-├── docs/                   # Developer documentation site
-├── Dockerfile              # Multi-stage nginx production container
-├── SECURITY.md             # CSP policy, security headers, XSS prevention
-├── CHANGELOG.md            # Release history
+│   └── count.js                # Vendored GoatCounter analytics (DO NOT modify)
+├── __tests__/                  # 70+ Jest + jsdom test suites
+│   ├── index.test.js           # Core module integration tests
+│   ├── lib.test.js             # npm package tests
+│   └── *.test.js               # Per-feature tests (one per module)
+├── docs/                       # Developer documentation site
+├── Dockerfile                  # Multi-stage nginx production container
+├── SECURITY.md                 # CSP policy, security headers, XSS prevention
+├── CHANGELOG.md                # Release history
 └── .github/
-    ├── workflows/          # CI, Pages, Docker, CodeQL, npm publish, etc.
+    ├── workflows/              # CI, Pages, Docker, CodeQL, npm publish, etc.
     ├── dependabot.yml
-    ├── copilot-instructions.md   # AI agent coding context
+    ├── copilot-instructions.md # AI agent coding context
     └── copilot-setup-steps.yml
 ```
+
+### Module Architecture
+
+The codebase uses a modular IIFE architecture in `src/modules/`. Each module is a self-contained file that exposes a global object with `init()` and `reset()` methods. The build script (`build.js`) concatenates them in dependency order into `dist/bundle.js`.
+
+**Load order matters:** `storage.js` → `dom-utils.js` → `globals.js` → all feature modules → `init.js` (orchestrator). See `build.js` for the exact concatenation order.
+
+**Top-level `src/` files** (outside `modules/`) are page-specific scripts loaded directly by individual HTML pages (e.g., `workflow-builder.js` is used by `workflow-builder.html`).
 
 ## Tech Stack
 
@@ -73,8 +104,9 @@ getagentbox/
 ### Code Style
 
 - **ES5 JavaScript only** — no ES6+ syntax for broad browser compatibility
-- Modules are global IIFEs in `app.js`:
+- Modules are individual files in `src/modules/`, each a global IIFE:
   ```javascript
+  /* exported MyModule */
   var MyModule = (function () {
       function init() { /* DOM setup */ }
       function reset() { /* cleanup for tests */ }
@@ -82,6 +114,8 @@ getagentbox/
   })();
   ```
 - Use `/* exported ... */` JSHint comments for global module declarations
+- Module initialization order is controlled by `build.js` — respect dependency chains
+- `src/modules/dom-utils.js` provides safe DOM helpers — use them instead of raw `document.createElement`
 - CSS uses a single `styles.css` with section-based organization and CSS custom properties
 - Use semantic HTML with ARIA attributes for accessibility
 - Check `prefersReducedMotion` before adding animations (WCAG 2.3.3)
@@ -114,22 +148,27 @@ npm run test:coverage
 
 # Run a specific test file
 npx jest __tests__/feedback.test.js
+
+# Build the bundle (after adding/modifying modules)
+npm run build
 ```
 
 **Test conventions:**
 - Tests use jsdom environment (configured in `jest.config.js`)
-- Each feature has its own test file in `__tests__/`
+- Each feature has its own test file in `__tests__/` (70+ test suites)
 - DOM elements are set up in `beforeEach`
-- Functions from `app.js` are re-evaluated in test scope (jsdom can't `require` browser globals)
+- Module globals from `src/modules/` are loaded via `eval(fs.readFileSync(...))` in test scope since jsdom can't `require` browser globals
 - Test behavior, not implementation — meaningful assertions over brittle structural checks
+- When testing a module, also load its dependencies (storage.js, dom-utils.js, globals.js)
 - Note: Jest exit code may be 1 even when all tests pass (pre-existing config quirk)
 
 ### Adding a New Module
 
 1. Add the HTML section in `index.html`
 2. Add styles in `styles.css` (follow section-based organization, use CSS variables)
-3. Create an IIFE module in `app.js`:
+3. Create a new file `src/modules/my-module.js` with an IIFE:
    ```javascript
+   /* exported MyModule */
    var MyModule = (function () {
        function init() {
            var container = document.getElementById('my-module');
@@ -144,9 +183,13 @@ npx jest __tests__/feedback.test.js
        return { init: init, reset: reset };
    })();
    ```
-4. Call `MyModule.init()` in the second `DOMContentLoaded` block (around line ~2292)
-5. Add tests in `__tests__/my-module.test.js`
-6. Update README if the section adds user-facing features
+4. Register the module in `build.js` — add its path to the `files` array (before `init.js`)
+5. Add `MyModule.init()` call in `src/modules/init.js`
+6. Rebuild the bundle: `npm run build`
+7. Add tests in `__tests__/my-module.test.js`
+8. Update README if the section adds user-facing features
+
+**Page-specific scripts** (not part of the main bundle): If your module is only used by a standalone HTML page, place it in `src/` (not `src/modules/`) and load it with a `<script>` tag in that page. Add it to `build.js` after the `init.js` entry if it should also be part of the bundle.
 
 ### Responsive Design
 
@@ -178,10 +221,12 @@ npx serve . -l 3000
 # Option 2: Python
 python3 -m http.server 3000
 
-# Option 3: Build the minified version
-npm run build
-# This runs build.js which processes src/ into dist/
+# Option 3: Build the minified bundle and serve
+npm run build    # Concatenates src/modules/* → dist/bundle.js
+npx serve . -l 3000
 ```
+
+**Development vs Production:** During development, `index.html` loads individual module files from `src/modules/` via `<script>` tags (no bundle needed). In production, the bundled `dist/bundle.js` is used for performance. The build script preserves module load order from `build.js`.
 
 ### Docker Development
 
@@ -197,20 +242,23 @@ The Dockerfile uses multi-stage builds: stage 1 runs `npm test`, stage 2 copies 
 
 ### npm Package Development
 
-The `src/` directory contains the reusable npm package (FAQ accordion, pricing toggle, animated stats). To test changes to the package:
+The `src/index.js` and `src/roi-calculator.js` are the reusable npm package exports (FAQ accordion, pricing toggle, animated stats, ROI calculator). To test changes to the package:
 
 ```bash
 # Run package-specific tests
 npx jest __tests__/lib.test.js
 
-# Test the UMD bundle locally
+# Test the UMD module locally
 node -e "var m = require('./src/index.js'); console.log(Object.keys(m));"
+
+# Test the ROI calculator export
+node -e "var roi = require('./src/roi-calculator.js'); console.log(typeof roi);"
 
 # Dry-run publish to check what gets included
 npm pack --dry-run
 ```
 
-The `"files"` field in `package.json` limits the published package to `src/` and `LICENSE` only — HTML pages and tests are excluded.
+The `"files"` field in `package.json` limits the published package to `src/` and `LICENSE` only — HTML pages, tests, and `dist/` are excluded. The package supports both CommonJS `require()` and the `"exports"` map for subpath imports.
 
 ## Release Process
 
