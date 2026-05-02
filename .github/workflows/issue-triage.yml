@@ -1,0 +1,156 @@
+name: Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Triage issue by content
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const title = (issue.title || '').toLowerCase();
+            const body = (issue.body || '').toLowerCase();
+            const text = `${title} ${body}`;
+
+            const labelsToAdd = new Set();
+
+            // ── Category detection ────────────────────────────────
+            if (/\bbug\b|broken|crash|error|fail|not working|regression|exception/.test(text)) {
+              labelsToAdd.add('bug');
+            }
+            if (/\bfeature\b|enhancement|request|add support|would be nice|proposal/.test(text)) {
+              labelsToAdd.add('enhancement');
+            }
+            if (/\bdoc(s|umentation)?\b|readme|typo|spelling|example|tutorial/.test(text)) {
+              labelsToAdd.add('documentation');
+            }
+            if (/\bperformance\b|slow|latency|memory|optimize|speed|bottleneck/.test(text)) {
+              labelsToAdd.add('performance');
+            }
+            if (/\bsecurity\b|vulnerab|cve|xss|injection|exploit|csrf|auth/.test(text)) {
+              labelsToAdd.add('security');
+            }
+            if (/\btest(s|ing)?\b|coverage|jest|spec|assertion/.test(text)) {
+              labelsToAdd.add('tests');
+            }
+            if (/\bci\b|workflow|action|deploy|pipeline|build|docker/.test(text)) {
+              labelsToAdd.add('ci/cd');
+            }
+            if (/\baccessib(le|ility)\b|aria|screen.reader|wcag|a11y/.test(text)) {
+              labelsToAdd.add('accessibility');
+            }
+
+            // ── Component detection ───────────────────────────────
+            // Core modules
+            if (/\bchat.demo\b|chat|conversation|message/.test(text)) {
+              labelsToAdd.add('area:chat');
+            }
+            if (/\bcommand.palette\b|command|cheat.sheet|cli/.test(text)) {
+              labelsToAdd.add('area:commands');
+            }
+            if (/\bcalculator\b|roi|cost|pricing|estimat/.test(text)) {
+              labelsToAdd.add('area:calculator');
+            }
+            if (/\bworkflow\b|builder|pipeline|automation/.test(text)) {
+              labelsToAdd.add('area:workflow');
+            }
+            if (/\bapi\b|endpoint|rest|graphql|explorer/.test(text)) {
+              labelsToAdd.add('area:api');
+            }
+            if (/\bdashboard\b|metric|monitor|analytics|telemetry/.test(text)) {
+              labelsToAdd.add('area:dashboard');
+            }
+            if (/\bintegrat(e|ion)\b|plugin|extension|marketplace/.test(text)) {
+              labelsToAdd.add('area:integrations');
+            }
+            if (/\bcalibrat(e|ion)\b|benchmark|capability|radar/.test(text)) {
+              labelsToAdd.add('area:calibration');
+            }
+            if (/\bmigrat(e|ion)\b|upgrade|version|breaking.change/.test(text)) {
+              labelsToAdd.add('area:migration');
+            }
+            if (/\bonboard(ing)?\b|setup|install|getting.started/.test(text)) {
+              labelsToAdd.add('area:onboarding');
+            }
+
+            // ── Priority heuristics ───────────────────────────────
+            if (/\burgent\b|critical|blocker|production|p0|sev.?[01]/.test(text)) {
+              labelsToAdd.add('priority:critical');
+            } else if (/\bhigh.priority\b|important|p1|sev.?2/.test(text)) {
+              labelsToAdd.add('priority:high');
+            }
+
+            // ── Issue template detection ──────────────────────────
+            if (/### steps to reproduce|### expected behavior|### actual behavior/.test(body)) {
+              labelsToAdd.add('has-repro');
+            }
+
+            if (labelsToAdd.size === 0) {
+              labelsToAdd.add('needs-triage');
+            }
+
+            // ── Ensure labels exist, then apply ───────────────────
+            const labelColors = {
+              'bug': 'd73a4a',
+              'enhancement': 'a2eeef',
+              'documentation': '0075ca',
+              'performance': 'fbca04',
+              'security': 'e11d48',
+              'tests': '1d76db',
+              'ci/cd': '5319e7',
+              'accessibility': '7057ff',
+              'area:chat': 'c5def5',
+              'area:commands': 'c5def5',
+              'area:calculator': 'c5def5',
+              'area:workflow': 'c5def5',
+              'area:api': 'c5def5',
+              'area:dashboard': 'c5def5',
+              'area:integrations': 'c5def5',
+              'area:calibration': 'c5def5',
+              'area:migration': 'c5def5',
+              'area:onboarding': 'c5def5',
+              'priority:critical': 'b60205',
+              'priority:high': 'ff9f1c',
+              'has-repro': '0e8a16',
+              'needs-triage': 'ededed',
+            };
+
+            const existingLabels = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+            const existingNames = new Set(existingLabels.data.map(l => l.name));
+
+            for (const label of labelsToAdd) {
+              if (!existingNames.has(label)) {
+                try {
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: label,
+                    color: labelColors[label] || 'ededed',
+                  });
+                } catch (e) {
+                  if (e.status !== 422) throw e; // 422 = already exists (race)
+                }
+              }
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              labels: [...labelsToAdd],
+            });
+
+            console.log(`Applied labels: ${[...labelsToAdd].join(', ')}`);
