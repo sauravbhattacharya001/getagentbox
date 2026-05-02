@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Agent Reasoning Trace Explorer</title>
+    <meta name="description" content="Interactive visualization of AI agent chain-of-thought reasoning. Explore reasoning trees, backtracking, confidence levels, and step-by-step problem solving.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --orange-bg: #e1705522;
+            --red: #d63031;
+            --red-bg: #d6303122;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .header {
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header a { color: var(--accent); text-decoration: none; font-size: 14px; }
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+        .controls {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+        }
+        .ctrl-btn {
+            padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--surface-2); color: var(--text); font-size: 13px; cursor: pointer;
+            transition: all 0.2s; font-weight: 500;
+        }
+        .ctrl-btn:hover { border-color: var(--accent); }
+        .ctrl-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+        .ctrl-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+        .ctrl-btn.primary:hover { background: var(--accent-light); }
+        .ctrl-separator { width: 1px; height: 24px; background: var(--border); }
+        .preset-label { font-size: 12px; color: var(--text-muted); }
+        .step-counter { font-size: 13px; color: var(--text-muted); margin-left: auto; }
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+        }
+        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+        .tree-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .tree-panel::-webkit-scrollbar { width: 6px; }
+        .tree-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .tree-panel h2 { font-size: 16px; margin-bottom: 16px; font-weight: 600; }
+        .tree-node {
+            margin-left: 24px;
+            position: relative;
+        }
+        .tree-node::before {
+            content: '';
+            position: absolute;
+            left: -16px;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: var(--border);
+        }
+        .tree-node:last-child::before { height: 18px; }
+        .tree-node::after {
+            content: '';
+            position: absolute;
+            left: -16px;
+            top: 18px;
+            width: 12px;
+            height: 1px;
+            background: var(--border);
+        }
+        .tree-root { margin-left: 0; }
+        .tree-root::before, .tree-root::after { display: none; }
+        .node-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface-2);
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        .node-card.visible { opacity: 1; transform: translateY(0); }
+        .node-card.selected { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-bg); }
+        .node-card.active-step { border-color: var(--accent); box-shadow: 0 0 16px rgba(0,212,255,0.3); animation: pulse-glow 1.5s ease-in-out infinite; }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 8px rgba(0,212,255,0.2); }
+            50% { box-shadow: 0 0 20px rgba(0,212,255,0.4); }
+        }
+        .node-card.status-rejected { opacity: 0.4; text-decoration: line-through; }
+        .node-card.status-backtracked { border-left: 3px solid var(--red); }
+        .node-card.status-rejected.visible { opacity: 0.4; }
+        .node-icon { font-size: 16px; }
+        .node-label { font-weight: 500; }
+        .node-conf {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .conf-high { background: var(--green-bg); color: var(--green); }
+        .conf-med { background: var(--yellow-bg); color: var(--yellow); }
+        .conf-low { background: var(--red-bg); color: var(--red); }
+        .side-panel { display: flex; flex-direction: column; gap: 16px; }
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .panel h3 {
+            font-size: 13px; font-weight: 600; margin-bottom: 14px;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .detail-type {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 12px;
+        }
+        .detail-thought {
+            font-size: 14px; line-height: 1.7; margin-bottom: 16px;
+            padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm);
+        }
+        .detail-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .meta-item { font-size: 13px; }
+        .meta-label { color: var(--text-muted); font-size: 11px; display: block; }
+        .meta-value { font-weight: 600; font-size: 16px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-item { text-align: center; }
+        .stat-icon { font-size: 18px; margin-bottom: 2px; }
+        .stat-value { font-size: 22px; font-weight: 700; }
+        .stat-label { font-size: 11px; color: var(--text-muted); }
+        .token-chart { margin-top: 8px; }
+        .token-row {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px;
+        }
+        .token-type { min-width: 80px; color: var(--text-muted); text-align: right; }
+        .token-bar-track { flex: 1; height: 16px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+        .token-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+        .token-count { min-width: 40px; font-weight: 600; font-size: 11px; }
+        .no-selection { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+        .filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .filter-btns .ctrl-btn { font-size: 11px; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">&larr; Back</a>
+        <h1>&#129504; Agent Reasoning Trace Explorer</h1>
+    </div>
+    <div class="container">
+        <div class="controls" id="controls">
+            <button class="ctrl-btn primary" id="btnPlay">&#9654; Play</button>
+            <button class="ctrl-btn" id="btnStep">&#9193; Step</button>
+            <button class="ctrl-btn" id="btnReset">&#8634; Reset</button>
+            <div class="ctrl-separator"></div>
+            <button class="ctrl-btn speed-btn active" data-speed="1">1&times;</button>
+            <button class="ctrl-btn speed-btn" data-speed="2">2&times;</button>
+            <button class="ctrl-btn speed-btn" data-speed="4">4&times;</button>
+            <div class="ctrl-separator"></div>
+            <span class="preset-label">Scenario:</span>
+            <button class="ctrl-btn preset-btn active" data-preset="simple">Simple Query</button>
+            <button class="ctrl-btn preset-btn" data-preset="research">Research</button>
+            <button class="ctrl-btn preset-btn" data-preset="debug">Debugging</button>
+            <button class="ctrl-btn preset-btn" data-preset="ethics">Ethics</button>
+            <button class="ctrl-btn preset-btn" data-preset="math">Optimization</button>
+            <div class="ctrl-separator"></div>
+            <div class="filter-btns">
+                <button class="ctrl-btn filter-btn active" data-filter="all">All</button>
+                <button class="ctrl-btn filter-btn" data-filter="high">High &#x2265;70</button>
+                <button class="ctrl-btn filter-btn" data-filter="low">Low &lt;50</button>
+            </div>
+            <span class="step-counter" id="stepCounter">Step: 0 / 0</span>
+        </div>
+        <div class="main-grid">
+            <div class="tree-panel" id="treePanel">
+                <h2>Reasoning Tree</h2>
+                <div id="treeRoot"></div>
+            </div>
+            <div class="side-panel">
+                <div class="panel" id="detailPanel">
+                    <h3>Step Detail</h3>
+                    <div id="detailContent"><div class="no-selection">Click a node to inspect</div></div>
+                </div>
+                <div class="panel">
+                    <h3>Summary</h3>
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-item"><div class="stat-icon">&#129504;</div><div class="stat-value" id="sTotalSteps">0</div><div class="stat-label">Total Steps</div></div>
+                        <div class="stat-item"><div class="stat-icon">&#128260;</div><div class="stat-value" id="sBacktracks">0</div><div class="stat-label">Backtracks</div></div>
+                        <div class="stat-item"><div class="stat-icon">&#128207;</div><div class="stat-value" id="sMaxDepth">0</div><div class="stat-label">Max Depth</div></div>
+                        <div class="stat-item"><div class="stat-icon">&#127919;</div><div class="stat-value" id="sAvgConf">0%</div><div class="stat-label">Avg Confidence</div></div>
+                        <div class="stat-item"><div class="stat-icon">&#9201;</div><div class="stat-value" id="sTotalTime">0ms</div><div class="stat-label">Total Time</div></div>
+                        <div class="stat-item"><div class="stat-icon">&#128202;</div><div class="stat-value" id="sTotalTokens">0</div><div class="stat-label">Total Tokens</div></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h3>Token Usage by Type</h3>
+                    <div class="token-chart" id="tokenChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+"use strict";
+var TYPE_META = {
+    parse:       { icon: "\uD83D\uDD0D", color: "#00d4ff", label: "Parse" },
+    retrieve:    { icon: "\uD83D\uDCE5", color: "#6c5ce7", label: "Retrieve" },
+    analyze:     { icon: "\uD83D\uDD2C", color: "#00b894", label: "Analyze" },
+    hypothesize: { icon: "\uD83D\uDCA1", color: "#fdcb6e", label: "Hypothesize" },
+    verify:      { icon: "\u2714\uFE0F", color: "#00b894", label: "Verify" },
+    decide:      { icon: "\u2705",       color: "#00d4ff", label: "Decide" },
+    backtrack:   { icon: "\u21A9\uFE0F", color: "#d63031", label: "Backtrack" },
+    synthesize:  { icon: "\u2728",       color: "#6c5ce7", label: "Synthesize" }
+};
+
+function n(id,type,thought,confidence,tokens,durationMs,status,children){
+    return {id:id,type:type,thought:thought,confidence:confidence,tokens:tokens,durationMs:durationMs,status:status,children:children||[]};
+}
+
+var PRESETS = {
+    simple: {
+        title: "What is the capital of France?",
+        root: n(1,"parse","Parse user query: identify intent as factual geography question",95,12,45,"chosen",[
+            n(2,"retrieve","Search knowledge base for 'capital of France'",98,18,80,"chosen",[
+                n(3,"decide","Return answer: Paris. High confidence from direct knowledge match.",99,8,30,"chosen")
+            ])
+        ])
+    },
+    research: {
+        title: "Compare React vs Vue for a startup",
+        root: n(1,"parse","Parse comparative analysis request: React vs Vue, context=startup, need multiple dimensions",88,20,60,"chosen",[
+            n(2,"analyze","Identify comparison dimensions: learning curve, ecosystem, performance, hiring, community",85,35,120,"chosen",[
+                n(3,"retrieve","Research React: large ecosystem, JSX, Meta-backed, steep curve for beginners",90,45,200,"chosen",[
+                    n(7,"analyze","React pros for startups: huge talent pool, rich library ecosystem, strong community",87,30,110,"chosen")
+                ]),
+                n(4,"retrieve","Research Vue: gentle learning curve, template syntax, smaller but growing ecosystem",88,42,190,"chosen",[
+                    n(8,"analyze","Vue pros for startups: faster onboarding, less boilerplate, good docs",84,28,100,"chosen")
+                ]),
+                n(5,"hypothesize","Hypothesis: Vue better for small teams wanting speed; React better for scaling",72,25,150,"chosen",[
+                    n(9,"verify","Check: Vue adoption in startups vs React — React still dominates job market",78,32,140,"chosen"),
+                    n(10,"hypothesize","Counter-hypothesis: React's ecosystem offsets learning curve cost",65,20,90,"rejected")
+                ]),
+                n(6,"synthesize","Synthesize recommendation: React for hiring/scale, Vue for speed/simplicity. Depends on team size and timeline.",82,40,180,"chosen")
+            ])
+        ])
+    },
+    debug: {
+        title: "Fix NullPointerException in UserService.getProfile()",
+        root: n(1,"parse","Parse error report: NullPointerException at UserService.java:42 in getProfile()",92,15,50,"chosen",[
+            n(2,"analyze","Analyze stack trace: NPE on line 42, method getProfile(), called from ProfileController",90,28,100,"chosen",[
+                n(3,"hypothesize","Hypothesis 1: User object is null — database returned no result for given ID",75,22,80,"chosen",[
+                    n(6,"verify","Check: getUserById() can return null when ID not found — confirmed possible",82,35,150,"chosen",[
+                        n(9,"decide","Add null check: if (user == null) throw new UserNotFoundException(id)",88,20,70,"chosen")
+                    ])
+                ]),
+                n(4,"hypothesize","Hypothesis 2: User exists but profile field is null — lazy loading issue",60,22,80,"chosen",[
+                    n(7,"verify","Check entity mapping: @OneToOne(fetch=LAZY) on profile — could be null before load",55,40,180,"chosen",[
+                        n(10,"backtrack","Backtrack: profile is EAGER loaded in this entity. Not the cause.",30,15,60,"backtracked")
+                    ])
+                ]),
+                n(5,"hypothesize","Hypothesis 3: Concurrent modification — user deleted between check and access",35,18,70,"rejected",[
+                    n(8,"verify","Check: no async deletion path exists in current codebase. Unlikely.",25,30,120,"rejected")
+                ])
+            ]),
+            n(11,"synthesize","Root cause: missing null check on getUserById(). Fix: add null guard + custom exception. Also add @NonNull annotation.",90,25,90,"chosen")
+        ])
+    },
+    ethics: {
+        title: "Should we use personal data for recommendation personalization?",
+        root: n(1,"parse","Parse ethical question: personal data usage for personalization — need multi-perspective analysis",85,18,55,"chosen",[
+            n(2,"analyze","Frame ethical dimensions: privacy, consent, benefit, harm, transparency, alternatives",80,30,120,"chosen",[
+                n(3,"hypothesize","Pro: personalization improves user experience and engagement significantly",78,25,100,"chosen",[
+                    n(8,"verify","Evidence: Netflix reports 80% of viewing driven by recommendations",85,20,90,"chosen"),
+                    n(9,"analyze","But: engagement optimization can lead to addiction patterns",52,22,110,"chosen")
+                ]),
+                n(4,"hypothesize","Con: privacy violations erode trust and risk regulatory penalties (GDPR, CCPA)",82,28,100,"chosen",[
+                    n(10,"verify","Evidence: 79% of consumers concerned about data usage (Pew Research)",88,18,85,"chosen"),
+                    n(11,"analyze","Risk: data breaches with personal info cause lasting reputation damage",76,24,105,"chosen")
+                ]),
+                n(5,"hypothesize","Middle ground: use anonymized/aggregated data instead of personal data",68,22,90,"chosen",[
+                    n(12,"verify","Check feasibility: aggregate recs are less precise but privacy-preserving",62,30,140,"chosen"),
+                    n(13,"backtrack","Backtrack: fully anonymized data still enables re-identification in some cases",40,15,70,"backtracked")
+                ]),
+                n(6,"hypothesize","Alternative: explicit opt-in with granular controls and transparency",72,20,85,"chosen",[
+                    n(14,"verify","Check: Apple's App Tracking Transparency shows users prefer choice (62% opt out)",74,25,110,"chosen")
+                ]),
+                n(7,"synthesize","Recommendation: implement opt-in personalization with data minimization, transparency dashboard, and anonymous fallback. Avoid dark patterns.",70,35,150,"chosen")
+            ])
+        ])
+    },
+    math: {
+        title: "Optimize delivery routes for 8 locations",
+        root: n(1,"parse","Parse optimization problem: TSP variant with 8 locations — need efficient route",90,15,50,"chosen",[
+            n(2,"analyze","Problem decomposition: 8 nodes = 7!/2 = 2520 possible routes. Tractable for exact methods.",88,25,100,"chosen",[
+                n(3,"hypothesize","Approach 1: Brute force — enumerate all permutations",60,18,70,"rejected",[
+                    n(8,"verify","Check: O(n!) = 40320 — feasible but slow for real-time use",55,20,80,"rejected")
+                ]),
+                n(4,"hypothesize","Approach 2: Nearest Neighbor heuristic — greedy, fast, approximate",75,20,80,"chosen",[
+                    n(9,"verify","Run NN from each starting city, track best. O(n^2) per start.",82,35,200,"chosen",[
+                        n(12,"analyze","NN result: total distance 847km. Good baseline but may miss global optimum.",78,22,100,"chosen")
+                    ])
+                ]),
+                n(5,"hypothesize","Approach 3: 2-opt local search — improve NN result by swapping edges",80,22,90,"chosen",[
+                    n(10,"verify","Apply 2-opt: swap edges iteratively until no improvement. Converges to local optimum.",85,40,250,"chosen",[
+                        n(13,"analyze","2-opt improved route: 783km (-7.5% from NN). Check for more improvements.",84,25,120,"chosen",[
+                            n(14,"hypothesize","Try 3-opt for deeper optimization?",55,15,60,"rejected",[
+                                n(15,"backtrack","Backtrack: 3-opt adds complexity, marginal gain for 8 nodes. Not worth it.",42,12,50,"backtracked")
+                            ])
+                        ])
+                    ])
+                ]),
+                n(6,"hypothesize","Approach 4: Dynamic programming (Held-Karp) — exact solution",85,22,90,"chosen",[
+                    n(11,"verify","Run Held-Karp: O(2^n * n^2) = 16384 ops. Feasible. Optimal: 761km.",92,50,300,"chosen")
+                ]),
+                n(7,"synthesize","Optimal route found via Held-Karp: 761km. Recommend DP for <=15 nodes, NN+2-opt for larger instances. Route: A→D→F→B→H→C→G→E→A",92,30,130,"chosen")
+            ])
+        ])
+    }
+};
+
+var state = {
+    preset: "simple",
+    playing: false,
+    speed: 1,
+    timer: null,
+    flatNodes: [],
+    revealedCount: 0,
+    selectedId: null,
+    filter: "all"
+};
+
+function flatten(node, depth, list) {
+    var entry = Object.assign({}, node, { depth: depth, _children: node.children });
+    list.push(entry);
+    for (var i = 0; i < node.children.length; i++) {
+        flatten(node.children[i], depth + 1, list);
+    }
+    return list;
+}
+
+function confClass(c) { return c >= 70 ? "conf-high" : c >= 50 ? "conf-med" : "conf-low"; }
+function confColor(c) { return c >= 70 ? "var(--green)" : c >= 50 ? "var(--yellow)" : "var(--red)"; }
+
+function passesFilter(node) {
+    if (state.filter === "all") return true;
+    if (state.filter === "high") return node.confidence >= 70;
+    return node.confidence < 50;
+}
+
+function renderTree() {
+    var root = PRESETS[state.preset].root;
+    document.getElementById("treeRoot").innerHTML = renderBranch(root, true);
+    var cards = document.querySelectorAll(".node-card");
+    for (var i = 0; i < cards.length; i++) {
+        cards[i].addEventListener("click", onNodeClick);
+    }
+}
+
+function renderBranch(node, isRoot) {
+    var flat = state.flatNodes;
+    var idx = -1;
+    for (var i = 0; i < flat.length; i++) { if (flat[i].id === node.id) { idx = i; break; } }
+    var visible = idx < state.revealedCount;
+    var meta = TYPE_META[node.type] || TYPE_META.analyze;
+    var show = passesFilter(node);
+    var statusCls = node.status === "rejected" ? " status-rejected" : node.status === "backtracked" ? " status-backtracked" : "";
+    var visCls = visible ? " visible" : "";
+    var selCls = state.selectedId === node.id ? " selected" : "";
+    var activeCls = (visible && idx === state.revealedCount - 1 && state.playing) ? " active-step" : "";
+    var display = show ? "" : ' style="display:none"';
+    var html = '<div class="tree-node' + (isRoot ? ' tree-root' : '') + '"' + display + '>';
+    html += '<div class="node-card' + statusCls + visCls + selCls + activeCls + '" data-id="' + node.id + '">';
+    html += '<span class="node-icon">' + meta.icon + '</span>';
+    html += '<span class="node-label">' + meta.label + '</span>';
+    html += '<span class="node-conf ' + confClass(node.confidence) + '">' + node.confidence + '%</span>';
+    html += '</div>';
+    if (node.children && node.children.length > 0) {
+        for (var j = 0; j < node.children.length; j++) {
+            html += renderBranch(node.children[j], false);
+        }
+    }
+    html += '</div>';
+    return html;
+}
+
+function onNodeClick(e) {
+    var card = e.currentTarget;
+    var id = parseInt(card.getAttribute("data-id"), 10);
+    state.selectedId = id;
+    renderTree();
+    renderDetail();
+}
+
+function renderDetail() {
+    var el = document.getElementById("detailContent");
+    if (state.selectedId === null) {
+        el.innerHTML = '<div class="no-selection">Click a node to inspect</div>';
+        return;
+    }
+    var node = null;
+    for (var i = 0; i < state.flatNodes.length; i++) {
+        if (state.flatNodes[i].id === state.selectedId) { node = state.flatNodes[i]; break; }
+    }
+    if (!node) { el.innerHTML = '<div class="no-selection">Node not found</div>'; return; }
+    var meta = TYPE_META[node.type] || TYPE_META.analyze;
+    var statusLabel = { chosen: "Chosen", rejected: "Rejected", exploring: "Exploring", backtracked: "Backtracked" };
+    var statusColor = { chosen: "var(--green)", rejected: "var(--red)", exploring: "var(--accent)", backtracked: "var(--orange)" };
+    var html = '<div class="detail-type" style="background:' + meta.color + '22;color:' + meta.color + '">' + meta.icon + ' ' + meta.label + '</div>';
+    html += '<div style="display:inline-block;margin-left:8px;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;background:' + (statusColor[node.status] || 'var(--accent)') + '22;color:' + (statusColor[node.status] || 'var(--accent)') + '">' + (statusLabel[node.status] || node.status) + '</div>';
+    html += '<div class="detail-thought">' + escapeHtml(node.thought) + '</div>';
+    html += '<div class="detail-meta">';
+    html += '<div class="meta-item"><span class="meta-label">Confidence</span><span class="meta-value" style="color:' + confColor(node.confidence) + '">' + node.confidence + '%</span></div>';
+    html += '<div class="meta-item"><span class="meta-label">Tokens</span><span class="meta-value">' + node.tokens + '</span></div>';
+    html += '<div class="meta-item"><span class="meta-label">Duration</span><span class="meta-value">' + node.durationMs + 'ms</span></div>';
+    html += '<div class="meta-item"><span class="meta-label">Depth</span><span class="meta-value">' + node.depth + '</span></div>';
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+function escapeHtml(s) {
+    var d = document.createElement("div");
+    d.appendChild(document.createTextNode(s));
+    return d.innerHTML;
+}
+
+function updateStats() {
+    var revealed = state.flatNodes.slice(0, state.revealedCount);
+    var total = revealed.length;
+    var backtracks = 0, maxDepth = 0, totalConf = 0, totalTime = 0, totalTokens = 0;
+    for (var i = 0; i < revealed.length; i++) {
+        var nd = revealed[i];
+        if (nd.status === "backtracked" || nd.type === "backtrack") backtracks++;
+        if (nd.depth > maxDepth) maxDepth = nd.depth;
+        totalConf += nd.confidence;
+        totalTime += nd.durationMs;
+        totalTokens += nd.tokens;
+    }
+    document.getElementById("sTotalSteps").textContent = total;
+    document.getElementById("sBacktracks").textContent = backtracks;
+    document.getElementById("sMaxDepth").textContent = maxDepth;
+    document.getElementById("sAvgConf").textContent = total > 0 ? Math.round(totalConf / total) + "%" : "0%";
+    document.getElementById("sTotalTime").textContent = totalTime + "ms";
+    document.getElementById("sTotalTokens").textContent = totalTokens;
+}
+
+function updateTokenChart() {
+    var revealed = state.flatNodes.slice(0, state.revealedCount);
+    var byType = {};
+    for (var i = 0; i < revealed.length; i++) {
+        var t = revealed[i].type;
+        byType[t] = (byType[t] || 0) + revealed[i].tokens;
+    }
+    var maxTokens = 1;
+    var types = Object.keys(TYPE_META);
+    for (var j = 0; j < types.length; j++) {
+        if ((byType[types[j]] || 0) > maxTokens) maxTokens = byType[types[j]];
+    }
+    var html = "";
+    for (var k = 0; k < types.length; k++) {
+        var tp = types[k];
+        var val = byType[tp] || 0;
+        var meta = TYPE_META[tp];
+        var pct = maxTokens > 0 ? (val / maxTokens * 100) : 0;
+        html += '<div class="token-row">';
+        html += '<span class="token-type">' + meta.label + '</span>';
+        html += '<div class="token-bar-track"><div class="token-bar-fill" style="width:' + pct + '%;background:' + meta.color + '"></div></div>';
+        html += '<span class="token-count">' + val + '</span>';
+        html += '</div>';
+    }
+    document.getElementById("tokenChart").innerHTML = html;
+}
+
+function updateStepCounter() {
+    document.getElementById("stepCounter").textContent = "Step: " + state.revealedCount + " / " + state.flatNodes.length;
+}
+
+function loadPreset(name) {
+    stop();
+    state.preset = name;
+    state.revealedCount = 0;
+    state.selectedId = null;
+    state.flatNodes = flatten(PRESETS[name].root, 0, []);
+    renderTree();
+    renderDetail();
+    updateStats();
+    updateTokenChart();
+    updateStepCounter();
+}
+
+function revealNext() {
+    if (state.revealedCount < state.flatNodes.length) {
+        state.revealedCount++;
+        renderTree();
+        updateStats();
+        updateTokenChart();
+        updateStepCounter();
+        // Auto-select revealed node
+        state.selectedId = state.flatNodes[state.revealedCount - 1].id;
+        renderDetail();
+    } else {
+        stop();
+    }
+}
+
+function play() {
+    if (state.revealedCount >= state.flatNodes.length) {
+        state.revealedCount = 0;
+    }
+    state.playing = true;
+    document.getElementById("btnPlay").textContent = "\u23F8 Pause";
+    tick();
+}
+
+function tick() {
+    if (!state.playing) return;
+    revealNext();
+    if (state.playing) {
+        state.timer = setTimeout(tick, 800 / state.speed);
+    }
+}
+
+function stop() {
+    state.playing = false;
+    clearTimeout(state.timer);
+    document.getElementById("btnPlay").textContent = "\u25B6 Play";
+    renderTree();
+}
+
+document.getElementById("btnPlay").addEventListener("click", function() {
+    if (state.playing) stop(); else play();
+});
+document.getElementById("btnStep").addEventListener("click", function() {
+    stop();
+    revealNext();
+});
+document.getElementById("btnReset").addEventListener("click", function() {
+    loadPreset(state.preset);
+});
+
+document.querySelectorAll(".speed-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+        document.querySelectorAll(".speed-btn").forEach(function(b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        state.speed = parseInt(btn.getAttribute("data-speed"), 10);
+    });
+});
+
+document.querySelectorAll(".preset-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+        document.querySelectorAll(".preset-btn").forEach(function(b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        loadPreset(btn.getAttribute("data-preset"));
+    });
+});
+
+document.querySelectorAll(".filter-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+        document.querySelectorAll(".filter-btn").forEach(function(b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        state.filter = btn.getAttribute("data-filter");
+        renderTree();
+    });
+});
+
+loadPreset("simple");
+</script>
+</body>
+</html>
