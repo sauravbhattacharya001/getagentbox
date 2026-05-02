@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox - Agent Knowledge Distillation Lab</title>
+    <meta name="description" content="Interactive visualization of AI agent knowledge distillation. Watch large teacher agents compress and transfer knowledge to smaller, faster student agents.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --orange-bg: #e1705522;
+            --red: #d63031;
+            --red-bg: #d6303122;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh;
+        }
+        .header {
+            padding: 16px 32px; display: flex; align-items: center; gap: 16px;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0;
+            background: var(--bg); z-index: 100; backdrop-filter: blur(12px);
+        }
+        .header a { color: var(--accent); text-decoration: none; font-size: 14px; }
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+        .controls {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 16px 20px; margin-bottom: 24px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+        }
+        .ctrl-btn {
+            padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--surface-2); color: var(--text); font-size: 13px; cursor: pointer;
+            transition: all 0.2s; font-weight: 500;
+        }
+        .ctrl-btn:hover { border-color: var(--accent); }
+        .ctrl-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+        .ctrl-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+        .ctrl-btn.primary:hover { background: var(--accent-light); }
+        .ctrl-separator { width: 1px; height: 24px; background: var(--border); }
+        .preset-label { font-size: 12px; color: var(--text-muted); }
+        .step-counter { font-size: 13px; color: var(--text-muted); margin-left: auto; }
+        .speed-control { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+        .speed-control input { width: 80px; accent-color: var(--accent); }
+        .main-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+        .panel {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 16px; margin-bottom: 16px;
+        }
+        .panel h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
+        #distillCanvas { width: 100%; border-radius: var(--radius-sm); display: block; cursor: crosshair; }
+        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .profile-card {
+            background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px;
+            border: 1px solid var(--border);
+        }
+        .profile-card h3 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+        .profile-card.teacher h3 { color: var(--purple); }
+        .profile-card.student h3 { color: var(--green); }
+        .profile-stat { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+        .profile-stat .label { color: var(--text-muted); }
+        .profile-stat .value { font-weight: 600; font-variant-numeric: tabular-nums; }
+        .bar-row { margin-bottom: 10px; }
+        .bar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+        .bar-label .name { color: var(--text-muted); }
+        .bar-label .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+        .bar-track { height: 8px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+        .log-area {
+            max-height: 180px; overflow-y: auto; font-size: 12px;
+            font-family: 'SF Mono', 'Cascadia Code', monospace; color: var(--text-muted);
+        }
+        .log-area::-webkit-scrollbar { width: 4px; }
+        .log-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .log-entry { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .log-entry .time { color: var(--accent); margin-right: 6px; }
+        .log-entry.concept { color: var(--purple); }
+        .log-entry.pattern { color: var(--green); }
+        .log-entry.rule { color: var(--yellow); }
+        .log-entry.complete { color: var(--accent); font-weight: 600; }
+        #accuracyCanvas { width: 100%; height: 160px; border-radius: var(--radius-sm); display: block; }
+        .legend { display: flex; gap: 16px; margin-top: 8px; font-size: 11px; }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← AgentBox</a>
+        <h1>🧬 Agent Knowledge Distillation Lab</h1>
+    </div>
+    <div class="container">
+        <div class="controls" role="toolbar" aria-label="Distillation controls">
+            <span class="preset-label">Scenarios:</span>
+            <button class="ctrl-btn active" data-preset="0" aria-label="GPT-4 to GPT-3.5 scenario">GPT-4 → 3.5</button>
+            <button class="ctrl-btn" data-preset="1" aria-label="Vision to MobileNet scenario">Vision → Mobile</button>
+            <button class="ctrl-btn" data-preset="2" aria-label="Swarm to Solo scenario">Swarm → Solo</button>
+            <button class="ctrl-btn" data-preset="3" aria-label="RAG to Cached scenario">RAG → Cached</button>
+            <button class="ctrl-btn" data-preset="4" aria-label="Safety to Quick scenario">Safety → Quick</button>
+            <div class="ctrl-separator"></div>
+            <button class="ctrl-btn primary" id="btnStart" aria-label="Start distillation">▶ Start</button>
+            <button class="ctrl-btn" id="btnPause" aria-label="Pause distillation">⏸ Pause</button>
+            <button class="ctrl-btn" id="btnReset" aria-label="Reset distillation">↺ Reset</button>
+            <div class="ctrl-separator"></div>
+            <div class="speed-control">
+                <span>Speed:</span>
+                <input type="range" id="speedSlider" min="0.5" max="4" step="0.5" value="1" aria-label="Animation speed">
+                <span id="speedLabel">1×</span>
+            </div>
+            <span class="step-counter" id="stepCounter">Epoch 0 / 50</span>
+        </div>
+
+        <div class="main-grid">
+            <div>
+                <div class="panel">
+                    <h2>Distillation Visualization</h2>
+                    <canvas id="distillCanvas" height="420" aria-label="Knowledge distillation animation"></canvas>
+                </div>
+                <div class="panel">
+                    <h2>Accuracy Over Epochs</h2>
+                    <canvas id="accuracyCanvas" aria-label="Teacher vs student accuracy chart"></canvas>
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div> Teacher</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:#00b894"></div> Student</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:#fdcb6e"></div> Fidelity</div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="panel">
+                    <h2>Agent Profiles</h2>
+                    <div class="profile-grid">
+                        <div class="profile-card teacher">
+                            <h3>🎓 Teacher</h3>
+                            <div class="profile-stat"><span class="label">Model</span><span class="value" id="tModel">—</span></div>
+                            <div class="profile-stat"><span class="label">Parameters</span><span class="value" id="tParams">—</span></div>
+                            <div class="profile-stat"><span class="label">Accuracy</span><span class="value" id="tAccuracy">—</span></div>
+                            <div class="profile-stat"><span class="label">Latency</span><span class="value" id="tLatency">—</span></div>
+                            <div class="profile-stat"><span class="label">Cost/1K</span><span class="value" id="tCost">—</span></div>
+                        </div>
+                        <div class="profile-card student">
+                            <h3>📘 Student</h3>
+                            <div class="profile-stat"><span class="label">Model</span><span class="value" id="sModel">—</span></div>
+                            <div class="profile-stat"><span class="label">Parameters</span><span class="value" id="sParams">—</span></div>
+                            <div class="profile-stat"><span class="label">Accuracy</span><span class="value" id="sAccuracy">—</span></div>
+                            <div class="profile-stat"><span class="label">Latency</span><span class="value" id="sLatency">—</span></div>
+                            <div class="profile-stat"><span class="label">Cost/1K</span><span class="value" id="sCost">—</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h2>Compression Analysis</h2>
+                    <div id="compressionBars">
+                        <div class="bar-row">
+                            <div class="bar-label"><span class="name">Compression Ratio</span><span class="val" id="compRatio">0×</span></div>
+                            <div class="bar-track"><div class="bar-fill" id="compRatioBar" style="width:0%;background:var(--accent)"></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label"><span class="name">Fidelity Score</span><span class="val" id="fidelity">0%</span></div>
+                            <div class="bar-track"><div class="bar-fill" id="fidelityBar" style="width:0%;background:var(--green)"></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label"><span class="name">Speedup Factor</span><span class="val" id="speedup">0×</span></div>
+                            <div class="bar-track"><div class="bar-fill" id="speedupBar" style="width:0%;background:var(--yellow)"></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label"><span class="name">Cost Reduction</span><span class="val" id="costReduction">0%</span></div>
+                            <div class="bar-track"><div class="bar-fill" id="costReductionBar" style="width:0%;background:var(--orange)"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h2>Knowledge Transfer Log</h2>
+                    <div class="log-area" id="transferLog"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+/* ── Scenario Presets ─────────────────────────────────────── */
+const PRESETS = [
+    {
+        name: 'GPT-4 → GPT-3.5',
+        teacher: { model: 'GPT-4o', params: '1.8T', accuracy: 96.2, latency: '820ms', cost: '$0.030' },
+        student: { model: 'GPT-3.5t', params: '175B', baseAccuracy: 78.5, latency: '120ms', cost: '$0.002' },
+        maxAccuracy: 93.8, maxFidelity: 97.5, compression: 10.3, speedup: 6.8, costReduction: 93,
+        knowledge: [
+            { type: 'concept', text: 'Multi-step reasoning chains' },
+            { type: 'pattern', text: 'Contextual nuance detection' },
+            { type: 'rule', text: 'Instruction following heuristics' },
+            { type: 'concept', text: 'Code generation patterns' },
+            { type: 'pattern', text: 'Ambiguity resolution strategies' },
+            { type: 'rule', text: 'Safety boundary awareness' },
+            { type: 'concept', text: 'Mathematical proof structures' },
+            { type: 'pattern', text: 'Cross-lingual transfer patterns' },
+            { type: 'rule', text: 'Output format consistency rules' },
+            { type: 'concept', text: 'Long-context coherence models' },
+        ]
+    },
+    {
+        name: 'Vision → MobileNet',
+        teacher: { model: 'ViT-L/14', params: '632M', accuracy: 94.7, latency: '340ms', cost: '$0.015' },
+        student: { model: 'MobileNetV3', params: '5.4M', baseAccuracy: 72.1, latency: '12ms', cost: '$0.0003' },
+        maxAccuracy: 91.2, maxFidelity: 96.3, compression: 117, speedup: 28.3, costReduction: 98,
+        knowledge: [
+            { type: 'concept', text: 'Edge detection kernels' },
+            { type: 'pattern', text: 'Texture classification features' },
+            { type: 'rule', text: 'Scale-invariant anchor points' },
+            { type: 'concept', text: 'Spatial attention maps' },
+            { type: 'pattern', text: 'Color histogram normalization' },
+            { type: 'rule', text: 'Object boundary refinement' },
+            { type: 'concept', text: 'Depth-from-monocular cues' },
+            { type: 'pattern', text: 'Background suppression masks' },
+            { type: 'rule', text: 'Rotation equivariance priors' },
+            { type: 'concept', text: 'Fine-grained category splits' },
+        ]
+    },
+    {
+        name: 'Swarm → Solo',
+        teacher: { model: '8-Agent Swarm', params: '12.4B', accuracy: 97.1, latency: '2.4s', cost: '$0.080' },
+        student: { model: 'Solo-Agent', params: '1.2B', baseAccuracy: 69.3, latency: '180ms', cost: '$0.005' },
+        maxAccuracy: 92.6, maxFidelity: 95.4, compression: 10.3, speedup: 13.3, costReduction: 94,
+        knowledge: [
+            { type: 'concept', text: 'Consensus voting heuristics' },
+            { type: 'pattern', text: 'Role specialization mapping' },
+            { type: 'rule', text: 'Conflict resolution protocols' },
+            { type: 'concept', text: 'Task decomposition strategies' },
+            { type: 'pattern', text: 'Cross-agent verification checks' },
+            { type: 'rule', text: 'Failure recovery pathways' },
+            { type: 'concept', text: 'Collective memory indexing' },
+            { type: 'pattern', text: 'Emergent strategy patterns' },
+            { type: 'rule', text: 'Load balancing decisions' },
+            { type: 'concept', text: 'Ensemble confidence calibration' },
+        ]
+    },
+    {
+        name: 'RAG → Cached',
+        teacher: { model: 'RAG Pipeline', params: '7B+DB', accuracy: 93.8, latency: '1.8s', cost: '$0.045' },
+        student: { model: 'Cached-Agent', params: '3B', baseAccuracy: 74.2, latency: '45ms', cost: '$0.001' },
+        maxAccuracy: 90.5, maxFidelity: 96.5, compression: 2.3, speedup: 40, costReduction: 98,
+        knowledge: [
+            { type: 'concept', text: 'Retrieval relevance scoring' },
+            { type: 'pattern', text: 'Document chunk boundaries' },
+            { type: 'rule', text: 'Citation grounding rules' },
+            { type: 'concept', text: 'Query reformulation tactics' },
+            { type: 'pattern', text: 'Knowledge freshness signals' },
+            { type: 'rule', text: 'Hallucination suppression checks' },
+            { type: 'concept', text: 'Semantic embedding clusters' },
+            { type: 'pattern', text: 'Multi-hop reasoning chains' },
+            { type: 'rule', text: 'Confidence threshold gates' },
+            { type: 'concept', text: 'Fact consolidation strategies' },
+        ]
+    },
+    {
+        name: 'Safety → Quick',
+        teacher: { model: 'SafetyAudit-XL', params: '13B', accuracy: 99.1, latency: '3.2s', cost: '$0.060' },
+        student: { model: 'QuickScan-S', params: '350M', baseAccuracy: 81.4, latency: '28ms', cost: '$0.0005' },
+        maxAccuracy: 96.8, maxFidelity: 97.7, compression: 37.1, speedup: 114, costReduction: 99,
+        knowledge: [
+            { type: 'concept', text: 'Injection attack signatures' },
+            { type: 'pattern', text: 'Jailbreak prompt templates' },
+            { type: 'rule', text: 'Content policy boundary rules' },
+            { type: 'concept', text: 'Social engineering markers' },
+            { type: 'pattern', text: 'Adversarial token patterns' },
+            { type: 'rule', text: 'Multi-turn escalation rules' },
+            { type: 'concept', text: 'Obfuscation detection layers' },
+            { type: 'pattern', text: 'Context manipulation signals' },
+            { type: 'rule', text: 'Output sanitization checks' },
+            { type: 'concept', text: 'Threat severity classifiers' },
+        ]
+    }
+];
+
+/* ── State ────────────────────────────────────────────────── */
+let state = {
+    preset: 0, epoch: 0, maxEpochs: 50, running: false, paused: false,
+    speed: 1, studentAccuracy: 0, teacherHistory: [], studentHistory: [], fidelityHistory: [],
+    particles: [], logEntries: [], knowledgeIdx: 0, animFrame: null, lastTick: 0
+};
+
+/* ── DOM refs ─────────────────────────────────────────────── */
+const distillCanvas = document.getElementById('distillCanvas');
+const dCtx = distillCanvas.getContext('2d');
+const accCanvas = document.getElementById('accuracyCanvas');
+const aCtx = accCanvas.getContext('2d');
+
+function resize() {
+    distillCanvas.width = distillCanvas.clientWidth * devicePixelRatio;
+    distillCanvas.height = 420 * devicePixelRatio;
+    dCtx.scale(devicePixelRatio, devicePixelRatio);
+    accCanvas.width = accCanvas.clientWidth * devicePixelRatio;
+    accCanvas.height = 160 * devicePixelRatio;
+    aCtx.scale(devicePixelRatio, devicePixelRatio);
+}
+resize();
+window.addEventListener('resize', () => { resize(); drawDistill(); drawAccuracy(); });
+
+/* ── Preset buttons ───────────────────────────────────────── */
+document.querySelectorAll('[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        state.preset = +btn.dataset.preset;
+        document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        resetState();
+    });
+});
+document.getElementById('btnStart').addEventListener('click', startDistillation);
+document.getElementById('btnPause').addEventListener('click', togglePause);
+document.getElementById('btnReset').addEventListener('click', resetState);
+document.getElementById('speedSlider').addEventListener('input', e => {
+    state.speed = +e.target.value;
+    document.getElementById('speedLabel').textContent = state.speed + '×';
+});
+
+/* ── State management ─────────────────────────────────────── */
+function resetState() {
+    if (state.animFrame) cancelAnimationFrame(state.animFrame);
+    const p = PRESETS[state.preset];
+    state.epoch = 0; state.running = false; state.paused = false;
+    state.studentAccuracy = p.student.baseAccuracy;
+    state.teacherHistory = []; state.studentHistory = []; state.fidelityHistory = [];
+    state.particles = []; state.logEntries = []; state.knowledgeIdx = 0;
+    state.lastTick = 0;
+    updateProfiles();
+    updateCompression(0);
+    updateStepCounter();
+    document.getElementById('transferLog').innerHTML = '';
+    drawDistill();
+    drawAccuracy();
+}
+
+function startDistillation() {
+    if (state.running && !state.paused) return;
+    if (state.epoch >= state.maxEpochs) resetState();
+    state.running = true; state.paused = false;
+    state.lastTick = performance.now();
+    tick();
+}
+
+function togglePause() {
+    if (!state.running) return;
+    state.paused = !state.paused;
+    if (!state.paused) { state.lastTick = performance.now(); tick(); }
+}
+
+/* ── Simulation tick ──────────────────────────────────────── */
+function tick() {
+    if (!state.running || state.paused) return;
+    const now = performance.now();
+    const interval = 600 / state.speed; // ms per epoch
+    if (now - state.lastTick >= interval) {
+        state.lastTick = now;
+        advanceEpoch();
+    }
+    updateParticles();
+    drawDistill();
+    drawAccuracy();
+    if (state.epoch < state.maxEpochs) {
+        state.animFrame = requestAnimationFrame(tick);
+    }
+}
+
+function advanceEpoch() {
+    const p = PRESETS[state.preset];
+    state.epoch++;
+    // Student accuracy follows a logarithmic curve toward maxAccuracy
+    const t = state.epoch / state.maxEpochs;
+    const eased = 1 - Math.pow(1 - t, 2.5);
+    state.studentAccuracy = p.student.baseAccuracy + (p.maxAccuracy - p.student.baseAccuracy) * eased;
+    const fidelity = (state.studentAccuracy / p.teacher.accuracy) * 100;
+
+    state.teacherHistory.push(p.teacher.accuracy);
+    state.studentHistory.push(state.studentAccuracy);
+    state.fidelityHistory.push(fidelity);
+
+    // Spawn knowledge packet particles
+    spawnParticles(3);
+
+    // Log knowledge transfer
+    if (state.epoch % 5 === 0 && state.knowledgeIdx < p.knowledge.length) {
+        const k = p.knowledge[state.knowledgeIdx++];
+        addLog(k.type, k.text);
+    }
+
+    updateProfiles();
+    updateCompression(t);
+    updateStepCounter();
+
+    if (state.epoch >= state.maxEpochs) {
+        state.running = false;
+        addLog('complete', `Distillation complete! Student reached ${state.studentAccuracy.toFixed(1)}% accuracy`);
+    }
+}
+
+/* ── Particles ────────────────────────────────────────────── */
+function spawnParticles(count) {
+    const w = distillCanvas.clientWidth, h = 420;
+    const tx = w * 0.25, ty = h * 0.5;
+    const sx = w * 0.75, sy = h * 0.5;
+    for (let i = 0; i < count; i++) {
+        state.particles.push({
+            x: tx + (Math.random() - 0.5) * 40,
+            y: ty + (Math.random() - 0.5) * 40,
+            targetX: sx + (Math.random() - 0.5) * 30,
+            targetY: sy + (Math.random() - 0.5) * 30,
+            progress: 0,
+            speed: 0.008 + Math.random() * 0.012,
+            size: 2 + Math.random() * 3,
+            hue: Math.random() > 0.5 ? 268 : 160, // purple or green
+            trail: []
+        });
+    }
+}
+
+function updateParticles() {
+    state.particles = state.particles.filter(p => {
+        p.progress += p.speed * state.speed;
+        const t = p.progress;
+        // Curved path using quadratic bezier
+        const cx = (p.x + p.targetX) / 2, cy = Math.min(p.y, p.targetY) - 60;
+        p.cx = (1-t)*(1-t)*p.x + 2*(1-t)*t*cx + t*t*p.targetX;
+        p.cy = (1-t)*(1-t)*p.y + 2*(1-t)*t*cy + t*t*p.targetY;
+        p.trail.push({ x: p.cx, y: p.cy, alpha: 1 });
+        if (p.trail.length > 12) p.trail.shift();
+        p.trail.forEach(tr => tr.alpha *= 0.9);
+        return p.progress < 1;
+    });
+}
+
+/* ── Draw distillation canvas ─────────────────────────────── */
+function drawDistill() {
+    const w = distillCanvas.clientWidth, h = 420;
+    dCtx.clearRect(0, 0, w, h);
+    const p = PRESETS[state.preset];
+    const t = state.epoch / state.maxEpochs;
+
+    // Background grid
+    dCtx.strokeStyle = 'rgba(255,255,255,0.03)';
+    dCtx.lineWidth = 1;
+    for (let x = 0; x < w; x += 40) { dCtx.beginPath(); dCtx.moveTo(x, 0); dCtx.lineTo(x, h); dCtx.stroke(); }
+    for (let y = 0; y < h; y += 40) { dCtx.beginPath(); dCtx.moveTo(0, y); dCtx.lineTo(w, y); dCtx.stroke(); }
+
+    const tx = w * 0.25, ty = h * 0.5;
+    const sx = w * 0.75, sy = h * 0.5;
+    const teacherR = 65, studentR = 25 + t * 20;
+
+    // Connection beam
+    if (state.running || state.epoch > 0) {
+        const grad = dCtx.createLinearGradient(tx, ty, sx, sy);
+        grad.addColorStop(0, `rgba(108,92,231,${0.15 + t * 0.15})`);
+        grad.addColorStop(1, `rgba(0,184,148,${0.15 + t * 0.15})`);
+        dCtx.strokeStyle = grad;
+        dCtx.lineWidth = 2 + t * 4;
+        dCtx.setLineDash([8, 8]);
+        dCtx.beginPath(); dCtx.moveTo(tx + teacherR, ty); dCtx.lineTo(sx - studentR, sy); dCtx.stroke();
+        dCtx.setLineDash([]);
+    }
+
+    // Particles
+    state.particles.forEach(pt => {
+        // Trail
+        pt.trail.forEach(tr => {
+            dCtx.fillStyle = `hsla(${pt.hue}, 70%, 60%, ${tr.alpha * 0.4})`;
+            dCtx.beginPath(); dCtx.arc(tr.x, tr.y, pt.size * 0.6, 0, Math.PI * 2); dCtx.fill();
+        });
+        // Particle
+        dCtx.fillStyle = `hsla(${pt.hue}, 80%, 70%, 0.9)`;
+        dCtx.beginPath(); dCtx.arc(pt.cx, pt.cy, pt.size, 0, Math.PI * 2); dCtx.fill();
+        dCtx.fillStyle = `hsla(${pt.hue}, 90%, 90%, 0.5)`;
+        dCtx.beginPath(); dCtx.arc(pt.cx, pt.cy, pt.size * 0.5, 0, Math.PI * 2); dCtx.fill();
+    });
+
+    // Teacher node
+    const tGlow = dCtx.createRadialGradient(tx, ty, teacherR * 0.5, tx, ty, teacherR * 1.5);
+    tGlow.addColorStop(0, 'rgba(108,92,231,0.2)');
+    tGlow.addColorStop(1, 'rgba(108,92,231,0)');
+    dCtx.fillStyle = tGlow;
+    dCtx.beginPath(); dCtx.arc(tx, ty, teacherR * 1.5, 0, Math.PI * 2); dCtx.fill();
+
+    dCtx.fillStyle = 'rgba(108,92,231,0.15)';
+    dCtx.strokeStyle = '#6c5ce7';
+    dCtx.lineWidth = 2;
+    dCtx.beginPath(); dCtx.arc(tx, ty, teacherR, 0, Math.PI * 2); dCtx.fill(); dCtx.stroke();
+
+    dCtx.fillStyle = '#fff';
+    dCtx.font = 'bold 14px -apple-system, sans-serif';
+    dCtx.textAlign = 'center'; dCtx.textBaseline = 'middle';
+    dCtx.fillText('🎓 Teacher', tx, ty - 10);
+    dCtx.font = '12px -apple-system, sans-serif';
+    dCtx.fillStyle = '#a0a0a0';
+    dCtx.fillText(p.teacher.model, tx, ty + 10);
+
+    // Student node (grows with knowledge)
+    const sGlow = dCtx.createRadialGradient(sx, sy, studentR * 0.5, sx, sy, studentR * 1.5);
+    sGlow.addColorStop(0, `rgba(0,184,148,${0.1 + t * 0.15})`);
+    sGlow.addColorStop(1, 'rgba(0,184,148,0)');
+    dCtx.fillStyle = sGlow;
+    dCtx.beginPath(); dCtx.arc(sx, sy, studentR * 1.5, 0, Math.PI * 2); dCtx.fill();
+
+    dCtx.fillStyle = `rgba(0,184,148,${0.1 + t * 0.1})`;
+    dCtx.strokeStyle = '#00b894';
+    dCtx.lineWidth = 2;
+    dCtx.beginPath(); dCtx.arc(sx, sy, studentR, 0, Math.PI * 2); dCtx.fill(); dCtx.stroke();
+
+    // Accuracy ring on student
+    if (t > 0) {
+        const accFrac = state.studentAccuracy / 100;
+        dCtx.strokeStyle = '#00b894';
+        dCtx.lineWidth = 3;
+        dCtx.beginPath();
+        dCtx.arc(sx, sy, studentR + 6, -Math.PI/2, -Math.PI/2 + accFrac * Math.PI * 2);
+        dCtx.stroke();
+    }
+
+    dCtx.fillStyle = '#fff';
+    dCtx.font = 'bold 14px -apple-system, sans-serif';
+    dCtx.textAlign = 'center';
+    dCtx.fillText('📘 Student', sx, sy - 10);
+    dCtx.font = '12px -apple-system, sans-serif';
+    dCtx.fillStyle = '#a0a0a0';
+    dCtx.fillText(p.student.model, sx, sy + 10);
+
+    // Epoch label
+    dCtx.fillStyle = '#555';
+    dCtx.font = '11px -apple-system, sans-serif';
+    dCtx.textAlign = 'center';
+    dCtx.fillText(`Epoch ${state.epoch} / ${state.maxEpochs}`, w / 2, h - 12);
+
+    // Progress bar at bottom
+    dCtx.fillStyle = 'rgba(255,255,255,0.05)';
+    dCtx.fillRect(40, h - 6, w - 80, 3);
+    const pgGrad = dCtx.createLinearGradient(40, 0, 40 + (w - 80) * t, 0);
+    pgGrad.addColorStop(0, '#6c5ce7');
+    pgGrad.addColorStop(1, '#00b894');
+    dCtx.fillStyle = pgGrad;
+    dCtx.fillRect(40, h - 6, (w - 80) * t, 3);
+}
+
+/* ── Draw accuracy chart ──────────────────────────────────── */
+function drawAccuracy() {
+    const w = accCanvas.clientWidth, h = 160;
+    aCtx.clearRect(0, 0, w, h);
+
+    // Grid
+    aCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+    aCtx.lineWidth = 1;
+    for (let y = 0; y < h; y += 32) { aCtx.beginPath(); aCtx.moveTo(0, y); aCtx.lineTo(w, y); aCtx.stroke(); }
+
+    // Y-axis labels
+    aCtx.fillStyle = '#555'; aCtx.font = '10px monospace'; aCtx.textAlign = 'right';
+    aCtx.fillText('100%', 32, 12);
+    aCtx.fillText('50%', 32, h - 4);
+
+    if (state.teacherHistory.length < 2) return;
+    const pad = 40;
+    const plotW = w - pad - 10, plotH = h - 20;
+    const n = state.teacherHistory.length;
+
+    function drawLine(data, color) {
+        aCtx.strokeStyle = color; aCtx.lineWidth = 2; aCtx.beginPath();
+        data.forEach((v, i) => {
+            const x = pad + (i / (state.maxEpochs - 1)) * plotW;
+            const y = 10 + plotH * (1 - (v - 50) / 50); // scale 50-100
+            i === 0 ? aCtx.moveTo(x, y) : aCtx.lineTo(x, y);
+        });
+        aCtx.stroke();
+    }
+
+    drawLine(state.teacherHistory, '#6c5ce7');
+    drawLine(state.studentHistory, '#00b894');
+    drawLine(state.fidelityHistory, '#fdcb6e');
+}
+
+/* ── UI Updates ───────────────────────────────────────────── */
+function updateProfiles() {
+    const p = PRESETS[state.preset];
+    document.getElementById('tModel').textContent = p.teacher.model;
+    document.getElementById('tParams').textContent = p.teacher.params;
+    document.getElementById('tAccuracy').textContent = p.teacher.accuracy.toFixed(1) + '%';
+    document.getElementById('tLatency').textContent = p.teacher.latency;
+    document.getElementById('tCost').textContent = p.teacher.cost;
+    document.getElementById('sModel').textContent = p.student.model;
+    document.getElementById('sParams').textContent = p.student.params;
+    document.getElementById('sAccuracy').textContent = state.studentAccuracy.toFixed(1) + '%';
+    document.getElementById('sLatency').textContent = p.student.latency;
+    document.getElementById('sCost').textContent = p.student.cost;
+}
+
+function updateCompression(t) {
+    const p = PRESETS[state.preset];
+    const ratio = p.compression * t;
+    const fidelity = t > 0 ? (state.studentAccuracy / p.teacher.accuracy) * 100 : 0;
+    const speedup = p.speedup * t;
+    const costRed = p.costReduction * t;
+
+    document.getElementById('compRatio').textContent = ratio.toFixed(1) + '×';
+    document.getElementById('compRatioBar').style.width = Math.min(ratio / p.compression * 100, 100) + '%';
+    document.getElementById('fidelity').textContent = fidelity.toFixed(1) + '%';
+    document.getElementById('fidelityBar').style.width = Math.min(fidelity, 100) + '%';
+    document.getElementById('speedup').textContent = speedup.toFixed(1) + '×';
+    document.getElementById('speedupBar').style.width = Math.min(speedup / p.speedup * 100, 100) + '%';
+    document.getElementById('costReduction').textContent = costRed.toFixed(0) + '%';
+    document.getElementById('costReductionBar').style.width = Math.min(costRed, 100) + '%';
+}
+
+function updateStepCounter() {
+    document.getElementById('stepCounter').textContent = `Epoch ${state.epoch} / ${state.maxEpochs}`;
+}
+
+function addLog(type, text) {
+    const log = document.getElementById('transferLog');
+    const el = document.createElement('div');
+    el.className = 'log-entry ' + type;
+    const epoch = String(state.epoch).padStart(2, '0');
+    el.innerHTML = `<span class="time">[E${epoch}]</span> ${escapeHtml(text)}`;
+    log.prepend(el);
+}
+
+function escapeHtml(s) {
+    const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+
+/* ── Init ─────────────────────────────────────────────────── */
+resetState();
+</script>
+</body>
+</html>
