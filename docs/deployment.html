@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Guide — AgentBox Docs</title>
+    <meta name="description" content="Complete guide to deploying AgentBox via GitHub Pages, Docker, Vercel, Netlify, or self-hosted nginx.">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --bg-card: #1a1d28;
+            --bg-code: #252830;
+            --text: #e0e0e8;
+            --text-dim: #8b8fa0;
+            --accent: #4a9eff;
+            --accent-hover: #70b4ff;
+            --border: #2d3040;
+            --green: #4ade80;
+            --yellow: #facc15;
+            --red: #f87171;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 3rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle { color: var(--text-dim); margin-bottom: 2.5rem; font-size: 1.1rem; }
+
+        h2 {
+            font-size: 1.5rem;
+            margin: 2.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        h3 { font-size: 1.15rem; margin: 1.5rem 0 0.75rem; color: var(--accent); }
+
+        p, li { margin-bottom: 0.75rem; }
+        ul, ol { padding-left: 1.5rem; }
+
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 1rem 0;
+        }
+        code {
+            font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+        :not(pre) > code {
+            background: var(--bg-code);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .card h3 { margin-top: 0; }
+
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .method-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .method-card:hover { border-color: var(--accent); }
+        .method-card .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .method-card .name { font-weight: 600; margin-bottom: 0.25rem; }
+        .method-card .desc { font-size: 0.85rem; color: var(--text-dim); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-easy { background: #4ade8022; color: var(--green); }
+        .badge-medium { background: #facc1522; color: var(--yellow); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th { color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; }
+
+        .warning {
+            background: #facc1510;
+            border-left: 3px solid var(--yellow);
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+        .warning strong { color: var(--yellow); }
+
+        .tip {
+            background: #4ade8010;
+            border-left: 3px solid var(--green);
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+        .tip strong { color: var(--green); }
+
+        .breadcrumb {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+        }
+        .breadcrumb a { color: var(--text-dim); }
+        .breadcrumb a:hover { color: var(--accent); }
+
+        .toc {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .toc h4 { margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.85rem; text-transform: uppercase; }
+        .toc ul { list-style: none; padding: 0; }
+        .toc li { margin-bottom: 0.35rem; }
+        .toc a { font-size: 0.9rem; }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="breadcrumb">
+    <a href="index.html">Docs</a> &rsaquo; Deployment Guide
+</div>
+
+<h1>Deployment Guide</h1>
+<p class="subtitle">Deploy AgentBox anywhere — from zero-config GitHub Pages to production Docker clusters.</p>
+
+<div class="toc">
+    <h4>On this page</h4>
+    <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#github-pages">GitHub Pages (Recommended)</a></li>
+        <li><a href="#docker">Docker</a></li>
+        <li><a href="#vercel">Vercel</a></li>
+        <li><a href="#netlify">Netlify</a></li>
+        <li><a href="#self-hosted">Self-Hosted (nginx)</a></li>
+        <li><a href="#env-config">Environment Configuration</a></li>
+        <li><a href="#ssl">SSL &amp; HTTPS</a></li>
+        <li><a href="#cdn">CDN &amp; Caching</a></li>
+        <li><a href="#monitoring">Monitoring &amp; Health Checks</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+    </ul>
+</div>
+
+<!-- ─── Overview ─────────────────────────────────────────────── -->
+
+<h2 id="overview">Overview</h2>
+
+<p>AgentBox is a static site — no server-side runtime, no database. This makes deployment straightforward on any platform that serves HTML. Choose your method based on your needs:</p>
+
+<div class="method-grid">
+    <div class="method-card">
+        <div class="icon">📄</div>
+        <div class="name">GitHub Pages</div>
+        <div class="desc">Zero-config, auto-deploys on push</div>
+        <span class="badge badge-easy">Easiest</span>
+    </div>
+    <div class="method-card">
+        <div class="icon">🐳</div>
+        <div class="name">Docker</div>
+        <div class="desc">Production-hardened nginx container</div>
+        <span class="badge badge-easy">Easy</span>
+    </div>
+    <div class="method-card">
+        <div class="icon">▲</div>
+        <div class="name">Vercel</div>
+        <div class="desc">Global edge network, instant rollbacks</div>
+        <span class="badge badge-easy">Easy</span>
+    </div>
+    <div class="method-card">
+        <div class="icon">◆</div>
+        <div class="name">Netlify</div>
+        <div class="desc">Form handling, branch previews</div>
+        <span class="badge badge-easy">Easy</span>
+    </div>
+    <div class="method-card">
+        <div class="icon">🖥️</div>
+        <div class="name">Self-Hosted</div>
+        <div class="desc">Full control, custom nginx config</div>
+        <span class="badge badge-medium">Medium</span>
+    </div>
+</div>
+
+<!-- ─── Prerequisites ────────────────────────────────────────── -->
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<p>Before deploying, build the production bundle:</p>
+
+<pre><code># Install dependencies
+npm install
+
+# Build the production bundle (dist/bundle.js)
+npm run build
+
+# Run tests to verify everything works
+npm test</code></pre>
+
+<p>The build step bundles all 59 source modules from <code>src/</code> into a single <code>dist/bundle.js</code>. The deployment artifacts are:</p>
+
+<table>
+    <thead><tr><th>File/Directory</th><th>Required</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td><code>index.html</code></td><td>Yes</td><td>Main application entry point</td></tr>
+        <tr><td><code>styles.css</code></td><td>Yes</td><td>Core stylesheet</td></tr>
+        <tr><td><code>dist/bundle.js</code></td><td>Yes</td><td>Bundled application modules</td></tr>
+        <tr><td><code>vendor/</code></td><td>Yes</td><td>Third-party scripts (GoatCounter)</td></tr>
+        <tr><td><code>cookie-consent.js</code></td><td>Yes</td><td>GDPR cookie consent handler</td></tr>
+        <tr><td><code>docs/</code></td><td>Optional</td><td>Documentation site</td></tr>
+        <tr><td><code>*.html</code></td><td>Optional</td><td>Additional feature pages</td></tr>
+        <tr><td><code>404.html</code></td><td>Recommended</td><td>Custom error page</td></tr>
+    </tbody>
+</table>
+
+<!-- ─── GitHub Pages ─────────────────────────────────────────── -->
+
+<h2 id="github-pages">GitHub Pages (Recommended)</h2>
+
+<p>The repository includes a pre-configured <code>.github/workflows/pages.yml</code> workflow that deploys automatically on push to <code>master</code>.</p>
+
+<h3>How It Works</h3>
+<ol>
+    <li>Push changes to the <code>master</code> branch</li>
+    <li>The <code>pages.yml</code> workflow triggers automatically</li>
+    <li>It assembles a <code>_site/</code> directory with all required files</li>
+    <li>The <code>actions/deploy-pages</code> action publishes to GitHub Pages</li>
+</ol>
+
+<h3>First-Time Setup</h3>
+<ol>
+    <li>Go to <strong>Settings → Pages</strong> in your repository</li>
+    <li>Under <strong>Source</strong>, select <strong>GitHub Actions</strong></li>
+    <li>Push any change to <code>master</code> to trigger the first deploy</li>
+    <li>Your site will be live at <code>https://&lt;username&gt;.github.io/getagentbox/</code></li>
+</ol>
+
+<div class="tip">
+    <strong>Tip:</strong> The workflow only triggers on changes to <code>*.html</code>, <code>*.css</code>, <code>*.js</code>, <code>vendor/**</code>, or <code>docs/**</code> files — non-code changes (README, tests) won't trigger a redeploy.
+</div>
+
+<h3>Custom Domain</h3>
+<pre><code># 1. Create CNAME file in the repo root
+echo "your-domain.com" > CNAME
+
+# 2. Configure DNS (choose one):
+#    A records → 185.199.108.153, 185.199.109.153,
+#                185.199.110.153, 185.199.111.153
+#    CNAME → &lt;username&gt;.github.io
+
+# 3. Enable HTTPS in Settings → Pages → Enforce HTTPS</code></pre>
+
+<!-- ─── Docker ───────────────────────────────────────────────── -->
+
+<h2 id="docker">Docker</h2>
+
+<p>The included multi-stage <code>Dockerfile</code> validates HTML, then serves via a hardened nginx container running as a non-root user.</p>
+
+<h3>Quick Start</h3>
+<pre><code># Build the image
+docker build -t agentbox .
+
+# Run on port 8080
+docker run -d -p 8080:8080 --name agentbox agentbox
+
+# Verify it's running
+curl http://localhost:8080/healthz
+# → ok</code></pre>
+
+<h3>Docker Compose</h3>
+<pre><code># docker-compose.yml
+services:
+  agentbox:
+    build: .
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:size=10m
+      - /var/run:size=1m
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.25'</code></pre>
+
+<h3>Pre-Built Images</h3>
+<p>The CI/CD pipeline builds and pushes Docker images to GitHub Container Registry on every push to <code>master</code>:</p>
+<pre><code># Pull the latest image
+docker pull ghcr.io/sauravbhattacharya001/getagentbox:latest
+
+# Or pin a specific version
+docker pull ghcr.io/sauravbhattacharya001/getagentbox:sha-abc1234</code></pre>
+
+<h3>Security Features</h3>
+<ul>
+    <li>Multi-stage build — validation artifacts don't ship in production</li>
+    <li>Runs as non-root user (<code>app:1001</code>)</li>
+    <li>Comprehensive security headers (CSP, HSTS, X-Frame-Options, CORP, COEP, COOP)</li>
+    <li>Gzip compression enabled</li>
+    <li>Built-in health check endpoint at <code>/healthz</code></li>
+    <li>Dotfile access denied</li>
+</ul>
+
+<!-- ─── Vercel ───────────────────────────────────────────────── -->
+
+<h2 id="vercel">Vercel</h2>
+
+<pre><code># Install Vercel CLI
+npm i -g vercel
+
+# Deploy (follow the prompts)
+vercel
+
+# Deploy to production
+vercel --prod</code></pre>
+
+<p>Create a <code>vercel.json</code> for optimal configuration:</p>
+<pre><code>{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}</code></pre>
+
+<!-- ─── Netlify ──────────────────────────────────────────────── -->
+
+<h2 id="netlify">Netlify</h2>
+
+<ol>
+    <li>Connect your GitHub repository in the Netlify dashboard</li>
+    <li>Set <strong>Build command</strong>: <code>npm run build</code></li>
+    <li>Set <strong>Publish directory</strong>: <code>.</code> (root)</li>
+    <li>Deploy</li>
+</ol>
+
+<p>Add a <code>netlify.toml</code> for headers and redirects:</p>
+<pre><code>[build]
+  command = "npm run build"
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self';"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200</code></pre>
+
+<!-- ─── Self-Hosted ──────────────────────────────────────────── -->
+
+<h2 id="self-hosted">Self-Hosted (nginx)</h2>
+
+<p>For full control, serve AgentBox from your own nginx instance.</p>
+
+<h3>Minimal nginx Configuration</h3>
+<pre><code>server {
+    listen 443 ssl http2;
+    server_name your-domain.com;
+
+    root /var/www/agentbox;
+    index index.html;
+
+    # SSL (use certbot or your CA)
+    ssl_certificate     /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+
+    # Security headers
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; frame-ancestors 'none';" always;
+
+    # Gzip
+    gzip on;
+    gzip_types text/html text/css application/javascript;
+    gzip_min_length 256;
+
+    # Cache static assets
+    location ~* \.(js|css)$ {
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # SPA fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Deny dotfiles
+    location ~ /\. { deny all; }
+}</code></pre>
+
+<h3>Deployment Script</h3>
+<pre><code>#!/bin/bash
+set -euo pipefail
+
+DEPLOY_DIR="/var/www/agentbox"
+REPO="https://github.com/sauravbhattacharya001/getagentbox.git"
+
+# Clone or pull latest
+if [ -d "$DEPLOY_DIR/.git" ]; then
+    cd "$DEPLOY_DIR" && git pull origin master
+else
+    git clone --depth 1 "$REPO" "$DEPLOY_DIR"
+fi
+
+# Build
+cd "$DEPLOY_DIR"
+npm install --production
+npm run build
+
+# Set permissions
+chown -R www-data:www-data "$DEPLOY_DIR"
+
+# Reload nginx
+nginx -t && systemctl reload nginx
+
+echo "Deployed successfully!"</code></pre>
+
+<!-- ─── Environment Configuration ─────────────────────────────── -->
+
+<h2 id="env-config">Environment Configuration</h2>
+
+<p>AgentBox is a static site with no server-side configuration. Runtime behavior is controlled through:</p>
+
+<div class="card">
+    <h3>Analytics (GoatCounter)</h3>
+    <p>Privacy-friendly analytics are enabled by default via the vendored GoatCounter script. To change the analytics endpoint, update the <code>data-goatcounter</code> attribute in <code>index.html</code>:</p>
+    <pre><code>&lt;script data-goatcounter="https://YOUR-SITE.goatcounter.com/count"
+        async src="vendor/count.js"&gt;&lt;/script&gt;</code></pre>
+    <p>To disable analytics entirely, remove both the GoatCounter <code>&lt;script&gt;</code> tag and the cookie consent script.</p>
+</div>
+
+<div class="card">
+    <h3>Content Security Policy</h3>
+    <p>The CSP is defined in two places that must stay in sync:</p>
+    <ul>
+        <li><code>index.html</code> — <code>&lt;meta http-equiv="Content-Security-Policy"&gt;</code></li>
+        <li><code>Dockerfile</code> — nginx <code>add_header Content-Security-Policy</code></li>
+    </ul>
+    <p>If you add external resources (fonts, CDN scripts), update both locations.</p>
+</div>
+
+<!-- ─── SSL ──────────────────────────────────────────────────── -->
+
+<h2 id="ssl">SSL &amp; HTTPS</h2>
+
+<table>
+    <thead><tr><th>Platform</th><th>SSL</th><th>Configuration</th></tr></thead>
+    <tbody>
+        <tr><td>GitHub Pages</td><td>Automatic</td><td>Enable "Enforce HTTPS" in Settings</td></tr>
+        <tr><td>Vercel / Netlify</td><td>Automatic</td><td>Included by default</td></tr>
+        <tr><td>Docker</td><td>Manual</td><td>Add a reverse proxy (Traefik, Caddy) or termination at load balancer</td></tr>
+        <tr><td>Self-hosted</td><td>Manual</td><td>Use <code>certbot</code> for free Let's Encrypt certificates</td></tr>
+    </tbody>
+</table>
+
+<pre><code># Let's Encrypt with certbot (self-hosted)
+sudo certbot --nginx -d your-domain.com
+sudo certbot renew --dry-run  # Test auto-renewal</code></pre>
+
+<!-- ─── CDN & Caching ────────────────────────────────────────── -->
+
+<h2 id="cdn">CDN &amp; Caching</h2>
+
+<p>AgentBox is well-suited for CDN caching since all content is static. Recommended cache headers:</p>
+
+<table>
+    <thead><tr><th>File Type</th><th>Cache Duration</th><th>Rationale</th></tr></thead>
+    <tbody>
+        <tr><td><code>*.html</code></td><td>1 hour</td><td>Content may change frequently</td></tr>
+        <tr><td><code>dist/bundle.js</code></td><td>7 days</td><td>Changes only on rebuild</td></tr>
+        <tr><td><code>styles.css</code></td><td>7 days</td><td>Changes only on rebuild</td></tr>
+        <tr><td><code>vendor/*</code></td><td>30 days</td><td>Third-party, versioned with SRI</td></tr>
+    </tbody>
+</table>
+
+<div class="tip">
+    <strong>Tip:</strong> The vendor scripts use Subresource Integrity (SRI) hashes, so they can be cached aggressively — the browser will reject tampered content regardless of cache duration.
+</div>
+
+<!-- ─── Monitoring ────────────────────────────────────────────── -->
+
+<h2 id="monitoring">Monitoring &amp; Health Checks</h2>
+
+<h3>Docker Health Check</h3>
+<p>The Docker image includes a built-in health check on <code>/healthz</code>:</p>
+<pre><code># Check container health
+docker inspect --format='{{.State.Health.Status}}' agentbox
+# → healthy
+
+# Manual check
+curl -s http://localhost:8080/healthz
+# → ok</code></pre>
+
+<h3>Uptime Monitoring</h3>
+<p>Point your uptime monitor (UptimeRobot, Pingdom, etc.) at:</p>
+<ul>
+    <li><strong>HTTP check:</strong> <code>GET /</code> — expect 200</li>
+    <li><strong>Docker:</strong> <code>GET /healthz</code> — expect 200 with body "ok"</li>
+    <li><strong>Content check:</strong> Verify response contains <code>AgentBox</code></li>
+</ul>
+
+<!-- ─── Troubleshooting ──────────────────────────────────────── -->
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<div class="card">
+    <h3>Blank page after deploy</h3>
+    <p>Check that <code>dist/bundle.js</code> was built and included. Run <code>npm run build</code> before deploying. Verify the browser console for 404 errors on script loads.</p>
+</div>
+
+<div class="card">
+    <h3>CSP errors in console</h3>
+    <p>If you see <code>Refused to load the script...</code> errors, your CSP doesn't allow the resource. Update the CSP in both <code>index.html</code> and your server config (Dockerfile/nginx).</p>
+</div>
+
+<div class="card">
+    <h3>GitHub Pages shows 404</h3>
+    <ul>
+        <li>Verify Pages source is set to "GitHub Actions" (not "Deploy from branch")</li>
+        <li>Check the Actions tab for workflow failures</li>
+        <li>Ensure the repo has Pages enabled in Settings</li>
+    </ul>
+</div>
+
+<div class="card">
+    <h3>Docker container exits immediately</h3>
+    <pre><code># Check logs
+docker logs agentbox
+
+# Common cause: port conflict
+# Solution: use a different host port
+docker run -d -p 9090:8080 --name agentbox agentbox</code></pre>
+</div>
+
+<div class="card">
+    <h3>Assets not loading with custom domain</h3>
+    <p>All asset references in AgentBox are relative, so custom domains work out of the box. If assets fail to load, check that your CDN/proxy is forwarding the correct path prefix.</p>
+</div>
+
+<div class="warning">
+    <strong>Note:</strong> The GoatCounter analytics script requires a <code>connect-src</code> CSP directive allowing <code>https://agentbox.goatcounter.com</code>. If you change the GoatCounter endpoint, update the CSP accordingly.
+</div>
+
+<footer>
+    <p><a href="index.html">← Back to Documentation</a></p>
+    <p style="margin-top: 0.5rem;">AgentBox Documentation &middot; <a href="https://github.com/sauravbhattacharya001/getagentbox">GitHub</a></p>
+</footer>
+
+</body>
+</html>
