@@ -1,0 +1,79 @@
+name: "🚀 Deployment / CI Failure"
+description: Report a deployment failure, CI pipeline issue, or Docker build problem
+labels: ["ci/cd", "deployment"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for CI/CD pipeline failures, Docker build issues, GitHub Pages deployment problems, or npm publish errors.
+  - type: dropdown
+    id: pipeline
+    attributes:
+      label: Affected Pipeline / Component
+      description: Which deployment or CI component is failing?
+      options:
+        - CI workflow (ci.yml)
+        - CodeQL analysis (codeql.yml)
+        - Coverage workflow (coverage.yml)
+        - Docker build/push (docker.yml)
+        - GitHub Pages deployment (pages.yml)
+        - npm publish (publish.yml)
+        - Local Docker build
+        - Local development server
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - GitHub Actions
+        - Local (Docker)
+        - Local (native)
+        - Self-hosted runner
+    validations:
+      required: true
+  - type: textarea
+    id: failure-log
+    attributes:
+      label: Failure Log
+      description: Paste the relevant error output from the CI run or terminal. Include the workflow run URL if applicable.
+      placeholder: |
+        Run URL: https://github.com/sauravbhattacharya001/getagentbox/actions/runs/...
+
+        Error: ...
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit / PR
+      description: Which commit SHA or PR triggered the failure?
+      placeholder: "e.g., abc1234 or PR #42"
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Is this a regression?
+      description: Was this pipeline working before?
+      options:
+        - "Yes — it was working before"
+        - "No — first time running it"
+        - "Unknown"
+    validations:
+      required: true
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this failure locally?
+      placeholder: |
+        1. Clone the repo
+        2. Run `docker build .`
+        3. See error on step X
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other details — workarounds attempted, related issues, environment versions, etc.

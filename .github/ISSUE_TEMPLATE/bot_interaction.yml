@@ -1,0 +1,72 @@
+name: "🤖 Bot Interaction Issue"
+description: Report a problem with the AgentBox Telegram bot behavior, responses, or commands
+labels: ["bug", "bot"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bot issue. Please provide enough detail so we can reproduce and fix it.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Issue Category
+      description: What aspect of the bot is affected?
+      options:
+        - Conversation / Response quality
+        - Memory / Context persistence
+        - Web search results
+        - Reminders / Scheduling
+        - Image understanding
+        - Command handling
+        - Rate limiting / Quota
+        - Authentication / Session
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: interaction
+    attributes:
+      label: Interaction Log
+      description: Paste your conversation with the bot showing the issue. Redact any personal info.
+      placeholder: |
+        You: What's the weather in Seattle?
+        Bot: [unexpected response or error]
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should the bot have done?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What did the bot actually do?
+    validations:
+      required: true
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Frequency
+      options:
+        - Every time
+        - Most of the time
+        - Occasionally
+        - Happened once
+    validations:
+      required: true
+  - type: input
+    id: telegram-client
+    attributes:
+      label: Telegram Client
+      description: Which Telegram client are you using?
+      placeholder: "e.g., Telegram Desktop 5.x, Telegram iOS 11.x, Telegram Web"
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other information (screenshots, conversation length, time of day, etc.)
