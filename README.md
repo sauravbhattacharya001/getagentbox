@@ -34,6 +34,8 @@
 
 An AI assistant that remembers you, searches the web, sets reminders, understands images, and lives right in Telegram. No signup, no app to install — just open Telegram and start chatting.
 
+**83 HTML pages · 67 JS modules · 71 test suites**
+
 </div>
 
 ---
@@ -93,7 +95,7 @@ The [live landing page](https://sauravbhattacharya001.github.io/getagentbox/) in
 
 ## 🧰 Pages & Interactive Tools
 
-Beyond the main landing page, the site includes 30+ standalone pages with interactive tools and resources:
+The site includes 75+ standalone pages organized across seven categories:
 
 ### Planning & Analysis
 
@@ -104,6 +106,8 @@ Beyond the main landing page, the site includes 30+ standalone pages with intera
 | [Decision Matrix](https://sauravbhattacharya001.github.io/getagentbox/decision-matrix.html) | Compare AgentBox against alternatives with weighted criteria |
 | [Capability Matrix](https://sauravbhattacharya001.github.io/getagentbox/capability-matrix.html) | Feature-by-feature breakdown of agent capabilities |
 | [Readiness Assessment](https://sauravbhattacharya001.github.io/getagentbox/readiness.html) | Evaluate whether your team is ready for AI agents |
+| [Cost Optimizer](https://sauravbhattacharya001.github.io/getagentbox/cost-optimizer.html) | Optimize agent costs across tiers and usage patterns |
+| [Scenario Planner](https://sauravbhattacharya001.github.io/getagentbox/simulator.html) | Simulate agent deployment scenarios and outcomes |
 
 ### Development & Integration
 
@@ -114,6 +118,9 @@ Beyond the main landing page, the site includes 30+ standalone pages with intera
 | [Webhooks](https://sauravbhattacharya001.github.io/getagentbox/webhooks.html) | Configure and test webhook integrations |
 | [SDK](https://sauravbhattacharya001.github.io/getagentbox/sdk.html) | SDK documentation for building on top of AgentBox |
 | [Sandbox](https://sauravbhattacharya001.github.io/getagentbox/sandbox.html) | Isolated testing environment for experiments |
+| [Architecture](https://sauravbhattacharya001.github.io/getagentbox/architecture.html) | System architecture overview and design decisions |
+| [Dependency Mapper](https://sauravbhattacharya001.github.io/getagentbox/dependency-mapper.html) | Visualize service and module dependencies |
+| [Marketplace](https://sauravbhattacharya001.github.io/getagentbox/marketplace.html) | Browse and install agent extensions and plugins |
 
 ### Agent Intelligence
 
@@ -126,6 +133,12 @@ Beyond the main landing page, the site includes 30+ standalone pages with intera
 | [Task Decomposer](https://sauravbhattacharya001.github.io/getagentbox/task-decomposer.html) | Break complex tasks into agent-executable steps |
 | [Evolution Lab](https://sauravbhattacharya001.github.io/getagentbox/evolution-lab.html) | Experiment with agent behavior evolution |
 | [Negotiation Arena](https://sauravbhattacharya001.github.io/getagentbox/negotiation-arena.html) | Multi-agent negotiation simulations |
+| [Empathy Engine](https://sauravbhattacharya001.github.io/getagentbox/empathy-engine.html) | Emotional intelligence and empathy-aware responses |
+| [Reasoning Trace](https://sauravbhattacharya001.github.io/getagentbox/reasoning-trace.html) | Inspect step-by-step reasoning chains |
+| [Knowledge Distillation](https://sauravbhattacharya001.github.io/getagentbox/knowledge-distillation.html) | Extract and compress knowledge from agent interactions |
+| [Calibration Lab](https://sauravbhattacharya001.github.io/getagentbox/calibration-lab.html) | Fine-tune agent confidence and response calibration |
+| [Digital Twin](https://sauravbhattacharya001.github.io/getagentbox/digital-twin.html) | Create and manage digital twin simulations |
+| [Swarm Orchestrator](https://sauravbhattacharya001.github.io/getagentbox/swarm-orchestrator.html) | Coordinate multi-agent swarm behaviors |
 
 ### Operations & Monitoring
 
@@ -138,6 +151,21 @@ Beyond the main landing page, the site includes 30+ standalone pages with intera
 | [SLA Dashboard](https://sauravbhattacharya001.github.io/getagentbox/sla-dashboard.html) | Service level agreement tracking |
 | [Watchdog](https://sauravbhattacharya001.github.io/getagentbox/watchdog.html) | Automated health monitoring |
 | [Postmortems](https://sauravbhattacharya001.github.io/getagentbox/postmortems.html) | Incident analysis and learnings |
+| [Lifecycle Manager](https://sauravbhattacharya001.github.io/getagentbox/lifecycle-manager.html) | Agent lifecycle state machine management |
+| [War Room](https://sauravbhattacharya001.github.io/getagentbox/war-room.html) | Collaborative incident response dashboard |
+| [Autopsy](https://sauravbhattacharya001.github.io/getagentbox/autopsy.html) | Deep analysis of failed agent interactions |
+| [Feedback Loop](https://sauravbhattacharya001.github.io/getagentbox/feedback-loop.html) | Continuous improvement via user feedback |
+
+### Trust & Security
+
+| Page | Description |
+|:---|:---|
+| [Trust Score](https://sauravbhattacharya001.github.io/getagentbox/trust-score.html) | Real-time agent trust scoring and breakdown |
+| [Trust Evolution](https://sauravbhattacharya001.github.io/getagentbox/trust-evolution.html) | Track trust changes over time |
+| [Threat Model](https://sauravbhattacharya001.github.io/getagentbox/threat-model.html) | Interactive threat modeling for agent deployments |
+| [Red Team Arena](https://sauravbhattacharya001.github.io/getagentbox/red-team-arena.html) | Adversarial testing playground |
+| [Security Whitepaper](https://sauravbhattacharya001.github.io/getagentbox/security-whitepaper.html) | Comprehensive security documentation |
+| [Voting](https://sauravbhattacharya001.github.io/getagentbox/voting.html) | Community governance and feature voting |
 
 ### Resources
 
@@ -149,41 +177,64 @@ Beyond the main landing page, the site includes 30+ standalone pages with intera
 | [Glossary](https://sauravbhattacharya001.github.io/getagentbox/glossary.html) | AI and agent terminology |
 | [Workflow Builder](https://sauravbhattacharya001.github.io/getagentbox/workflow-builder.html) | Visual drag-and-drop workflow designer |
 | [Migration Guide](https://sauravbhattacharya001.github.io/getagentbox/migrate.html) | Migrate from other AI assistants |
+| [Case Studies](https://sauravbhattacharya001.github.io/getagentbox/case-studies.html) | Real-world deployment case studies |
+| [Roadmap](https://sauravbhattacharya001.github.io/getagentbox/roadmap.html) | Public product roadmap and feature timeline |
+| [Blog](https://sauravbhattacharya001.github.io/getagentbox/blog.html) | Product updates, technical deep-dives |
+| [Events](https://sauravbhattacharya001.github.io/getagentbox/events.html) | Upcoming events, webinars, and demos |
+
+### Community & Business
+
+| Page | Description |
+|:---|:---|
+| [Community](https://sauravbhattacharya001.github.io/getagentbox/community.html) | Community hub and showcase |
+| [Testimonials](https://sauravbhattacharya001.github.io/getagentbox/testimonials.html) | User testimonials and success stories |
+| [Affiliate](https://sauravbhattacharya001.github.io/getagentbox/affiliate.html) | Affiliate and referral program |
+| [Partners](https://sauravbhattacharya001.github.io/getagentbox/partners.html) | Technology and integration partners |
+| [Careers](https://sauravbhattacharya001.github.io/getagentbox/careers.html) | Open positions and team culture |
+| [Contact](https://sauravbhattacharya001.github.io/getagentbox/contact.html) | Get in touch |
+| [Press Kit](https://sauravbhattacharya001.github.io/getagentbox/press-kit.html) | Brand assets, logos, and media resources |
+| [Badges](https://sauravbhattacharya001.github.io/getagentbox/badges.html) | Embeddable trust and integration badges |
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌──────────────────────────────────────┐
-│        Landing Page (this repo)      │
-│                                      │
-│  Multi-page static site with:        │
-│  • 30+ pages (landing, docs, tools)  │
-│  • 50+ modular JS components         │
-│  • Comparison table                  │
-│  • FAQ accordion                     │
-│  • CTA → Telegram bot               │
-│                                      │
-│  Deployed via GitHub Pages           │
-└───────────────┬──────────────────────┘
-                │ Links to
-                ▼
-┌──────────────────────────────────────┐
-│       Telegram Bot Backend           │
-│                                      │
-│  ┌──────────┐  ┌─────────────────┐   │
-│  │ GPT-4o / │  │ Per-user memory │   │
-│  │ Claude   │  │ & workspace    │   │
-│  └──────────┘  └─────────────────┘   │
-│  ┌──────────┐  ┌─────────────────┐   │
-│  │ Web      │  │ Reminder       │   │
-│  │ Search   │  │ Scheduler      │   │
-│  └──────────┘  └─────────────────┘   │
-└──────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│          Landing Site (this repo)             │
+│                                              │
+│  83 HTML pages · 67 JS modules · 71 tests    │
+│                                              │
+│  ┌────────────┐  ┌────────────────────────┐  │
+│  │ index.html │  │ 75+ tool/resource      │  │
+│  │ (landing)  │  │ pages (calculators,    │  │
+│  │            │  │ monitors, labs, docs)  │  │
+│  └────────────┘  └────────────────────────┘  │
+│  ┌────────────────────────────────────────┐  │
+│  │ src/modules/ — 55 UI components        │  │
+│  │ src/*.js    — 12 page-level modules    │  │
+│  │ vendor/     — Vendored dependencies    │  │
+│  └────────────────────────────────────────┘  │
+│                                              │
+│  Deployed via GitHub Pages                   │
+└───────────────────┬──────────────────────────┘
+                    │ Links to
+                    ▼
+┌──────────────────────────────────────────────┐
+│          Telegram Bot Backend                │
+│                                              │
+│  ┌──────────┐  ┌─────────────────────────┐   │
+│  │ GPT-4o / │  │ Per-user memory         │   │
+│  │ Claude   │  │ & workspace             │   │
+│  └──────────┘  └─────────────────────────┘   │
+│  ┌──────────┐  ┌─────────────────────────┐   │
+│  │ Web      │  │ Reminder                │   │
+│  │ Search   │  │ Scheduler               │   │
+│  └──────────┘  └─────────────────────────┘   │
+└──────────────────────────────────────────────┘
 ```
 
-> This repository contains the **landing site** — a multi-page static site with 30+ pages and 50+ interactive JS modules, deployed via GitHub Pages. The bot backend runs separately and communicates through the Telegram Bot API.
+> This repository contains the **landing site** — a multi-page static site with 83 pages and 67 interactive JS modules, deployed via GitHub Pages. The bot backend runs separately and communicates through the Telegram Bot API.
 
 ---
 
@@ -198,6 +249,9 @@ Beyond the main landing page, the site includes 30+ standalone pages with intera
 | **AI** | GPT-4o, Claude | Language understanding + generation + vision |
 | **Analytics** | GoatCounter | Privacy-friendly, cookie-free tracking |
 | **CI** | GitHub Actions | HTML validation, link checks, accessibility audit |
+| **Testing** | Jest | 71 test suites with coverage thresholds |
+| **Security** | CodeQL + Dependabot | Automated vulnerability scanning and dependency updates |
+| **Package** | npm (`agentbox-landing`) | Reusable interactive components |
 
 ---
 
@@ -207,39 +261,63 @@ Beyond the main landing page, the site includes 30+ standalone pages with intera
 getagentbox/
 ├── index.html                              # Main landing page
 ├── styles.css                              # Global styling (dark theme, responsive)
-├── app.js                                  # Interactive component orchestrator
 ├── cookie-consent.js                       # GDPR-compliant cookie consent
-├── keyboard-shortcuts.js                   # Keyboard navigation support
-├── build.js                                # Build script
+├── build.js                                # Build script (template processing)
 │
-├── # ─── Site Pages (30+) ───
+├── # ─── Site Pages (75+ HTML files) ───
 ├── compare.html                            # Feature comparison matrix
 ├── faq.html                                # FAQ page
 ├── api-docs.html                           # API documentation
 ├── tutorials.html                          # User tutorials
-├── blog.html                               # Blog / updates
+├── blog.html / updates.html                # Blog and product updates
 ├── community.html                          # Community hub
 ├── integrations.html                       # Integration catalog
 ├── onboarding.html                         # Onboarding wizard
 ├── roi-calculator.html                     # ROI calculator tool
+├── cost-optimizer.html                     # Cost optimization tool
 ├── use-case-explorer.html                  # Interactive use case explorer
 ├── status-page.html                        # Service status dashboard
 ├── uptime-history.html                     # Historical uptime data
+├── war-room.html                           # Incident response dashboard
+├── autopsy.html                            # Failed interaction analysis
+├── persona-creator.html                    # Agent personality designer
+├── autonomy-ladder.html                    # Autonomy level configuration
+├── memory-palace.html                      # Agent memory visualizer
+├── empathy-engine.html                     # Emotional intelligence engine
+├── reasoning-trace.html                    # Reasoning chain inspector
+├── swarm-orchestrator.html                 # Multi-agent swarm coordination
+├── digital-twin.html                       # Digital twin simulations
+├── calibration-lab.html                    # Response calibration lab
+├── knowledge-distillation.html             # Knowledge extraction tool
+├── trust-score.html / trust-evolution.html # Trust scoring and tracking
+├── red-team-arena.html                     # Adversarial testing
+├── threat-model.html                       # Threat modeling tool
 ├── security-whitepaper.html                # Security documentation
 ├── accessibility.html                      # Accessibility statement
-├── testimonials.html                       # User testimonials
 ├── privacy.html / terms.html / sla.html    # Legal pages
 ├── careers.html / partners.html            # Company pages
+├── affiliate.html                          # Referral program
+├── case-studies.html                       # Deployment case studies
+├── press-kit.html                          # Media and brand assets
+├── voting.html                             # Community governance
 ├── 404.html                                # Custom error page
+├── sitemap.html                            # Site map
 ├── ... (and more)
 │
-├── src/                                    # npm package source
+├── src/                                    # npm package source (67 modules)
 │   ├── index.js                            # Package entry (FAQ, Pricing, Stats)
 │   ├── roi-calculator.js                   # ROI calculator logic
 │   ├── capability-radar.js                 # Capability radar chart
 │   ├── workflow-builder.js                 # Visual workflow builder
 │   ├── command-reference.js                # Command reference engine
-│   └── modules/                            # 50+ modular UI components
+│   ├── autonomy-ladder.js                  # Autonomy level logic
+│   ├── benchmarks.js                       # Performance benchmarks
+│   ├── calibration-lab.js                  # Calibration lab logic
+│   ├── events-page.js                      # Events page logic
+│   ├── migration-guide.js                  # Migration guide logic
+│   ├── role-demo-picker.js                 # Role-based demo selector
+│   ├── use-case-explorer.js                # Use case explorer logic
+│   └── modules/                            # 55 modular UI components
 │       ├── chat-demo.js                    # Animated chat simulation
 │       ├── pricing.js                      # Pricing toggle & tiers
 │       ├── faq.js                          # FAQ accordion
@@ -253,36 +331,62 @@ getagentbox/
 │       ├── prompt-gallery.js               # Prompt template gallery
 │       ├── theme-toggle.js                 # Light/dark theme toggle
 │       ├── site-nav.js                     # Navigation system
-│       └── ... (40+ more modules)
+│       ├── activity-feed.js                # Real-time activity feed
+│       ├── capacity-planner.js             # Capacity planning tool
+│       ├── help-chat-widget.js             # In-page help chat
+│       ├── privacy-checkup.js              # Privacy audit tool
+│       ├── referral-program.js             # Referral program logic
+│       ├── scenario-planner.js             # Scenario planning tool
+│       ├── scroll-progress.js              # Reading progress indicator
+│       ├── section-minimap.js              # Page section minimap
+│       ├── share-card-generator.js         # Social share card generator
+│       ├── social-proof-toasts.js          # Social proof notifications
+│       ├── speed-challenge.js              # Interactive speed benchmarks
+│       ├── status-dashboard.js             # Status dashboard widget
+│       ├── storage.js                      # Client-side storage layer
+│       ├── workflow-templates.js           # Workflow template library
+│       └── ... (28 more modules)
 │
-├── docs/                                   # Developer documentation
+├── docs/                                   # Developer documentation (8 pages)
 │   ├── index.html                          # API reference
 │   ├── getting-started.html                # Setup guide
 │   ├── architecture.html                   # Architecture overview
 │   ├── changelog.html                      # Visual changelog
+│   ├── component-catalog.html              # Component gallery
+│   ├── deployment.html                     # Deployment guide
+│   ├── performance.html                    # Performance guide
+│   ├── plugin-development.html             # Plugin development guide
 │   ├── customization.md                    # Customization guide
-│   └── modules.md                          # Module documentation
+│   ├── modules.md                          # Module documentation
 │   └── TESTING.md                          # Testing guide & conventions
 │
 ├── vendor/                                 # Vendored dependencies
-├── __tests__/                              # Jest test suites
+├── __tests__/                              # 71 Jest test suites
+│
 ├── Dockerfile                              # Multi-stage nginx container
 ├── .dockerignore                           # Docker build exclusions
+├── package.json                            # npm package config (agentbox-landing)
+├── jest.config.js                          # Jest configuration
 ├── codecov.yml                             # Code coverage config
 ├── CONTRIBUTING.md                         # Contribution guidelines
 ├── CHANGELOG.md                            # Release changelog
+├── SECURITY.md                             # Security policy
 ├── LICENSE                                 # MIT License
+│
+├── dist/                                   # Built distribution files
 │
 └── .github/
     ├── copilot-setup-steps.yml             # GitHub Copilot coding agent config
     ├── copilot-instructions.md             # Repo context for AI agents
     ├── pull_request_template.md            # PR template
+    ├── dependabot.yml                      # Dependabot config
     ├── ISSUE_TEMPLATE/                     # Issue form templates
     └── workflows/
         ├── ci.yml                          # CI: validate, lint, a11y audit
         ├── pages.yml                       # Auto-deploy to GitHub Pages
         ├── publish.yml                     # npm publish on release
-        └── docker.yml                      # Docker build/push
+        ├── docker.yml                      # Docker build/push
+        └── codeql.yml                      # CodeQL security scanning
 ```
 
 ---
@@ -363,7 +467,7 @@ Runs as a non-root user for production security.
 
 ## 🧪 Testing
 
-The project has a comprehensive test suite with 66 test files covering all interactive modules.
+71 test suites covering all interactive modules, page logic, security hardening, and edge cases.
 
 ```bash
 # Run all tests
@@ -377,6 +481,13 @@ npx jest __tests__/storage.test.js
 ```
 
 Coverage thresholds (enforced in CI): 70% lines, 70% statements, 60% branches, 60% functions.
+
+Test categories include:
+- **Module tests** — Individual UI component behavior (chat-demo, pricing, FAQ, playground, etc.)
+- **Page-level tests** — Full-page logic for ROI calculator, capacity planner, autonomy ladder, calibration lab
+- **Security tests** — LocalStorage security, refactored security patterns, input sanitization
+- **Integration tests** — DOM utils, storage layer, site navigation, theme toggle
+- **Edge case tests** — Bugfix regression tests, feedback edge cases, performance caching
 
 See the full [Testing Guide](docs/TESTING.md) for architecture details, conventions, and troubleshooting.
 
@@ -392,6 +503,8 @@ See [SECURITY.md](SECURITY.md) for the full security policy and vulnerability re
 - **9 security headers** — CSP, HSTS, COOP, COEP, CORP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - **Docker** — Non-root user, multi-stage build, Alpine minimal image, health checks
 - **No cookies** — Privacy-first analytics via GoatCounter
+- **CodeQL** — Automated code scanning for JS/HTML vulnerabilities
+- **Dependabot** — Automated dependency updates with security alerts
 
 ---
 
@@ -403,6 +516,7 @@ See [SECURITY.md](SECURITY.md) for the full security policy and vulnerability re
 - **No external deps** — Loads fast everywhere, no CDN dependency
 - **Interactive demos** — Animated chat simulations to show real usage patterns
 - **Privacy-first analytics** — GoatCounter (cookie-free, GDPR-compliant)
+- **Modular architecture** — 55 self-contained UI components in `src/modules/`
 
 ---
 
@@ -431,6 +545,8 @@ The CI workflow runs on every push and PR:
 | **Structure Check** | DOCTYPE, lang, charset, viewport, title, meta description, OG tags |
 | **Link Validation** | All external links in `index.html` and `README.md` (via lychee) |
 | **Accessibility** | WCAG 2.0 AA audit via pa11y |
+| **Tests** | 71 Jest test suites with coverage thresholds |
+| **CodeQL** | Static analysis for security vulnerabilities |
 
 ---
 
@@ -440,9 +556,11 @@ Contributions are welcome! This is a simple static site, so getting started is s
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/your-idea`
-3. **Edit** `index.html` — that's the entire codebase
-4. **Test** locally with any static file server
+3. **Make changes** and test locally
+4. **Run tests**: `npm test`
 5. **Open** a Pull Request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ### Ideas for contributions
 
@@ -452,18 +570,19 @@ Contributions are welcome! This is a simple static site, so getting started is s
 - ⚡ Performance optimizations
 - 🔍 SEO improvements (structured data, Twitter cards)
 - 📱 PWA support (service worker, manifest)
+- 🧩 New interactive tools and pages
 
 ---
 
 ## 📄 License
 
-© [Saurav Bhattacharya](https://github.com/sauravbhattacharya001). All rights reserved.
+[MIT License](LICENSE) — © [Saurav Bhattacharya](https://github.com/sauravbhattacharya001)
 
 ---
 
 <div align="center">
 
-**[🌐 Live Site](https://sauravbhattacharya001.github.io/getagentbox/)** · **[💬 Try on Telegram](https://t.me/AgentBox11Bot)** · **[🐛 Report Bug](https://github.com/sauravbhattacharya001/getagentbox/issues/new?template=bug_report.yml)** · **[💡 Request Feature](https://github.com/sauravbhattacharya001/getagentbox/issues/new?template=feature_request.yml)**
+**[🌐 Live Site](https://sauravbhattacharya001.github.io/getagentbox/)** · **[💬 Try on Telegram](https://t.me/AgentBox11Bot)** · **[📦 npm Package](https://www.npmjs.com/package/agentbox-landing)** · **[🐛 Report Bug](https://github.com/sauravbhattacharya001/getagentbox/issues/new?template=bug_report.yml)** · **[💡 Request Feature](https://github.com/sauravbhattacharya001/getagentbox/issues/new?template=feature_request.yml)**
 
 Built by [Saurav Bhattacharya](https://github.com/sauravbhattacharya001)
 
