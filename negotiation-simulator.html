@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentBox — Agent Negotiation Simulator</title>
+    <meta name="description" content="Interactive multi-agent negotiation demo. Watch AI agents negotiate resource allocation using different strategies — cooperative, competitive, tit-for-tat, random, and adaptive.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1e1e1e;
+            --surface-3: #252525;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #00d4ff;
+            --accent-light: #66e5ff;
+            --accent-bg: #00d4ff15;
+            --green: #00b894;
+            --green-bg: #00b89422;
+            --yellow: #fdcb6e;
+            --yellow-bg: #fdcb6e22;
+            --orange: #e17055;
+            --orange-bg: #e1705522;
+            --red: #d63031;
+            --red-bg: #d6303122;
+            --purple: #6c5ce7;
+            --purple-bg: #6c5ce722;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .header {
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header a { color: var(--accent); text-decoration: none; font-size: 14px; }
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+        /* Controls */
+        .controls {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+        }
+        .ctrl-btn {
+            padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--surface-2); color: var(--text); font-size: 13px; cursor: pointer;
+            transition: all 0.2s; font-weight: 500;
+        }
+        .ctrl-btn:hover { border-color: var(--accent); }
+        .ctrl-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+        .ctrl-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+        .ctrl-btn.primary:hover { background: var(--accent-light); }
+        .ctrl-separator { width: 1px; height: 24px; background: var(--border); }
+        .preset-label { font-size: 12px; color: var(--text-muted); margin-right: 4px; }
+        .round-counter { font-size: 13px; color: var(--text-muted); margin-left: auto; }
+
+        /* Slider */
+        .slider-group { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+        .slider-group input[type=range] { width: 80px; accent-color: var(--accent); }
+
+        /* Main grid */
+        .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+        /* Canvas panel */
+        .canvas-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            position: relative;
+        }
+        .canvas-panel h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        canvas#negotiationCanvas { width: 100%; height: 400px; display: block; border-radius: var(--radius-sm); background: var(--surface-2); }
+        .status-badge {
+            position: absolute; top: 20px; right: 20px;
+            padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+        }
+        .status-badge.negotiating { background: var(--accent-bg); color: var(--accent); }
+        .status-badge.agreement { background: var(--green-bg); color: var(--green); }
+        .status-badge.deadlock { background: var(--red-bg); color: var(--red); }
+        .status-badge.timeout { background: var(--orange-bg); color: var(--orange); }
+
+        /* Right sidebar */
+        .sidebar { display: flex; flex-direction: column; gap: 20px; }
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .panel h3 {
+            font-size: 13px; font-weight: 600; margin-bottom: 14px;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* Agent cards */
+        .agent-card {
+            padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--surface-2); margin-bottom: 8px; font-size: 13px;
+        }
+        .agent-card:last-child { margin-bottom: 0; }
+        .agent-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .agent-avatar { font-size: 20px; }
+        .agent-name { font-weight: 600; flex: 1; }
+        .agent-satisfaction { font-weight: 700; }
+        .agent-strategy {
+            display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+        }
+        .agent-strategy.cooperative { background: var(--green-bg); color: var(--green); }
+        .agent-strategy.competitive { background: var(--red-bg); color: var(--red); }
+        .agent-strategy.tit-for-tat { background: var(--yellow-bg); color: var(--yellow); }
+        .agent-strategy.random { background: var(--purple-bg); color: var(--purple); }
+        .agent-strategy.adaptive { background: var(--accent-bg); color: var(--accent); }
+        .agent-offer { color: var(--text-muted); margin-top: 4px; font-size: 12px; }
+        select.strategy-select {
+            background: var(--surface-3); color: var(--text); border: 1px solid var(--border);
+            border-radius: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer;
+        }
+
+        /* Event log */
+        .event-log { max-height: 260px; overflow-y: auto; font-size: 12px; }
+        .event-log::-webkit-scrollbar { width: 6px; }
+        .event-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .log-entry { padding: 6px 0; border-bottom: 1px solid var(--border); }
+        .log-entry:last-child { border-bottom: none; }
+        .log-round { color: var(--accent); font-weight: 600; margin-right: 6px; }
+        .log-action { color: var(--text-muted); }
+
+        /* Outcome dashboard */
+        .outcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .outcome-stat {
+            background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px; text-align: center;
+        }
+        .outcome-value { font-size: 28px; font-weight: 700; margin-bottom: 2px; }
+        .outcome-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+        .outcome-stat.pareto .outcome-value { color: var(--green); }
+        .outcome-stat.fairness .outcome-value { color: var(--yellow); }
+
+        .outcome-panel { display: none; }
+        .outcome-panel.visible { display: block; }
+
+        .export-btn {
+            margin-top: 12px; padding: 8px 16px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text);
+            font-size: 12px; cursor: pointer; width: 100%;
+        }
+        .export-btn:hover { border-color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← Back</a>
+        <h1>🤝 Agent Negotiation Simulator</h1>
+    </div>
+
+    <div class="container">
+        <div class="controls" id="controls">
+            <span class="preset-label">Presets:</span>
+            <button class="ctrl-btn active" data-preset="resource-split">💎 Resource Split</button>
+            <button class="ctrl-btn" data-preset="priority-conflict">⚡ Priority Conflict</button>
+            <button class="ctrl-btn" data-preset="multi-party-trade">🔄 Multi-Party Trade</button>
+            <button class="ctrl-btn" data-preset="salary">💰 Salary Negotiation</button>
+            <button class="ctrl-btn" data-preset="coalition">🏛️ Coalition Formation</button>
+            <div class="ctrl-separator"></div>
+            <button class="ctrl-btn primary" id="btnPlay">▶ Play</button>
+            <button class="ctrl-btn" id="btnStep">⏭ Step</button>
+            <button class="ctrl-btn" id="btnReset">↻ Reset</button>
+            <div class="ctrl-separator"></div>
+            <div class="slider-group">
+                <label>Speed:</label>
+                <input type="range" id="speedSlider" min="1" max="10" value="3">
+                <span id="speedLabel">3x</span>
+            </div>
+            <div class="slider-group">
+                <label>Max Rounds:</label>
+                <input type="range" id="roundsSlider" min="10" max="100" value="30" step="5">
+                <span id="roundsLabel">30</span>
+            </div>
+            <span class="round-counter" id="roundCounter">Round 0 / 30</span>
+        </div>
+
+        <div class="main-grid">
+            <div>
+                <div class="canvas-panel">
+                    <h2>Negotiation Arena</h2>
+                    <span class="status-badge negotiating" id="statusBadge">Negotiating</span>
+                    <canvas id="negotiationCanvas"></canvas>
+                </div>
+                <div class="outcome-panel" id="outcomePanel">
+                    <div class="panel" style="margin-top:20px;">
+                        <h3>📊 Outcome Dashboard</h3>
+                        <div class="outcome-grid" id="outcomeGrid"></div>
+                        <button class="export-btn" id="btnExport">📥 Export Negotiation as JSON</button>
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar">
+                <div class="panel" id="agentsPanel">
+                    <h3>🤖 Agents</h3>
+                    <div id="agentCards"></div>
+                </div>
+                <div class="panel">
+                    <h3>📋 Negotiation Log</h3>
+                    <div class="event-log" id="eventLog"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        /* ========== SCENARIO PRESETS ========== */
+        const PRESETS = {
+            'resource-split': {
+                name: 'Resource Split',
+                description: '3 agents negotiate dividing 100 compute units',
+                resources: ['compute'],
+                totalPool: { compute: 100 },
+                agents: [
+                    { name: 'Alpha', emoji: '🔵', strategy: 'competitive', priorities: { compute: 1.0 }, reservationValue: 0.2 },
+                    { name: 'Beta', emoji: '🟢', strategy: 'cooperative', priorities: { compute: 1.0 }, reservationValue: 0.15 },
+                    { name: 'Gamma', emoji: '🟡', strategy: 'tit-for-tat', priorities: { compute: 1.0 }, reservationValue: 0.25 }
+                ]
+            },
+            'priority-conflict': {
+                name: 'Priority Conflict',
+                description: '2 agents with opposing deadline preferences',
+                resources: ['speed', 'quality'],
+                totalPool: { speed: 100, quality: 100 },
+                agents: [
+                    { name: 'Rush', emoji: '🚀', strategy: 'competitive', priorities: { speed: 0.8, quality: 0.2 }, reservationValue: 0.3 },
+                    { name: 'Craft', emoji: '🎨', strategy: 'competitive', priorities: { speed: 0.2, quality: 0.8 }, reservationValue: 0.3 }
+                ]
+            },
+            'multi-party-trade': {
+                name: 'Multi-Party Trade',
+                description: '4 agents trading capabilities',
+                resources: ['data', 'compute', 'memory', 'bandwidth'],
+                totalPool: { data: 100, compute: 100, memory: 100, bandwidth: 100 },
+                agents: [
+                    { name: 'DataBot', emoji: '📊', strategy: 'adaptive', priorities: { data: 0.5, compute: 0.2, memory: 0.2, bandwidth: 0.1 }, reservationValue: 0.2 },
+                    { name: 'GPUNode', emoji: '⚡', strategy: 'competitive', priorities: { data: 0.1, compute: 0.6, memory: 0.2, bandwidth: 0.1 }, reservationValue: 0.25 },
+                    { name: 'MemBank', emoji: '💾', strategy: 'cooperative', priorities: { data: 0.1, compute: 0.1, memory: 0.6, bandwidth: 0.2 }, reservationValue: 0.2 },
+                    { name: 'NetLink', emoji: '🌐', strategy: 'tit-for-tat', priorities: { data: 0.2, compute: 0.1, memory: 0.1, bandwidth: 0.6 }, reservationValue: 0.2 }
+                ]
+            },
+            'salary': {
+                name: 'Salary Negotiation',
+                description: 'Employer vs candidate with hidden reservation prices',
+                resources: ['salary', 'equity', 'flexibility'],
+                totalPool: { salary: 100, equity: 100, flexibility: 100 },
+                agents: [
+                    { name: 'Employer', emoji: '🏢', strategy: 'competitive', priorities: { salary: 0.2, equity: 0.3, flexibility: 0.5 }, reservationValue: 0.35 },
+                    { name: 'Candidate', emoji: '👤', strategy: 'adaptive', priorities: { salary: 0.5, equity: 0.3, flexibility: 0.2 }, reservationValue: 0.3 }
+                ]
+            },
+            'coalition': {
+                name: 'Coalition Formation',
+                description: '5 agents forming alliances for a shared project',
+                resources: ['leadership', 'funding', 'expertise', 'network'],
+                totalPool: { leadership: 100, funding: 100, expertise: 100, network: 100 },
+                agents: [
+                    { name: 'Visionary', emoji: '🔮', strategy: 'cooperative', priorities: { leadership: 0.5, funding: 0.1, expertise: 0.2, network: 0.2 }, reservationValue: 0.15 },
+                    { name: 'Investor', emoji: '💎', strategy: 'competitive', priorities: { leadership: 0.1, funding: 0.5, expertise: 0.1, network: 0.3 }, reservationValue: 0.3 },
+                    { name: 'Expert', emoji: '🧠', strategy: 'tit-for-tat', priorities: { leadership: 0.2, funding: 0.2, expertise: 0.5, network: 0.1 }, reservationValue: 0.2 },
+                    { name: 'Connector', emoji: '🤝', strategy: 'adaptive', priorities: { leadership: 0.1, funding: 0.2, expertise: 0.1, network: 0.6 }, reservationValue: 0.2 },
+                    { name: 'Builder', emoji: '🔧', strategy: 'random', priorities: { leadership: 0.2, funding: 0.3, expertise: 0.3, network: 0.2 }, reservationValue: 0.15 }
+                ]
+            }
+        };
+
+        const STRATEGIES = ['cooperative', 'competitive', 'tit-for-tat', 'random', 'adaptive'];
+
+        /* ========== STATE ========== */
+        let state = {
+            preset: 'resource-split',
+            agents: [],
+            resources: [],
+            totalPool: {},
+            round: 0,
+            maxRounds: 30,
+            speed: 3,
+            status: 'idle', // idle | negotiating | agreement | deadlock | timeout
+            log: [],
+            history: [],
+            playing: false,
+            timer: null
+        };
+
+        /* ========== UTILITY FUNCTIONS ========== */
+        function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+        function calcUtility(agent, allocation) {
+            let u = 0;
+            const res = Object.keys(agent.priorities);
+            for (const r of res) {
+                const share = (allocation[r] || 0) / (state.totalPool[r] || 1);
+                u += share * (agent.priorities[r] || 0);
+            }
+            return Math.max(0, Math.min(1, u));
+        }
+
+        function calcGini(values) {
+            if (!values.length) return 0;
+            const sorted = [...values].sort((a, b) => a - b);
+            const n = sorted.length;
+            let sumDiffs = 0;
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    sumDiffs += Math.abs(sorted[i] - sorted[j]);
+                }
+            }
+            const mean = sorted.reduce((a, b) => a + b, 0) / n;
+            if (mean === 0) return 0;
+            return sumDiffs / (2 * n * n * mean);
+        }
+
+        function isParetoEfficient(agents, allocations) {
+            // Check if any agent can improve without making another worse
+            const utilities = agents.map((a, i) => calcUtility(a, allocations[i]));
+            // Simple check: total utility vs equal split utility
+            const totalU = utilities.reduce((a, b) => a + b, 0);
+            const maxPossibleU = agents.length; // max if each got 100%
+            return totalU / Math.max(1, agents.length) > 0.5 ? true : false;
+        }
+
+        function calcBATNA(agent) {
+            // Best Alternative: assume equal split
+            const n = state.agents.length;
+            const equalAlloc = {};
+            for (const r of state.resources) {
+                equalAlloc[r] = state.totalPool[r] / n;
+            }
+            return calcUtility(agent, equalAlloc);
+        }
+
+        /* ========== STRATEGY IMPLEMENTATIONS ========== */
+        function makeOffer(agent, agentIdx, round) {
+            const n = state.agents.length;
+            const resources = state.resources;
+            const newOffer = {};
+
+            switch (agent.strategy) {
+                case 'cooperative': {
+                    // Start slightly above fair, concede 10-20% toward others each round
+                    const concessionRate = 0.1 + Math.random() * 0.1;
+                    for (const r of resources) {
+                        const fair = state.totalPool[r] / n;
+                        const desired = state.totalPool[r] * (agent.priorities[r] || 0.25) * 1.3;
+                        const prev = agent.currentOffer[r] || desired;
+                        newOffer[r] = Math.max(fair * 0.5, prev - (prev - fair) * concessionRate);
+                    }
+                    break;
+                }
+                case 'competitive': {
+                    // Hold firm, concede only 2-5%
+                    const concessionRate = 0.02 + Math.random() * 0.03;
+                    for (const r of resources) {
+                        const desired = state.totalPool[r] * (agent.priorities[r] || 0.25) * 1.5;
+                        const prev = agent.currentOffer[r] || desired;
+                        const fair = state.totalPool[r] / n;
+                        newOffer[r] = Math.max(fair * 0.3, prev - prev * concessionRate);
+                    }
+                    break;
+                }
+                case 'tit-for-tat': {
+                    // Mirror opponent's last concession
+                    const otherIdx = (agentIdx + 1) % n;
+                    const other = state.agents[otherIdx];
+                    for (const r of resources) {
+                        const prev = agent.currentOffer[r] || state.totalPool[r] / n;
+                        const otherPrev = other.lastOffer ? other.lastOffer[r] : state.totalPool[r] / n;
+                        const otherCurrent = other.currentOffer[r] || state.totalPool[r] / n;
+                        const otherConcession = (otherPrev - otherCurrent) / Math.max(1, state.totalPool[r]);
+                        newOffer[r] = Math.max(0, prev - state.totalPool[r] * Math.abs(otherConcession));
+                    }
+                    break;
+                }
+                case 'random': {
+                    // Random within ±15% of current
+                    for (const r of resources) {
+                        const prev = agent.currentOffer[r] || state.totalPool[r] / n;
+                        const swing = state.totalPool[r] * 0.15;
+                        newOffer[r] = Math.max(0, prev + (Math.random() - 0.5) * 2 * swing);
+                    }
+                    break;
+                }
+                case 'adaptive': {
+                    // Start competitive, switch to cooperative if satisfaction drops
+                    const satisfaction = agent.satisfaction || 50;
+                    const isCooperativeNow = satisfaction < 40;
+                    const concessionRate = isCooperativeNow ? (0.1 + Math.random() * 0.1) : (0.02 + Math.random() * 0.03);
+                    for (const r of resources) {
+                        const fair = state.totalPool[r] / n;
+                        const desired = state.totalPool[r] * (agent.priorities[r] || 0.25) * (isCooperativeNow ? 1.1 : 1.5);
+                        const prev = agent.currentOffer[r] || desired;
+                        newOffer[r] = Math.max(fair * 0.3, prev - (prev - fair) * concessionRate);
+                    }
+                    break;
+                }
+                default: {
+                    for (const r of resources) {
+                        newOffer[r] = state.totalPool[r] / n;
+                    }
+                }
+            }
+
+            // Clamp to total pool
+            for (const r of resources) {
+                newOffer[r] = Math.max(0, Math.min(state.totalPool[r], newOffer[r]));
+            }
+
+            return newOffer;
+        }
+
+        function normalizeAllocations(offers) {
+            // Scale offers so total per resource doesn't exceed pool
+            const normalized = offers.map(o => ({ ...o }));
+            for (const r of state.resources) {
+                const total = normalized.reduce((sum, o) => sum + (o[r] || 0), 0);
+                if (total > state.totalPool[r] && total > 0) {
+                    const scale = state.totalPool[r] / total;
+                    for (const o of normalized) {
+                        o[r] = (o[r] || 0) * scale;
+                    }
+                }
+            }
+            return normalized;
+        }
+
+        function checkAgreement() {
+            const offers = state.agents.map(a => a.currentOffer);
+            const normalized = normalizeAllocations(offers);
+            let allSatisfied = true;
+            for (let i = 0; i < state.agents.length; i++) {
+                const u = calcUtility(state.agents[i], normalized[i]);
+                if (u < state.agents[i].reservationValue) {
+                    allSatisfied = false;
+                    break;
+                }
+            }
+            // Also check convergence: are offers close to each other?
+            let maxDrift = 0;
+            for (const r of state.resources) {
+                const vals = state.agents.map(a => (a.currentOffer[r] || 0));
+                const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+                for (const v of vals) {
+                    const drift = Math.abs(v - avg) / Math.max(1, state.totalPool[r]);
+                    maxDrift = Math.max(maxDrift, drift);
+                }
+            }
+            return allSatisfied && maxDrift < 0.15;
+        }
+
+        /* ========== SIMULATION STEP ========== */
+        function simulateRound() {
+            if (state.status !== 'negotiating') return;
+
+            state.round++;
+            const roundLog = [];
+
+            // Each agent makes an offer
+            for (let i = 0; i < state.agents.length; i++) {
+                const agent = state.agents[i];
+                agent.lastOffer = agent.currentOffer ? { ...agent.currentOffer } : null;
+                const newOffer = makeOffer(agent, i, state.round);
+                agent.currentOffer = newOffer;
+
+                // Calculate satisfaction
+                const normalized = normalizeAllocations(state.agents.map(a => a.currentOffer));
+                const u = calcUtility(agent, normalized[i]);
+                agent.satisfaction = Math.round(u * 100);
+
+                // Log
+                const offerStr = state.resources.map(r => `${r}:${Math.round(newOffer[r])}`).join(', ');
+                roundLog.push({
+                    round: state.round,
+                    agent: agent.name,
+                    emoji: agent.emoji,
+                    action: 'propose',
+                    detail: offerStr,
+                    satisfaction: agent.satisfaction
+                });
+            }
+
+            state.log.push(...roundLog);
+            state.history.push({
+                round: state.round,
+                offers: state.agents.map(a => ({ ...a.currentOffer })),
+                satisfactions: state.agents.map(a => a.satisfaction)
+            });
+
+            // Check for agreement
+            if (checkAgreement()) {
+                state.status = 'agreement';
+                state.log.push({ round: state.round, agent: 'System', emoji: '✅', action: 'agreement', detail: 'All agents reached consensus!' });
+                stopSimulation();
+                showOutcome();
+            } else if (state.round >= state.maxRounds) {
+                state.status = 'timeout';
+                state.log.push({ round: state.round, agent: 'System', emoji: '⏰', action: 'timeout', detail: `Max rounds (${state.maxRounds}) reached without agreement` });
+                stopSimulation();
+                showOutcome();
+            } else {
+                // Check for deadlock (no movement for 5 rounds)
+                if (state.round > 5) {
+                    const recent = state.history.slice(-5);
+                    let stalled = true;
+                    for (let i = 1; i < recent.length; i++) {
+                        for (let j = 0; j < state.agents.length; j++) {
+                            for (const r of state.resources) {
+                                if (Math.abs((recent[i].offers[j][r] || 0) - (recent[i - 1].offers[j][r] || 0)) > 0.5) {
+                                    stalled = false;
+                                }
+                            }
+                        }
+                    }
+                    if (stalled) {
+                        state.status = 'deadlock';
+                        state.log.push({ round: state.round, agent: 'System', emoji: '🔒', action: 'deadlock', detail: 'Negotiation stalled — no movement detected' });
+                        stopSimulation();
+                        showOutcome();
+                    }
+                }
+            }
+
+            render();
+        }
+
+        /* ========== OUTCOME ========== */
+        function showOutcome() {
+            const panel = document.getElementById('outcomePanel');
+            const grid = document.getElementById('outcomeGrid');
+            panel.classList.add('visible');
+
+            const normalized = normalizeAllocations(state.agents.map(a => a.currentOffer));
+            const utilities = state.agents.map((a, i) => calcUtility(a, normalized[i]));
+            const gini = calcGini(utilities);
+            const pareto = isParetoEfficient(state.agents, normalized);
+            const avgBATNA = state.agents.map(a => calcBATNA(a)).reduce((a, b) => a + b, 0) / state.agents.length;
+            const avgUtility = utilities.reduce((a, b) => a + b, 0) / utilities.length;
+
+            grid.innerHTML = `
+                <div class="outcome-stat">
+                    <div class="outcome-value" style="color: ${state.status === 'agreement' ? 'var(--green)' : state.status === 'deadlock' ? 'var(--red)' : 'var(--orange)'}">${state.status === 'agreement' ? '✅' : state.status === 'deadlock' ? '🔒' : '⏰'}</div>
+                    <div class="outcome-label">${state.status.charAt(0).toUpperCase() + state.status.slice(1)}</div>
+                </div>
+                <div class="outcome-stat">
+                    <div class="outcome-value">${state.round}</div>
+                    <div class="outcome-label">Rounds Taken</div>
+                </div>
+                <div class="outcome-stat pareto">
+                    <div class="outcome-value">${pareto ? 'Yes ✓' : 'No ✗'}</div>
+                    <div class="outcome-label">Pareto Efficient</div>
+                </div>
+                <div class="outcome-stat fairness">
+                    <div class="outcome-value">${(1 - gini).toFixed(2)}</div>
+                    <div class="outcome-label">Fairness (1-Gini)</div>
+                </div>
+                <div class="outcome-stat">
+                    <div class="outcome-value" style="color:var(--accent)">${(avgUtility * 100).toFixed(0)}%</div>
+                    <div class="outcome-label">Avg Utility</div>
+                </div>
+                <div class="outcome-stat">
+                    <div class="outcome-value" style="color:var(--purple)">${(avgBATNA * 100).toFixed(0)}%</div>
+                    <div class="outcome-label">Avg BATNA</div>
+                </div>
+            `;
+        }
+
+        /* ========== CANVAS RENDERING ========== */
+        function renderCanvas() {
+            const canvas = document.getElementById('negotiationCanvas');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            const W = rect.width;
+            const H = rect.height;
+
+            ctx.clearRect(0, 0, W, H);
+
+            if (!state.agents.length) return;
+
+            // Position agents in a circle
+            const cx = W / 2;
+            const cy = H / 2;
+            const radius = Math.min(W, H) * 0.32;
+            const n = state.agents.length;
+            const positions = state.agents.map((_, i) => {
+                const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+                return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius };
+            });
+
+            // Draw proposal arrows between agents
+            if (state.round > 0) {
+                ctx.lineWidth = 1.5;
+                ctx.globalAlpha = 0.3;
+                for (let i = 0; i < n; i++) {
+                    for (let j = i + 1; j < n; j++) {
+                        const sat = ((state.agents[i].satisfaction || 0) + (state.agents[j].satisfaction || 0)) / 200;
+                        const r = Math.round(255 * (1 - sat));
+                        const g = Math.round(255 * sat);
+                        ctx.strokeStyle = `rgb(${r},${g},100)`;
+                        ctx.beginPath();
+                        ctx.moveTo(positions[i].x, positions[i].y);
+                        ctx.lineTo(positions[j].x, positions[j].y);
+                        ctx.stroke();
+                    }
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // Draw agents
+            for (let i = 0; i < n; i++) {
+                const agent = state.agents[i];
+                const pos = positions[i];
+                const sat = (agent.satisfaction || 0) / 100;
+
+                // Circle
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 32, 0, Math.PI * 2);
+                const hue = sat > 0.5 ? 160 : sat > 0.3 ? 45 : 0;
+                ctx.fillStyle = `hsla(${hue}, 70%, 40%, 0.3)`;
+                ctx.fill();
+                ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.8)`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Satisfaction arc
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 36, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * sat));
+                ctx.strokeStyle = `hsla(${hue}, 80%, 60%, 1)`;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Emoji
+                ctx.font = '22px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(agent.emoji, pos.x, pos.y);
+
+                // Name
+                ctx.font = '12px -apple-system, sans-serif';
+                ctx.fillStyle = '#e8e8e8';
+                ctx.fillText(agent.name, pos.x, pos.y + 50);
+
+                // Satisfaction score
+                ctx.font = 'bold 13px -apple-system, sans-serif';
+                ctx.fillStyle = `hsla(${hue}, 70%, 65%, 1)`;
+                ctx.fillText(`${agent.satisfaction || 0}%`, pos.x, pos.y + 64);
+            }
+
+            // Center status
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 14px -apple-system, sans-serif';
+            ctx.fillStyle = '#888';
+            if (state.status === 'negotiating' && state.round > 0) {
+                ctx.fillText(`Round ${state.round}`, cx, cy);
+            } else if (state.status === 'agreement') {
+                ctx.fillStyle = '#00b894';
+                ctx.font = 'bold 16px -apple-system, sans-serif';
+                ctx.fillText('🤝 Agreement!', cx, cy);
+            } else if (state.status === 'deadlock') {
+                ctx.fillStyle = '#d63031';
+                ctx.font = 'bold 16px -apple-system, sans-serif';
+                ctx.fillText('🔒 Deadlock', cx, cy);
+            } else if (state.status === 'timeout') {
+                ctx.fillStyle = '#e17055';
+                ctx.font = 'bold 16px -apple-system, sans-serif';
+                ctx.fillText('⏰ Timeout', cx, cy);
+            }
+        }
+
+        /* ========== UI RENDERING ========== */
+        function renderAgentCards() {
+            const container = document.getElementById('agentCards');
+            container.innerHTML = state.agents.map((agent, i) => `
+                <div class="agent-card">
+                    <div class="agent-header">
+                        <span class="agent-avatar">${agent.emoji}</span>
+                        <span class="agent-name">${agent.name}</span>
+                        <span class="agent-satisfaction" style="color: ${agent.satisfaction > 60 ? 'var(--green)' : agent.satisfaction > 30 ? 'var(--yellow)' : 'var(--red)'}">${agent.satisfaction || 0}%</span>
+                    </div>
+                    <span class="agent-strategy ${agent.strategy}">${agent.strategy}</span>
+                    <select class="strategy-select" data-agent="${i}" ${state.status !== 'idle' && state.status !== 'negotiating' ? 'disabled' : ''}>
+                        ${STRATEGIES.map(s => `<option value="${s}" ${s === agent.strategy ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                    <div class="agent-offer">${agent.currentOffer ? state.resources.map(r => `${r}: ${Math.round(agent.currentOffer[r] || 0)}`).join(' · ') : 'No offer yet'}</div>
+                </div>
+            `).join('');
+
+            // Bind strategy selects
+            container.querySelectorAll('.strategy-select').forEach(sel => {
+                sel.addEventListener('change', (e) => {
+                    const idx = parseInt(e.target.dataset.agent);
+                    state.agents[idx].strategy = e.target.value;
+                    render();
+                });
+            });
+        }
+
+        function renderLog() {
+            const container = document.getElementById('eventLog');
+            const entries = state.log.slice(-50).reverse();
+            container.innerHTML = entries.map(e => `
+                <div class="log-entry">
+                    <span class="log-round">R${e.round}</span>
+                    <span>${e.emoji} ${e.agent}</span>
+                    <span class="log-action"> — ${e.action}: ${e.detail}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderStatus() {
+            const badge = document.getElementById('statusBadge');
+            badge.className = 'status-badge ' + state.status;
+            const labels = { idle: 'Ready', negotiating: 'Negotiating', agreement: 'Agreement', deadlock: 'Deadlock', timeout: 'Timeout' };
+            badge.textContent = labels[state.status] || state.status;
+            document.getElementById('roundCounter').textContent = `Round ${state.round} / ${state.maxRounds}`;
+        }
+
+        function render() {
+            renderAgentCards();
+            renderLog();
+            renderStatus();
+            renderCanvas();
+        }
+
+        /* ========== CONTROL FUNCTIONS ========== */
+        function initPreset(presetKey) {
+            stopSimulation();
+            const preset = PRESETS[presetKey];
+            if (!preset) return;
+
+            state.preset = presetKey;
+            state.resources = preset.resources;
+            state.totalPool = { ...preset.totalPool };
+            state.agents = preset.agents.map(a => ({
+                ...deepClone(a),
+                currentOffer: null,
+                lastOffer: null,
+                satisfaction: 50
+            }));
+            state.round = 0;
+            state.status = 'idle';
+            state.log = [];
+            state.history = [];
+
+            // Initialize starting offers
+            const n = state.agents.length;
+            for (const agent of state.agents) {
+                agent.currentOffer = {};
+                for (const r of state.resources) {
+                    // Start with priority-weighted share
+                    agent.currentOffer[r] = state.totalPool[r] * (agent.priorities[r] || (1 / state.resources.length)) * 1.3;
+                    agent.currentOffer[r] = Math.min(agent.currentOffer[r], state.totalPool[r]);
+                }
+            }
+
+            document.getElementById('outcomePanel').classList.remove('visible');
+
+            // Update preset buttons
+            document.querySelectorAll('#controls [data-preset]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.preset === presetKey);
+            });
+
+            render();
+        }
+
+        function startSimulation() {
+            if (state.status === 'agreement' || state.status === 'deadlock' || state.status === 'timeout') return;
+            state.status = 'negotiating';
+            state.playing = true;
+            document.getElementById('btnPlay').textContent = '⏸ Pause';
+            const interval = Math.max(100, 1000 / state.speed);
+            state.timer = setInterval(simulateRound, interval);
+        }
+
+        function stopSimulation() {
+            state.playing = false;
+            if (state.timer) clearInterval(state.timer);
+            state.timer = null;
+            document.getElementById('btnPlay').textContent = '▶ Play';
+        }
+
+        function togglePlay() {
+            if (state.playing) {
+                stopSimulation();
+            } else {
+                startSimulation();
+            }
+        }
+
+        function stepOnce() {
+            if (state.status === 'agreement' || state.status === 'deadlock' || state.status === 'timeout') return;
+            stopSimulation();
+            state.status = 'negotiating';
+            simulateRound();
+        }
+
+        function resetSimulation() {
+            initPreset(state.preset);
+        }
+
+        /* ========== EXPORT ========== */
+        function exportJSON() {
+            const data = {
+                preset: state.preset,
+                maxRounds: state.maxRounds,
+                outcome: state.status,
+                totalRounds: state.round,
+                agents: state.agents.map(a => ({
+                    name: a.name,
+                    strategy: a.strategy,
+                    priorities: a.priorities,
+                    reservationValue: a.reservationValue,
+                    finalOffer: a.currentOffer,
+                    satisfaction: a.satisfaction
+                })),
+                resources: state.resources,
+                totalPool: state.totalPool,
+                history: state.history,
+                metrics: (() => {
+                    const normalized = normalizeAllocations(state.agents.map(a => a.currentOffer));
+                    const utilities = state.agents.map((a, i) => calcUtility(a, normalized[i]));
+                    return {
+                        gini: calcGini(utilities),
+                        fairness: 1 - calcGini(utilities),
+                        paretoEfficient: isParetoEfficient(state.agents, normalized),
+                        avgUtility: utilities.reduce((a, b) => a + b, 0) / utilities.length,
+                        avgBATNA: state.agents.map(a => calcBATNA(a)).reduce((a, b) => a + b, 0) / state.agents.length
+                    };
+                })()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `negotiation-${state.preset}-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        /* ========== EVENT LISTENERS ========== */
+        document.querySelectorAll('#controls [data-preset]').forEach(btn => {
+            btn.addEventListener('click', () => initPreset(btn.dataset.preset));
+        });
+
+        document.getElementById('btnPlay').addEventListener('click', togglePlay);
+        document.getElementById('btnStep').addEventListener('click', stepOnce);
+        document.getElementById('btnReset').addEventListener('click', resetSimulation);
+        document.getElementById('btnExport').addEventListener('click', exportJSON);
+
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            state.speed = parseInt(e.target.value);
+            document.getElementById('speedLabel').textContent = state.speed + 'x';
+            if (state.playing) {
+                clearInterval(state.timer);
+                const interval = Math.max(100, 1000 / state.speed);
+                state.timer = setInterval(simulateRound, interval);
+            }
+        });
+
+        document.getElementById('roundsSlider').addEventListener('input', (e) => {
+            state.maxRounds = parseInt(e.target.value);
+            document.getElementById('roundsLabel').textContent = state.maxRounds;
+            document.getElementById('roundCounter').textContent = `Round ${state.round} / ${state.maxRounds}`;
+        });
+
+        // Canvas resize
+        window.addEventListener('resize', renderCanvas);
+
+        /* ========== EXPOSE FOR TESTING ========== */
+        if (typeof window !== 'undefined') {
+            window.NegotiationSimulator = {
+                PRESETS,
+                STRATEGIES,
+                state,
+                calcUtility,
+                calcGini,
+                isParetoEfficient,
+                calcBATNA,
+                makeOffer,
+                normalizeAllocations,
+                checkAgreement,
+                simulateRound,
+                initPreset,
+                startSimulation,
+                stopSimulation,
+                togglePlay,
+                stepOnce,
+                resetSimulation,
+                exportJSON,
+                deepClone
+            };
+        }
+
+        /* ========== INIT ========== */
+        initPreset('resource-split');
+    })();
+    </script>
+</body>
+</html>
