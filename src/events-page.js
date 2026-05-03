@@ -276,16 +276,51 @@
     return 'DTSTART;VALUE=DATE:' + dateStr;
   }
 
+  /**
+   * Parse a human-readable duration string into total minutes.
+   * Handles "45 min", "90 min", "30 min talk", "2 hours", etc.
+   * Returns 60 as a fallback when the format is unrecognised.
+   */
+  function parseDurationMinutes(durStr) {
+    if (!durStr) return 60;
+    var m = durStr.match(/(\d+)\s*min/i);
+    if (m) return parseInt(m[1], 10);
+    var h = durStr.match(/(\d+)\s*hour/i);
+    if (h) return parseInt(h[1], 10) * 60;
+    return 60;
+  }
+
+  /**
+   * Format an iCal DURATION value from minutes (e.g. "PT45M", "PT1H30M").
+   */
+  function icalDuration(minutes) {
+    var h = Math.floor(minutes / 60);
+    var m = minutes % 60;
+    if (h > 0 && m > 0) return 'DURATION:PT' + h + 'H' + m + 'M';
+    if (h > 0) return 'DURATION:PT' + h + 'H';
+    return 'DURATION:PT' + m + 'M';
+  }
+
   // iCal export
   var icalLink = document.getElementById('icalLink');
   if (icalLink) {
     icalLink.addEventListener('click', function(e) {
       e.preventDefault();
+      var now = new Date();
+      var dtstamp = now.getUTCFullYear() +
+        ('0' + (now.getUTCMonth() + 1)).slice(-2) +
+        ('0' + now.getUTCDate()).slice(-2) + 'T' +
+        ('0' + now.getUTCHours()).slice(-2) +
+        ('0' + now.getUTCMinutes()).slice(-2) +
+        ('0' + now.getUTCSeconds()).slice(-2) + 'Z';
       var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AgentBox//Events//EN'];
       EVENTS.filter(function(ev) { return ev.status !== 'past'; }).forEach(function(ev) {
         var d = parseDate(ev.date);
         lines.push('BEGIN:VEVENT');
+        lines.push('UID:' + ev.id + '@agentbox.ai');
+        lines.push('DTSTAMP:' + dtstamp);
         lines.push(icalDTStart(d, ev.time));
+        lines.push(icalDuration(parseDurationMinutes(ev.duration)));
         lines.push('SUMMARY:' + icalEscapeText(ev.title));
         lines.push('DESCRIPTION:' + icalEscapeText(ev.description.substring(0, 200)));
         lines.push('END:VEVENT');
