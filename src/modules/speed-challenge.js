@@ -167,8 +167,6 @@ var SpeedChallenge = (function () {
     });
 
     // Agent finish
-    var agentDone = false;
-    var tradDone = false;
     var aFinish = setTimeout(function () {
       clearInterval(aTimerInterval);
       timerA.textContent = (aTotal / 1000).toFixed(1) + 's';
