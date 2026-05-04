@@ -55,6 +55,7 @@
                 <li role="none"><a href="#shareCardSection" role="menuitem">Share Card</a></li>
                 <li role="none"><a href="#speedChallengeSection" role="menuitem">Speed</a></li>
                 <li role="none"><a href="#scenarioPlannerSection" role="menuitem">Scenarios</a></li>
+                <li role="none"><a href="#delegationVisualizerSection" role="menuitem">Delegation</a></li>
                 <li role="none"><a href="#privacyCheckupSection" role="menuitem">Privacy</a></li>
                 <li role="none"><a href="#feedbackSection" role="menuitem">Feedback</a></li>
                 <li role="none"><a href="#workflowBuilderSection" role="menuitem">Workflows</a></li>
@@ -2202,6 +2203,31 @@
             <div class="scenario-phases" id="scenarioPhases"></div>
             <div class="scenario-summary" id="scenarioSummary" hidden></div>
             <button class="scenario-reset-btn" id="scenarioResetBtn">Try Another Scenario</button>
+        </div>
+    </section>
+
+    <!-- Delegation Visualizer -->
+    <section class="section delegation-section" id="delegationVisualizerSection" aria-labelledby="delegationVisualizerTitle">
+        <h2 class="section-title" id="delegationVisualizerTitle">🤝 Agent Delegation Visualizer</h2>
+        <p class="section-subtitle">See how AgentBox breaks complex tasks into subtasks and delegates to specialized agents</p>
+
+        <div class="delegation-presets" role="group" aria-label="Choose a task">
+            <button class="delegation-preset-btn" data-task="Research competitor landscape and write a strategy report" aria-pressed="false">🔍 Competitor Research</button>
+            <button class="delegation-preset-btn" data-task="Plan and launch a Product Hunt campaign" aria-pressed="false">🚀 Product Hunt Launch</button>
+            <button class="delegation-preset-btn" data-task="Audit codebase security and fix critical vulnerabilities" aria-pressed="false">🛡️ Security Audit</button>
+            <button class="delegation-preset-btn" data-task="Organize a team offsite for 20 people" aria-pressed="false">🏕️ Team Offsite</button>
+            <button class="delegation-preset-btn" data-task="Build and deploy a landing page from a sketch" aria-pressed="false">🎨 Landing Page</button>
+        </div>
+
+        <div class="delegation-workspace" id="delegationWorkspace" hidden>
+            <div class="delegation-header">
+                <div class="delegation-task-label" id="delegationTaskLabel"></div>
+                <div class="delegation-status" id="delegationStatus">🤖 AgentBox is orchestrating...</div>
+            </div>
+            <div class="delegation-tree" id="delegationTreeRoot" role="tree" aria-label="Agent delegation tree"></div>
+            <div class="delegation-log" id="delegationLog" role="log" aria-label="Delegation activity log"></div>
+            <div class="delegation-summary" id="delegationSummary" hidden></div>
+            <button class="delegation-reset-btn" id="delegationResetBtn">Try Another Task</button>
         </div>
     </section>
 

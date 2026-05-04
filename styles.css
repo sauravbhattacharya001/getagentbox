@@ -8389,3 +8389,74 @@ select.wb-field-input { cursor: pointer; }
     background: var(--accent, #6c5ce7);
     color: #fff;
 }
+
+/* ── Delegation Visualizer ── */
+.delegation-section { padding: 4rem 2rem; }
+.delegation-presets { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; }
+.delegation-preset-btn {
+    padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid var(--border, #e0e0e0);
+    background: var(--card-bg, #fff); color: var(--text, #222); cursor: pointer;
+    font-size: 0.95rem; transition: all 0.2s;
+}
+.delegation-preset-btn:hover { border-color: var(--accent, #6c5ce7); background: var(--accent-light, #f0eaff); }
+.delegation-preset-btn[aria-pressed="true"] { border-color: var(--accent, #6c5ce7); background: var(--accent, #6c5ce7); color: #fff; }
+
+.delegation-workspace { display: grid; grid-template-columns: 1fr 280px; gap: 1.5rem; margin-top: 1rem; }
+.delegation-header { grid-column: 1 / -1; }
+.delegation-task-label { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.25rem; }
+.delegation-status { font-size: 0.95rem; color: var(--text-muted, #888); }
+.delegation-status.done { color: var(--success, #27ae60); font-weight: 600; }
+
+/* Tree */
+.delegation-tree { min-height: 200px; }
+.delegation-node { margin-left: 1.5rem; position: relative; opacity: 0; transition: opacity 0.3s; }
+.delegation-node.visible { opacity: 1; }
+.delegation-node.depth-0 { margin-left: 0; }
+.delegation-children { border-left: 2px solid var(--border, #ddd); margin-left: 1rem; padding-left: 0.5rem; }
+
+.delegation-node-card {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    padding: 0.75rem 1rem; margin: 0.5rem 0; border-radius: 10px;
+    border: 2px solid var(--border, #e0e0e0); background: var(--card-bg, #fff);
+    transition: all 0.3s;
+}
+.delegation-node-card[data-state="active"] { border-color: var(--accent, #6c5ce7); animation: delegation-pulse 1.5s infinite; }
+.delegation-node-card[data-state="done"] { border-left: 4px solid var(--success, #27ae60); }
+@keyframes delegation-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(108,92,231,0.3); } 50% { box-shadow: 0 0 0 6px rgba(108,92,231,0); } }
+
+.delegation-node-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+.delegation-node-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.delegation-node-agent { font-size: 0.95rem; }
+.delegation-node-task { font-size: 0.85rem; color: var(--text-muted, #888); }
+.delegation-node-result { font-size: 0.8rem; color: var(--success, #27ae60); font-style: italic; }
+.delegation-node-state { font-size: 0.8rem; color: var(--text-muted, #888); }
+
+/* Log panel */
+.delegation-log {
+    max-height: 400px; overflow-y: auto; padding: 0.75rem;
+    background: var(--code-bg, #1e1e2e); color: var(--code-text, #cdd6f4);
+    border-radius: 10px; font-family: 'Fira Code', monospace; font-size: 0.78rem; line-height: 1.6;
+}
+.delegation-log-entry { white-space: pre-wrap; word-break: break-word; }
+
+/* Summary */
+.delegation-summary { grid-column: 1 / -1; text-align: center; margin-top: 1rem; }
+.delegation-summary-stats { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.delegation-summary-stat .value { font-size: 1.8rem; font-weight: 700; color: var(--accent, #6c5ce7); }
+.delegation-summary-stat .label { font-size: 0.85rem; color: var(--text-muted, #888); }
+.delegation-summary-insight { font-size: 0.95rem; color: var(--text-muted, #888); max-width: 600px; margin: 0 auto; }
+
+.delegation-reset-btn {
+    margin-top: 1rem; padding: 0.5rem 1.5rem; border-radius: 8px;
+    border: 2px solid var(--border, #e0e0e0); background: transparent;
+    color: var(--text, #222); cursor: pointer; transition: all 0.2s;
+}
+.delegation-reset-btn:hover { background: var(--accent, #6c5ce7); color: #fff; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .delegation-workspace { grid-template-columns: 1fr; }
+    .delegation-log { max-height: 200px; }
+    .delegation-node { margin-left: 0.75rem; }
+    .delegation-children { margin-left: 0.5rem; }
+}

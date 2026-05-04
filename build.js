@@ -63,6 +63,7 @@ const files = [
   'src/modules/share-card-generator.js',
   'src/modules/speed-challenge.js',
   'src/modules/scenario-planner.js',
+  'src/modules/delegation-visualizer.js',
   'src/modules/privacy-checkup.js',
   'src/modules/referral-program.js',
   'src/modules/init.js',
