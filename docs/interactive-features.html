@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Features Reference — AgentBox Docs</title>
+    <meta name="description" content="Developer reference for all interactive demo modules in the AgentBox landing page — scenario planner, pipeline builder, personality configurator, and more.">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --bg-card: #1a1d28;
+            --bg-code: #252830;
+            --text: #e0e0e8;
+            --text-dim: #8b8fa0;
+            --accent: #4a9eff;
+            --accent-hover: #70b4ff;
+            --border: #2d3040;
+            --green: #4ade80;
+            --yellow: #facc15;
+            --red: #f87171;
+            --purple: #a78bfa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 2rem 0;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            overflow-y: auto;
+        }
+        .sidebar-logo { font-size: 1.4rem; font-weight: 700; padding: 0 1.5rem 1.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+        .sidebar-logo span { color: var(--accent); }
+        .sidebar nav { padding: 0 1rem; }
+        .sidebar nav a { display: block; padding: 0.45rem 0.75rem; border-radius: 6px; color: var(--text-dim); font-size: 0.9rem; transition: all 0.15s; }
+        .sidebar nav a:hover, .sidebar nav a.active { background: rgba(74,158,255,0.1); color: var(--accent); text-decoration: none; }
+        .sidebar nav .section-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); padding: 1.2rem 0.75rem 0.4rem; font-weight: 600; }
+
+        .content { margin-left: 260px; flex: 1; padding: 3rem 4rem; max-width: 960px; }
+        h1 { font-size: 2.2rem; margin-bottom: 1rem; }
+        h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 1.15rem; margin: 1.8rem 0 0.7rem; color: var(--accent); }
+        h4 { font-size: 1rem; margin: 1.2rem 0 0.5rem; color: var(--text); }
+        p { margin-bottom: 1rem; color: var(--text-dim); }
+        ul, ol { margin: 0 0 1.2rem 1.5rem; color: var(--text-dim); }
+        li { margin-bottom: 0.35rem; }
+
+        code { font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace; font-size: 0.85rem; background: var(--bg-code); padding: 0.15rem 0.4rem; border-radius: 4px; }
+        pre { background: var(--bg-code); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem; overflow-x: auto; margin-bottom: 1.5rem; }
+        pre code { background: none; padding: 0; }
+
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem; }
+        .card h4 { margin-bottom: 0.5rem; font-size: 1rem; }
+        .card p { font-size: 0.88rem; margin: 0; }
+
+        .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; }
+        .badge-green { background: rgba(74,222,128,0.15); color: var(--green); }
+        .badge-yellow { background: rgba(250,204,21,0.15); color: var(--yellow); }
+        .badge-blue { background: rgba(74,158,255,0.15); color: var(--accent); }
+        .badge-purple { background: rgba(167,139,250,0.15); color: var(--purple); }
+
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); }
+        th { background: var(--bg-code); color: var(--text); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        td { color: var(--text-dim); }
+        td code { font-size: 0.82rem; }
+
+        .api-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.5rem; margin: 1rem 0 1.5rem; }
+        .api-method { font-weight: 700; color: var(--green); font-family: monospace; }
+        .api-param { color: var(--yellow); font-family: monospace; font-size: 0.88rem; }
+        .api-desc { color: var(--text-dim); font-size: 0.88rem; }
+        .api-return { color: var(--purple); font-style: italic; font-size: 0.88rem; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .content { margin-left: 0; padding: 2rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">🤖 <span>AgentBox</span> Docs</div>
+            <nav>
+                <div class="section-title">Navigation</div>
+                <a href="index.html">← Back to Docs</a>
+                <a href="component-catalog.html">Component Catalog</a>
+                <a href="plugin-development.html">Plugin Development</a>
+
+                <div class="section-title">Interactive Features</div>
+                <a href="#overview" class="active">Overview</a>
+                <a href="#scenario-planner">Scenario Planner</a>
+                <a href="#pipeline-builder">Pipeline Builder</a>
+                <a href="#personality-config">Personality Configurator</a>
+                <a href="#onboarding-quiz">Onboarding Quiz</a>
+                <a href="#workflow-templates">Workflow Templates</a>
+                <a href="#speed-challenge">Speed Challenge</a>
+                <a href="#prompt-gallery">Prompt Gallery</a>
+                <a href="#setup-checklist">Setup Checklist</a>
+                <a href="#privacy-checkup">Privacy Checkup</a>
+                <a href="#capacity-planner">Capacity Planner</a>
+                <a href="#status-dashboard">Status Dashboard</a>
+                <a href="#share-card">Share Card Generator</a>
+
+                <div class="section-title">Developer</div>
+                <a href="#module-pattern">Module Pattern</a>
+                <a href="#storage">Storage Layer</a>
+                <a href="#extending">Adding Features</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <h1>Interactive Features Reference</h1>
+            <p>AgentBox's landing page includes 13 interactive demo modules that showcase the agent's capabilities. Each is a self-contained IIFE module following the project's <code>var ModuleName = (function() { ... })();</code> pattern, with zero external dependencies.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h4>🎯 13 Interactive Modules</h4>
+                    <p>Self-contained demos that visitors can interact with directly on the landing page.</p>
+                </div>
+                <div class="card">
+                    <h4>💾 Persistent State</h4>
+                    <p>All modules use <code>StorageUtil</code> for localStorage with safe fallbacks.</p>
+                </div>
+                <div class="card">
+                    <h4>♿ Accessible</h4>
+                    <p>Keyboard navigation, ARIA labels, reduced-motion support throughout.</p>
+                </div>
+            </div>
+
+            <!-- ══════════ OVERVIEW TABLE ══════════ -->
+            <h2 id="overview">Module Overview</h2>
+            <table>
+                <tr>
+                    <th>Module</th>
+                    <th>Source</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><a href="#scenario-planner">ScenarioPlanner</a></td>
+                    <td><code>scenario-planner.js</code></td>
+                    <td><span class="badge badge-blue">demo</span></td>
+                    <td>Multi-phase task planning animation showing agent thought process</td>
+                </tr>
+                <tr>
+                    <td><a href="#pipeline-builder">PipelineBuilder</a></td>
+                    <td><code>pipeline-builder.js</code></td>
+                    <td><span class="badge badge-blue">demo</span></td>
+                    <td>Drag-and-connect integration pipeline visualizer (12 services)</td>
+                </tr>
+                <tr>
+                    <td><a href="#personality-config">PersonalityConfigurator</a></td>
+                    <td><code>personality-configurator.js</code></td>
+                    <td><span class="badge badge-purple">config</span></td>
+                    <td>Live personality slider with response style preview</td>
+                </tr>
+                <tr>
+                    <td><a href="#onboarding-quiz">OnboardingQuiz</a></td>
+                    <td><code>onboarding-quiz.js</code></td>
+                    <td><span class="badge badge-green">conversion</span></td>
+                    <td>Multi-step quiz recommending the right plan</td>
+                </tr>
+                <tr>
+                    <td><a href="#workflow-templates">WorkflowTemplates</a></td>
+                    <td><code>workflow-templates.js</code></td>
+                    <td><span class="badge badge-blue">demo</span></td>
+                    <td>Ready-to-use automation recipe gallery with copy-to-Telegram</td>
+                </tr>
+                <tr>
+                    <td><a href="#speed-challenge">SpeedChallenge</a></td>
+                    <td><code>speed-challenge.js</code></td>
+                    <td><span class="badge badge-yellow">engagement</span></td>
+                    <td>Side-by-side speed race: traditional search vs agent</td>
+                </tr>
+                <tr>
+                    <td><a href="#prompt-gallery">PromptGallery</a></td>
+                    <td><code>prompt-gallery.js</code></td>
+                    <td><span class="badge badge-blue">demo</span></td>
+                    <td>Searchable/filterable example prompts with response previews</td>
+                </tr>
+                <tr>
+                    <td><a href="#setup-checklist">SetupChecklist</a></td>
+                    <td><code>setup-checklist.js</code></td>
+                    <td><span class="badge badge-green">conversion</span></td>
+                    <td>Interactive onboarding progress tracker with celebration</td>
+                </tr>
+                <tr>
+                    <td><a href="#privacy-checkup">PrivacyCheckup</a></td>
+                    <td><code>privacy-checkup.js</code></td>
+                    <td><span class="badge badge-purple">config</span></td>
+                    <td>Privacy concern questionnaire with feature mapping</td>
+                </tr>
+                <tr>
+                    <td><a href="#capacity-planner">CapacityPlanner</a></td>
+                    <td><code>capacity-planner.js</code></td>
+                    <td><span class="badge badge-yellow">engagement</span></td>
+                    <td>Interactive cost/usage estimator with plan recommendations</td>
+                </tr>
+                <tr>
+                    <td><a href="#status-dashboard">StatusDashboard</a></td>
+                    <td><code>status-dashboard.js</code></td>
+                    <td><span class="badge badge-yellow">engagement</span></td>
+                    <td>Live service health monitor with incident feed</td>
+                </tr>
+                <tr>
+                    <td><a href="#share-card">ShareCardGenerator</a></td>
+                    <td><code>share-card-generator.js</code></td>
+                    <td><span class="badge badge-green">conversion</span></td>
+                    <td>Customizable social share card builder</td>
+                </tr>
+                <tr>
+                    <td><a href="#feature-tour">FeatureTour</a></td>
+                    <td><code>feature-tour.js</code></td>
+                    <td><span class="badge badge-green">conversion</span></td>
+                    <td>Guided walkthrough overlay highlighting key sections</td>
+                </tr>
+            </table>
+
+            <!-- ══════════ SCENARIO PLANNER ══════════ -->
+            <h2 id="scenario-planner">🎬 Scenario Planner</h2>
+            <p>Animates a multi-phase task breakdown showing how AgentBox plans, executes, and delivers on complex real-world requests. Each scenario walks through <strong>Understand → Plan → Execute → Deliver</strong> phases with typing-animated steps.</p>
+
+            <h3>Data Model</h3>
+            <pre><code>SCENARIOS = {
+  "Plan a surprise birthday dinner for 8 people...": {
+    phases: [
+      { icon: '🔍', name: 'Understand', steps: [...] },
+      { icon: '📋', name: 'Plan',       steps: [...] },
+      { icon: '⚡', name: 'Execute',    steps: [...] },
+      { icon: '✅', name: 'Deliver',    steps: [...] }
+    ]
+  }
+  // ... more scenarios
+}</code></pre>
+
+            <h3>Public API</h3>
+            <div class="api-block">
+                <p><span class="api-method">ScenarioPlanner.init()</span></p>
+                <p class="api-desc">Binds event listeners, renders the scenario selector, and initializes the animation controller. Call once after DOM ready.</p>
+            </div>
+            <div class="api-block">
+                <p><span class="api-method">ScenarioPlanner.run(scenarioKey)</span></p>
+                <p class="api-desc">Starts the multi-phase animation for a given scenario. Each step is revealed with configurable <code>delay</code> (ms).</p>
+            </div>
+
+            <h4>How It Works</h4>
+            <ol>
+                <li>User selects a scenario from the dropdown</li>
+                <li>Each phase renders sequentially with progress indicators</li>
+                <li>Steps within each phase animate with typing delays (400–900ms)</li>
+                <li>A final "deliverable" card appears with the completed plan</li>
+            </ol>
+
+            <!-- ══════════ PIPELINE BUILDER ══════════ -->
+            <h2 id="pipeline-builder">🔗 Pipeline Builder</h2>
+            <p>Visual integration pipeline builder. Users select two services and see a generated automation flow. Supports 12 services across 5 categories with 18 pre-defined pipeline combinations.</p>
+
+            <h3>Supported Integrations</h3>
+            <table>
+                <tr><th>Service</th><th>Category</th><th>Description</th></tr>
+                <tr><td>📧 Gmail</td><td>Communication</td><td>Read, draft, and send emails</td></tr>
+                <tr><td>💬 Slack</td><td>Communication</td><td>Send messages and monitor channels</td></tr>
+                <tr><td>📅 Calendar</td><td>Productivity</td><td>Create events and check schedule</td></tr>
+                <tr><td>📝 Notion</td><td>Productivity</td><td>Update pages and databases</td></tr>
+                <tr><td>🐙 GitHub</td><td>Developer</td><td>Manage issues, PRs, and repos</td></tr>
+                <tr><td>🎫 Jira</td><td>Developer</td><td>Track and update tickets</td></tr>
+                <tr><td>📊 Google Sheets</td><td>Data</td><td>Read and update spreadsheets</td></tr>
+                <tr><td>📁 Google Drive</td><td>Data</td><td>Search and organize files</td></tr>
+                <tr><td>🐦 Twitter/X</td><td>Social</td><td>Post tweets and monitor mentions</td></tr>
+                <tr><td>🔷 Linear</td><td>Developer</td><td>Create and track issues</td></tr>
+                <tr><td>🎮 Discord</td><td>Communication</td><td>Send messages and manage servers</td></tr>
+                <tr><td>✈️ Telegram</td><td>Communication</td><td>Chat and manage bot commands</td></tr>
+            </table>
+
+            <h3>Pipeline Combinations</h3>
+            <p>The builder maps service pairs to pre-defined flows. For example:</p>
+            <pre><code>PIPELINES = {
+  'gmail+calendar': {
+    name: 'Email → Meeting',
+    flow: 'Reads emails, detects meeting requests, creates calendar events.'
+  },
+  'github+slack': {
+    name: 'Code → Notify',
+    flow: 'Watches repos for new PRs and issues, posts summaries to Slack.'
+  }
+  // ... 18 total combinations
+}</code></pre>
+
+            <h3>Public API</h3>
+            <div class="api-block">
+                <p><span class="api-method">PipelineBuilder.init()</span></p>
+                <p class="api-desc">Renders the integration grid and binds click handlers. Each service chip is toggleable; when two are selected, the matching pipeline flow is displayed.</p>
+            </div>
+
+            <!-- ══════════ PERSONALITY CONFIGURATOR ══════════ -->
+            <h2 id="personality-config">🎨 Personality Configurator</h2>
+            <p>Live preview of how AgentBox's response style changes based on two personality axes: <strong>formality</strong> (casual ↔ formal) and <strong>detail level</strong> (brief ↔ detailed). Persists the user's preference to <code>localStorage</code>.</p>
+
+            <h3>Personality Axes</h3>
+            <table>
+                <tr><th>Axis</th><th>Range</th><th>Effect</th></tr>
+                <tr><td>Formality</td><td>Casual → Formal</td><td>Controls tone, emoji usage, sentence structure</td></tr>
+                <tr><td>Detail</td><td>Brief → Detailed</td><td>Controls response length, step-by-step breakdowns, examples</td></tr>
+            </table>
+
+            <h3>Response Matrix</h3>
+            <p>Each sample question has <strong>4 pre-written responses</strong> covering the full personality matrix:</p>
+            <pre><code>RESPONSES[question] = {
+  casualBrief:    "...",   // Casual + Short
+  casualDetailed: "...",   // Casual + Verbose
+  formalBrief:    "...",   // Formal + Short
+  formalDetailed: "..."    // Formal + Verbose
+}</code></pre>
+            <p>15 sample questions cover: recipes, DNS explanation, weekend planning, meeting reminders, email drafting, focus tips, tech news, coffee knowledge, road trips, Python learning, cat naming, debugging, book recommendations, workout plans, and salary negotiation.</p>
+
+            <h3>Storage</h3>
+            <p>Key: <code>agentbox_personality</code>. Stores the selected formality/detail combination so returning visitors see their preferred style.</p>
+
+            <!-- ══════════ ONBOARDING QUIZ ══════════ -->
+            <h2 id="onboarding-quiz">📋 Onboarding Quiz</h2>
+            <p>A 4-question multi-step quiz that recommends the right AgentBox plan based on the visitor's usage patterns.</p>
+
+            <h3>Questions &amp; Scoring</h3>
+            <table>
+                <tr><th>#</th><th>Question</th><th>Options</th></tr>
+                <tr><td>1</td><td>How often will you use AgentBox?</td><td>A few times a week / Every day / All day</td></tr>
+                <tr><td>2</td><td>Solo or team?</td><td>Just me / Me + few others / Whole team (5+)</td></tr>
+                <tr><td>3</td><td>Which feature matters most?</td><td>Web search / Memory &amp; context / Reminders &amp; files</td></tr>
+                <tr><td>4</td><td>Expected messages per day?</td><td>Under 20 / 20–100 / 100+</td></tr>
+            </table>
+            <p>Answers are scored and mapped to plan recommendations (Starter, Pro, Team) with a confidence percentage and feature highlights.</p>
+
+            <!-- ══════════ WORKFLOW TEMPLATES ══════════ -->
+            <h2 id="workflow-templates">⚡ Workflow Templates</h2>
+            <p>Gallery of ready-to-use automation recipes organized by category. Each template includes a description, step-by-step flow, setup command, and difficulty rating.</p>
+
+            <h3>Template Categories</h3>
+            <ul>
+                <li><strong>Productivity</strong> — Daily Briefing, Meeting Prep, Task Prioritizer</li>
+                <li><strong>Finance</strong> — Expense Tracker, Invoice Reminder</li>
+                <li><strong>Health</strong> — Habit Tracker, Meal Planner</li>
+                <li><strong>Social</strong> — Birthday Reminders, Social Monitor</li>
+                <li><strong>Developer</strong> — PR Reviewer, Deploy Monitor, Dependency Watcher</li>
+                <li><strong>Learning</strong> — Study Planner, Vocabulary Builder</li>
+            </ul>
+
+            <h3>Template Structure</h3>
+            <pre><code>{
+  id: 'daily-briefing',
+  title: 'Daily Briefing',
+  icon: '☕',
+  category: 'productivity',
+  description: '...',
+  steps: ['Agent checks weather', 'Pulls calendar', ...],
+  setup: '/remind every day at 8am: Give me a morning briefing...',
+  tags: ['morning', 'weather', 'news'],
+  difficulty: 'easy'  // easy | medium | advanced
+}</code></pre>
+
+            <!-- ══════════ SPEED CHALLENGE ══════════ -->
+            <h2 id="speed-challenge">⏱️ Speed Challenge</h2>
+            <p>Side-by-side race comparing traditional web search (7 steps, ~10.5s) vs AgentBox (3 steps, ~1.5s). Demonstrates the value proposition through interactive timing.</p>
+
+            <h3>How It Works</h3>
+            <ol>
+                <li>User selects a trivia question (e.g. "What's the capital of Bhutan?")</li>
+                <li>Two columns animate simultaneously:</li>
+                <ul>
+                    <li><strong>Traditional:</strong> Open browser → Navigate → Type → Scan → Click → Read → Find (7 steps)</li>
+                    <li><strong>Agent:</strong> Send message → Processing → Answer ready (3 steps)</li>
+                </ul>
+                <li>Timer shows elapsed time; agent finishes ~7× faster</li>
+                <li>Final answer displays with the time comparison</li>
+            </ol>
+
+            <h3>Preset Questions</h3>
+            <pre><code>ANSWERS = {
+  "What's the capital of Bhutan?": "Thimphu is the capital of Bhutan.",
+  "Convert 72°F to Celsius": "72°F = 22.2°C",
+  "Who painted the Mona Lisa?": "Leonardo da Vinci (c. 1503–1519).",
+  "How many ounces in a gallon?": "128 fluid ounces in a US gallon.",
+  "What year did the Berlin Wall fall?": "November 9, 1989."
+}</code></pre>
+
+            <!-- ══════════ PROMPT GALLERY ══════════ -->
+            <h2 id="prompt-gallery">💬 Prompt Gallery</h2>
+            <p>Searchable gallery of example prompts with pre-written agent responses. Helps visitors understand what AgentBox can do through concrete examples.</p>
+
+            <h3>Categories</h3>
+            <table>
+                <tr><th>Category</th><th>Icon</th><th>Example Prompts</th></tr>
+                <tr><td>Productivity</td><td>⚡</td><td>Reminders, conversation summaries, weekly planning</td></tr>
+                <tr><td>Learning</td><td>📚</td><td>Concept explanations, comparisons, language learning</td></tr>
+                <tr><td>Creative</td><td>🎨</td><td>Writing help, brainstorming, storytelling</td></tr>
+                <tr><td>Technical</td><td>🔧</td><td>Debugging, code review, API explanations</td></tr>
+                <tr><td>Personal</td><td>🧠</td><td>Decision-making, habit tracking, wellness</td></tr>
+            </table>
+            <p>Each prompt includes a full response preview shown in a modal. The gallery supports text search and category filtering.</p>
+
+            <!-- ══════════ SETUP CHECKLIST ══════════ -->
+            <h2 id="setup-checklist">✅ Setup Checklist</h2>
+            <p>Interactive onboarding progress tracker that guides new users through the AgentBox setup process. Progress is persisted to <code>localStorage</code>.</p>
+
+            <h3>Steps</h3>
+            <ol>
+                <li><strong>Install Telegram</strong> — Link to telegram.org/apps</li>
+                <li><strong>Find @AgentBoxBot</strong> — Direct link to t.me/AgentBoxBot</li>
+                <li><strong>Send /start</strong> — Initialize the bot</li>
+                <li><strong>Try Your First Prompt</strong> — Suggested starter prompts</li>
+                <li><strong>Enable Memory</strong> — Turn on conversation memory</li>
+                <li><strong>Set a Reminder</strong> — Test scheduling features</li>
+                <li><strong>Explore /help</strong> — Discover all commands</li>
+            </ol>
+            <p>When all steps are completed, a celebration animation plays and a "Setup Complete" badge appears.</p>
+
+            <h3>Storage</h3>
+            <p>Key: <code>agentbox_setup_checklist</code>. Stores an array of completed step IDs.</p>
+
+            <!-- ══════════ PRIVACY CHECKUP ══════════ -->
+            <h2 id="privacy-checkup">🔒 Privacy Checkup</h2>
+            <p>Interactive questionnaire that maps privacy concerns to AgentBox's security features. Each answer reveals a relevant feature card.</p>
+
+            <h3>Questions</h3>
+            <table>
+                <tr><th>Concern</th><th>Feature Highlighted</th></tr>
+                <tr><td>Data storage location</td><td>🗄️ Your Data Stays Yours — on-demand processing, user-controlled storage</td></tr>
+                <tr><td>Third-party sharing</td><td>🚫 Zero Third-Party Sharing — no advertising use</td></tr>
+                <tr><td>Memory control</td><td>🧠 Full Memory Control — review, edit, delete memories</td></tr>
+                <tr><td>Message encryption</td><td>🔐 End-to-End via Telegram — leveraging Telegram's protocol</td></tr>
+                <tr><td>Data deletion</td><td>🗑️ Right to Erasure — complete data wipe via /deleteall</td></tr>
+            </table>
+            <p>Weighted scoring produces an overall "Privacy Score" with a percentage and recommendation.</p>
+
+            <!-- ══════════ CAPACITY PLANNER ══════════ -->
+            <h2 id="capacity-planner">📊 Capacity Planner</h2>
+            <p>Interactive estimator that calculates expected usage and cost based on team size, message volume, and feature requirements. Outputs a plan recommendation with monthly cost breakdown.</p>
+
+            <h3>Public API</h3>
+            <div class="api-block">
+                <p><span class="api-method">CapacityPlanner.init()</span></p>
+                <p class="api-desc">Renders sliders for team size, daily messages, and feature checkboxes. Recalculates on every input change.</p>
+            </div>
+
+            <!-- ══════════ STATUS DASHBOARD ══════════ -->
+            <h2 id="status-dashboard">📡 Status Dashboard</h2>
+            <p>Live service health monitor showing operational status for all AgentBox subsystems.</p>
+
+            <h3>Public API</h3>
+            <div class="api-block">
+                <p><span class="api-method">StatusDashboard.init()</span></p>
+                <p class="api-desc">Renders the service grid and overall status indicator. Caches service elements for O(1) lookups.</p>
+            </div>
+            <div class="api-block">
+                <p><span class="api-method">StatusDashboard.setServiceStatus(name, level)</span></p>
+                <p class="api-param">level: 'operational' | 'degraded' | 'outage'</p>
+                <p class="api-desc">Updates a single service's status badge and recalculates the overall health indicator.</p>
+            </div>
+            <div class="api-block">
+                <p><span class="api-method">StatusDashboard.addIncident(opts)</span></p>
+                <p class="api-param">opts: { title, description, severity, timestamp }</p>
+                <p class="api-desc">Adds an incident to the feed with automatic severity coloring.</p>
+            </div>
+
+            <!-- ══════════ SHARE CARD ══════════ -->
+            <h2 id="share-card">🎴 Share Card Generator</h2>
+            <p>Creates customizable social media share cards for AgentBox referrals. Users can personalize the card with their name, a quote, and style preferences before downloading or sharing.</p>
+
+            <!-- ══════════ MODULE PATTERN ══════════ -->
+            <h2 id="module-pattern">🏗️ Module Pattern</h2>
+            <p>All interactive features follow the same IIFE (Immediately Invoked Function Expression) pattern for encapsulation without build tools:</p>
+            <pre><code>var ModuleName = (function () {
+  'use strict';
+
+  // Private state
+  var CONSTANTS = { ... };
+  var _state = null;
+
+  // Private methods
+  function _render() { ... }
+
+  // Public API
+  function init() {
+    // Bind to DOM, set up events
+  }
+
+  return { init: init };
+})();</code></pre>
+
+            <h3>Conventions</h3>
+            <ul>
+                <li>Private variables prefixed with <code>_</code></li>
+                <li>Constants in <code>UPPER_SNAKE_CASE</code></li>
+                <li>All modules expose at minimum an <code>init()</code> method</li>
+                <li>DOM queries are lazily cached for performance</li>
+                <li>No external dependencies — pure vanilla JS</li>
+            </ul>
+
+            <!-- ══════════ STORAGE ══════════ -->
+            <h2 id="storage">💾 Storage Layer</h2>
+            <p>The shared <code>StorageUtil</code> module (loaded first in build order) provides safe localStorage access with automatic JSON serialization and fallback for private browsing:</p>
+
+            <div class="api-block">
+                <p><span class="api-method">StorageUtil.get(key, fallback)</span></p>
+                <p class="api-desc">Returns parsed JSON value or <code>fallback</code> if missing/corrupt.</p>
+            </div>
+            <div class="api-block">
+                <p><span class="api-method">StorageUtil.set(key, value)</span></p>
+                <p class="api-desc">JSON-serializes and stores the value. Silently fails in private mode.</p>
+            </div>
+            <div class="api-block">
+                <p><span class="api-method">StorageUtil.remove(key)</span></p>
+                <p class="api-desc">Removes a key from storage.</p>
+            </div>
+
+            <h3>Storage Keys Reference</h3>
+            <table>
+                <tr><th>Key</th><th>Module</th><th>Type</th></tr>
+                <tr><td><code>agentbox_personality</code></td><td>PersonalityConfigurator</td><td>Object (formality + detail)</td></tr>
+                <tr><td><code>agentbox_setup_checklist</code></td><td>SetupChecklist</td><td>Array of step IDs</td></tr>
+                <tr><td><code>agentbox_quiz_result</code></td><td>OnboardingQuiz</td><td>Object (plan + scores)</td></tr>
+                <tr><td><code>agentbox_theme</code></td><td>ThemeToggle</td><td>String ('dark' | 'light')</td></tr>
+                <tr><td><code>agentbox_cookie_consent</code></td><td>CookieConsent</td><td>Boolean</td></tr>
+            </table>
+
+            <!-- ══════════ EXTENDING ══════════ -->
+            <h2 id="extending">🔧 Adding New Interactive Features</h2>
+            <ol>
+                <li>Create <code>src/modules/your-feature.js</code> following the IIFE pattern above</li>
+                <li>Add a corresponding section in the landing page HTML with unique IDs</li>
+                <li>Register initialization in <code>src/modules/init.js</code>:
+                    <pre><code>if (document.getElementById('yourFeatureSection')) {
+  YourFeature.init();
+}</code></pre>
+                </li>
+                <li>Add to <code>build.js</code> source list (order matters — dependencies first)</li>
+                <li>If using persistence, namespace your key as <code>agentbox_your_feature</code></li>
+                <li>Run <code>node build.js</code> to regenerate <code>dist/bundle.js</code></li>
+                <li>Add tests in <code>__tests__/</code> following existing patterns</li>
+            </ol>
+
+            <p>See the <a href="plugin-development.html">Plugin Development Guide</a> for the full plugin lifecycle and event system.</p>
+
+        </main>
+    </div>
+</body>
+</html>
