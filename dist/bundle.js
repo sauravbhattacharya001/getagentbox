@@ -1903,6 +1903,8 @@ var Roadmap = (function () {
         }
       }
       StorageUtil.setJSON(STORAGE_KEY, data);
+    } catch (e) {
+      // Silently ignore storage write failures (quota, privacy mode)
     }
   }
 
