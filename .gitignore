@@ -2,5 +2,8 @@ node_modules/
 coverage/
 agentlens/
 
+# Build artifacts
+app.js
+
 # Build output committed for GitHub Pages
 

@@ -92,4 +92,10 @@ for (const file of files) {
 const outPath = path.join(distDir, 'bundle.js');
 fs.writeFileSync(outPath, bundle);
 
-console.log(`Bundled ${files.length} files (${(totalSize / 1024).toFixed(1)} KB) → dist/bundle.js (${(bundle.length / 1024).toFixed(1)} KB)`);
+// Also write app.js at the repo root for backward-compatible test loading.
+// Many test files use `readFileSync('../app.js')` and eval() the result
+// inside jsdom.  Writing the same bundle here avoids rewriting 39+ tests.
+const appPath = path.join(__dirname, 'app.js');
+fs.writeFileSync(appPath, bundle);
+
+console.log(`Bundled ${files.length} files (${(totalSize / 1024).toFixed(1)} KB) → dist/bundle.js + app.js (${(bundle.length / 1024).toFixed(1)} KB)`);

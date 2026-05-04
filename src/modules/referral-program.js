@@ -11,8 +11,6 @@ var ReferralProgram = (function () {
     { min: 50, label: 'Legend',     icon: '👑', color: '#ef4444', perk: 'Lifetime Pro + custom personality' }
   ];
 
-  var MILESTONES = [3, 10, 25, 50, 100];
-
   var state = {
     handle: '',
     referrals: 0,

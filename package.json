@@ -13,6 +13,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "pretest": "node build.js",
     "test": "jest --verbose",
     "test:coverage": "jest --verbose --coverage",
     "build": "node build.js",

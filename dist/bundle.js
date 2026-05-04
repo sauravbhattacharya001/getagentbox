@@ -7371,8 +7371,6 @@ var CommunityShowcase = (function () {
 
   var STORAGE_KEY = "agentbox_showcase_likes";
 
-  var CATEGORIES = ["All", "Productivity", "Developer", "Creative", "Business", "Research"];
-
   var SHOWCASES = [
     {
       id: "sc-1", title: "Daily Standup Summarizer",
@@ -9365,8 +9363,6 @@ var ReferralProgram = (function () {
     { min: 25, label: 'Champion',   icon: '🏆', color: '#f59e0b', perk: 'Unlimited messages for 1 month' },
     { min: 50, label: 'Legend',     icon: '👑', color: '#ef4444', perk: 'Lifetime Pro + custom personality' }
   ];
-
-  var MILESTONES = [3, 10, 25, 50, 100];
 
   var state = {
     handle: '',

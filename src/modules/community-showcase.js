@@ -10,8 +10,6 @@ var CommunityShowcase = (function () {
 
   var STORAGE_KEY = "agentbox_showcase_likes";
 
-  var CATEGORIES = ["All", "Productivity", "Developer", "Creative", "Business", "Research"];
-
   var SHOWCASES = [
     {
       id: "sc-1", title: "Daily Standup Summarizer",
