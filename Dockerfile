@@ -1,5 +1,5 @@
 # ---- Stage 1: Validate HTML ----
-FROM node:22-alpine AS validate
+FROM node:26-alpine AS validate
 
 WORKDIR /app
 COPY index.html .
