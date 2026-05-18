@@ -9310,8 +9310,19 @@ var DelegationVisualizer = (function () {
   }
 
   function escapeHtml(str) {
-    if (typeof DOMUtil !== 'undefined' && DOMUtil.escapeHTML) return DOMUtil.escapeHTML(str);
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    // Prefer the shared DOMUtil helper (uses the browser's text-node
+    // encoder, so it handles every entity correctly). Fall back to a
+    // manual escape only when running outside the bundle (e.g. unit
+    // tests that load this file in isolation).
+    if (typeof DOMUtil !== 'undefined' && typeof DOMUtil.escapeHtml === 'function') {
+      return DOMUtil.escapeHtml(str);
+    }
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function _getEls() {
