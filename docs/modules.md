@@ -1,10 +1,25 @@
-# AgentBox Landing Page — Module Reference
+# AgentBox Landing Page - Module Reference
 
-Complete reference for all 38 interactive modules in `app.js`.
+Complete reference for the interactive modules that make up the AgentBox
+landing page and its standalone agent-tooling library.
 
-Each module is an ES5 IIFE (Immediately Invoked Function Expression) exported
-to `window`. They are initialized via `DOMContentLoaded` and use no external
-dependencies beyond the DOM.
+There are two families of modules:
+
+1. **Landing-page modules** (`src/modules/*.js`, plus a handful of
+   top-level `src/*.js` files) — UMD/IIFE components that decorate the
+   marketing site. These are concatenated by `build.js` into
+   `dist/bundle.js` (and a mirrored `app.js` at the repo root for
+   backward-compatible test loading).
+2. **Agent Advisors** (`src/agent-*-advisor.js`, `src/agent-drift-detector.js`)
+   — headless UMD libraries that can be `require()`d from Node or
+   loaded standalone in the browser. They have no DOM dependencies and
+   form a small reusable toolkit for agentic-fleet operations
+   (triage, rollout, drift, policy, budget, autonomy, memory hygiene,
+   escalation). See the [Agent Advisors](#agent-advisors) section.
+
+Each landing-page module is an ES5 IIFE (Immediately Invoked Function
+Expression) exported to `window`. They are initialized via
+`DOMContentLoaded` and use no external dependencies beyond the DOM.
 
 > **Important:** All modules use ES5 syntax (`var`, `function`, no arrow
 > functions) for maximum browser compatibility.
@@ -14,79 +29,89 @@ dependencies beyond the DOM.
 ## Contents
 
 ### Core Experience
-- [ChatDemo](#chatdemo) — Interactive Telegram-style chat simulations
-- [Testimonials](#testimonials) — Auto-rotating testimonial carousel
-- [Pricing](#pricing) — Billing toggle (monthly/annual)
-- [FAQ](#faq) — Accordion-style frequently asked questions
-- [HowItWorks](#howitworks) — Step-by-step reveal animation
-- [Stats](#stats) — Animated statistics counter cards
+- [ChatDemo](#chatdemo) - Interactive Telegram-style chat simulations
+- [Testimonials](#testimonials) - Auto-rotating testimonial carousel
+- [Pricing](#pricing) - Billing toggle (monthly/annual)
+- [FAQ](#faq) - Accordion-style frequently asked questions
+- [HowItWorks](#howitworks) - Step-by-step reveal animation
+- [Stats](#stats) - Animated statistics counter cards
 
 ### Discovery
-- [UseCases](#usecases) — Tabbed use-case showcase
-- [Integrations](#integrations) — Filterable integrations grid
-- [Changelog](#changelog) — Version history with tag filtering
-- [Roadmap](#roadmap) — Feature roadmap with status filtering and voting
-- [Trust](#trust) — Security & trust badges toggle
-- [PromptGallery](#promptgallery) — Example prompt cards with copy-to-clipboard
-- [ActivityFeed](#activityfeed) — Simulated real-time activity stream
+- [UseCases](#usecases) - Tabbed use-case showcase
+- [Integrations](#integrations) - Filterable integrations grid
+- [Changelog](#changelog) - Version history with tag filtering
+- [Roadmap](#roadmap) - Feature roadmap with status filtering and voting
+- [Trust](#trust) - Security & trust badges toggle
+- [PromptGallery](#promptgallery) - Example prompt cards with copy-to-clipboard
+- [ActivityFeed](#activityfeed) - Simulated real-time activity stream
 
 ### Interactive Tools
-- [Calculator](#calculator) — Pricing calculator
-- [CommandPalette](#commandpalette) — Keyboard-driven command palette (Ctrl+K)
-- [Playground](#playground) — Live API playground
-- [ApiExplorer](#apiexplorer) — Searchable API endpoint explorer
-- [OnboardingQuiz](#onboardingquiz) — Plan recommendation quiz
-- [PersonalityConfigurator](#personalityconfigurator) — AI personality slider configurator
-- [FeatureTour](#featuretour) — Guided product tour overlay
-- [CommandsCheatSheet](#commandscheatsheet) — Bot commands reference grid
+- [Calculator](#calculator) - Pricing calculator
+- [CommandPalette](#commandpalette) - Keyboard-driven command palette (Ctrl+K)
+- [Playground](#playground) - Live API playground
+- [ApiExplorer](#apiexplorer) - Searchable API endpoint explorer
+- [OnboardingQuiz](#onboardingquiz) - Plan recommendation quiz
+- [PersonalityConfigurator](#personalityconfigurator) - AI personality slider configurator
+- [FeatureTour](#featuretour) - Guided product tour overlay
+- [CommandsCheatSheet](#commandscheatsheet) - Bot commands reference grid
 
 ### Chrome
-- [SiteNav](#sitenav) — Responsive navigation with scroll tracking
-- [Newsletter](#newsletter) — Email subscription widget
-- [StatusDashboard](#statusdashboard) — Service health monitor
-- [ShareFab](#sharefab) — Floating action button for social sharing
-- [ThemeToggle](#themetoggle) — Dark/light theme switcher
-- [ScrollProgress](#scrollprogress) — Reading progress indicator bar
-- [ShortcutsHelp](#shortcutshelp) — Keyboard shortcuts overlay
+- [SiteNav](#sitenav) - Responsive navigation with scroll tracking
+- [Newsletter](#newsletter) - Email subscription widget
+- [StatusDashboard](#statusdashboard) - Service health monitor
+- [ShareFab](#sharefab) - Floating action button for social sharing
+- [ThemeToggle](#themetoggle) - Dark/light theme switcher
+- [ScrollProgress](#scrollprogress) - Reading progress indicator bar
+- [ShortcutsHelp](#shortcutshelp) - Keyboard shortcuts overlay
 
 ### Engagement & Social Proof
-- [SuccessStories](#successstories) — Interactive case study cards with problem→action→result flow
-- [SocialProofToasts](#socialprooftoasts) — Periodic user activity toast notifications
-- [GrowthTimeline](#growthtimeline) — Interactive user journey milestone viewer
-- [ComparisonTable](#comparisontable) — Feature comparison matrix vs alternatives
-- [BeforeAfter](#beforeafter) — Before/after day comparison tabs
-- [FeatureBoard](#featureboard) — Feature request board with voting
-- [AIGlossary](#aiglossary) — Searchable AI/agent terminology reference (35 terms)
+- [SuccessStories](#successstories) - Interactive case study cards with problem→action→result flow
+- [SocialProofToasts](#socialprooftoasts) - Periodic user activity toast notifications
+- [GrowthTimeline](#growthtimeline) - Interactive user journey milestone viewer
+- [ComparisonTable](#comparisontable) - Feature comparison matrix vs alternatives
+- [BeforeAfter](#beforeafter) - Before/after day comparison tabs
+- [FeatureBoard](#featureboard) - Feature request board with voting
+- [AIGlossary](#aiglossary) - Searchable AI/agent terminology reference (35 terms)
 
 ### Onboarding & Conversion
-- [CapacityPlanner](#capacityplanner) — Team size / message volume plan estimator
-- [QuickStartWizard](#quickstartwizard) — Guided use-case setup wizard
-- [SetupChecklist](#setupchecklist) — Interactive onboarding progress tracker
-- [PrivacyCheckup](#privacycheckup) — Privacy concern quiz with personalized reassurance
-- [SpeedChallenge](#speedchallenge) — AgentBox-vs-traditional speed comparison demo
-- [ReferralProgram](#referralprogram) — Tiered referral link system with progress tracker
+- [CapacityPlanner](#capacityplanner) - Team size / message volume plan estimator
+- [QuickStartWizard](#quickstartwizard) - Guided use-case setup wizard
+- [SetupChecklist](#setupchecklist) - Interactive onboarding progress tracker
+- [PrivacyCheckup](#privacycheckup) - Privacy concern quiz with personalized reassurance
+- [SpeedChallenge](#speedchallenge) - AgentBox-vs-traditional speed comparison demo
+- [ReferralProgram](#referralprogram) - Tiered referral link system with progress tracker
 
 ### Visualization & Sharing
-- [NotificationPreview](#notificationpreview) — Phone mockup with cycling notification scenarios
-- [ShareCardGenerator](#sharecardgenerator) — Canvas-based social share image builder
-- [SectionMinimap](#sectionminimap) — Floating page minimap for quick section navigation
+- [NotificationPreview](#notificationpreview) - Phone mockup with cycling notification scenarios
+- [ShareCardGenerator](#sharecardgenerator) - Canvas-based social share image builder
+- [SectionMinimap](#sectionminimap) - Floating page minimap for quick section navigation
 
 ### Integration & Automation
-- [PipelineBuilder](#pipelinebuilder) — Drag-and-drop integration pipeline creator
-- [WorkflowTemplates](#workflowtemplates) — Ready-to-use automation recipe gallery
-- [CommunityShowcase](#communityshowcase) — User-submitted agent showcase with likes and filtering
+- [PipelineBuilder](#pipelinebuilder) - Drag-and-drop integration pipeline creator
+- [WorkflowTemplates](#workflowtemplates) - Ready-to-use automation recipe gallery
+- [CommunityShowcase](#communityshowcase) - User-submitted agent showcase with likes and filtering
+
+### Agent Advisors
+- [AgentTriageAdvisor](#agenttriageadvisor) - Inbox triage with lanes, stressors, and batch planning
+- [AgentRolloutPlanner](#agentrolloutplanner) - Phased deployment planner with risk scoring
+- [AgentDriftDetector](#agentdriftdetector) - Behavioral drift detection vs. baseline
+- [AgentToolPolicyAdvisor](#agenttoolpolicyadvisor) - Per-tool policy synthesizer (ALLOW/CONFIRM/DENY/QUARANTINE)
+- [AgentBudgetGuardianAdvisor](#agentbudgetguardianadvisor) - Per-agent spend/budget guardian
+- [AgentAutonomyTuningAdvisor](#agentautonomytuningadvisor) - Per-agent autonomy-level tuner
+- [AgentMemoryHygieneAdvisor](#agentmemoryhygieneadvisor) - Memory-store hygiene audit with playbook
+- [AgentEscalationAdvisor](#agentescalationadvisor) - Fleet handoff / human-escalation triage
 
 ### Support & Utility
-- [HelpChatWidget](#helpchatwidget) — In-page FAQ chat bot with branching conversations
-- [StorageUtil](#storageutil) — Safe localStorage wrapper used by all stateful modules
+- [HelpChatWidget](#helpchatwidget) - In-page FAQ chat bot with branching conversations
+- [StorageUtil](#storageutil) - Safe localStorage wrapper used by all stateful modules
 
 ### Onboarding
-- [QuickStartWizard](#quickstartwizard) — Step-by-step setup wizard per use-case
-- [WorkflowTemplates](#workflowtemplates) — Pre-built workflow template browser
-- [RoleDemoPicker](#roledemopicker) — Personalized role-based demo conversations
+- [QuickStartWizard](#quickstartwizard) - Step-by-step setup wizard per use-case
+- [WorkflowTemplates](#workflowtemplates) - Pre-built workflow template browser
+- [RoleDemoPicker](#roledemopicker) - Personalized role-based demo conversations
 
 ### Accessibility
-- [AccessibilityPanel](#accessibilitypanel) — Floating preferences panel (font, contrast, motion)
+- [AccessibilityPanel](#accessibilitypanel) - Floating preferences panel (font, contrast, motion)
 
 ---
 
@@ -97,7 +122,7 @@ dependencies beyond the DOM.
 Interactive Telegram-style chat simulations demonstrating four core
 features: Memory, Search, Reminder, and Image understanding.
 
-**Source:** L108–L222 (115 lines)
+**Source:** L108-L222 (115 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -113,7 +138,7 @@ features: Memory, Search, Reminder, and Image understanding.
 Auto-rotating testimonial carousel with swipe support and dot
 navigation. Supports reduced-motion preferences.
 
-**Source:** L227–L352 (126 lines)
+**Source:** L227-L352 (126 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -130,7 +155,7 @@ navigation. Supports reduced-motion preferences.
 
 Monthly/annual billing toggle with savings calculation display.
 
-**Source:** L357–L400 (44 lines)
+**Source:** L357-L400 (44 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -142,7 +167,7 @@ Monthly/annual billing toggle with savings calculation display.
 
 Accordion-style FAQ section. Only one answer is open at a time.
 
-**Source:** L405–L430 (26 lines)
+**Source:** L405-L430 (26 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -154,7 +179,7 @@ Accordion-style FAQ section. Only one answer is open at a time.
 
 Scroll-triggered step-by-step reveal animation using IntersectionObserver.
 
-**Source:** L435–L493 (59 lines)
+**Source:** L435-L493 (59 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -170,7 +195,7 @@ Scroll-triggered step-by-step reveal animation using IntersectionObserver.
 Animated counter cards that count up to target values on scroll.
 Configurable duration and easing (cubic ease-out).
 
-**Source:** L498–L693 (196 lines)
+**Source:** L498-L693 (196 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -191,7 +216,7 @@ Configurable duration and easing (cubic ease-out).
 Tabbed showcase of different use-case categories with card-flip
 animations.
 
-**Source:** L698–L794 (97 lines)
+**Source:** L698-L794 (97 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -207,7 +232,7 @@ animations.
 Filterable grid of third-party integrations with category buttons
 and status indicators.
 
-**Source:** L799–L909 (111 lines)
+**Source:** L799-L909 (111 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -225,7 +250,7 @@ and status indicators.
 Version history display with tag-based filtering (feature, fix,
 improvement, etc.).
 
-**Source:** L914–L1043 (130 lines)
+**Source:** L914-L1043 (130 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -243,7 +268,7 @@ improvement, etc.).
 Feature roadmap with status filtering, vote buttons, and progress
 indicators.
 
-**Source:** L1571–L1817 (247 lines)
+**Source:** L1571-L1817 (247 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -262,7 +287,7 @@ indicators.
 
 Toggle for security and trust badges/certifications section.
 
-**Source:** L1048–L1082 (35 lines)
+**Source:** L1048-L1082 (35 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -274,7 +299,7 @@ Toggle for security and trust badges/certifications section.
 
 Gallery of example prompts organized by category with copy-to-clipboard.
 
-**Source:** L2909–L3125 (217 lines)
+**Source:** L2909-L3125 (217 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -287,7 +312,7 @@ Gallery of example prompts organized by category with copy-to-clipboard.
 Simulated real-time activity stream showing recent user actions
 (new users, messages sent, reminders set, etc.).
 
-**Source:** L2699–L2905 (207 lines)
+**Source:** L2699-L2905 (207 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -303,7 +328,7 @@ Simulated real-time activity stream showing recent user actions
 Pricing calculator that estimates monthly cost based on selected
 services and usage volume.
 
-**Source:** L2001–L2097 (97 lines)
+**Source:** L2001-L2097 (97 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -318,7 +343,7 @@ services and usage volume.
 Keyboard-driven command palette (Ctrl+K / Cmd+K) with fuzzy search
 across all page sections, features, and actions.
 
-**Source:** L2101–L2302 (202 lines)
+**Source:** L2101-L2302 (202 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -336,7 +361,7 @@ across all page sections, features, and actions.
 Live API playground where users can try example API calls and see
 formatted responses.
 
-**Source:** L2546–L2693 (148 lines)
+**Source:** L2546-L2693 (148 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -349,7 +374,7 @@ formatted responses.
 Searchable, filterable API endpoint explorer with method badges,
 request/response examples, and endpoint detail views.
 
-**Source:** L4705–L4948 (244 lines)
+**Source:** L4705-L4948 (244 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -363,7 +388,7 @@ Multi-step quiz that recommends the best plan based on user
 answers. Tracks answers across questions and computes weighted
 scores for each plan.
 
-**Source:** L4356–L4703 (348 lines)
+**Source:** L4356-L4703 (348 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -382,7 +407,7 @@ Slider-based AI personality configurator with presets and live
 response preview. Users adjust formality, humor, verbosity,
 emoji usage, and technical depth.
 
-**Source:** L3131–L3468 (338 lines)
+**Source:** L3131-L3468 (338 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -398,7 +423,7 @@ emoji usage, and technical depth.
 Guided product tour overlay that highlights page sections with
 tooltips, progress tracking, and navigation arrows.
 
-**Source:** L3899–L4227 (329 lines)
+**Source:** L3899-L4227 (329 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -416,7 +441,7 @@ tooltips, progress tracking, and navigation arrows.
 
 Grid of bot commands with descriptions and copy-to-clipboard.
 
-**Source:** L4229–L4351 (123 lines)
+**Source:** L4229-L4351 (123 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -433,7 +458,7 @@ Responsive navigation bar with smooth-scroll links, mobile
 hamburger menu, and scroll-position-based active section
 highlighting.
 
-**Source:** L1292–L1473 (182 lines)
+**Source:** L1292-L1473 (182 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -451,7 +476,7 @@ highlighting.
 Email subscription widget with basic validation and subscriber
 count display.
 
-**Source:** L1480–L1566 (87 lines)
+**Source:** L1480-L1566 (87 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -465,7 +490,7 @@ count display.
 Service health monitor showing uptime percentages, status
 indicators, and recent incidents for each service.
 
-**Source:** L1822–L1992 (171 lines)
+**Source:** L1822-L1992 (171 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -489,7 +514,7 @@ indicators, and recent incidents for each service.
 Floating action button with social sharing options (Twitter,
 LinkedIn, email, clipboard).
 
-**Source:** L2306–L2390 (85 lines)
+**Source:** L2306-L2390 (85 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -502,7 +527,7 @@ LinkedIn, email, clipboard).
 Dark/light theme switcher that persists preference to localStorage
 and respects system `prefers-color-scheme`.
 
-**Source:** L2394–L2420 (27 lines)
+**Source:** L2394-L2420 (27 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -515,7 +540,7 @@ and respects system `prefers-color-scheme`.
 Reading progress indicator bar at the top of the page. Shows
 percentage of page scrolled.
 
-**Source:** L2425–L2497 (73 lines)
+**Source:** L2425-L2497 (73 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -529,7 +554,7 @@ percentage of page scrolled.
 Keyboard shortcuts overlay modal listing all available keyboard
 shortcuts across modules.
 
-**Source:** L2499–L2544 (46 lines)
+**Source:** L2499-L2544 (46 lines)
 
 | Method | Description |
 |--------|-------------|
@@ -544,10 +569,10 @@ shortcuts across modules.
 ### SCENARIOS
 
 Chat script data for the four ChatDemo scenarios. Not a module
-with methods — it's a data constant containing message sequences,
+with methods - it's a data constant containing message sequences,
 typing delays, and response content.
 
-**Source:** L1–L96
+**Source:** L1-L96
 
 ---
 
@@ -569,9 +594,9 @@ flow. Each story includes a persona, quantified outcome metrics, and category fi
 Stories auto-cycle with manual override.
 
 **Public API:**
-- `SuccessStories.init()` — Renders stories into `#success-stories` section
-- `SuccessStories.getStories()` — Returns the full story dataset
-- `SuccessStories.getActiveFilter()` — Returns the currently active category filter
+- `SuccessStories.init()` - Renders stories into `#success-stories` section
+- `SuccessStories.getStories()` - Returns the full story dataset
+- `SuccessStories.getActiveFilter()` - Returns the currently active category filter
 
 **DOM target:** `#success-stories`
 
@@ -589,7 +614,7 @@ messages like "Sarah from London just automated her email workflow." Respects
 `prefers-reduced-motion`, caps at 15 toasts per session, and includes dismiss controls.
 
 **Public API:**
-- `SocialProofToasts.init()` — Starts the toast cycle after a 12-second initial delay
+- `SocialProofToasts.init()` - Starts the toast cycle after a 12-second initial delay
 
 **Behavior:**
 - Toast display: 5 seconds
@@ -608,9 +633,9 @@ Month 3, Month 6). Each milestone reveals features unlocked at that stage with a
 progress bar. Auto-advances every 4 seconds with pause-on-hover.
 
 **Public API:**
-- `GrowthTimeline.init()` — Renders timeline into `#growth-timeline` section
-- `GrowthTimeline.getCurrent()` — Returns the current milestone index (0-3)
-- `GrowthTimeline.getMilestones()` — Returns milestone IDs array
+- `GrowthTimeline.init()` - Renders timeline into `#growth-timeline` section
+- `GrowthTimeline.getCurrent()` - Returns the current milestone index (0-3)
+- `GrowthTimeline.getMilestones()` - Returns milestone IDs array
 
 **DOM target:** `#growth-timeline`
 
@@ -626,10 +651,10 @@ Integration, Intelligence, Operations). Users can filter by category and hover f
 feature details. AgentBox column is visually highlighted.
 
 **Public API:**
-- `ComparisonTable.init()` — Renders table into `#comparison-table` section
-- `ComparisonTable.setFilter(category)` — Filter features by category ID
-- `ComparisonTable.getScores()` — Returns aggregate scores per competitor
-- `ComparisonTable.getActiveCategory()` — Returns the currently active filter
+- `ComparisonTable.init()` - Renders table into `#comparison-table` section
+- `ComparisonTable.setFilter(category)` - Filter features by category ID
+- `ComparisonTable.getScores()` - Returns aggregate scores per competitor
+- `ComparisonTable.getActiveCategory()` - Returns the currently active filter
 
 **DOM target:** `#comparison-table`
 
@@ -644,7 +669,7 @@ Before/after daily workflow comparison with tabbed switching.
 Keyboard-accessible via Enter and Space keys.
 
 **Public API:**
-- `BeforeAfter.init()` — Binds tab switching to `#baTabBefore` / `#baTabAfter`
+- `BeforeAfter.init()` - Binds tab switching to `#baTabBefore` / `#baTabAfter`
 
 **DOM targets:** `#baTabBefore`, `#baTabAfter`, `#baPanelBefore`, `#baPanelAfter`
 
@@ -660,10 +685,10 @@ users can vote on. Supports custom feature submission, category filtering
 and persistent vote/submission storage via `localStorage`.
 
 **Public API:**
-- `FeatureBoard.init()` — Renders the board into `#feature-board` section
-- `FeatureBoard.getFeatures()` — Returns all features (seed + custom)
-- `FeatureBoard.getVotes()` — Returns the current vote counts
-- `FeatureBoard.getFilter()` — Returns the active filter/sort state
+- `FeatureBoard.init()` - Renders the board into `#feature-board` section
+- `FeatureBoard.getFeatures()` - Returns all features (seed + custom)
+- `FeatureBoard.getVotes()` - Returns the current vote counts
+- `FeatureBoard.getFilter()` - Returns the active filter/sort state
 
 **DOM target:** `#feature-board`
 
@@ -681,10 +706,10 @@ category chip filters, expandable definitions with examples and related terms,
 and a "word of the day" highlight.
 
 **Public API:**
-- `AIGlossary.init()` — Renders glossary into `#ai-glossary` section
-- `AIGlossary.getTerms()` — Returns the full terms dataset (35 entries)
-- `AIGlossary.getCategory()` — Returns the currently active category filter
-- `AIGlossary.getQuery()` — Returns the current search query string
+- `AIGlossary.init()` - Renders glossary into `#ai-glossary` section
+- `AIGlossary.getTerms()` - Returns the full terms dataset (35 entries)
+- `AIGlossary.getCategory()` - Returns the currently active category filter
+- `AIGlossary.getQuery()` - Returns the current search query string
 
 **DOM target:** `#ai-glossary`
 
@@ -702,7 +727,7 @@ personalized step-by-step setup instructions. Each use-case has 5 setup steps an
 a pro tip. Includes back/next navigation and progress dots.
 
 **Public API:**
-- `QuickStartWizard.init()` — Renders wizard into `#quick-start-wizard` section
+- `QuickStartWizard.init()` - Renders wizard into `#quick-start-wizard` section
 
 **DOM target:** `#quick-start-wizard`
 
@@ -718,13 +743,13 @@ workflows, and copy the trigger command. Each template shows estimated time save
 and complexity level.
 
 **Public API:**
-- `WorkflowTemplates.init()` — Renders template browser
-- `WorkflowTemplates.filterBy(category)` — Filter templates by category
-- `WorkflowTemplates.getTemplates()` — Returns all templates
-- `WorkflowTemplates.getCategories()` — Returns available categories
-- `WorkflowTemplates.getCurrent()` — Returns the currently selected template
-- `WorkflowTemplates.getByCategory(cat)` — Returns templates in a category
-- `WorkflowTemplates.getById(id)` — Returns a specific template by ID
+- `WorkflowTemplates.init()` - Renders template browser
+- `WorkflowTemplates.filterBy(category)` - Filter templates by category
+- `WorkflowTemplates.getTemplates()` - Returns all templates
+- `WorkflowTemplates.getCategories()` - Returns available categories
+- `WorkflowTemplates.getCurrent()` - Returns the currently selected template
+- `WorkflowTemplates.getByCategory(cat)` - Returns templates in a category
+- `WorkflowTemplates.getById(id)` - Returns a specific template by ID
 
 **DOM target:** `#workflow-templates`
 
@@ -742,7 +767,7 @@ user↔agent exchanges with role-specific scenarios.
 **Location:** `src/role-demo-picker.js` (separate file, not in app.js IIFE)
 
 **Public API:**
-- `RoleDemoPicker.init()` — Renders role picker into `#role-demo` section
+- `RoleDemoPicker.init()` - Renders role picker into `#role-demo` section
 
 **DOM target:** `#role-demo`
 
@@ -767,12 +792,12 @@ immediately via CSS classes on `<body>`.
 - **Line Spacing:** Normal / Relaxed / Loose
 
 **Public API:**
-- `AccessibilityPanel.init()` — Creates and injects the panel + trigger button
-- `AccessibilityPanel.open()` — Opens the preferences panel
-- `AccessibilityPanel.close()` — Closes the panel
-- `AccessibilityPanel.toggle()` — Toggles panel visibility
-- `AccessibilityPanel.destroy()` — Removes panel from DOM
-- `AccessibilityPanel.getPrefs()` — Returns current preferences object
+- `AccessibilityPanel.init()` - Creates and injects the panel + trigger button
+- `AccessibilityPanel.open()` - Opens the preferences panel
+- `AccessibilityPanel.close()` - Closes the panel
+- `AccessibilityPanel.toggle()` - Toggles panel visibility
+- `AccessibilityPanel.destroy()` - Removes panel from DOM
+- `AccessibilityPanel.getPrefs()` - Returns current preferences object
 
 **Storage key:** `agentbox-a11y-prefs`
 
@@ -795,8 +820,8 @@ real time.
 Team (≤5 000, $79) → Enterprise (unlimited, $199).
 
 **Public API:**
-- `CapacityPlanner.init()` — Builds the UI inside `#capacityPlannerSection`
-- `CapacityPlanner.destroy()` — Removes event listeners
+- `CapacityPlanner.init()` - Builds the UI inside `#capacityPlannerSection`
+- `CapacityPlanner.destroy()` - Removes event listeners
 
 **DOM target:** `#capacityPlannerSection`
 
@@ -813,7 +838,7 @@ copy-able commands and a Telegram deep link.
 **Location:** `src/modules/quick-start-wizard.js`
 
 **Public API:**
-- `QuickStartWizard.init()` — Renders the wizard into `#quickStartWizard`
+- `QuickStartWizard.init()` - Renders the wizard into `#quickStartWizard`
 
 **DOM target:** `#quickStartWizard`
 
@@ -830,9 +855,9 @@ steps persist in localStorage so returning visitors see their progress.
 **Location:** `src/modules/setup-checklist.js`
 
 **Public API:**
-- `SetupChecklist.init()` — Renders checklist into `#setupChecklist`
-- `SetupChecklist.destroy()` — Tears down the component
-- `SetupChecklist.getProgress()` — Returns `{ completed, total, percent }`
+- `SetupChecklist.init()` - Renders checklist into `#setupChecklist`
+- `SetupChecklist.destroy()` - Tears down the component
+- `SetupChecklist.getProgress()` - Returns `{ completed, total, percent }`
 
 **Storage key:** `agentbox_setup_checklist`
 
@@ -850,8 +875,8 @@ At the end, a score and tailored recommendations are displayed.
 **Location:** `src/modules/privacy-checkup.js`
 
 **Public API:**
-- `PrivacyCheckup.init()` — Builds the quiz into `#privacyCheckup`
-- `PrivacyCheckup.destroy()` — Removes event listeners
+- `PrivacyCheckup.init()` - Builds the quiz into `#privacyCheckup`
+- `PrivacyCheckup.destroy()` - Removes event listeners
 
 **DOM target:** `#privacyCheckup`
 
@@ -869,8 +894,8 @@ times to highlight the speed advantage.
 **Location:** `src/modules/speed-challenge.js`
 
 **Public API:**
-- `SpeedChallenge.init()` — Renders into `#speedChallenge`
-- `SpeedChallenge.destroy()` — Cleans up timers and listeners
+- `SpeedChallenge.init()` - Renders into `#speedChallenge`
+- `SpeedChallenge.destroy()` - Cleans up timers and listeners
 
 **DOM target:** `#speedChallenge`
 
@@ -897,8 +922,8 @@ copy-to-clipboard sharing.
 **Location:** `src/modules/referral-program.js`
 
 **Public API:**
-- `ReferralProgram.init()` — Renders into `#referralProgram`
-- `ReferralProgram.destroy()` — Cleans up
+- `ReferralProgram.init()` - Renders into `#referralProgram`
+- `ReferralProgram.destroy()` - Cleans up
 
 **Storage key:** `agentbox_referrals`
 
@@ -917,8 +942,8 @@ Scheduled Message). Users can toggle between compact and detailed views.
 **Location:** `src/modules/notification-preview.js`
 
 **Public API:**
-- `NotificationPreview.init()` — Starts the cycling preview
-- `NotificationPreview.destroy()` — Stops cycling
+- `NotificationPreview.init()` - Starts the cycling preview
+- `NotificationPreview.destroy()` - Stops cycling
 
 **DOM target:** `#notificationSection`
 
@@ -936,8 +961,8 @@ a download button.
 **Location:** `src/modules/share-card-generator.js`
 
 **Public API:**
-- `ShareCardGenerator.init()` — Builds the editor into `#shareCardGenerator`
-- `ShareCardGenerator.destroy()` — Cleans up
+- `ShareCardGenerator.init()` - Builds the editor into `#shareCardGenerator`
+- `ShareCardGenerator.destroy()` - Cleans up
 
 **DOM target:** `#shareCardGenerator`
 
@@ -955,8 +980,8 @@ to that section. Appears only when the page has >3 sections.
 **Location:** `src/modules/section-minimap.js`
 
 **Public API:**
-- `SectionMinimap.init()` — Creates the minimap
-- `SectionMinimap.destroy()` — Removes the minimap from the DOM
+- `SectionMinimap.init()` - Creates the minimap
+- `SectionMinimap.destroy()` - Removes the minimap from the DOM
 
 ---
 
@@ -968,15 +993,15 @@ Drag-and-connect integration pipeline creator.
 
 **What it does:** Displays a grid of 12 integration cards (Gmail, Slack,
 Calendar, Notion, GitHub, Jira, Sheets, Drive, Twitter/X, Linear, Discord,
-Telegram). Users select 2–4 integrations and the module shows a pre-built
+Telegram). Users select 2-4 integrations and the module shows a pre-built
 automation pipeline describing how AgentBox chains them together. 30+
 pipeline combinations are defined.
 
 **Location:** `src/modules/pipeline-builder.js`
 
 **Public API:**
-- `PipelineBuilder.init()` — Renders into `#pipelineBuilder`
-- `PipelineBuilder.destroy()` — Cleans up
+- `PipelineBuilder.init()` - Renders into `#pipelineBuilder`
+- `PipelineBuilder.destroy()` - Cleans up
 
 **DOM target:** `#pipelineBuilder`
 
@@ -994,8 +1019,8 @@ Includes category filtering and a search bar.
 **Location:** `src/modules/workflow-templates.js`
 
 **Public API:**
-- `WorkflowTemplates.init()` — Renders into `#workflowTemplates`
-- `WorkflowTemplates.destroy()` — Cleans up
+- `WorkflowTemplates.init()` - Renders into `#workflowTemplates`
+- `WorkflowTemplates.destroy()` - Cleans up
 
 **DOM target:** `#workflowTemplates`
 
@@ -1013,8 +1038,8 @@ Entries show author, date, tags, and like count.
 **Location:** `src/modules/community-showcase.js`
 
 **Public API:**
-- `CommunityShowcase.init()` — Renders into `#communityShowcase`
-- `CommunityShowcase.destroy()` — Cleans up
+- `CommunityShowcase.init()` - Renders into `#communityShowcase`
+- `CommunityShowcase.destroy()` - Cleans up
 
 **Storage key:** `agentbox_showcase_likes`
 
@@ -1034,8 +1059,8 @@ further navigation options. Mimics a live-chat support feel without any backend.
 **Location:** `src/modules/help-chat-widget.js`
 
 **Public API:**
-- `HelpChatWidget.init()` — Creates the floating widget
-- `HelpChatWidget.destroy()` — Removes the widget
+- `HelpChatWidget.init()` - Creates the floating widget
+- `HelpChatWidget.destroy()` - Removes the widget
 
 ---
 
@@ -1052,9 +1077,134 @@ uses StorageUtil instead of raw `localStorage`.
 **Location:** `src/modules/storage.js`
 
 **Public API:**
-- `StorageUtil.get(key, fallback)` — Read a string
-- `StorageUtil.set(key, value)` — Write a string
-- `StorageUtil.getJSON(key, fallback)` — Read & parse JSON
-- `StorageUtil.setJSON(key, value)` — Stringify & write JSON
-- `StorageUtil.remove(key)` — Delete a key
-- `StorageUtil.clear()` — Wipe all keys
+- `StorageUtil.get(key, fallback)` - Read a string
+- `StorageUtil.set(key, value)` - Write a string
+- `StorageUtil.getJSON(key, fallback)` - Read & parse JSON
+- `StorageUtil.setJSON(key, value)` - Stringify & write JSON
+- `StorageUtil.remove(key)` - Delete a key
+- `StorageUtil.clear()` - Wipe all keys
+
+---
+
+## Agent Advisors
+
+The `src/agent-*.js` files are **headless** UMD libraries — no DOM, no
+landing-page coupling. They share a common shape:
+
+- UMD wrapper: works as a CommonJS module (`require('./src/agent-…')`) or
+  attaches a global (`window.AgentTriageAdvisor`, etc.) in the browser.
+- Pure functions over plain objects; deterministic given the same input.
+- All time-sensitive APIs accept an explicit `now` (epoch ms or ISO
+  string) so tests and replays are reproducible.
+- Multiple output formatters (`formatText`, `formatMarkdown`,
+  `formatJson`) so callers can render the same recommendation into a
+  chat reply, a wiki page, or a machine-readable event.
+
+### AgentTriageAdvisor
+
+Inbox / message-queue triage. Classifies items into lanes (`Now`,
+`Soon`, `Later`, `Archive`), accounts for VIP overrides and muted
+senders, and groups outgoing work into batches.
+
+**Location:** `src/agent-triage-advisor.js`
+
+**Public API:**
+- `AgentTriageAdvisor.LANES` - Ordered lane list.
+- `AgentTriageAdvisor.triage(items, options)` - Classify and sort items.
+- `AgentTriageAdvisor.summarize(queue)` - Counts + stressor narrative.
+- `AgentTriageAdvisor.planBatches(queue, batchSize)` - Group by lane.
+- `AgentTriageAdvisor.formatMarkdown(report)` - Render to Markdown.
+
+### AgentRolloutPlanner
+
+Produces a phased deployment plan (canary → ramp → general
+availability) for a new agent capability. Computes a risk score from
+the target profile, recommends phase count and per-phase rollback
+criteria, and can simulate a rollout against synthetic incident data.
+
+**Location:** `src/agent-rollout-planner.js`
+
+**Public API:**
+- `AgentRolloutPlanner.plan(profile, options)` - Build a rollout plan.
+- `AgentRolloutPlanner.simulate(plan, events)` - Replay a plan.
+- `AgentRolloutPlanner.formatMarkdown(plan)` / `formatText` / `formatJson`.
+
+### AgentDriftDetector
+
+Detects behavioral drift in a deployed agent by comparing a current
+metrics window against a baseline. Surfaces per-metric scores,
+confidence (based on sample sizes), and recommended actions drawn from
+a catalog (e.g., re-evaluate prompts, freeze rollout, page on-call).
+
+**Location:** `src/agent-drift-detector.js`
+
+**Public API:**
+- `AgentDriftDetector.analyze(baseline, current, options)` - Compare windows.
+- `AgentDriftDetector.simulate(scenario)` - Replay for tests/demos.
+- `AgentDriftDetector.formatText` / `formatMarkdown` / `formatJson`.
+
+### AgentToolPolicyAdvisor
+
+Synthesizes per-tool policies (`ALLOW`, `CONFIRM`, `DENY`, `QUARANTINE`)
+from usage telemetry, risk metadata, and prior incidents. Output is
+stable-sorted and stable-stringified so diffs are reviewable.
+
+**Location:** `src/agent-tool-policy-advisor.js`
+
+**Public API:**
+- `AgentToolPolicyAdvisor.VERSION`
+- `AgentToolPolicyAdvisor.advise(input)` - Compute per-tool decisions.
+- `AgentToolPolicyAdvisor.simulate(input, overrides)` - What-if analysis.
+- `AgentToolPolicyAdvisor.formatText` / `formatMarkdown` / `formatJson`.
+
+### AgentBudgetGuardianAdvisor
+
+Per-agent spend / budget guardrail. Tracks burn against soft and hard
+caps, projects end-of-period spend using trend slope, and emits
+recommended actions (warn, throttle, pause).
+
+**Location:** `src/agent-budget-guardian-advisor.js`
+
+**Public API:**
+- `AgentBudgetGuardianAdvisor.createAgentBudgetGuardianAdvisor(config)` -
+  Factory returning an advisor instance.
+- `AgentBudgetGuardianAdvisor.VERSION`
+
+### AgentAutonomyTuningAdvisor
+
+Recommends an autonomy level for each agent on a numeric ladder, given
+recent success/incident telemetry. Designed to interoperate with the
+landing-page [AutonomyLadder](#autonomyladder) visualization but does
+not depend on it.
+
+**Location:** `src/agent-autonomy-tuning-advisor.js`
+
+**Public API:**
+- `AgentAutonomyTuningAdvisor.createAgentAutonomyTuningAdvisor(config)`
+- `AgentAutonomyTuningAdvisor.VERSION`
+
+### AgentMemoryHygieneAdvisor
+
+Audits a memory store (e.g., long-term agent memory, retrieval index)
+for staleness, duplication, low-signal entries, and PII risk. Returns
+a playbook of `apply`/`simulate` operations so the caller can dry-run
+fixes before mutating storage.
+
+**Location:** `src/agent-memory-hygiene-advisor.js`
+
+**Public API:**
+- `AgentMemoryHygieneAdvisor.createAgentMemoryHygieneAdvisor(config)`
+- `AgentMemoryHygieneAdvisor.version`
+
+### AgentEscalationAdvisor
+
+Fleet-handoff triage. Given an in-flight agent session (transcript,
+tools used, error signals, user sentiment), recommends whether to keep
+handling, hand off to another agent, or escalate to a human, and to
+whom.
+
+**Location:** `src/agent-escalation-advisor.js`
+
+**Public API:**
+- `AgentEscalationAdvisor.createAgentEscalationAdvisor(config)`
+- `AgentEscalationAdvisor.version`
