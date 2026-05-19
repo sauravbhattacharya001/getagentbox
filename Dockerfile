@@ -24,7 +24,7 @@ RUN npm install -g html-validate@9 && \
     html-validate index.html
 
 # ---- Stage 2: Production ----
-FROM nginx:1.29-alpine
+FROM nginx:1.31-alpine
 
 # Security: run as non-root, drop capabilities
 RUN addgroup -g 1001 -S app && \
