@@ -4747,6 +4747,28 @@ var ApiExplorer = (function () {
     { key: 'account', label: '\uD83D\uDC64 Account', name: 'Account' }
   ];
 
+  // Pre-built lookup map: O(1) category-name resolution.
+  const CATEGORY_NAME_BY_KEY = (function () {
+    var out = {};
+    for (var i = 0; i < CATEGORIES.length; i++) { out[CATEGORIES[i].key] = CATEGORIES[i].name; }
+    return out;
+  })();
+
+  // Build a copy-pasteable curl command for an endpoint.
+  // Pure function (no DOM access) so it can be unit-tested in isolation.
+  function buildCurl(ep) {
+    var lines = ['curl'];
+    if (ep.method !== 'GET') { lines[0] += ' -X ' + ep.method; }
+    lines[0] += " 'https://api.agentbox.ai" + ep.path + "'";
+    lines.push("  -H 'Authorization: Bearer YOUR_API_KEY'");
+    lines.push("  -H 'Content-Type: application/json'");
+    if (ep.reqBody) {
+      // Single-quote shell escape: close, escaped quote, reopen.
+      lines.push("  -d '" + ep.reqBody.replace(/'/g, "'\\''") + "'");
+    }
+    return lines.join(' \\\n');
+  }
+
   let grid, detailPanel, filterContainer;
   let activeCard = null;
   let currentFilter = 'all';
@@ -4849,14 +4871,8 @@ var ApiExplorer = (function () {
       '<span>\u26A1 ' + escapeHtml(ep.rateLimit) + '</span>' +
       '<span>\uD83C\uDFF7\uFE0F ' + escapeHtml(getCategoryName(ep.category)) + '</span>';
 
-    // Curl command
-    let curl = 'curl';
-    if (ep.method !== 'GET') curl += ' -X ' + ep.method;
-    curl += " 'https://api.agentbox.ai" + ep.path + "'";
-    curl += " \\\n  -H 'Authorization: Bearer YOUR_API_KEY'";
-    curl += " \\\n  -H 'Content-Type: application/json'";
-    if (ep.reqBody) curl += " \\\n  -d '" + ep.reqBody.replace(/'/g, "'\\''") + "'";
-    document.getElementById('apiCurlCode').textContent = curl;
+    // Curl command (built via pure helper for testability).
+    document.getElementById('apiCurlCode').textContent = buildCurl(ep);
 
     // Request body
     const reqSection = document.getElementById('apiReqBodySection');
@@ -4870,10 +4886,9 @@ var ApiExplorer = (function () {
     // Response
     document.getElementById('apiRespBody').textContent = ep.respBody;
 
-    // Status badge
+    // Status badge - all endpoints currently document 200 OK responses.
     const badge = document.getElementById('apiStatusBadge');
-    if (ep.method === 'DELETE') { badge.textContent = '200 OK'; }
-    else { badge.textContent = '200 OK'; }
+    badge.textContent = '200 OK';
 
     detailPanel.hidden = false;
     if (detailPanel.scrollIntoView) { detailPanel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' }); }
@@ -4885,16 +4900,18 @@ var ApiExplorer = (function () {
   }
 
   function getCategoryName(key) {
-    for (var i = 0; i < CATEGORIES.length; i++) {
-      if (CATEGORIES[i].key === key) return CATEGORIES[i].name;
-    }
-    return key;
+    return CATEGORY_NAME_BY_KEY[key] || key;
   }
 
   // escapeHtml is provided by DOMUtil (src/modules/dom-utils.js).
   var escapeHtml = DOMUtil.escapeHtml;
 
-  return { init: init };
+  return {
+    init: init,
+    // Exposed for unit tests and external integrations.
+    _buildCurl: buildCurl,
+    _categoryName: getCategoryName
+  };
 })();
 
 
