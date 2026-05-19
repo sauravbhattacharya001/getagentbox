@@ -629,7 +629,7 @@
             const id = window.location.hash.slice(1);
             if (id) {
                 setTimeout(() => {
-                    const card = document.querySelector(`.article-card[data-id="${id}"]`);
+                    const card = document.querySelector('.article-card[data-id="' + CSS.escape(id) + '"]');
                     if (card) {
                         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         const header = card.querySelector('.article-header');

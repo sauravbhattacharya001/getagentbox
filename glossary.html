@@ -511,7 +511,7 @@
                 document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
                 document.querySelector('.cat-btn[data-cat=""]').classList.add('active');
                 render();
-                const found = document.querySelector(`.term-card[data-term="${target}"]`);
+                const found = document.querySelector('.term-card[data-term="' + CSS.escape(target) + '"]');
                 if (found) {
                     found.classList.add('expanded');
                     found.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -544,7 +544,7 @@
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
         document.querySelector('.cat-btn[data-cat=""]').classList.add('active');
         render();
-        const card = document.querySelector(`.term-card[data-term="${t.term}"]`);
+        const card = document.querySelector('.term-card[data-term="' + CSS.escape(t.term) + '"]');
         if (card) {
             card.classList.add('expanded');
             card.scrollIntoView({ behavior: 'smooth', block: 'center' });
