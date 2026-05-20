@@ -14,18 +14,36 @@ You should receive a response within 48 hours.
 
 ### Content Security Policy (CSP)
 
-The site uses a strict CSP via `<meta>` tag:
+Every HTML page in the repo ships an identical baseline security header block,
+generated and verified by [`scripts/apply-security-headers.js`](scripts/apply-security-headers.js).
+The `security-headers` job in [`ci.yml`](.github/workflows/ci.yml) runs that
+script in `--check` mode on every push, so a page can never silently drift out
+of policy.
+
+The canonical CSP (delivered via `<meta http-equiv="Content-Security-Policy">`) is:
 
 | Directive | Value | Purpose |
 |---|---|---|
 | `default-src` | `'self'` | Block all external resources by default |
-| `script-src` | `'self'` | Only own scripts (GoatCounter is vendored locally) |
-| `style-src` | `'self'` | Own stylesheets only |
-| `img-src` | `'self'` | Own images only (no external tracking pixels) |
-| `connect-src` | `'self' https://agentbox.goatcounter.com` | Only GoatCounter analytics endpoint |
+| `script-src` | `'self'` (tightened automatically; pages with inline `<script>` get `'self' 'unsafe-inline'`) | Only own scripts (GoatCounter is vendored locally) |
+| `style-src` | `'self' 'unsafe-inline'` | Own stylesheets plus the hand-authored `<style>`/`style=""` used across the marketing pages |
+| `img-src` | `'self' data:` | Own images and inline `data:` icons only — no external tracking pixels |
+| `font-src` | `'self' data:` | Own fonts plus inline `data:` glyphs |
+| `connect-src` | `'self'` (or `'self' https://agentbox.goatcounter.com` on pages that load the analytics beacon) | Restrict XHR/fetch/beacon to first-party + analytics |
 | `frame-ancestors` | `'none'` | Prevent clickjacking via iframe embedding |
 | `base-uri` | `'self'` | Prevent base tag injection |
 | `form-action` | `'self'` | Restrict form submissions |
+| `object-src` | `'none'` | Block legacy plugin sinks |
+| `worker-src` | `'none'` | No web/service workers (the site is fully static) |
+| `manifest-src` | `'self'` | Lock down PWA manifest origin |
+
+To regenerate the block after editing any HTML page:
+
+```sh
+node scripts/apply-security-headers.js
+```
+
+The script is idempotent — running it twice in a row produces no diff.
 
 ### XSS Prevention
 
