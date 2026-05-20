@@ -18,16 +18,26 @@ describe.each(docsPages)('Security headers in $name', ({ name, html }) => {
     expect(html).toMatch(/<meta\s+http-equiv="Content-Security-Policy"/i);
   });
 
-  test('CSP sets default-src to none', () => {
-    expect(html).toMatch(/default-src\s+'none'/);
+  // The canonical CSP (see scripts/apply-security-headers.js) standardises
+  // default-src to 'self' across every page rather than 'none' so the same
+  // block can be applied to interactive and static pages alike. The hard
+  // sinks (object-src, frame-ancestors, base-uri, form-action) are still
+  // locked down on every page, which is what actually matters for XSS /
+  // clickjacking defense.
+  test('CSP sets default-src to self', () => {
+    expect(html).toMatch(/default-src\s+'self'/);
   });
 
   test('CSP allows unsafe-inline styles (inline <style> blocks)', () => {
-    expect(html).toMatch(/style-src\s+'unsafe-inline'/);
+    expect(html).toMatch(/style-src[^;]*'unsafe-inline'/);
   });
 
   test('CSP sets img-src to self', () => {
     expect(html).toMatch(/img-src\s+'self'/);
+  });
+
+  test('CSP locks object-src to none', () => {
+    expect(html).toMatch(/object-src\s+'none'/);
   });
 
   test('CSP sets frame-ancestors to none (anti-clickjacking)', () => {

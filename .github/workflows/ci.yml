@@ -74,6 +74,22 @@ jobs:
             if (failed) process.exit(1);
           "
 
+  security-headers:
+    name: Security Headers Drift Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Verify every HTML page has the canonical security header block
+        # If this fails, run `node scripts/apply-security-headers.js`
+        # locally and commit the result.
+        run: node scripts/apply-security-headers.js --check
+
   html-validate:
     name: HTML Validation
     runs-on: ubuntu-latest
