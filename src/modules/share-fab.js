@@ -36,7 +36,8 @@ var ShareFab = (function () {
   function openMenu() {
     menu.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
-    toast.hidden = true;
+    // Toast is optional — only present on pages that wire up the copy-link feedback.
+    if (toast) toast.hidden = true;
   }
 
   function close() {
@@ -79,6 +80,10 @@ var ShareFab = (function () {
   }
 
   function showToast() {
+    // No-op when the page has no toast element (e.g. pages that opt out of
+    // the copy-confirmation UI). Previously this threw a TypeError, taking
+    // down the entire click handler.
+    if (!toast) return;
     toast.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toast.hidden = true; }, 2000);

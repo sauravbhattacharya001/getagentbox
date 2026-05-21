@@ -2670,7 +2670,8 @@ var ShareFab = (function () {
   function openMenu() {
     menu.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
-    toast.hidden = true;
+    // Toast is optional — only present on pages that wire up the copy-link feedback.
+    if (toast) toast.hidden = true;
   }
 
   function close() {
@@ -2713,6 +2714,10 @@ var ShareFab = (function () {
   }
 
   function showToast() {
+    // No-op when the page has no toast element (e.g. pages that opt out of
+    // the copy-confirmation UI). Previously this threw a TypeError, taking
+    // down the entire click handler.
+    if (!toast) return;
     toast.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toast.hidden = true; }, 2000);
@@ -6958,18 +6963,46 @@ var AIGlossary = (function () {
     return results;
   }
 
+  /**
+   * Render the categories toolbar.
+   *
+   * Optimisation: the set of categories is fixed for the life of the
+   * module (derived from the static TERMS array), and only the "active"
+   * state changes when the user clicks a tab.  Rebuilding the entire
+   * innerHTML on every click was expensive and – worse – destroyed focus
+   * on the just-clicked button (a real a11y bug for keyboard users).
+   *
+   * We now build the buttons once on the first call and, on subsequent
+   * calls, just toggle `.active` and `aria-selected`.  This drops the
+   * per-click work from O(categories) DOM allocations to O(categories)
+   * attribute writes and keeps keyboard focus where the user left it.
+   */
+  var _catsBuilt = false;
   function renderCategories() {
     var el = document.getElementById("glossaryCategories");
     if (!el) return;
-    var cats = getCategories();
-    var keys = Object.keys(cats).sort();
-    var html = '<button class="glossary-cat-btn' + (activeCategory === "all" ? " active" : "") + '" data-cat="all" role="tab" aria-selected="' + (activeCategory === "all") + '">All (' + TERMS.length + ')</button>';
-    for (var i = 0; i < keys.length; i++) {
-      var k = keys[i];
-      var active = activeCategory === k;
-      html += '<button class="glossary-cat-btn' + (active ? " active" : "") + '" data-cat="' + k + '" role="tab" aria-selected="' + active + '">' + k + ' (' + cats[k] + ')</button>';
+
+    if (!_catsBuilt) {
+      var cats = getCategories();
+      var keys = Object.keys(cats).sort();
+      var html = '<button class="glossary-cat-btn' + (activeCategory === "all" ? " active" : "") + '" data-cat="all" role="tab" aria-selected="' + (activeCategory === "all") + '">All (' + TERMS.length + ')</button>';
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        var active = activeCategory === k;
+        html += '<button class="glossary-cat-btn' + (active ? " active" : "") + '" data-cat="' + k + '" role="tab" aria-selected="' + active + '">' + k + ' (' + cats[k] + ')</button>';
+      }
+      el.innerHTML = html;
+      _catsBuilt = true;
+      return;
     }
-    el.innerHTML = html;
+
+    // Fast path: just sync active state on existing buttons.
+    var buttons = el.querySelectorAll('.glossary-cat-btn');
+    for (var b = 0; b < buttons.length; b++) {
+      var isActive = buttons[b].getAttribute('data-cat') === activeCategory;
+      buttons[b].classList.toggle('active', isActive);
+      buttons[b].setAttribute('aria-selected', String(isActive));
+    }
   }
 
   function renderList() {
