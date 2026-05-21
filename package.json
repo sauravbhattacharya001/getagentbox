@@ -1,6 +1,6 @@
 {
   "name": "agentbox-landing",
-  "version": "2.0.0",
+  "version": "2.10.0",
   "description": "Interactive landing page components - FAQ accordion, pricing toggle, animated stats, chat demo. Zero dependencies.",
   "main": "src/index.js",
   "exports": {

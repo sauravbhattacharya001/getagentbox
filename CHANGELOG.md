@@ -1,5 +1,69 @@
 # Changelog
 
+## [v2.10.0] — 2026-05-21
+
+25 commits since v2.9.0 — a new agentic-advisor family, hardened security
+posture across all 85 HTML pages, Docker image refresh, and a fresh
+behavioural test suite for the share FAB.
+
+### ✨ New Agentic Advisors
+A full family of nine sibling advisors landed during this cycle, each
+shipped with its own jsdom test suite:
+
+- **AgentTriageAdvisor** — inbox triage with lanes, stressors, batch planning
+- **AgentRolloutPlanner** — phased deployment strategy with risk bands
+- **AgentDriftDetector** — behavioural-drift monitor with baseline diffing
+- **AgentToolPolicyAdvisor** — per-tool ALLOW / CONFIRM / DENY / QUARANTINE policy synthesizer
+- **AgentBudgetGuardianAdvisor** — per-agent budget & spend guardian
+- **AgentAutonomyTuningAdvisor** — per-agent autonomy-level tuner
+- **AgentMemoryHygieneAdvisor** — per-memory hygiene audit with simulate / apply playbook
+- **AgentEscalationAdvisor** — fleet handoff triage
+- **AgentTaskDependencyAdvisor** — cross-task dependency / blocker triage
+
+### 🎬 New Interactive Demo
+- **Agent Delegation Visualizer** — interactive multi-agent task delegation demo
+  with task-flow animation and per-agent capability tagging.
+
+### 🔐 Security Hardening
+- Enforced a single canonical CSP + security-header block across all 85 HTML
+  pages, with a CI drift check (`scripts/apply-security-headers.js`).
+- Hardened user-controlled selectors and added a defensive `escapeHtml`
+  fallback for legacy code paths.
+- Documented the canonical CSP policy in `SECURITY.md`.
+
+### 🐛 Bug Fixes
+- **ShareFab** — null-guard the optional `#shareToast` element so pages that
+  opt out of the copy-confirmation UI no longer throw when the FAB is opened
+  or the copy button is clicked.
+- **Roadmap** — added the missing `catch` block to the `saveVotes` try /
+  catch (the module would crash on quota errors).
+- **arrowKeyNav** — added the missing keyboard-navigation utility that was
+  already referenced by the roadmap and notification-preview modules.
+- **Docker** — build `app.js` inside the image and pin `html-validate@9` so
+  builds are reproducible on clean runners.
+- **delegation-visualizer** — fix `DOMUtil.escapeHTML` typo that broke text
+  rendering on agent nodes.
+
+### ⚡ Refactors
+- **api-explorer** — extract `buildCurl`, switch category lookup to an O(1)
+  map, drop a dead branch.
+
+### 🧪 Tests
+- New `__tests__/share-fab.test.js` — 11 deterministic behavioural tests
+  covering menu toggle, click-outside / Escape dismissal, twitter / linkedin
+  popup composition, `navigator.clipboard` + `execCommand` copy paths, and
+  the toast auto-hide timer.
+
+### 📦 Dependencies & CI
+- Bump nginx base image from `1.29-alpine` to `1.31-alpine`.
+- Bump `actions/github-script` from v7 to v9.
+- Dependabot dev-dependency group bumps.
+
+### 📖 Documentation
+- New **Interactive Features Reference** — 13-module deep-dive doc.
+- Clarified module families and per-advisor wiring in `docs/modules.md`.
+
+
 ## [v2.1.0] — 2026-03-14
 
 38 PRs merged since v2.0.0 — major new interactive components, performance
