@@ -26,6 +26,27 @@ var LEVEL_NAMES = ['', 'Manual', 'Suggest', 'Auto-Low', 'Auto-High', 'Autonomous
 
 var SPEED_MAP = { slow: 3000, normal: 1800, fast: 900 };
 
+// ---------------------------------------------------------------------------
+// Tuning tables (kept here so behavior is data-driven, not buried in if-chains)
+// ---------------------------------------------------------------------------
+
+// Index = autonomy level (1-5). Value = max RISK_ORDER auto-handled at that
+// level; -1 means "nothing auto-handled". Index 0 is unused (levels start at 1).
+var AUTO_THRESHOLDS = [-1, -1, -1, 0, 2, 3];
+
+// Per-level mistake probability for low-risk vs. high-risk task buckets.
+// `highRisk` applies when RISK_ORDER[risk] >= 2 (i.e. high/critical).
+var MISTAKE_CHANCE = {
+    3: { lowRisk: 0,    mediumOnly: 0.05, highRisk: 0    },
+    4: { lowRisk: 0.02,                   highRisk: 0.08 },
+    5: { lowRisk: 0.04,                   highRisk: 0.12 }
+};
+
+// Base response-time seconds per risk class before level multiplier.
+var RESPONSE_TIME_BASE = { low: 1.2, medium: 2.5, high: 4.0, critical: 6.0 };
+// Index = autonomy level (1-5). Index 0 unused.
+var RESPONSE_TIME_LEVEL_MULT = [0, 5.0, 3.0, 1.5, 0.8, 0.4];
+
 function createState() {
     return {
         level: 1,
@@ -46,12 +67,17 @@ function createState() {
     };
 }
 
+/**
+ * Maximum task risk (as RISK_ORDER value) the agent will handle without
+ * approval at the given autonomy level. Returns -1 when nothing is auto-handled.
+ * @param {number} level Autonomy level 1-5.
+ * @returns {number} Threshold in RISK_ORDER space, or -1.
+ */
 function getAutoThreshold(level) {
-    if (level <= 1) return -1;
-    if (level === 2) return -1;
-    if (level === 3) return 0;
-    if (level === 4) return 2;
-    return 3;
+    if (typeof level !== 'number' || level < 1 || level >= AUTO_THRESHOLDS.length) {
+        return -1;
+    }
+    return AUTO_THRESHOLDS[level];
 }
 
 function shouldAutoHandle(level, riskStr) {
@@ -79,18 +105,28 @@ function generateTask(state, preset) {
 }
 
 function getResponseTime(level, risk) {
-    var base = { low: 1.2, medium: 2.5, high: 4.0, critical: 6.0 };
-    var mult = [0, 5.0, 3.0, 1.5, 0.8, 0.4];
-    return parseFloat((base[risk] * mult[level] * (0.8 + Math.random() * 0.4)).toFixed(1));
+    var base = RESPONSE_TIME_BASE[risk] || 0;
+    var mult = RESPONSE_TIME_LEVEL_MULT[level] || 0;
+    return parseFloat((base * mult * (0.8 + Math.random() * 0.4)).toFixed(1));
+}
+
+/**
+ * Probability that an auto-handled task at the given level/risk will produce
+ * an error. Pure helper so tests can assert mistake rates without invoking RNG.
+ * @param {number} level Autonomy level 1-5.
+ * @param {string} risk One of 'low' | 'medium' | 'high' | 'critical'.
+ * @returns {number} Probability in [0, 1].
+ */
+function getMistakeChance(level, risk) {
+    var table = MISTAKE_CHANCE[level];
+    if (!table) return 0;
+    if (level === 3) return risk === 'medium' ? table.mediumOnly : 0;
+    return RISK_ORDER[risk] >= 2 ? table.highRisk : table.lowRisk;
 }
 
 function rollMistake(level, risk) {
-    if (level < 3) return false;
-    var chance = 0;
-    if (level === 3) chance = risk === 'medium' ? 0.05 : 0;
-    else if (level === 4) chance = RISK_ORDER[risk] >= 2 ? 0.08 : 0.02;
-    else chance = RISK_ORDER[risk] >= 2 ? 0.12 : 0.04;
-    return Math.random() < chance;
+    var chance = getMistakeChance(level, risk);
+    return chance > 0 && Math.random() < chance;
 }
 
 function processTask(state, task) {
@@ -190,11 +226,16 @@ module.exports = {
     RISK_ORDER: RISK_ORDER,
     LEVEL_NAMES: LEVEL_NAMES,
     SPEED_MAP: SPEED_MAP,
+    AUTO_THRESHOLDS: AUTO_THRESHOLDS,
+    MISTAKE_CHANCE: MISTAKE_CHANCE,
+    RESPONSE_TIME_BASE: RESPONSE_TIME_BASE,
+    RESPONSE_TIME_LEVEL_MULT: RESPONSE_TIME_LEVEL_MULT,
     createState: createState,
     getAutoThreshold: getAutoThreshold,
     shouldAutoHandle: shouldAutoHandle,
     generateTask: generateTask,
     getResponseTime: getResponseTime,
+    getMistakeChance: getMistakeChance,
     rollMistake: rollMistake,
     processTask: processTask,
     approveTask: approveTask,
