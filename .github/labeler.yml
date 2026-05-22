@@ -1,22 +1,63 @@
+# ----------------------------------------------------------------------------
 # Auto-labeler configuration for pull requests
-# Used by actions/labeler to automatically label PRs based on changed files
+# ----------------------------------------------------------------------------
+# Used by actions/labeler@v6 to tag PRs based on changed files.
+# Every label referenced here must exist on the repo (see scripts/sync-labels.sh
+# or .github/labels.yml if added later). When you introduce a new label here,
+# also create it via `gh label create "<name>" --color <hex> --description "<txt>"`.
+# ----------------------------------------------------------------------------
 
-# Core application code
+# Core application bundle (top-level JS entry points + non-module sources)
 "app":
   - changed-files:
     - any-glob-to-any-file:
       - "app.js"
-      - "src/**"
+      - "src/*.js"
+      - "build.js"
 
-# Frontend / UI
+# Frontend / UI surface — touched HTML, CSS, or visual modules
 "frontend":
   - changed-files:
     - any-glob-to-any-file:
-      - "index.html"
+      - "*.html"
       - "styles.css"
-      - "src/**/*.js"
+      - "src/modules/**/*.js"
 
-# Configuration
+# Static HTML pages (excludes index.html — it's both shell + frontend)
+"html-page":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "*.html"
+      - "!index.html"
+      - "!404.html"
+
+# Self-contained UI modules (single-purpose IIFE files)
+"module":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "src/modules/**"
+
+# Agent / advisor logic (the "agent-*.js" family at the top of src/)
+"agent":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "src/agent-*.js"
+
+# Vendored / third-party assets we don't author ourselves
+"vendor":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "vendor/**"
+
+# Build pipeline + repo scripts
+"build":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "build.js"
+      - "scripts/**"
+      - "Makefile"
+
+# Configuration files
 "config":
   - changed-files:
     - any-glob-to-any-file:
@@ -26,6 +67,9 @@
       - ".prettierrc*"
       - "tsconfig.json"
       - ".babelrc"
+      - ".editorconfig"
+      - "codecov.yml"
+      - ".htmlvalidate*"
 
 # Tests
 "tests":
@@ -33,6 +77,7 @@
     - any-glob-to-any-file:
       - "__tests__/**"
       - "jest.config.js"
+      - "**/*.test.js"
 
 # CI/CD and GitHub workflows
 "ci/cd":
@@ -48,25 +93,26 @@
       - ".dockerignore"
       - ".github/workflows/docker.yml"
 
-# Dependencies
+# Dependencies (manifests + lockfiles; covers dependabot PRs cleanly)
 "dependencies":
   - changed-files:
     - any-glob-to-any-file:
       - "package.json"
       - "package-lock.json"
+      - "yarn.lock"
+      - "pnpm-lock.yaml"
+      - ".github/dependabot.yml"
 
 # Documentation
 "documentation":
   - changed-files:
     - any-glob-to-any-file:
-      - "README.md"
-      - "SECURITY.md"
-      - "CONTRIBUTING.md"
-      - "LICENSE"
+      - "*.md"
       - "docs/**"
       - ".github/copilot-instructions.md"
       - ".github/ISSUE_TEMPLATE/**"
       - ".github/pull_request_template.md"
+      - ".github/PULL_REQUEST_TEMPLATE.md"
 
 # Release / Deployment
 "release":
@@ -76,7 +122,13 @@
       - ".github/workflows/pages.yml"
       - "CHANGELOG.md"
 
-# GitHub configuration
+# GitHub Pages deployment (split out from generic release)
+"pages":
+  - changed-files:
+    - any-glob-to-any-file:
+      - ".github/workflows/pages.yml"
+
+# GitHub configuration (.github metadata files)
 "github-config":
   - changed-files:
     - any-glob-to-any-file:
@@ -84,6 +136,7 @@
       - ".github/labeler.yml"
       - ".github/stale.yml"
       - ".github/copilot-setup-steps.yml"
+      - ".github/FUNDING.yml"
 
 # Security-related changes
 "security":
@@ -92,3 +145,26 @@
       - "SECURITY.md"
       - ".github/workflows/codeql.yml"
       - ".github/dependabot.yml"
+      - "scripts/apply-security-headers.js"
+
+# Accessibility-related changes (a11y modules, panels, page)
+"accessibility":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "accessibility.html"
+      - "src/modules/accessibility-panel.js"
+      - "__tests__/accessibility.test.js"
+
+# Performance-related changes (perf tests, caching modules)
+"performance":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "__tests__/perf-*.test.js"
+      - "__tests__/*-perf.test.js"
+
+# Test coverage configuration
+"coverage":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "codecov.yml"
+      - ".github/workflows/coverage.yml"
