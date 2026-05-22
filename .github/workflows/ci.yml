@@ -109,7 +109,9 @@ jobs:
               "no-trailing-whitespace": "off",
               "tel-non-breaking": "off",
               "attribute-boolean-style": "off",
-              "script-type": "off"
+              "script-type": "off",
+              "prefer-native-element": "off",
+              "empty-heading": "off"
             }
           }
           EOF

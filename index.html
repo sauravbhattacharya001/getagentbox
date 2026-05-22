@@ -20,10 +20,10 @@
     <nav class="site-nav" id="siteNav" aria-label="Main navigation">
         <div class="nav-inner">
             <a href="#" class="nav-logo" aria-label="Back to top">🤖 AgentBox</a>
-            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
                 <span class="nav-hamburger"></span>
             </button>
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Toggle theme">
+            <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Toggle theme">
                 <span class="theme-icon" id="themeIcon">☀️</span>
             </button>
             <ul class="nav-links" id="navLinks" role="menubar">
@@ -105,7 +105,7 @@
             <div class="feature">
                 <div class="feature-icon">⏰</div>
                 <div class="feature-text">
-                    <h3>Reminders & scheduling</h3>
+                    <h3>Reminders &amp; scheduling</h3>
                     <p>"Remind me in 30 minutes to check the oven." Done. It just works.</p>
                 </div>
             </div>
@@ -174,22 +174,22 @@
                 <div class="wizard-step active" data-wizard-step="1">
                     <h3>What will you use AgentBox for?</h3>
                     <div class="wizard-options" role="radiogroup" aria-label="Use case selection">
-                        <button class="wizard-option" data-value="productivity" role="radio" aria-checked="false">
+                        <button type="button" class="wizard-option" data-value="productivity" role="radio" aria-checked="false">
                             <span class="wizard-option-icon">📋</span>
                             <span class="wizard-option-label">Productivity</span>
                             <span class="wizard-option-desc">Reminders, scheduling, task management</span>
                         </button>
-                        <button class="wizard-option" data-value="research" role="radio" aria-checked="false">
+                        <button type="button" class="wizard-option" data-value="research" role="radio" aria-checked="false">
                             <span class="wizard-option-icon">🔬</span>
                             <span class="wizard-option-label">Research</span>
                             <span class="wizard-option-desc">Web search, summaries, fact-checking</span>
                         </button>
-                        <button class="wizard-option" data-value="creative" role="radio" aria-checked="false">
+                        <button type="button" class="wizard-option" data-value="creative" role="radio" aria-checked="false">
                             <span class="wizard-option-icon">🎨</span>
                             <span class="wizard-option-label">Creative</span>
                             <span class="wizard-option-desc">Writing, brainstorming, image analysis</span>
                         </button>
-                        <button class="wizard-option" data-value="coding" role="radio" aria-checked="false">
+                        <button type="button" class="wizard-option" data-value="coding" role="radio" aria-checked="false">
                             <span class="wizard-option-icon">💻</span>
                             <span class="wizard-option-label">Coding</span>
                             <span class="wizard-option-desc">Code help, debugging, explanations</span>
@@ -199,17 +199,17 @@
                 <div class="wizard-step" data-wizard-step="2">
                     <h3>How often will you chat?</h3>
                     <div class="wizard-options" role="radiogroup" aria-label="Frequency selection">
-                        <button class="wizard-option" data-value="casual" role="radio" aria-checked="false">
+                        <button type="button" class="wizard-option" data-value="casual" role="radio" aria-checked="false">
                             <span class="wizard-option-icon">☕</span>
                             <span class="wizard-option-label">A few times a week</span>
                             <span class="wizard-option-desc">Occasional questions and tasks</span>
                         </button>
-                        <button class="wizard-option" data-value="daily" role="radio" aria-checked="false">
+                        <button type="button" class="wizard-option" data-value="daily" role="radio" aria-checked="false">
                             <span class="wizard-option-icon">📅</span>
                             <span class="wizard-option-label">Daily</span>
                             <span class="wizard-option-desc">Part of my daily workflow</span>
                         </button>
-                        <button class="wizard-option" data-value="power" role="radio" aria-checked="false">
+                        <button type="button" class="wizard-option" data-value="power" role="radio" aria-checked="false">
                             <span class="wizard-option-icon">⚡</span>
                             <span class="wizard-option-label">Power user</span>
                             <span class="wizard-option-desc">Multiple conversations per day</span>
@@ -221,9 +221,9 @@
                     <div class="wizard-result" id="wizardResult"></div>
                 </div>
                 <div class="wizard-nav">
-                    <button class="wizard-btn wizard-btn-back" id="wizardBack" disabled>← Back</button>
+                    <button type="button" class="wizard-btn wizard-btn-back" id="wizardBack" disabled>← Back</button>
                     <span class="wizard-step-indicator" id="wizardIndicator">Step 1 of 3</span>
-                    <button class="wizard-btn wizard-btn-next" id="wizardNext" disabled>Next →</button>
+                    <button type="button" class="wizard-btn wizard-btn-next" id="wizardNext" disabled>Next →</button>
                 </div>
             </div>
         </div>
@@ -233,10 +233,10 @@
             <p class="demo-subtitle">This is what chatting with your agent looks like</p>
             <div class="chat-window" id="chatWindow"></div>
             <div class="demo-scenarios">
-                <button class="scenario-btn active" data-scenario="memory">🧠 Memory</button>
-                <button class="scenario-btn" data-scenario="search">🔍 Search</button>
-                <button class="scenario-btn" data-scenario="reminder">⏰ Reminder</button>
-                <button class="scenario-btn" data-scenario="image">📷 Image</button>
+                <button type="button" class="scenario-btn active" data-scenario="memory">🧠 Memory</button>
+                <button type="button" class="scenario-btn" data-scenario="search">🔍 Search</button>
+                <button type="button" class="scenario-btn" data-scenario="reminder">⏰ Reminder</button>
+                <button type="button" class="scenario-btn" data-scenario="image">📷 Image</button>
             </div>
         </div>
 
@@ -287,17 +287,17 @@
                         <input type="range" id="sliderEmoji" min="0" max="100" value="40" class="personality-range" aria-label="Emoji usage level">
                     </div>
                     <div class="personality-presets" role="group" aria-label="Personality presets">
-                        <button class="preset-btn" data-preset="professional">&#x1F4BC; Professional</button>
-                        <button class="preset-btn" data-preset="friendly">&#x1F60A; Friendly</button>
-                        <button class="preset-btn" data-preset="minimal">&#x1F3AF; Minimal</button>
-                        <button class="preset-btn" data-preset="enthusiastic">&#x1F389; Enthusiastic</button>
+                        <button type="button" class="preset-btn" data-preset="professional">&#x1F4BC; Professional</button>
+                        <button type="button" class="preset-btn" data-preset="friendly">&#x1F60A; Friendly</button>
+                        <button type="button" class="preset-btn" data-preset="minimal">&#x1F3AF; Minimal</button>
+                        <button type="button" class="preset-btn" data-preset="enthusiastic">&#x1F389; Enthusiastic</button>
                     </div>
                 </div>
                 <div class="personality-preview">
                     <div class="preview-question">
                         <span class="preview-label">You ask:</span>
                         <p id="personalityQuestion">"What's a good recipe for dinner tonight?"</p>
-                        <button class="preview-cycle-btn" id="personalityCycleBtn" aria-label="Try a different question">&#x1F504; Different question</button>
+                        <button type="button" class="preview-cycle-btn" id="personalityCycleBtn" aria-label="Try a different question">&#x1F504; Different question</button>
                     </div>
                     <div class="preview-response">
                         <span class="preview-label">Your agent responds:</span>
@@ -311,12 +311,12 @@
             <h2>What can I ask?</h2>
             <p class="prompt-gallery-subtitle">Tap any prompt to see how AgentBox responds</p>
             <div class="prompt-gallery-filters" role="tablist" aria-label="Prompt categories">
-                <button class="prompt-filter-btn active" role="tab" aria-selected="true" data-prompt-category="all">All</button>
-                <button class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="productivity">⚡ Productivity</button>
-                <button class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="learning">📚 Learning</button>
-                <button class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="coding">💻 Coding</button>
-                <button class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="creative">🎨 Creative</button>
-                <button class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="daily">☀️ Daily Life</button>
+                <button type="button" class="prompt-filter-btn active" role="tab" aria-selected="true" data-prompt-category="all">All</button>
+                <button type="button" class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="productivity">⚡ Productivity</button>
+                <button type="button" class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="learning">📚 Learning</button>
+                <button type="button" class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="coding">💻 Coding</button>
+                <button type="button" class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="creative">🎨 Creative</button>
+                <button type="button" class="prompt-filter-btn" role="tab" aria-selected="false" data-prompt-category="daily">☀️ Daily Life</button>
             </div>
             <div class="prompt-search-wrapper">
                 <input type="text" class="prompt-search-input" id="promptSearchInput" placeholder="Search prompts..." aria-label="Search prompts" maxlength="100">
@@ -329,7 +329,7 @@
             <div class="prompt-response-modal" id="promptResponseModal" hidden>
                 <div class="prompt-modal-backdrop" id="promptModalBackdrop"></div>
                 <div class="prompt-modal-content" role="dialog" aria-label="Example response" aria-modal="true">
-                    <button class="prompt-modal-close" id="promptModalClose" aria-label="Close">&times;</button>
+                    <button type="button" class="prompt-modal-close" id="promptModalClose" aria-label="Close">&times;</button>
                     <div class="prompt-modal-question" id="promptModalQuestion"></div>
                     <div class="prompt-modal-answer" id="promptModalAnswer"></div>
                     <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer" class="prompt-modal-cta">Try it for real on Telegram →</a>
@@ -343,22 +343,22 @@
             <div class="stats-grid">
                 <div class="stat-card" data-target="10000" data-suffix="+">
                     <div class="stat-icon">💬</div>
-                    <div class="stat-number" aria-label="10,000+ messages processed">0</div>
+                    <div role="region" class="stat-number" aria-label="10,000+ messages processed">0</div>
                     <div class="stat-label">Messages processed</div>
                 </div>
                 <div class="stat-card" data-target="500" data-suffix="+">
                     <div class="stat-icon">👥</div>
-                    <div class="stat-number" aria-label="500+ active users">0</div>
+                    <div role="region" class="stat-number" aria-label="500+ active users">0</div>
                     <div class="stat-label">Active users</div>
                 </div>
                 <div class="stat-card" data-target="99" data-suffix="%" data-decimal="9">
                     <div class="stat-icon">⚡</div>
-                    <div class="stat-number" aria-label="99.9% uptime">0</div>
+                    <div role="region" class="stat-number" aria-label="99.9% uptime">0</div>
                     <div class="stat-label">Uptime</div>
                 </div>
                 <div class="stat-card" data-target="2" data-suffix="s">
                     <div class="stat-icon">🚀</div>
-                    <div class="stat-number" aria-label="Under 2 second response time">&lt;0</div>
+                    <div role="region" class="stat-number" aria-label="Under 2 second response time">&lt;0</div>
                     <div class="stat-label">Avg response time</div>
                 </div>
             </div>
@@ -369,8 +369,8 @@
             <h2>Your day, transformed</h2>
             <p class="before-after-subtitle">See how AgentBox changes everyday tasks</p>
             <div class="before-after-toggle" role="tablist" aria-label="Before and after comparison">
-                <button class="ba-tab active" id="baTabBefore" role="tab" aria-selected="true" aria-controls="baPanelBefore">😩 Without AgentBox</button>
-                <button class="ba-tab" id="baTabAfter" role="tab" aria-selected="false" aria-controls="baPanelAfter">✨ With AgentBox</button>
+                <button type="button" class="ba-tab active" id="baTabBefore" role="tab" aria-selected="true" aria-controls="baPanelBefore">😩 Without AgentBox</button>
+                <button type="button" class="ba-tab" id="baTabAfter" role="tab" aria-selected="false" aria-controls="baPanelAfter">✨ With AgentBox</button>
             </div>
             <div class="ba-panel active" id="baPanelBefore" role="tabpanel" aria-labelledby="baTabBefore">
                 <div class="ba-timeline">
@@ -497,9 +497,9 @@
             <p class="memory-timeline-subtitle">Watch how your agent builds context over time — no setup, no re-explaining</p>
             <div class="memory-timeline-container">
                 <div class="memory-timeline-controls" role="group" aria-label="Memory timeline controls">
-                    <button class="memory-timeline-btn active" data-scenario="daily" aria-pressed="true">☀️ Daily Assistant</button>
-                    <button class="memory-timeline-btn" data-scenario="project" aria-pressed="false">💻 Project Helper</button>
-                    <button class="memory-timeline-btn" data-scenario="health" aria-pressed="false">🏃 Health Coach</button>
+                    <button type="button" class="memory-timeline-btn active" data-scenario="daily" aria-pressed="true">☀️ Daily Assistant</button>
+                    <button type="button" class="memory-timeline-btn" data-scenario="project" aria-pressed="false">💻 Project Helper</button>
+                    <button type="button" class="memory-timeline-btn" data-scenario="health" aria-pressed="false">🏃 Health Coach</button>
                 </div>
                 <div class="memory-timeline-track" id="memoryTimelineTrack" role="list" aria-label="Memory timeline events">
                 </div>
@@ -512,8 +512,8 @@
                     <div class="memory-brain-facts" id="memoryBrainFacts" role="list" aria-label="Remembered facts"></div>
                 </div>
                 <div class="memory-timeline-action">
-                    <button class="memory-timeline-play" id="memoryPlayBtn" aria-label="Play memory timeline">▶ Watch it learn</button>
-                    <button class="memory-timeline-reset" id="memoryResetBtn" aria-label="Reset timeline">↺ Reset</button>
+                    <button type="button" class="memory-timeline-play" id="memoryPlayBtn" aria-label="Play memory timeline">▶ Watch it learn</button>
+                    <button type="button" class="memory-timeline-reset" id="memoryResetBtn" aria-label="Reset timeline">↺ Reset</button>
                 </div>
             </div>
         </div>
@@ -544,10 +544,10 @@
             <h2>Built for how you work</h2>
             <p class="usecases-subtitle">Whether you code, create, study, or just want life to be easier</p>
             <div class="usecases-tabs" role="tablist" aria-label="Use case categories">
-                <button class="usecase-tab active" role="tab" aria-selected="true" aria-controls="usecase-dev" id="tab-dev" data-usecase="dev">👨‍💻 Developers</button>
-                <button class="usecase-tab" role="tab" aria-selected="false" aria-controls="usecase-pro" id="tab-pro" data-usecase="pro">📊 Professionals</button>
-                <button class="usecase-tab" role="tab" aria-selected="false" aria-controls="usecase-student" id="tab-student" data-usecase="student">🎓 Students</button>
-                <button class="usecase-tab" role="tab" aria-selected="false" aria-controls="usecase-personal" id="tab-personal" data-usecase="personal">🏠 Personal</button>
+                <button type="button" class="usecase-tab active" role="tab" aria-selected="true" aria-controls="usecase-dev" id="tab-dev" data-usecase="dev">👨‍💻 Developers</button>
+                <button type="button" class="usecase-tab" role="tab" aria-selected="false" aria-controls="usecase-pro" id="tab-pro" data-usecase="pro">📊 Professionals</button>
+                <button type="button" class="usecase-tab" role="tab" aria-selected="false" aria-controls="usecase-student" id="tab-student" data-usecase="student">🎓 Students</button>
+                <button type="button" class="usecase-tab" role="tab" aria-selected="false" aria-controls="usecase-personal" id="tab-personal" data-usecase="personal">🏠 Personal</button>
             </div>
             <div class="usecases-panels">
                 <div class="usecase-panel active" role="tabpanel" id="usecase-dev" aria-labelledby="tab-dev">
@@ -633,10 +633,10 @@
             <h2>Connects with your tools</h2>
             <p class="integrations-subtitle">AgentBox works alongside the apps you already use</p>
             <div class="integrations-filter" role="tablist" aria-label="Integration categories">
-                <button class="integration-filter-btn active" role="tab" aria-selected="true" data-category="all">All</button>
-                <button class="integration-filter-btn" role="tab" aria-selected="false" data-category="messaging">💬 Messaging</button>
-                <button class="integration-filter-btn" role="tab" aria-selected="false" data-category="productivity">📋 Productivity</button>
-                <button class="integration-filter-btn" role="tab" aria-selected="false" data-category="developer">🛠️ Developer</button>
+                <button type="button" class="integration-filter-btn active" role="tab" aria-selected="true" data-category="all">All</button>
+                <button type="button" class="integration-filter-btn" role="tab" aria-selected="false" data-category="messaging">💬 Messaging</button>
+                <button type="button" class="integration-filter-btn" role="tab" aria-selected="false" data-category="productivity">📋 Productivity</button>
+                <button type="button" class="integration-filter-btn" role="tab" aria-selected="false" data-category="developer">🛠️ Developer</button>
             </div>
             <div class="integrations-grid" id="integrationsGrid">
                 <div class="integration-card" data-category="messaging" data-status="live">
@@ -721,11 +721,11 @@
             <h2 class="section-title" id="benchmarkTitle">Performance Benchmarks</h2>
             <p class="section-subtitle">Real-world task comparisons — see where a persistent agent outperforms raw AI chat</p>
             <div class="benchmark-filters" role="tablist" aria-label="Benchmark categories">
-                <button class="benchmark-filter active" role="tab" aria-selected="true" data-bench-cat="all">All Tasks</button>
-                <button class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="memory">🧠 Memory</button>
-                <button class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="integration">🔌 Integrations</button>
-                <button class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="efficiency">⚡ Efficiency</button>
-                <button class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="context">🎯 Context</button>
+                <button type="button" class="benchmark-filter active" role="tab" aria-selected="true" data-bench-cat="all">All Tasks</button>
+                <button type="button" class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="memory">🧠 Memory</button>
+                <button type="button" class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="integration">🔌 Integrations</button>
+                <button type="button" class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="efficiency">⚡ Efficiency</button>
+                <button type="button" class="benchmark-filter" role="tab" aria-selected="false" data-bench-cat="context">🎯 Context</button>
             </div>
             <div class="benchmark-chart-area" id="benchmarkChart" role="img" aria-label="Benchmark comparison chart"></div>
             <div class="benchmark-summary" id="benchmarkSummary" aria-live="polite"></div>
@@ -749,7 +749,7 @@
                     <div class="calc-slider-group" data-task="reminder" data-minutes="2">
                         <div class="calc-slider-header">
                             <span class="calc-slider-icon">⏰</span>
-                            <span class="calc-slider-label">Reminders & scheduling</span>
+                            <span class="calc-slider-label">Reminders &amp; scheduling</span>
                             <span class="calc-slider-value">3 /week</span>
                         </div>
                         <input type="range" class="calc-range" min="0" max="30" value="3" aria-label="Reminders per week">
@@ -758,7 +758,7 @@
                     <div class="calc-slider-group" data-task="email" data-minutes="5">
                         <div class="calc-slider-header">
                             <span class="calc-slider-icon">✍️</span>
-                            <span class="calc-slider-label">Emails & messages drafted</span>
+                            <span class="calc-slider-label">Emails &amp; messages drafted</span>
                             <span class="calc-slider-value">4 /week</span>
                         </div>
                         <input type="range" class="calc-range" min="0" max="40" value="4" aria-label="Emails drafted per week">
@@ -807,7 +807,7 @@
             </div>
         </div>
 
-        <div class="capacity-planner-section" id="capacityPlannerSection" aria-label="Capacity Planner">
+        <div role="region" class="capacity-planner-section" id="capacityPlannerSection" aria-label="Capacity Planner">
             <h2>Plan Your Team's Usage</h2>
             <p class="cp-subtitle">Estimate your monthly message volume and find the right plan for your team</p>
             <div class="cp-grid">
@@ -858,33 +858,33 @@
             </div>
         </div>
 
-        <div class="role-picker-section" id="rolePickerSection" aria-label="Role Demo Picker">
+        <div role="region" class="role-picker-section" id="rolePickerSection" aria-label="Role Demo Picker">
             <h2>See AgentBox in Your Role</h2>
             <p class="role-picker-subtitle">Pick your role to see a personalized demo conversation</p>
             <div class="role-picker-grid" role="group" aria-label="Select your role">
-                <button class="role-picker-btn" data-role="marketing" aria-pressed="false">
+                <button type="button" class="role-picker-btn" data-role="marketing" aria-pressed="false">
                     <span class="role-picker-icon">📣</span>
                     <span class="role-picker-label">Marketing</span>
                 </button>
-                <button class="role-picker-btn" data-role="engineering" aria-pressed="false">
+                <button type="button" class="role-picker-btn" data-role="engineering" aria-pressed="false">
                     <span class="role-picker-icon">⚙️</span>
                     <span class="role-picker-label">Engineering</span>
                 </button>
-                <button class="role-picker-btn" data-role="sales" aria-pressed="false">
+                <button type="button" class="role-picker-btn" data-role="sales" aria-pressed="false">
                     <span class="role-picker-icon">💼</span>
                     <span class="role-picker-label">Sales</span>
                 </button>
-                <button class="role-picker-btn" data-role="support" aria-pressed="false">
+                <button type="button" class="role-picker-btn" data-role="support" aria-pressed="false">
                     <span class="role-picker-icon">🎧</span>
                     <span class="role-picker-label">Support</span>
                 </button>
-                <button class="role-picker-btn" data-role="executive" aria-pressed="false">
+                <button type="button" class="role-picker-btn" data-role="executive" aria-pressed="false">
                     <span class="role-picker-icon">📈</span>
                     <span class="role-picker-label">Executive</span>
                 </button>
-                <button class="role-picker-btn" data-role="hr" aria-pressed="false">
+                <button type="button" class="role-picker-btn" data-role="hr" aria-pressed="false">
                     <span class="role-picker-icon">👥</span>
-                    <span class="role-picker-label">HR & People</span>
+                    <span class="role-picker-label">HR &amp; People</span>
                 </button>
             </div>
             <div class="role-picker-chat">
@@ -892,12 +892,12 @@
             </div>
         </div>
 
-        <div class="notification-section" id="notificationSection" aria-label="Notification Preview">
+        <div role="region" class="notification-section" id="notificationSection" aria-label="Notification Preview">
             <h2>See It In Action</h2>
             <p class="notification-subtitle">Preview what AgentBox notifications look like on your phone</p>
 
             <div class="notification-phone-wrap">
-                <div class="notification-phone" aria-label="Phone mockup showing AgentBox notifications">
+                <div role="region" class="notification-phone" aria-label="Phone mockup showing AgentBox notifications">
                     <div class="phone-status-bar" aria-hidden="true">
                         <span class="phone-time">9:41</span>
                         <span class="phone-icons">
@@ -922,15 +922,15 @@
 
             <div class="notification-controls">
                 <div class="notification-scenarios" role="tablist" aria-label="Notification scenarios">
-                    <button class="notif-scenario-btn active" role="tab" aria-selected="true" data-scenario="0" tabindex="0">Reminder</button>
-                    <button class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="1" tabindex="-1">Search</button>
-                    <button class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="2" tabindex="-1">Digest</button>
-                    <button class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="3" tabindex="-1">Alert</button>
-                    <button class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="4" tabindex="-1">Message</button>
+                    <button type="button" class="notif-scenario-btn active" role="tab" aria-selected="true" data-scenario="0" tabindex="0">Reminder</button>
+                    <button type="button" class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="1" tabindex="-1">Search</button>
+                    <button type="button" class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="2" tabindex="-1">Digest</button>
+                    <button type="button" class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="3" tabindex="-1">Alert</button>
+                    <button type="button" class="notif-scenario-btn" role="tab" aria-selected="false" data-scenario="4" tabindex="-1">Message</button>
                 </div>
                 <div class="notification-view-toggle">
-                    <button class="notif-view-btn active" data-view="compact" aria-pressed="true">Compact</button>
-                    <button class="notif-view-btn" data-view="detailed" aria-pressed="false">Detailed</button>
+                    <button type="button" class="notif-view-btn active" data-view="compact" aria-pressed="true">Compact</button>
+                    <button type="button" class="notif-view-btn" data-view="detailed" aria-pressed="false">Detailed</button>
                 </div>
             </div>
         </div>
@@ -1119,9 +1119,9 @@
                 </div>
             </div>
             <div class="testimonials-nav">
-                <button class="testimonial-arrow testimonial-prev" aria-label="Previous testimonial">‹</button>
+                <button type="button" class="testimonial-arrow testimonial-prev" aria-label="Previous testimonial">‹</button>
                 <div class="testimonials-dots" id="testimonialsDots"></div>
-                <button class="testimonial-arrow testimonial-next" aria-label="Next testimonial">›</button>
+                <button type="button" class="testimonial-arrow testimonial-next" aria-label="Next testimonial">›</button>
             </div>
         </div>
 
@@ -1130,11 +1130,11 @@
             <p class="stories-subtitle">See how people use AgentBox to transform their daily workflows</p>
 
             <div class="stories-filters" role="tablist" aria-label="Filter stories by category">
-                <button class="stories-filter active" role="tab" aria-selected="true" data-category="all">All</button>
-                <button class="stories-filter" role="tab" aria-selected="false" data-category="productivity">⚡ Productivity</button>
-                <button class="stories-filter" role="tab" aria-selected="false" data-category="developer">💻 Developer</button>
-                <button class="stories-filter" role="tab" aria-selected="false" data-category="creative">🎨 Creative</button>
-                <button class="stories-filter" role="tab" aria-selected="false" data-category="business">📊 Business</button>
+                <button type="button" class="stories-filter active" role="tab" aria-selected="true" data-category="all">All</button>
+                <button type="button" class="stories-filter" role="tab" aria-selected="false" data-category="productivity">⚡ Productivity</button>
+                <button type="button" class="stories-filter" role="tab" aria-selected="false" data-category="developer">💻 Developer</button>
+                <button type="button" class="stories-filter" role="tab" aria-selected="false" data-category="creative">🎨 Creative</button>
+                <button type="button" class="stories-filter" role="tab" aria-selected="false" data-category="business">📊 Business</button>
             </div>
 
             <div class="stories-grid" id="storiesGrid" role="list"></div>
@@ -1180,7 +1180,7 @@
                         <li>Priority responses</li>
                         <li>Advanced memory</li>
                         <li>Longer conversations</li>
-                        <li>Reminders & scheduling</li>
+                        <li>Reminders &amp; scheduling</li>
                         <li>File analysis</li>
                     </ul>
                     <a href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer" class="plan-btn btn-pro">Upgrade to Pro</a>
@@ -1216,16 +1216,16 @@
                     <div class="quiz-start" id="quizStart">
                         <span class="quiz-start-icon">🎯</span>
                         <p class="quiz-start-text">Find your ideal plan in under 30 seconds</p>
-                        <button class="quiz-start-btn" id="quizStartBtn">Take the Quiz</button>
+                        <button type="button" class="quiz-start-btn" id="quizStartBtn">Take the Quiz</button>
                     </div>
                 </div>
                 <div class="quiz-result" id="quizResult" hidden>
                     <div class="quiz-result-icon" id="quizResultIcon"></div>
-                    <h3 class="quiz-result-title" id="quizResultTitle"></h3>
+                    <h3 class="quiz-result-title" id="quizResultTitle"> </h3>
                     <p class="quiz-result-desc" id="quizResultDesc"></p>
                     <ul class="quiz-result-reasons" id="quizResultReasons"></ul>
                     <a class="quiz-result-cta" id="quizResultCta" href="https://t.me/AgentBox11Bot" target="_blank" rel="noopener noreferrer"></a>
-                    <button class="quiz-retake-btn" id="quizRetakeBtn">↩ Retake Quiz</button>
+                    <button type="button" class="quiz-retake-btn" id="quizRetakeBtn">↩ Retake Quiz</button>
                 </div>
             </div>
         </div>
@@ -1234,10 +1234,10 @@
             <h2>What's new</h2>
             <p class="changelog-subtitle">We ship fast. Here's what landed recently.</p>
             <div class="changelog-filter" role="tablist" aria-label="Changelog categories">
-                <button class="changelog-filter-btn active" role="tab" aria-selected="true" data-tag="all">All</button>
-                <button class="changelog-filter-btn" role="tab" aria-selected="false" data-tag="feature">✨ Features</button>
-                <button class="changelog-filter-btn" role="tab" aria-selected="false" data-tag="improvement">⚡ Improvements</button>
-                <button class="changelog-filter-btn" role="tab" aria-selected="false" data-tag="fix">🐛 Fixes</button>
+                <button type="button" class="changelog-filter-btn active" role="tab" aria-selected="true" data-tag="all">All</button>
+                <button type="button" class="changelog-filter-btn" role="tab" aria-selected="false" data-tag="feature">✨ Features</button>
+                <button type="button" class="changelog-filter-btn" role="tab" aria-selected="false" data-tag="improvement">⚡ Improvements</button>
+                <button type="button" class="changelog-filter-btn" role="tab" aria-selected="false" data-tag="fix">🐛 Fixes</button>
             </div>
             <div class="changelog-timeline" id="changelogTimeline">
                 <div class="changelog-entry" data-tag="feature">
@@ -1319,10 +1319,10 @@
             <h2>Product roadmap</h2>
             <p class="roadmap-subtitle">See what we're working on and what's coming next</p>
             <div class="roadmap-filter" role="tablist" aria-label="Roadmap status filter">
-                <button class="roadmap-filter-btn active" role="tab" aria-selected="true" data-status="all">All</button>
-                <button class="roadmap-filter-btn" role="tab" aria-selected="false" data-status="shipped">&#x2705; Shipped</button>
-                <button class="roadmap-filter-btn" role="tab" aria-selected="false" data-status="progress">&#x1F528; In Progress</button>
-                <button class="roadmap-filter-btn" role="tab" aria-selected="false" data-status="planned">&#x1F4CB; Planned</button>
+                <button type="button" class="roadmap-filter-btn active" role="tab" aria-selected="true" data-status="all">All</button>
+                <button type="button" class="roadmap-filter-btn" role="tab" aria-selected="false" data-status="shipped">&#x2705; Shipped</button>
+                <button type="button" class="roadmap-filter-btn" role="tab" aria-selected="false" data-status="progress">&#x1F528; In Progress</button>
+                <button type="button" class="roadmap-filter-btn" role="tab" aria-selected="false" data-status="planned">&#x1F4CB; Planned</button>
             </div>
             <div class="roadmap-grid" id="roadmapGrid">
                 <div class="roadmap-card" data-status="shipped" data-category="core">
@@ -1331,7 +1331,7 @@
                     <h3>Long-term memory</h3>
                     <p>Your agent remembers preferences, past conversations, and context across sessions.</p>
                     <div class="roadmap-votes">
-                        <button class="roadmap-vote-btn" aria-label="Upvote long-term memory">&#x1F44D;</button>
+                        <button type="button" class="roadmap-vote-btn" aria-label="Upvote long-term memory">&#x1F44D;</button>
                         <span class="roadmap-vote-count">142</span>
                     </div>
                 </div>
@@ -1341,7 +1341,7 @@
                     <h3>WhatsApp support</h3>
                     <p>Same agent, different app. Your WhatsApp messages are handled with full memory and intelligence.</p>
                     <div class="roadmap-votes">
-                        <button class="roadmap-vote-btn" aria-label="Upvote WhatsApp support">&#x1F44D;</button>
+                        <button type="button" class="roadmap-vote-btn" aria-label="Upvote WhatsApp support">&#x1F44D;</button>
                         <span class="roadmap-vote-count">98</span>
                     </div>
                 </div>
@@ -1351,7 +1351,7 @@
                     <h3>File analysis</h3>
                     <p>Upload PDFs, spreadsheets, and documents. Your agent reads, summarizes, and answers questions.</p>
                     <div class="roadmap-votes">
-                        <button class="roadmap-vote-btn" aria-label="Upvote file analysis">&#x1F44D;</button>
+                        <button type="button" class="roadmap-vote-btn" aria-label="Upvote file analysis">&#x1F44D;</button>
                         <span class="roadmap-vote-count">87</span>
                     </div>
                 </div>
@@ -1361,7 +1361,7 @@
                     <h3>Slack integration</h3>
                     <p>Bring your agent into Slack workspaces. Team-wide AI assistance with shared context.</p>
                     <div class="roadmap-votes">
-                        <button class="roadmap-vote-btn" aria-label="Upvote Slack integration">&#x1F44D;</button>
+                        <button type="button" class="roadmap-vote-btn" aria-label="Upvote Slack integration">&#x1F44D;</button>
                         <span class="roadmap-vote-count">156</span>
                     </div>
                 </div>
@@ -1371,7 +1371,7 @@
                     <h3>Multi-model switching</h3>
                     <p>Choose between different AI models per conversation. Use the best model for each task.</p>
                     <div class="roadmap-votes">
-                        <button class="roadmap-vote-btn" aria-label="Upvote multi-model switching">&#x1F44D;</button>
+                        <button type="button" class="roadmap-vote-btn" aria-label="Upvote multi-model switching">&#x1F44D;</button>
                         <span class="roadmap-vote-count">203</span>
                     </div>
                 </div>
@@ -1381,7 +1381,7 @@
                     <h3>Scheduled tasks</h3>
                     <p>Set up recurring actions. Daily briefings, weekly reports, automated checks while you sleep.</p>
                     <div class="roadmap-votes">
-                        <button class="roadmap-vote-btn" aria-label="Upvote scheduled tasks">&#x1F44D;</button>
+                        <button type="button" class="roadmap-vote-btn" aria-label="Upvote scheduled tasks">&#x1F44D;</button>
                         <span class="roadmap-vote-count">178</span>
                     </div>
                 </div>
@@ -1391,7 +1391,7 @@
                     <h3>Custom tools &amp; plugins</h3>
                     <p>Connect your own APIs and services as tools. Your agent calls them when needed.</p>
                     <div class="roadmap-votes">
-                        <button class="roadmap-vote-btn" aria-label="Upvote custom tools">&#x1F44D;</button>
+                        <button type="button" class="roadmap-vote-btn" aria-label="Upvote custom tools">&#x1F44D;</button>
                         <span class="roadmap-vote-count">234</span>
                     </div>
                 </div>
@@ -1401,7 +1401,7 @@
                     <h3>Agent personas</h3>
                     <p>Create custom personalities. A research assistant, writing coach, or coding mentor on demand.</p>
                     <div class="roadmap-votes">
-                        <button class="roadmap-vote-btn" aria-label="Upvote agent personas">&#x1F44D;</button>
+                        <button type="button" class="roadmap-vote-btn" aria-label="Upvote agent personas">&#x1F44D;</button>
                         <span class="roadmap-vote-count">189</span>
                     </div>
                 </div>
@@ -1411,7 +1411,7 @@
                     <h3>Notion integration</h3>
                     <p>Search, create, and update Notion pages and databases through natural language.</p>
                     <div class="roadmap-votes">
-                        <button class="roadmap-vote-btn" aria-label="Upvote Notion integration">&#x1F44D;</button>
+                        <button type="button" class="roadmap-vote-btn" aria-label="Upvote Notion integration">&#x1F44D;</button>
                         <span class="roadmap-vote-count">167</span>
                     </div>
                 </div>
@@ -1578,7 +1578,7 @@
             </div>
         </div>
 
-        <div class="glossary-section" id="glossarySection" aria-label="AI Glossary">
+        <div role="region" class="glossary-section" id="glossarySection" aria-label="AI Glossary">
             <h2>📖 AI Glossary</h2>
             <p class="glossary-subtitle">Learn the key terms behind AI agents and automation</p>
             <div class="glossary-controls">
@@ -1595,12 +1595,12 @@
 
             <div class="feature-board-controls">
                 <div class="fb-filter-row">
-                    <button class="fb-filter active" data-filter="all" aria-pressed="true">All</button>
-                    <button class="fb-filter" data-filter="popular" aria-pressed="false">🔥 Popular</button>
-                    <button class="fb-filter" data-filter="new" aria-pressed="false">✨ New</button>
-                    <button class="fb-filter" data-filter="planned" aria-pressed="false">📋 Planned</button>
+                    <button type="button" class="fb-filter active" data-filter="all" aria-pressed="true">All</button>
+                    <button type="button" class="fb-filter" data-filter="popular" aria-pressed="false">🔥 Popular</button>
+                    <button type="button" class="fb-filter" data-filter="new" aria-pressed="false">✨ New</button>
+                    <button type="button" class="fb-filter" data-filter="planned" aria-pressed="false">📋 Planned</button>
                 </div>
-                <button class="fb-suggest-btn" id="fbSuggestBtn" aria-label="Suggest a feature">💡 Suggest Feature</button>
+                <button type="button" class="fb-suggest-btn" id="fbSuggestBtn" aria-label="Suggest a feature">💡 Suggest Feature</button>
             </div>
 
             <div class="feature-board-list" id="featureBoardList" role="list" aria-label="Feature requests"></div>
@@ -1608,7 +1608,7 @@
             <div class="fb-suggest-form" id="fbSuggestForm" hidden>
                 <div class="fb-form-backdrop" id="fbFormBackdrop"></div>
                 <div class="fb-form-panel" role="dialog" aria-label="Suggest a feature" aria-modal="true">
-                    <button class="fb-form-close" id="fbFormClose" aria-label="Close">&times;</button>
+                    <button type="button" class="fb-form-close" id="fbFormClose" aria-label="Close">&times;</button>
                     <h3>Suggest a Feature</h3>
                     <label for="fbFormTitle">Feature title</label>
                     <input type="text" id="fbFormTitle" class="fb-input" placeholder="e.g. Calendar integration" maxlength="80" required>
@@ -1621,7 +1621,7 @@
                         <option value="ux">🎨 UX / Design</option>
                         <option value="platform">📱 Platform</option>
                     </select>
-                    <button class="fb-submit-btn" id="fbFormSubmit">Submit Idea</button>
+                    <button type="button" class="fb-submit-btn" id="fbFormSubmit">Submit Idea</button>
                 </div>
             </div>
 
@@ -1635,12 +1635,12 @@
                 <input type="text" class="commands-search-input" id="commandsSearchInput" placeholder="Search commands..." aria-label="Search commands" maxlength="100">
             </div>
             <div class="commands-filter" role="tablist" aria-label="Command categories">
-                <button class="commands-filter-btn active" role="tab" aria-selected="true" data-cmd-category="all">All</button>
-                <button class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="memory">&#x1F9E0; Memory</button>
-                <button class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="productivity">&#x26A1; Productivity</button>
-                <button class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="search">&#x1F50D; Search</button>
-                <button class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="media">&#x1F4F7; Media</button>
-                <button class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="settings">&#x2699;&#xFE0F; Settings</button>
+                <button type="button" class="commands-filter-btn active" role="tab" aria-selected="true" data-cmd-category="all">All</button>
+                <button type="button" class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="memory">&#x1F9E0; Memory</button>
+                <button type="button" class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="productivity">&#x26A1; Productivity</button>
+                <button type="button" class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="search">&#x1F50D; Search</button>
+                <button type="button" class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="media">&#x1F4F7; Media</button>
+                <button type="button" class="commands-filter-btn" role="tab" aria-selected="false" data-cmd-category="settings">&#x2699;&#xFE0F; Settings</button>
             </div>
             <div class="commands-grid" id="commandsGrid" role="list"></div>
             <div class="commands-empty" id="commandsEmpty" hidden>
@@ -1653,20 +1653,20 @@
             <h2>API Explorer</h2>
             <p class="api-explorer-subtitle">Browse the AgentBox API. Click any endpoint to see details, sample requests, and responses.</p>
             <div class="api-explorer-filter" role="tablist" aria-label="API categories">
-                <button class="api-filter-btn active" role="tab" aria-selected="true" data-api-cat="all">All</button>
+                <button type="button" class="api-filter-btn active" role="tab" aria-selected="true" data-api-cat="all">All</button>
             </div>
             <div class="api-explorer-grid" id="apiExplorerGrid" role="list"></div>
             <div class="api-detail-panel" id="apiDetailPanel" hidden>
                 <div class="api-detail-header">
-                    <h3 id="apiDetailTitle"></h3>
-                    <button class="api-detail-close" id="apiDetailClose" aria-label="Close detail panel">&times;</button>
+                    <h3 id="apiDetailTitle"> </h3>
+                    <button type="button" class="api-detail-close" id="apiDetailClose" aria-label="Close detail panel">&times;</button>
                 </div>
                 <div class="api-detail-body">
                     <div class="api-detail-meta" id="apiDetailMeta"></div>
                     <div class="api-detail-section">
                         <h4>Request</h4>
                         <div class="api-code-block">
-                            <button class="api-copy-btn" data-copy-target="apiCurlCode" aria-label="Copy curl command">📋 Copy</button>
+                            <button type="button" class="api-copy-btn" data-copy-target="apiCurlCode" aria-label="Copy curl command">📋 Copy</button>
                             <pre id="apiCurlCode"></pre>
                         </div>
                     </div>
@@ -1679,7 +1679,7 @@
                     <div class="api-detail-section">
                         <h4>Response <span class="api-status-badge" id="apiStatusBadge">200 OK</span></h4>
                         <div class="api-code-block">
-                            <button class="api-copy-btn" data-copy-target="apiRespBody" aria-label="Copy response JSON">📋 Copy</button>
+                            <button type="button" class="api-copy-btn" data-copy-target="apiRespBody" aria-label="Copy response JSON">📋 Copy</button>
                             <pre id="apiRespBody"></pre>
                         </div>
                     </div>
@@ -1692,13 +1692,13 @@
             <h2>Workflow Templates</h2>
             <p class="workflow-subtitle">Ready-to-use automation recipes. Pick a template, copy the setup, and start automating in seconds.</p>
             <div class="workflow-filter" role="tablist" aria-label="Workflow categories">
-                <button class="workflow-filter-btn active" role="tab" aria-selected="true" data-wf-cat="all">All</button>
+                <button type="button" class="workflow-filter-btn active" role="tab" aria-selected="true" data-wf-cat="all">All</button>
             </div>
             <div class="workflow-grid" id="workflowGrid" role="list"></div>
             <div class="workflow-detail" id="workflowDetail" hidden>
                 <div class="workflow-detail-header">
-                    <h3 id="workflowDetailTitle"></h3>
-                    <button class="workflow-detail-close" id="workflowDetailClose" aria-label="Close workflow detail">&times;</button>
+                    <h3 id="workflowDetailTitle"> </h3>
+                    <button type="button" class="workflow-detail-close" id="workflowDetailClose" aria-label="Close workflow detail">&times;</button>
                 </div>
                 <div class="workflow-detail-body">
                     <p class="workflow-detail-desc" id="workflowDetailDesc"></p>
@@ -1706,7 +1706,7 @@
                     <div class="workflow-setup">
                         <h4>Setup Command</h4>
                         <div class="workflow-code-block">
-                            <button class="workflow-copy-btn" id="workflowCopyBtn" aria-label="Copy setup command">📋 Copy</button>
+                            <button type="button" class="workflow-copy-btn" id="workflowCopyBtn" aria-label="Copy setup command">📋 Copy</button>
                             <pre id="workflowSetupCode"></pre>
                         </div>
                     </div>
@@ -1721,10 +1721,10 @@
             <h2>Your AgentBox Journey</h2>
             <p class="growth-timeline-subtitle">See what happens as your AI agent learns and grows with you</p>
             <div class="growth-timeline-controls">
-                <button class="growth-tab active" data-milestone="week1" aria-pressed="true">Week 1</button>
-                <button class="growth-tab" data-milestone="month1" aria-pressed="false">Month 1</button>
-                <button class="growth-tab" data-milestone="month3" aria-pressed="false">Month 3</button>
-                <button class="growth-tab" data-milestone="month6" aria-pressed="false">Month 6</button>
+                <button type="button" class="growth-tab active" data-milestone="week1" aria-pressed="true">Week 1</button>
+                <button type="button" class="growth-tab" data-milestone="month1" aria-pressed="false">Month 1</button>
+                <button type="button" class="growth-tab" data-milestone="month3" aria-pressed="false">Month 3</button>
+                <button type="button" class="growth-tab" data-milestone="month6" aria-pressed="false">Month 6</button>
             </div>
             <div class="growth-progress-bar">
                 <div class="growth-progress-fill" id="growthProgressFill"></div>
@@ -1809,17 +1809,17 @@
         </div>
 
         <!-- Competitive Comparison Table -->
-        <div class="comparison-section" id="comparisonSection">
+        <div class="comparison-section" id="comparisonAdvancedSection">
             <h2>How AgentBox Compares</h2>
             <p class="cmp-subtitle">See how AgentBox stacks up against alternatives across 20 features</p>
 
             <div class="cmp-filters" role="tablist" aria-label="Filter by category">
-                <button class="cmp-filter-btn active" data-category="all" role="tab" aria-pressed="true">All</button>
-                <button class="cmp-filter-btn" data-category="automation" role="tab" aria-pressed="false">Automation</button>
-                <button class="cmp-filter-btn" data-category="integration" role="tab" aria-pressed="false">Integration</button>
-                <button class="cmp-filter-btn" data-category="intelligence" role="tab" aria-pressed="false">Intelligence</button>
-                <button class="cmp-filter-btn" data-category="ops" role="tab" aria-pressed="false">Operations</button>
-                <button class="cmp-filter-btn" data-category="pricing" role="tab" aria-pressed="false">Pricing</button>
+                <button type="button" class="cmp-filter-btn active" data-category="all" role="tab" aria-pressed="true">All</button>
+                <button type="button" class="cmp-filter-btn" data-category="automation" role="tab" aria-pressed="false">Automation</button>
+                <button type="button" class="cmp-filter-btn" data-category="integration" role="tab" aria-pressed="false">Integration</button>
+                <button type="button" class="cmp-filter-btn" data-category="intelligence" role="tab" aria-pressed="false">Intelligence</button>
+                <button type="button" class="cmp-filter-btn" data-category="ops" role="tab" aria-pressed="false">Operations</button>
+                <button type="button" class="cmp-filter-btn" data-category="pricing" role="tab" aria-pressed="false">Pricing</button>
             </div>
 
             <div class="cmp-scores">
@@ -1877,17 +1877,17 @@
             <p class="feedback-subtitle">Your feedback helps us build a better product</p>
             <div class="feedback-widget" id="feedbackWidget">
                 <div class="nps-scale" id="npsScale" role="radiogroup" aria-label="Rating from 0 to 10">
-                    <button class="nps-btn" data-score="0" aria-label="0 - Not at all likely">0</button>
-                    <button class="nps-btn" data-score="1" aria-label="1">1</button>
-                    <button class="nps-btn" data-score="2" aria-label="2">2</button>
-                    <button class="nps-btn" data-score="3" aria-label="3">3</button>
-                    <button class="nps-btn" data-score="4" aria-label="4">4</button>
-                    <button class="nps-btn" data-score="5" aria-label="5">5</button>
-                    <button class="nps-btn" data-score="6" aria-label="6">6</button>
-                    <button class="nps-btn" data-score="7" aria-label="7">7</button>
-                    <button class="nps-btn" data-score="8" aria-label="8">8</button>
-                    <button class="nps-btn" data-score="9" aria-label="9">9</button>
-                    <button class="nps-btn" data-score="10" aria-label="10 - Extremely likely">10</button>
+                    <button type="button" class="nps-btn" data-score="0" aria-label="0 - Not at all likely">0</button>
+                    <button type="button" class="nps-btn" data-score="1" aria-label="1">1</button>
+                    <button type="button" class="nps-btn" data-score="2" aria-label="2">2</button>
+                    <button type="button" class="nps-btn" data-score="3" aria-label="3">3</button>
+                    <button type="button" class="nps-btn" data-score="4" aria-label="4">4</button>
+                    <button type="button" class="nps-btn" data-score="5" aria-label="5">5</button>
+                    <button type="button" class="nps-btn" data-score="6" aria-label="6">6</button>
+                    <button type="button" class="nps-btn" data-score="7" aria-label="7">7</button>
+                    <button type="button" class="nps-btn" data-score="8" aria-label="8">8</button>
+                    <button type="button" class="nps-btn" data-score="9" aria-label="9">9</button>
+                    <button type="button" class="nps-btn" data-score="10" aria-label="10 - Extremely likely">10</button>
                 </div>
                 <div class="nps-labels">
                     <span>Not at all likely</span>
@@ -1895,13 +1895,13 @@
                 </div>
                 <div class="feedback-comment-area" id="feedbackCommentArea" hidden>
                     <textarea class="feedback-textarea" id="feedbackComment" placeholder="What's the main reason for your score? (optional)" maxlength="500" aria-label="Feedback comment"></textarea>
-                    <button class="feedback-submit-btn" id="feedbackSubmit">Submit Feedback</button>
+                    <button type="button" class="feedback-submit-btn" id="feedbackSubmit">Submit Feedback</button>
                 </div>
                 <div class="feedback-thanks" id="feedbackThanks" hidden>
                     <div class="feedback-thanks-icon">🎉</div>
                     <p class="feedback-thanks-text">Thanks for your feedback!</p>
                     <p class="feedback-thanks-detail" id="feedbackThanksDetail"></p>
-                    <button class="feedback-reset-btn" id="feedbackReset">Change my response</button>
+                    <button type="button" class="feedback-reset-btn" id="feedbackReset">Change my response</button>
                 </div>
                 <div class="feedback-summary" id="feedbackSummary">
                     <div class="feedback-stat">
@@ -1951,20 +1951,20 @@
                     <div class="share-card-field">
                         <label>Card Theme</label>
                         <div class="share-card-themes" id="shareCardThemes">
-                            <button class="share-card-theme active" data-theme="gradient" aria-label="Gradient theme" style="background:linear-gradient(135deg,#667eea,#764ba2)"></button>
-                            <button class="share-card-theme" data-theme="ocean" aria-label="Ocean theme" style="background:linear-gradient(135deg,#2193b0,#6dd5ed)"></button>
-                            <button class="share-card-theme" data-theme="sunset" aria-label="Sunset theme" style="background:linear-gradient(135deg,#f093fb,#f5576c)"></button>
-                            <button class="share-card-theme" data-theme="forest" aria-label="Forest theme" style="background:linear-gradient(135deg,#11998e,#38ef7d)"></button>
-                            <button class="share-card-theme" data-theme="dark" aria-label="Dark theme" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"></button>
+                            <button type="button" class="share-card-theme active" data-theme="gradient" aria-label="Gradient theme" style="background:linear-gradient(135deg,#667eea,#764ba2)"></button>
+                            <button type="button" class="share-card-theme" data-theme="ocean" aria-label="Ocean theme" style="background:linear-gradient(135deg,#2193b0,#6dd5ed)"></button>
+                            <button type="button" class="share-card-theme" data-theme="sunset" aria-label="Sunset theme" style="background:linear-gradient(135deg,#f093fb,#f5576c)"></button>
+                            <button type="button" class="share-card-theme" data-theme="forest" aria-label="Forest theme" style="background:linear-gradient(135deg,#11998e,#38ef7d)"></button>
+                            <button type="button" class="share-card-theme" data-theme="dark" aria-label="Dark theme" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"></button>
                         </div>
                     </div>
-                    <button class="share-card-generate" id="shareCardGenerate">✨ Generate Card</button>
+                    <button type="button" class="share-card-generate" id="shareCardGenerate">✨ Generate Card</button>
                 </div>
                 <div class="share-card-preview">
                     <canvas id="shareCardCanvas" width="600" height="340"></canvas>
                     <div class="share-card-actions" id="shareCardActions" hidden>
-                        <button class="share-card-download" id="shareCardDownload">📥 Download PNG</button>
-                        <button class="share-card-copy" id="shareCardCopy">📋 Copy to Clipboard</button>
+                        <button type="button" class="share-card-download" id="shareCardDownload">📥 Download PNG</button>
+                        <button type="button" class="share-card-copy" id="shareCardCopy">📋 Copy to Clipboard</button>
                     </div>
                     <p class="share-card-hint">Fill in the form and click Generate to preview your card</p>
                 </div>
@@ -1997,19 +1997,19 @@
 
     <!-- Floating Share Button -->
     <div class="share-fab" id="shareFab">
-        <button class="share-fab-btn" id="shareFabBtn" aria-label="Share this page" aria-expanded="false">
+        <button type="button" class="share-fab-btn" id="shareFabBtn" aria-label="Share this page" aria-expanded="false">
             <span class="share-fab-icon">📤</span>
         </button>
         <div class="share-fab-menu" id="shareFabMenu" hidden>
-            <button class="share-option" data-share="twitter" aria-label="Share on X / Twitter">
+            <button type="button" class="share-option" data-share="twitter" aria-label="Share on X / Twitter">
                 <span class="share-option-icon">𝕏</span>
                 <span class="share-option-label">Twitter / X</span>
             </button>
-            <button class="share-option" data-share="linkedin" aria-label="Share on LinkedIn">
+            <button type="button" class="share-option" data-share="linkedin" aria-label="Share on LinkedIn">
                 <span class="share-option-icon">in</span>
                 <span class="share-option-label">LinkedIn</span>
             </button>
-            <button class="share-option" data-share="copy" aria-label="Copy link">
+            <button type="button" class="share-option" data-share="copy" aria-label="Copy link">
                 <span class="share-option-icon">🔗</span>
                 <span class="share-option-label">Copy link</span>
             </button>
@@ -2039,7 +2039,7 @@
         <div class="shortcuts-modal" role="dialog" aria-label="Keyboard shortcuts" aria-modal="true">
             <div class="shortcuts-header">
                 <h3>⌨️ Keyboard Shortcuts</h3>
-                <button class="shortcuts-close" id="shortcutsClose" aria-label="Close shortcuts help">&times;</button>
+                <button type="button" class="shortcuts-close" id="shortcutsClose" aria-label="Close shortcuts help">&times;</button>
             </div>
             <div class="shortcuts-body">
                 <div class="shortcuts-group">
@@ -2065,19 +2065,19 @@
     <div class="scroll-progress-bar" id="scrollProgressBar" aria-hidden="true"></div>
 
     <!-- Back to Top Button -->
-    <button class="back-to-top" id="backToTop" aria-label="Back to top" title="Back to top">↑</button>
+    <button type="button" class="back-to-top" id="backToTop" aria-label="Back to top" title="Back to top">↑</button>
 
 
     <!-- Onboarding Wizard -->
     <div class="onboarding-widget" id="onboardingWidget" hidden>
-        <button class="onboarding-trigger" id="onboardingTrigger" aria-label="Get personalized recommendations" title="Get started">
+        <button type="button" class="onboarding-trigger" id="onboardingTrigger" aria-label="Get personalized recommendations" title="Get started">
             <span class="onboarding-trigger-icon">🚀</span>
             <span class="onboarding-trigger-pulse"></span>
         </button>
         <div class="onboarding-panel" id="onboardingPanel" role="dialog" aria-label="Personalized setup wizard" aria-modal="false" hidden>
             <div class="onboarding-header">
                 <h3 class="onboarding-title" id="onboardingTitle">Let's find your fit</h3>
-                <button class="onboarding-close" id="onboardingClose" aria-label="Close wizard">&times;</button>
+                <button type="button" class="onboarding-close" id="onboardingClose" aria-label="Close wizard">&times;</button>
             </div>
             <div class="onboarding-progress">
                 <div class="onboarding-progress-bar" id="onboardingProgressBar" style="width: 33%"></div>
@@ -2087,22 +2087,22 @@
                 <div class="onboarding-step" id="onboardingStep1" data-step="1">
                     <p class="onboarding-question">What describes you best?</p>
                     <div class="onboarding-options" role="radiogroup" aria-label="Select your role">
-                        <button class="onboarding-option" data-role="developer" aria-pressed="false">
+                        <button type="button" class="onboarding-option" data-role="developer" aria-pressed="false">
                             <span class="onboarding-option-icon">💻</span>
                             <span class="onboarding-option-label">Developer</span>
                             <span class="onboarding-option-desc">Code, debug, automate</span>
                         </button>
-                        <button class="onboarding-option" data-role="student" aria-pressed="false">
+                        <button type="button" class="onboarding-option" data-role="student" aria-pressed="false">
                             <span class="onboarding-option-icon">🎓</span>
                             <span class="onboarding-option-label">Student</span>
                             <span class="onboarding-option-desc">Learn, research, study</span>
                         </button>
-                        <button class="onboarding-option" data-role="professional" aria-pressed="false">
+                        <button type="button" class="onboarding-option" data-role="professional" aria-pressed="false">
                             <span class="onboarding-option-icon">💼</span>
                             <span class="onboarding-option-label">Professional</span>
                             <span class="onboarding-option-desc">Productivity, writing, planning</span>
                         </button>
-                        <button class="onboarding-option" data-role="casual" aria-pressed="false">
+                        <button type="button" class="onboarding-option" data-role="casual" aria-pressed="false">
                             <span class="onboarding-option-icon">🌟</span>
                             <span class="onboarding-option-label">Casual User</span>
                             <span class="onboarding-option-desc">Fun, creativity, curiosity</span>
@@ -2123,13 +2123,13 @@
                 </div>
             </div>
             <div class="onboarding-footer">
-                <button class="onboarding-btn onboarding-btn-back" id="onboardingBack" hidden>← Back</button>
+                <button type="button" class="onboarding-btn onboarding-btn-back" id="onboardingBack" hidden>← Back</button>
                 <div class="onboarding-step-dots">
                     <span class="onboarding-dot active" data-dot="1"></span>
                     <span class="onboarding-dot" data-dot="2"></span>
                     <span class="onboarding-dot" data-dot="3"></span>
                 </div>
-                <button class="onboarding-btn onboarding-btn-next" id="onboardingNext" disabled>Next →</button>
+                <button type="button" class="onboarding-btn onboarding-btn-next" id="onboardingNext" disabled>Next →</button>
             </div>
         </div>
     </div>
@@ -2144,8 +2144,8 @@
                 <div class="day-sim-empty">Click an hour above to see what your agent does</div>
             </div>
             <div class="day-sim-controls">
-                <button class="day-sim-btn" id="dayPlayBtn" aria-label="Play through the day">▶ Play Day</button>
-                <button class="day-sim-btn day-sim-btn-outline" id="dayResetBtn" aria-label="Reset timeline">↺ Reset</button>
+                <button type="button" class="day-sim-btn" id="dayPlayBtn" aria-label="Play through the day">▶ Play Day</button>
+                <button type="button" class="day-sim-btn day-sim-btn-outline" id="dayResetBtn" aria-label="Reset timeline">↺ Reset</button>
                 <div class="day-sim-stats" id="dayStats" aria-live="polite"></div>
             </div>
         </div>
@@ -2159,20 +2159,20 @@
 
         <div class="showcase-controls">
             <div class="showcase-filter-row" role="tablist" aria-label="Filter by category">
-                <button class="showcase-filter active" role="tab" aria-selected="true" data-category="All">All</button>
-                <button class="showcase-filter" role="tab" aria-selected="false" data-category="Productivity">Productivity</button>
-                <button class="showcase-filter" role="tab" aria-selected="false" data-category="Developer">Developer</button>
-                <button class="showcase-filter" role="tab" aria-selected="false" data-category="Creative">Creative</button>
-                <button class="showcase-filter" role="tab" aria-selected="false" data-category="Business">Business</button>
-                <button class="showcase-filter" role="tab" aria-selected="false" data-category="Research">Research</button>
+                <button type="button" class="showcase-filter active" role="tab" aria-selected="true" data-category="All">All</button>
+                <button type="button" class="showcase-filter" role="tab" aria-selected="false" data-category="Productivity">Productivity</button>
+                <button type="button" class="showcase-filter" role="tab" aria-selected="false" data-category="Developer">Developer</button>
+                <button type="button" class="showcase-filter" role="tab" aria-selected="false" data-category="Creative">Creative</button>
+                <button type="button" class="showcase-filter" role="tab" aria-selected="false" data-category="Business">Business</button>
+                <button type="button" class="showcase-filter" role="tab" aria-selected="false" data-category="Research">Research</button>
             </div>
             <div class="showcase-actions">
                 <div class="showcase-sort-group" role="group" aria-label="Sort order">
-                    <button class="showcase-sort-btn active" data-sort="popular" aria-pressed="true">Popular</button>
-                    <button class="showcase-sort-btn" data-sort="newest" aria-pressed="false">Newest</button>
+                    <button type="button" class="showcase-sort-btn active" data-sort="popular" aria-pressed="true">Popular</button>
+                    <button type="button" class="showcase-sort-btn" data-sort="newest" aria-pressed="false">Newest</button>
                 </div>
                 <span class="showcase-count" id="showcaseCount" aria-live="polite">10 projects</span>
-                <button class="showcase-submit-trigger" id="showcaseSubmitBtn">Share Your Project</button>
+                <button type="button" class="showcase-submit-trigger" id="showcaseSubmitBtn">Share Your Project</button>
             </div>
         </div>
 
@@ -2185,16 +2185,16 @@
         <p class="section-subtitle">Describe a real-life situation and watch AgentBox autonomously plan &amp; execute</p>
 
         <div class="scenario-presets" role="group" aria-label="Choose a scenario">
-            <button class="scenario-preset-btn" data-scenario="Plan a surprise birthday dinner for 8 people this Saturday" aria-pressed="false">🎂 Birthday Dinner</button>
-            <button class="scenario-preset-btn" data-scenario="I'm moving to a new city next month and need to set everything up" aria-pressed="false">🏠 City Move</button>
-            <button class="scenario-preset-btn" data-scenario="Prepare for a job interview at a tech company next week" aria-pressed="false">💼 Job Interview</button>
-            <button class="scenario-preset-btn" data-scenario="Organize a weekend camping trip for a group of friends" aria-pressed="false">⛺ Camping Trip</button>
-            <button class="scenario-preset-btn" data-scenario="Launch a side project and get first 100 users" aria-pressed="false">🚀 Side Project</button>
+            <button type="button" class="scenario-preset-btn" data-scenario="Plan a surprise birthday dinner for 8 people this Saturday" aria-pressed="false">🎂 Birthday Dinner</button>
+            <button type="button" class="scenario-preset-btn" data-scenario="I'm moving to a new city next month and need to set everything up" aria-pressed="false">🏠 City Move</button>
+            <button type="button" class="scenario-preset-btn" data-scenario="Prepare for a job interview at a tech company next week" aria-pressed="false">💼 Job Interview</button>
+            <button type="button" class="scenario-preset-btn" data-scenario="Organize a weekend camping trip for a group of friends" aria-pressed="false">⛺ Camping Trip</button>
+            <button type="button" class="scenario-preset-btn" data-scenario="Launch a side project and get first 100 users" aria-pressed="false">🚀 Side Project</button>
         </div>
 
         <div class="scenario-custom">
             <input type="text" id="scenarioCustomInput" class="scenario-custom-input" placeholder="Or type your own scenario..." maxlength="200" aria-label="Custom scenario">
-            <button class="scenario-custom-btn" id="scenarioCustomBtn">Plan It</button>
+            <button type="button" class="scenario-custom-btn" id="scenarioCustomBtn">Plan It</button>
         </div>
 
         <div class="scenario-workspace" id="scenarioWorkspace" hidden>
@@ -2204,7 +2204,7 @@
             </div>
             <div class="scenario-phases" id="scenarioPhases"></div>
             <div class="scenario-summary" id="scenarioSummary" hidden></div>
-            <button class="scenario-reset-btn" id="scenarioResetBtn">Try Another Scenario</button>
+            <button type="button" class="scenario-reset-btn" id="scenarioResetBtn">Try Another Scenario</button>
         </div>
     </section>
 
@@ -2214,11 +2214,11 @@
         <p class="section-subtitle">See how AgentBox breaks complex tasks into subtasks and delegates to specialized agents</p>
 
         <div class="delegation-presets" role="group" aria-label="Choose a task">
-            <button class="delegation-preset-btn" data-task="Research competitor landscape and write a strategy report" aria-pressed="false">🔍 Competitor Research</button>
-            <button class="delegation-preset-btn" data-task="Plan and launch a Product Hunt campaign" aria-pressed="false">🚀 Product Hunt Launch</button>
-            <button class="delegation-preset-btn" data-task="Audit codebase security and fix critical vulnerabilities" aria-pressed="false">🛡️ Security Audit</button>
-            <button class="delegation-preset-btn" data-task="Organize a team offsite for 20 people" aria-pressed="false">🏕️ Team Offsite</button>
-            <button class="delegation-preset-btn" data-task="Build and deploy a landing page from a sketch" aria-pressed="false">🎨 Landing Page</button>
+            <button type="button" class="delegation-preset-btn" data-task="Research competitor landscape and write a strategy report" aria-pressed="false">🔍 Competitor Research</button>
+            <button type="button" class="delegation-preset-btn" data-task="Plan and launch a Product Hunt campaign" aria-pressed="false">🚀 Product Hunt Launch</button>
+            <button type="button" class="delegation-preset-btn" data-task="Audit codebase security and fix critical vulnerabilities" aria-pressed="false">🛡️ Security Audit</button>
+            <button type="button" class="delegation-preset-btn" data-task="Organize a team offsite for 20 people" aria-pressed="false">🏕️ Team Offsite</button>
+            <button type="button" class="delegation-preset-btn" data-task="Build and deploy a landing page from a sketch" aria-pressed="false">🎨 Landing Page</button>
         </div>
 
         <div class="delegation-workspace" id="delegationWorkspace" hidden>
@@ -2229,7 +2229,7 @@
             <div class="delegation-tree" id="delegationTreeRoot" role="tree" aria-label="Agent delegation tree"></div>
             <div class="delegation-log" id="delegationLog" role="log" aria-label="Delegation activity log"></div>
             <div class="delegation-summary" id="delegationSummary" hidden></div>
-            <button class="delegation-reset-btn" id="delegationResetBtn">Try Another Task</button>
+            <button type="button" class="delegation-reset-btn" id="delegationResetBtn">Try Another Task</button>
         </div>
     </section>
 
@@ -2239,11 +2239,11 @@
         <p class="section-subtitle">Pick a question and watch AgentBox race against traditional search</p>
 
         <div class="speed-challenge-prompts" role="group" aria-label="Choose a question">
-            <button class="speed-prompt-btn" data-prompt="What's the capital of Bhutan?" aria-pressed="false">🌍 What's the capital of Bhutan?</button>
-            <button class="speed-prompt-btn" data-prompt="Convert 72°F to Celsius" aria-pressed="false">🌡️ Convert 72°F to Celsius</button>
-            <button class="speed-prompt-btn" data-prompt="Who painted the Mona Lisa?" aria-pressed="false">🎨 Who painted the Mona Lisa?</button>
-            <button class="speed-prompt-btn" data-prompt="How many ounces in a gallon?" aria-pressed="false">📏 How many ounces in a gallon?</button>
-            <button class="speed-prompt-btn" data-prompt="What year did the Berlin Wall fall?" aria-pressed="false">🏛️ What year did the Berlin Wall fall?</button>
+            <button type="button" class="speed-prompt-btn" data-prompt="What's the capital of Bhutan?" aria-pressed="false">🌍 What's the capital of Bhutan?</button>
+            <button type="button" class="speed-prompt-btn" data-prompt="Convert 72°F to Celsius" aria-pressed="false">🌡️ Convert 72°F to Celsius</button>
+            <button type="button" class="speed-prompt-btn" data-prompt="Who painted the Mona Lisa?" aria-pressed="false">🎨 Who painted the Mona Lisa?</button>
+            <button type="button" class="speed-prompt-btn" data-prompt="How many ounces in a gallon?" aria-pressed="false">📏 How many ounces in a gallon?</button>
+            <button type="button" class="speed-prompt-btn" data-prompt="What year did the Berlin Wall fall?" aria-pressed="false">🏛️ What year did the Berlin Wall fall?</button>
         </div>
 
         <div class="speed-challenge-arena" id="speedArena" hidden>
@@ -2263,7 +2263,7 @@
         </div>
 
         <div class="speed-result" id="speedResult" hidden aria-live="polite"></div>
-        <button class="speed-reset-btn" id="speedResetBtn" hidden>Try Another Question</button>
+        <button type="button" class="speed-reset-btn" id="speedResetBtn" hidden>Try Another Question</button>
     </section>
 
     <!-- Privacy Checkup -->
@@ -2288,7 +2288,7 @@
                     <span class="privacy-score-label">Privacy Score</span>
                 </div>
                 <div class="privacy-findings" id="privacyFindings" role="list" aria-label="Privacy findings"></div>
-                <button class="privacy-restart-btn" id="privacyRestartBtn">🔄 Retake Checkup</button>
+                <button type="button" class="privacy-restart-btn" id="privacyRestartBtn">🔄 Retake Checkup</button>
             </div>
         </div>
     </section>
@@ -2299,7 +2299,7 @@
         <p class="section-subtitle">Select your tools — see how AgentBox connects them into automated workflows.</p>
         <div class="pipeline-counter" aria-live="polite">0 / 5 tools selected</div>
         <div class="pipeline-tool-grid" role="group" aria-label="Available integrations"></div>
-        <button class="pipeline-clear-btn" onclick="PipelineBuilder.clear()" aria-label="Clear all selections">Clear All</button>
+        <button type="button" class="pipeline-clear-btn" onclick="PipelineBuilder.clear()" aria-label="Clear all selections">Clear All</button>
         <div class="pipeline-visualization" aria-live="polite"></div>
         <div class="pipeline-description" aria-live="polite"></div>
     </section>
@@ -2315,13 +2315,13 @@
     </nav>
 
     <!-- Accessibility Preferences Panel -->
-    <button class="a11y-trigger" id="a11yTrigger" aria-label="Accessibility preferences" title="Accessibility preferences">
+    <button type="button" class="a11y-trigger" id="a11yTrigger" aria-label="Accessibility preferences" title="Accessibility preferences">
         <span class="a11y-trigger-icon" aria-hidden="true">♿</span>
     </button>
 
     <!-- Help Chat Widget -->
-    <div class="help-chat-widget" id="helpChatWidget" aria-label="Help chat">
-        <button class="help-chat-fab" id="helpChatFab" aria-label="Open help chat" aria-expanded="false">
+    <div role="region" class="help-chat-widget" id="helpChatWidget" aria-label="Help chat">
+        <button type="button" class="help-chat-fab" id="helpChatFab" aria-label="Open help chat" aria-expanded="false">
             <span class="help-chat-fab-icon" id="helpChatFabIcon">💬</span>
             <span class="help-chat-fab-badge" id="helpChatBadge" aria-hidden="true">1</span>
         </button>
@@ -2355,13 +2355,13 @@
 
             <div class="help-chat-header">
                 <span class="help-chat-header-title">🤖 AgentBox Help</span>
-                <button class="help-chat-close" id="helpChatClose" aria-label="Close help chat">&times;</button>
+                <button type="button" class="help-chat-close" id="helpChatClose" aria-label="Close help chat">&times;</button>
             </div>
             <div class="help-chat-messages" id="helpChatMessages" role="log" aria-live="polite"></div>
             <div class="help-chat-options" id="helpChatOptions"></div>
             <div class="help-chat-input-row" id="helpChatInputRow">
                 <input type="text" class="help-chat-input" id="helpChatInput" placeholder="Type a question..." aria-label="Type a question" autocomplete="off">
-                <button class="help-chat-send" id="helpChatSend" aria-label="Send">➤</button>
+                <button type="button" class="help-chat-send" id="helpChatSend" aria-label="Send">➤</button>
             </div>
         </div>
     </div>
