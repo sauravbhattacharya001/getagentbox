@@ -400,4 +400,152 @@ describe('AutonomyLadder', function () {
             expect(data.tasks[0].status).toBe('completed');
         });
     });
+
+    // -----------------------------------------------------------------------
+    // Tuning tables — guard against silent regressions in the data-driven
+    // behavior introduced when the if-chains were collapsed.
+    // -----------------------------------------------------------------------
+    describe('AUTO_THRESHOLDS table', function () {
+        test('matches getAutoThreshold for every level', function () {
+            for (var lvl = 1; lvl <= 5; lvl++) {
+                expect(AL.getAutoThreshold(lvl)).toBe(AL.AUTO_THRESHOLDS[lvl]);
+            }
+        });
+        test('returns -1 for non-numeric / out-of-range input', function () {
+            expect(AL.getAutoThreshold(0)).toBe(-1);
+            expect(AL.getAutoThreshold(99)).toBe(-1);
+            expect(AL.getAutoThreshold(-3)).toBe(-1);
+            expect(AL.getAutoThreshold(undefined)).toBe(-1);
+            expect(AL.getAutoThreshold('3')).toBe(-1);
+            expect(AL.getAutoThreshold(null)).toBe(-1);
+        });
+        test('thresholds are monotonically non-decreasing across levels 1..5', function () {
+            for (var lvl = 2; lvl <= 5; lvl++) {
+                expect(AL.AUTO_THRESHOLDS[lvl]).toBeGreaterThanOrEqual(AL.AUTO_THRESHOLDS[lvl - 1]);
+            }
+        });
+    });
+
+    describe('getMistakeChance', function () {
+        test('returns 0 for levels below 3 regardless of risk', function () {
+            ['low', 'medium', 'high', 'critical'].forEach(function (r) {
+                expect(AL.getMistakeChance(1, r)).toBe(0);
+                expect(AL.getMistakeChance(2, r)).toBe(0);
+            });
+        });
+        test('level 3 only carries risk on medium tasks', function () {
+            expect(AL.getMistakeChance(3, 'low')).toBe(0);
+            expect(AL.getMistakeChance(3, 'medium')).toBe(0.05);
+            expect(AL.getMistakeChance(3, 'high')).toBe(0);
+            expect(AL.getMistakeChance(3, 'critical')).toBe(0);
+        });
+        test('level 4 splits low-bucket vs. high-bucket risk', function () {
+            expect(AL.getMistakeChance(4, 'low')).toBe(0.02);
+            expect(AL.getMistakeChance(4, 'medium')).toBe(0.02);
+            expect(AL.getMistakeChance(4, 'high')).toBe(0.08);
+            expect(AL.getMistakeChance(4, 'critical')).toBe(0.08);
+        });
+        test('level 5 uses higher base mistake rates than level 4', function () {
+            expect(AL.getMistakeChance(5, 'low')).toBe(0.04);
+            expect(AL.getMistakeChance(5, 'high')).toBe(0.12);
+            expect(AL.getMistakeChance(5, 'critical')).toBe(0.12);
+            expect(AL.getMistakeChance(5, 'low')).toBeGreaterThan(AL.getMistakeChance(4, 'low'));
+            expect(AL.getMistakeChance(5, 'high')).toBeGreaterThan(AL.getMistakeChance(4, 'high'));
+        });
+        test('unknown level returns 0', function () {
+            expect(AL.getMistakeChance(99, 'high')).toBe(0);
+            expect(AL.getMistakeChance(0, 'low')).toBe(0);
+        });
+        test('rollMistake honors getMistakeChance via Math.random boundary', function () {
+            var spy = jest.spyOn(Math, 'random');
+            try {
+                // chance for level 4 / high == 0.08
+                spy.mockReturnValue(0.07);
+                expect(AL.rollMistake(4, 'high')).toBe(true);
+                spy.mockReturnValue(0.08);  // boundary: 0.08 < 0.08 is false
+                expect(AL.rollMistake(4, 'high')).toBe(false);
+                // any RNG output should be ignored when chance is 0
+                spy.mockReturnValue(0);
+                expect(AL.rollMistake(2, 'critical')).toBe(false);
+                expect(AL.rollMistake(3, 'high')).toBe(false);
+            } finally {
+                spy.mockRestore();
+            }
+        });
+    });
+
+    describe('RESPONSE_TIME tables', function () {
+        test('base values cover every risk class in TASK_POOL', function () {
+            AL.TASK_POOL.forEach(function (t) {
+                expect(AL.RESPONSE_TIME_BASE).toHaveProperty(t.risk);
+                expect(AL.RESPONSE_TIME_BASE[t.risk]).toBeGreaterThan(0);
+            });
+        });
+        test('level multipliers strictly decrease from level 1 to 5 (more autonomy = faster)', function () {
+            for (var lvl = 2; lvl <= 5; lvl++) {
+                expect(AL.RESPONSE_TIME_LEVEL_MULT[lvl]).toBeLessThan(AL.RESPONSE_TIME_LEVEL_MULT[lvl - 1]);
+            }
+        });
+        test('getResponseTime returns 0 for unknown risk', function () {
+            // Math.random() jitter still multiplies 0 base -> 0.
+            expect(AL.getResponseTime(3, 'bogus-risk')).toBe(0);
+        });
+        test('getResponseTime returns 0 for unknown level', function () {
+            expect(AL.getResponseTime(99, 'low')).toBe(0);
+        });
+        test('getResponseTime stays within base*mult * [0.8, 1.2] jitter window', function () {
+            var spy = jest.spyOn(Math, 'random');
+            try {
+                spy.mockReturnValue(0);     // jitter factor = 0.8
+                var lo = AL.getResponseTime(3, 'high');
+                // base 4.0 * mult 1.5 * 0.8 = 4.8
+                expect(lo).toBe(4.8);
+                spy.mockReturnValue(0.9999); // jitter factor ≈ 1.2
+                var hi = AL.getResponseTime(3, 'high');
+                // base 4.0 * mult 1.5 * ~1.2 ≈ 7.2 (rounded to 1 dp)
+                expect(hi).toBeGreaterThanOrEqual(7.1);
+                expect(hi).toBeLessThanOrEqual(7.2);
+            } finally {
+                spy.mockRestore();
+            }
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // rejectTask edge cases (previously uncovered: lines 103-110)
+    // -----------------------------------------------------------------------
+    describe('rejectTask edge cases', function () {
+        test('returns null when no task with the id exists', function () {
+            var s = AL.createState();
+            expect(AL.rejectTask(s, 999)).toBeNull();
+        });
+        test('returns null when the task is not pending', function () {
+            var s = AL.createState();
+            var t = AL.generateTask(s, null);
+            t.status = 'completed';
+            s.taskQueue.push(t);
+            expect(AL.rejectTask(s, t.id)).toBeNull();
+        });
+        test('marks a pending task as rejected and clears pendingApproval', function () {
+            var s = AL.createState();
+            var t = AL.generateTask(s, null);
+            s.taskQueue.push(t);
+            s.pendingApproval = t;
+            var result = AL.rejectTask(s, t.id);
+            expect(result).not.toBeNull();
+            expect(result.msg).toMatch(/Rejected/);
+            expect(t.status).toBe('rejected');
+            expect(t.action).toBe('rejected');
+            expect(s.pendingApproval).toBeNull();
+        });
+        test('does not change trustScore or tasksCompleted on rejection', function () {
+            var s = AL.createState();
+            s.trustScore = 42;
+            var t = AL.generateTask(s, null);
+            s.taskQueue.push(t);
+            AL.rejectTask(s, t.id);
+            expect(s.trustScore).toBe(42);
+            expect(s.tasksCompleted).toBe(0);
+        });
+    });
 });
