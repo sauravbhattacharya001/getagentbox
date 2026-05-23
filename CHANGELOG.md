@@ -1,5 +1,42 @@
 # Changelog
 
+## [v2.11.0] — 2026-05-23
+
+2 commits since v2.10.0. Focused test-coverage release for previously
+untested UI modules.
+
+### 🧪 New Test Coverage
+
+Three UI modules that previously had zero direct unit coverage now ship
+with CommonJS-importable Jest suites:
+
+- **ThemeToggle** (`src/modules/theme-toggle.js`) — 8 tests covering the
+  light/dark toggle, localStorage round-trip, missing-button no-op, icon
+  update, and persistence across re-init.
+- **FAQ** (`src/modules/faq.js`) — 6 tests covering accordion open/close,
+  sibling-collapse scoping, cross-container isolation, and the no-op
+  branch when called with a stray element.
+- **ShortcutsHelp** (`src/modules/shortcuts-help.js`) — 12 tests covering
+  the `?` toggle, Escape and backdrop close, input/textarea suppression,
+  modifier-key suppression, and the `t` → `#themeToggle` forwarding
+  (gated by overlay visibility).
+
+**Net effect:** +26 passing tests, +3 modules with direct coverage.
+
+### 🛠 Internal
+
+The three source modules gained a CommonJS export tail behind the usual
+`typeof module` guard so they can be `require()`-d directly in Jest
+without going through the bundle. Browser/bundle behaviour is unchanged:
+the IIFE still assigns the global `var`, and `build.js` still produces a
+clean `dist/bundle.js` + `app.js`.
+
+Pre-existing failing suites tracked by issue #111 (the `eval(appJs)`
+pattern and canvas-mock drift) are unrelated and unchanged by this
+release.
+
+---
+
 ## [v2.10.0] — 2026-05-21
 
 25 commits since v2.9.0 — a new agentic-advisor family, hardened security
