@@ -1,0 +1,93 @@
+name: 🧠 Advisor Recommendation Feedback
+description: Report a wrong / unhelpful / surprising recommendation from one of the agent advisor modules (triage, drift detector, budget guardian, autonomy tuning, etc.).
+title: "[Advisor]: "
+labels: ["advisor-feedback", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to give feedback on an advisor.
+
+        Each advisor module is intentionally rules-based and deterministic, so
+        every "weird" recommendation is reproducible and fixable. The more
+        concrete data you can share below, the faster we can adjust the rules
+        or add a regression test.
+
+  - type: dropdown
+    id: advisor
+    attributes:
+      label: Which advisor module?
+      description: Pick the page / module the recommendation came from.
+      options:
+        - agent-triage-advisor
+        - agent-tool-policy-advisor
+        - agent-task-dependency-advisor
+        - agent-rollout-planner
+        - agent-memory-hygiene-advisor
+        - agent-escalation-advisor
+        - agent-drift-detector
+        - agent-budget-guardian-advisor
+        - agent-autonomy-tuning-advisor
+        - autonomy-ladder
+        - calibration-lab
+        - capacity-planner
+        - cost-optimizer
+        - decision-matrix
+        - red-team-arena
+        - scenario-planner
+        - other (please specify in description)
+    validations:
+      required: true
+
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Inputs you provided
+      description: |
+        Copy the values you typed into the form, or describe the scenario you
+        selected. If the advisor has a "share" link, paste it here.
+      placeholder: |
+        e.g. requests/day = 50,000; latency budget = 200ms; failure rate = 2%
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Recommendation you actually got
+      description: Paste the recommendation text or a screenshot of the result panel.
+      placeholder: "The advisor recommended X with confidence Y, citing rule Z..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected / what would be more useful
+      description: |
+        What recommendation did you expect, and why? If you have a citation
+        (paper, internal runbook, your own production data) please share it.
+      placeholder: "I expected the advisor to suggest A because in our production setup..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: How wrong was it?
+      options:
+        - "🟢 Suboptimal — still safe, just not the best choice"
+        - "🟡 Misleading — could lead to a bad decision"
+        - "🟠 Actively wrong — contradicts well-known best practice"
+        - "🔴 Dangerous — would cause an outage / cost spike / safety issue if followed"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      description: All advisors run client-side; nothing is sent to a server. Please confirm before pasting inputs.
+      options:
+        - label: I have removed any production secrets, real customer data, or PII from the inputs above.
+          required: true

@@ -5137,12 +5137,39 @@ var WorkflowTemplates = (function () {
   let _detailEl = null;
   let _filterContainer = null;
 
+  /**
+   * Pre-bucketed view of TEMPLATES, keyed by category id.
+   * Built once in init() so _renderGrid()/getByCategory() avoid an O(n)
+   * .filter() walk on every category click (the previous implementation
+   * scanned every template on every filter change). Each bucket stores a
+   * frozen reference into TEMPLATES; callers that mutate the result
+   * (getByCategory) get a .slice() copy.
+   */
+  let _byCategory = null;
+
+  function _buildCategoryIndex() {
+    if (_byCategory) return;
+    _byCategory = Object.create(null);
+    // Seed every declared category (incl. ones with zero templates) so
+    // getByCategory('health') etc. is a single lookup, never a .filter().
+    for (var c = 0; c < CATEGORIES.length; c++) {
+      if (CATEGORIES[c].id === 'all') continue;
+      _byCategory[CATEGORIES[c].id] = [];
+    }
+    for (var i = 0; i < TEMPLATES.length; i++) {
+      var cat = TEMPLATES[i].category;
+      if (!_byCategory[cat]) _byCategory[cat] = [];
+      _byCategory[cat].push(TEMPLATES[i]);
+    }
+  }
+
   function init() {
     _gridEl = document.getElementById('workflowGrid');
     _detailEl = document.getElementById('workflowDetail');
     _filterContainer = document.querySelector('.workflow-filter');
     if (!_gridEl) return;
 
+    _buildCategoryIndex();
     _buildFilterButtons();
     _renderGrid();
     _bindDetailClose();
@@ -5192,12 +5219,30 @@ var WorkflowTemplates = (function () {
     if (!_gridEl) return;
     while (_gridEl.firstChild) _gridEl.removeChild(_gridEl.firstChild);
 
-    let filtered = _currentCategory === 'all'
-      ? TEMPLATES
-      : TEMPLATES.filter(function (t) { return t.category === _currentCategory; });
+    // O(1) lookup via the pre-built category index instead of an O(n)
+    // .filter() on every filter-button click.
+    let filtered;
+    if (_currentCategory === 'all') {
+      filtered = TEMPLATES;
+    } else {
+      _buildCategoryIndex();
+      filtered = _byCategory[_currentCategory] || [];
+    }
 
-    for (var i = 0; i < filtered.length; i++) {
-      _gridEl.appendChild(_createCard(filtered[i]));
+    // Batch DOM writes through a DocumentFragment so the grid sees a single
+    // reflow at the end instead of one per card. Falls back to direct
+    // appendChild if DocumentFragment is somehow unavailable (very old
+    // jsdom test envs).
+    if (typeof document.createDocumentFragment === 'function') {
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < filtered.length; i++) {
+        frag.appendChild(_createCard(filtered[i]));
+      }
+      _gridEl.appendChild(frag);
+    } else {
+      for (var j = 0; j < filtered.length; j++) {
+        _gridEl.appendChild(_createCard(filtered[j]));
+      }
     }
   }
 
@@ -5322,7 +5367,9 @@ var WorkflowTemplates = (function () {
 
   function getByCategory(category) {
     if (category === 'all') return TEMPLATES.slice();
-    return TEMPLATES.filter(function (t) { return t.category === category; });
+    _buildCategoryIndex();
+    var bucket = _byCategory[category];
+    return bucket ? bucket.slice() : [];
   }
 
   function getById(id) {
