@@ -45,3 +45,7 @@ var ShortcutsHelp = (function () {
 
   return { init: init };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ShortcutsHelp;
+}

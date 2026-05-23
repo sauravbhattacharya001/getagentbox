@@ -28,3 +28,7 @@ var FAQ = (function () {
 
   return { toggle: toggle };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = FAQ;
+}

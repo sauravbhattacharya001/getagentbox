@@ -26,5 +26,9 @@ var ThemeToggle = (function () {
     StorageUtil.set(STORAGE_KEY, isLight ? 'light' : 'dark');
   }
 
-  return { init: init };
+  return { init: init, toggle: toggle, _storageKey: STORAGE_KEY };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ThemeToggle;
+}

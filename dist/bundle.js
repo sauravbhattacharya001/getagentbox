@@ -672,6 +672,10 @@ var FAQ = (function () {
   return { toggle: toggle };
 })();
 
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = FAQ;
+}
+
 
 /* === src/modules/how-it-works.js === */
 
@@ -2768,8 +2772,12 @@ var ThemeToggle = (function () {
     StorageUtil.set(STORAGE_KEY, isLight ? 'light' : 'dark');
   }
 
-  return { init: init };
+  return { init: init, toggle: toggle, _storageKey: STORAGE_KEY };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ThemeToggle;
+}
 
 
 /* === src/modules/scroll-progress.js === */
@@ -2896,6 +2904,10 @@ var ShortcutsHelp = (function () {
 
   return { init: init };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ShortcutsHelp;
+}
 
 
 /* === src/modules/playground.js === */
