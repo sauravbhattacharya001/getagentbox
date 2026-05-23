@@ -114,3 +114,15 @@ var StorageUtil = (function () {
     remove: remove
   };
 })();
+
+// Make StorageUtil available as a global in CommonJS/Node environments
+// (e.g., Jest). At runtime in the browser the IIFE `var StorageUtil` already
+// lives on the window object via the concatenated bundle (see build.js); this
+// shim ensures consumer modules that reference the bare `StorageUtil`
+// identifier also resolve it when each module is loaded individually under
+// `require()`. Without this, every consumer (~10 modules) throws
+// `ReferenceError: StorageUtil is not defined` at require-time, cascading
+// into ~500 unrelated test failures in jsdom test suites.
+if (typeof globalThis !== 'undefined' && typeof globalThis.StorageUtil === 'undefined') {
+  globalThis.StorageUtil = StorageUtil;
+}
