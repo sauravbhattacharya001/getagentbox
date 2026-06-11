@@ -12585,6 +12585,10 @@ var CapabilityRadar = (function () {
     });
 
     // Axis lines + labels
+    // Resolve the canvas text color once per frame: getComputedStyle forces a
+    // style recalc, so calling it inside the per-axis loop (once per label)
+    // multiplied that cost by the dimension count on every redraw.
+    var axisColor = getComputedStyle(canvas).color || '#666';
     for (var i = 0; i < n; i++) {
       var angle = (Math.PI * 2 / n) * i - Math.PI / 2;
       var x = cx + Math.cos(angle) * R;
@@ -12598,7 +12602,7 @@ var CapabilityRadar = (function () {
       // Label
       var lx = cx + Math.cos(angle) * (R + 22);
       var ly = cy + Math.sin(angle) * (R + 22);
-      ctx.fillStyle = hoveredDim === i ? 'rgba(99,102,241,1)' : getComputedStyle(canvas).color || '#666';
+      ctx.fillStyle = hoveredDim === i ? 'rgba(99,102,241,1)' : axisColor;
       ctx.font = (hoveredDim === i ? 'bold ' : '') + '11px system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -12677,7 +12681,15 @@ var CapabilityRadar = (function () {
       tooltip.style.left = mx + 'px';
       tooltip.style.top = (my - 10) + 'px';
       draw(1);
-    } else if (dim === null) {
+    } else if (dim !== null) {
+      // Still hovering the same dimension — just track the tooltip with the
+      // cursor. No data changed, so skip the (expensive) full canvas redraw.
+      tooltip.style.left = mx + 'px';
+      tooltip.style.top = (my - 10) + 'px';
+    } else if (hoveredDim !== null) {
+      // Moved off a dimension that was previously hovered: clear once.
+      // Without this guard the canvas was fully re-rendered on every single
+      // mousemove across the (large) empty area of the chart.
       hoveredDim = null;
       tooltip.hidden = true;
       draw(1);
